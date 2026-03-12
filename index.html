@@ -578,6 +578,25 @@ white-space: nowrap;
 .cat-commissioning { –accent-color: #06b6d4; }
 .cat-hardware { –accent-color: #ef4444; }
 .cat-network { –accent-color: #10b981; }
+
+/* ── LOCATION AUTOCOMPLETE ── */
+.location-item {
+padding: 10px 14px;
+cursor: pointer;
+font-size: 13px;
+color: var(–text2);
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: flex-start;
+gap: 10px;
+transition: background 0.1s;
+}
+.location-item:last-child { border-bottom: none; }
+.location-item:hover, .location-item.highlighted { background: var(–surface3); color: var(–text); }
+.location-item .loc-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.location-item .loc-name { font-weight: 600; color: var(–text); font-size: 13px; }
+.location-item .loc-detail { font-size: 11px; color: var(–text3); margin-top: 2px; font-family: var(–mono); }
+.location-no-results { padding: 12px 14px; font-size: 13px; color: var(–text3); text-align: center; }
 </style>
 
 </head>
@@ -926,7 +945,27 @@ appId: "1:123456:web:abc"
       </div>
       <div class="form-row">
         <div class="form-group"><label>Budget ($)</label><input type="number" id="project-budget" placeholder="0.00"></div>
-        <div class="form-group"><label>Location</label><input type="text" id="project-location" placeholder="Site address"></div>
+        <div class="form-group">
+          <label>Location</label>
+          <div style="position:relative">
+            <input type="text" id="project-location" placeholder="Start typing an address…" autocomplete="off"
+              oninput="locationSearch(this.value)" onkeydown="locationKeydown(event)">
+            <div id="location-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3)">⏳</div>
+            <div id="location-dropdown" style="
+              display:none;
+              position:absolute;
+              top:calc(100% + 4px);
+              left:0;right:0;
+              background:var(--surface2);
+              border:1px solid var(--border2);
+              border-radius:8px;
+              z-index:9999;
+              max-height:220px;
+              overflow-y:auto;
+              box-shadow:0 8px 32px rgba(0,0,0,0.4);
+            "></div>
+          </div>
+        </div>
       </div>
       <div class="form-group"><label>Control System</label>
         <select id="project-system">
@@ -2139,6 +2178,154 @@ window.addEventListener('load', ()=>{
   }, 1000);
 });
 
+
+// ═══════════════════════════════════════════════
+//  LOCATION AUTOCOMPLETE — OpenStreetMap Nominatim
+// ═══════════════════════════════════════════════
+var _locTimer = null;
+var _locResults = [];
+var _locHighlight = -1;
+
+function locationSearch(val) {
+  clearTimeout(_locTimer);
+  var dd = document.getElementById('location-dropdown');
+  var sp = document.getElementById('location-spinner');
+  _locHighlight = -1;
+
+  if (!val || val.length < 3) {
+    dd.style.display = 'none';
+    return;
+  }
+
+  if (sp) sp.style.display = 'block';
+  _locTimer = setTimeout(function() {
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&q=' + encodeURIComponent(val);
+    fetch(url, { headers: { 'Accept-Language': 'en' } })
+      .then(function(r) { return r.json(); })
+      .then(function(results) {
+        if (sp) sp.style.display = 'none';
+        _locResults = results;
+        renderLocationDropdown(results);
+      })
+      .catch(function() {
+        if (sp) sp.style.display = 'none';
+        dd.style.display = 'none';
+      });
+  }, 350);
+}
+
+function renderLocationDropdown(results) {
+  var dd = document.getElementById('location-dropdown');
+  if (!results || !results.length) {
+    dd.innerHTML = '<div class="location-no-results">No results found</div>';
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = results.map(function(r, i) {
+    // Build a clean display address
+    var addr = r.address || {};
+    var name = r.name || addr.building || addr.amenity || addr.shop || '';
+    var street = [addr.house_number, addr.road].filter(Boolean).join(' ');
+    var city = addr.city || addr.town || addr.village || addr.county || '';
+    var state = addr.state || '';
+    var country = addr.country_code ? addr.country_code.toUpperCase() : '';
+    var detail = [street, city, state, country].filter(Boolean).join(', ');
+    var fullAddress = r.display_name || detail;
+    // Short address for the input field
+    var shortAddr = [street || name, city, state].filter(Boolean).join(', ');
+    if (!shortAddr) shortAddr = fullAddress.split(',').slice(0,3).join(',').trim();
+
+    var icon = getLocIcon(r.type, r.class, addr);
+
+    return '<div class="location-item" id="loc-item-' + i + '" ' +
+      'onclick="selectLocation(' + i + ')" ' +
+      'onmouseover="highlightLocation(' + i + ')">' +
+      '<span class="loc-icon">' + icon + '</span>' +
+      '<div>' +
+        '<div class="loc-name">' + escHtml(name || street || city) + '</div>' +
+        '<div class="loc-detail">' + escHtml(detail || fullAddress.split(',').slice(0,4).join(',')) + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function getLocIcon(type, cls, addr) {
+  if (cls === 'building' || type === 'building') return '🏢';
+  if (cls === 'office' || addr.office) return '🏢';
+  if (type === 'hotel' || addr.hotel) return '🏨';
+  if (cls === 'amenity' && (type === 'hospital' || type === 'clinic')) return '🏥';
+  if (cls === 'amenity' && (type === 'school' || type === 'university')) return '🏫';
+  if (cls === 'amenity' && type === 'place_of_worship') return '⛪';
+  if (cls === 'shop' || addr.shop) return '🏪';
+  if (type === 'residential' || addr.house_number) return '🏠';
+  if (type === 'industrial' || type === 'warehouse') return '🏭';
+  if (cls === 'highway' || addr.road) return '📍';
+  if (type === 'city' || type === 'town' || type === 'village') return '🌆';
+  return '📍';
+}
+
+function selectLocation(i) {
+  var r = _locResults[i];
+  if (!r) return;
+  var addr = r.address || {};
+  var street = [addr.house_number, addr.road].filter(Boolean).join(' ');
+  var city = addr.city || addr.town || addr.village || addr.county || '';
+  var state = addr.state || '';
+  var zip = addr.postcode || '';
+  // Build a clean short address for the field
+  var parts = [street, city, state, zip].filter(Boolean);
+  var shortAddr = parts.join(', ');
+  if (!shortAddr) shortAddr = r.display_name.split(',').slice(0,3).join(',').trim();
+
+  var input = document.getElementById('project-location');
+  if (input) {
+    input.value = shortAddr;
+    input.focus();
+  }
+  closeLocationDropdown();
+}
+
+function highlightLocation(i) {
+  _locHighlight = i;
+  document.querySelectorAll('.location-item').forEach(function(el, idx) {
+    el.classList.toggle('highlighted', idx === i);
+  });
+}
+
+function locationKeydown(e) {
+  var dd = document.getElementById('location-dropdown');
+  if (dd.style.display === 'none') return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _locHighlight = Math.min(_locHighlight + 1, _locResults.length - 1);
+    highlightLocation(_locHighlight);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _locHighlight = Math.max(_locHighlight - 1, 0);
+    highlightLocation(_locHighlight);
+  } else if (e.key === 'Enter' && _locHighlight >= 0) {
+    e.preventDefault();
+    selectLocation(_locHighlight);
+  } else if (e.key === 'Escape') {
+    closeLocationDropdown();
+  }
+}
+
+function closeLocationDropdown() {
+  var dd = document.getElementById('location-dropdown');
+  if (dd) dd.style.display = 'none';
+  _locResults = [];
+  _locHighlight = -1;
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest || !e.target.closest('#modal-project')) {
+    closeLocationDropdown();
+  }
+});
+
 // Expose functions globally
 Object.assign(window, {
   switchView, openAddModal, openModal, closeModal,
@@ -2149,7 +2336,8 @@ Object.assign(window, {
   deleteItem, openDetail,
   renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue, seedBuiltinIssues,
   saveFirebaseConfig, clearFirebaseConfig, globalSearch,
-  toggleSidebar, closeSidebar, toast
+  toggleSidebar, closeSidebar, toast,
+  locationSearch, locationKeydown, selectLocation, highlightLocation, closeLocationDropdown
 });
 </script>
 
