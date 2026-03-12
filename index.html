@@ -1174,17 +1174,19 @@ async function deleteItem(col, id) {
   renderAll();
 }
 
-function initFirebase(config) {
+async function initFirebase(config) {
   try {
-    // Delete any existing app with this name to allow re-init
+    // Tear down existing listeners first
+    unsubscribers.forEach(function(u){ u(); });
+    unsubscribers = [];
+    db = null;
+
+    // Delete any existing app with this name — must await so it finishes before re-init
     var existingApp = firebase.apps.find(function(a){ return a.name === 'fieldops'; });
-    if (existingApp) existingApp.delete();
+    if (existingApp) await existingApp.delete();
 
     var app = firebase.initializeApp(config, 'fieldops');
     db = firebase.firestore(app);
-
-    unsubscribers.forEach(function(u){ u(); });
-    unsubscribers = [];
 
     COLLECTIONS.forEach(function(col) {
       var unsub = db.collection(col)
