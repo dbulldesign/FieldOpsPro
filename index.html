@@ -623,7 +623,7 @@ select option { background: var(--surface2); }
       <div class="nav-section">
         <div class="nav-label">Settings</div>
         <div class="nav-item" onclick="switchView('settings')">
-          <span class="icon">⚙️</span> Firebase Setup
+          <span class="icon">⚙️</span> Sync Setup
         </div>
       </div>
     </nav>
@@ -656,7 +656,7 @@ select option { background: var(--surface2); }
       <div class="view active" id="view-dashboard">
         <div id="firebaseNotice" class="setup-banner" style="display:none">
           <span class="icon">🔥</span>
-          <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Firebase Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
+          <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Sync Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
         </div>
         <div class="grid-4" style="margin-bottom:20px">
           <div class="stat-card" style="--accent-color:var(--accent2)">
@@ -818,26 +818,52 @@ select option { background: var(--surface2); }
 
       <!-- ═══ SETTINGS ═══ -->
       <div class="view" id="view-settings">
-        <div class="card" style="max-width:600px">
-          <div class="section-header">
+        <div class="card" style="max-width:580px">
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+            <span style="font-size:24px">🔥</span>
             <div>
-              <div class="section-title">🔥 Firebase Configuration</div>
-              <div class="section-sub">Connect to sync data across all your devices for free</div>
+              <div class="section-title">Firebase Sync</div>
+              <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
             </div>
           </div>
-          <div class="setup-banner" style="margin-bottom:20px">
-            <span class="icon">ℹ️</span>
-            <p>
-              <strong>Free Setup:</strong> Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>, create a project, add a <strong>Firestore Database</strong> (free tier), then get your Web App config keys and paste them below. This enables real-time sync across iPhone, iPad, and Desktop.
-            </p>
+
+          <div class="setup-banner" style="margin:18px 0">
+            <span class="icon">📋</span>
+            <div style="font-size:13px;color:var(--text2);line-height:1.8">
+              <strong style="color:var(--gold)">3 steps — takes 5 minutes:</strong><br>
+              1. <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent2)">console.firebase.google.com</a> → Add project (any name)<br>
+              2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
+              3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
+            </div>
           </div>
-          <div class="form-group"><label>API Key</label><input type="text" id="cfg-apiKey" placeholder="AIzaSy…"></div>
-          <div class="form-group"><label>Auth Domain</label><input type="text" id="cfg-authDomain" placeholder="yourapp.firebaseapp.com"></div>
-          <div class="form-group"><label>Project ID</label><input type="text" id="cfg-projectId" placeholder="yourapp-12345"></div>
-          <div class="form-group"><label>App ID</label><input type="text" id="cfg-appId" placeholder="1:123:web:abc"></div>
-          <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 Save & Connect</button>
-          <button class="btn btn-danger" style="margin-left:10px" onclick="clearFirebaseConfig()">Disconnect</button>
-          <div id="firebase-status" style="margin-top:16px; font-size:13px; color:var(--text3)"></div>
+
+          <div class="form-group">
+            <label>Paste your Firebase config block here</label>
+            <textarea id="cfg-paste" style="font-family:var(--mono);font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
+
+const firebaseConfig = {
+  apiKey: &quot;AIzaSy...&quot;,
+  authDomain: &quot;myapp.firebaseapp.com&quot;,
+  projectId: &quot;myapp-12345&quot;,
+  appId: &quot;1:123456:web:abc&quot;
+};"></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
+              🔥 Connect &amp; Sync
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
+          </div>
+
+          <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
+
+          <div id="cfg-current-wrap" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Connected Project</div>
+            <div id="cfg-current" style="font-size:13px;font-family:var(--mono);color:var(--text2)"></div>
+          </div>
+
         </div>
       </div>
 
@@ -1188,36 +1214,80 @@ function loadLocalData() {
 }
 
 // Firebase config persistence
+function parseFirebaseConfig(raw) {
+  // Strip JS variable declarations and extract just the object
+  var text = raw.trim();
+  // Remove: const firebaseConfig = ... or var firebaseConfig = ... or firebase.initializeApp(
+  text = text.replace(/const\s+\w+\s*=\s*/g, '');
+  text = text.replace(/var\s+\w+\s*=\s*/g, '');
+  text = text.replace(/let\s+\w+\s*=\s*/g, '');
+  text = text.replace(/firebase\.initializeApp\s*\(/g, '');
+  text = text.replace(/initializeApp\s*\(/g, '');
+  // Remove trailing ); or ;
+  text = text.replace(/\)\s*;?\s*$/, '');
+  text = text.replace(/;\s*$/, '');
+  // Convert unquoted keys to quoted keys: apiKey: -> "apiKey":
+  text = text.replace(/(\w+)\s*:/g, '"$1":');
+  // Try to parse as JSON
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    // Try extracting key:value pairs manually with regex
+    var cfg = {};
+    var pairs = raw.match(/(\w+)\s*:\s*["\'](.*?)["\']\s*[,}]/g);
+    if (pairs) {
+      pairs.forEach(function(pair) {
+        var m = pair.match(/(\w+)\s*:\s*["\'](.*?)["\'][,}]/);
+        if (m) cfg[m[1]] = m[2];
+      });
+    }
+    if (cfg.apiKey) return cfg;
+    return null;
+  }
+}
+
 function saveFirebaseConfig() {
-  const cfg = {
-    apiKey: document.getElementById('cfg-apiKey').value.trim(),
-    authDomain: document.getElementById('cfg-authDomain').value.trim(),
-    projectId: document.getElementById('cfg-projectId').value.trim(),
-    appId: document.getElementById('cfg-appId').value.trim(),
-  };
-  if (!cfg.apiKey || !cfg.projectId) { toast('Fill in API Key and Project ID'); return; }
+  var raw = document.getElementById('cfg-paste').value.trim();
+  if (!raw) { toast('Paste your Firebase config first'); return; }
+
+  var cfg = parseFirebaseConfig(raw);
+  if (!cfg || !cfg.apiKey || !cfg.projectId) {
+    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--red)">&#x274C; Could not read config. Make sure you pasted the full block from Firebase.</span>';
+    return;
+  }
   localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
+  updateCfgDisplay(cfg);
   initFirebase(cfg);
 }
+
 function clearFirebaseConfig() {
   localStorage.removeItem('fop_firebase_cfg');
   db = null;
-  unsubscribers.forEach(u=>u()); unsubscribers=[];
+  unsubscribers.forEach(function(u){u();}); unsubscribers=[];
   loadLocalData();
   toast('Disconnected from Firebase');
   document.getElementById('firebase-status').innerHTML = '';
+  var wrap = document.getElementById('cfg-current-wrap'); if(wrap) wrap.style.display='none';
+  var paste = document.getElementById('cfg-paste'); if(paste) paste.value = '';
 }
+
+function updateCfgDisplay(cfg) {
+  var el = document.getElementById('cfg-current');
+  var wrap = document.getElementById('cfg-current-wrap');
+  if (el && cfg) {
+    el.innerHTML = 'Project: <span style="color:var(--accent2)">' + (cfg.projectId||'?') + '</span>   API Key: <span style="color:var(--text3)">' + (cfg.apiKey||'').slice(0,14) + '…</span>';
+    if (wrap) wrap.style.display = 'block';
+  }
+}
+
 function loadSavedConfig() {
-  const raw = localStorage.getItem('fop_firebase_cfg');
+  var raw = localStorage.getItem('fop_firebase_cfg');
   if (!raw) { loadLocalData(); document.getElementById('firebaseNotice').style.display='flex'; return; }
   try {
-    const cfg = JSON.parse(raw);
-    document.getElementById('cfg-apiKey').value = cfg.apiKey||'';
-    document.getElementById('cfg-authDomain').value = cfg.authDomain||'';
-    document.getElementById('cfg-projectId').value = cfg.projectId||'';
-    document.getElementById('cfg-appId').value = cfg.appId||'';
+    var cfg = JSON.parse(raw);
+    updateCfgDisplay(cfg);
     initFirebase(cfg);
-  } catch { loadLocalData(); }
+  } catch(e) { loadLocalData(); }
 }
 
 // ═══════════════════════════════════════════════
@@ -1226,7 +1296,7 @@ function loadSavedConfig() {
 let currentView = 'dashboard';
 const viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks',
-  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Firebase Setup'
+  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
 };
 
 function switchView(v) {
