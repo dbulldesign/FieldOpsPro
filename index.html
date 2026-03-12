@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FieldOps Pro">
+<meta name="theme-color" content="#0a0f1e">
+<title>FieldOps Pro</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070b18;
+  --surface: #0d1426;
+  --surface2: #131d35;
+  --surface3: #1a2540;
+  --border: #1e2d50;
+  --border2: #2a3d6a;
+  --accent: #2563ff;
+  --accent2: #3b82f6;
+  --accent-glow: rgba(37,99,255,0.15);
+  --gold: #f59e0b;
+  --gold-dim: #92400e;
+  --green: #10b981;
+  --green-dim: #064e3b;
+  --red: #ef4444;
+  --red-dim: #7f1d1d;
+  --yellow: #fbbf24;
+  --yellow-dim: #78350f;
+  --purple: #8b5cf6;
+  --purple-dim: #4c1d95;
+  --cyan: #06b6d4;
+  --text: #e8edf8;
+  --text2: #94a3b8;
+  --text3: #4a5568;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --body: 'Inter', sans-serif;
+  --nav-h: 64px;
+  --radius: 12px;
+  --radius-lg: 18px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── LAYOUT ── */
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── SIDEBAR (Desktop) ── */
+#sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo h1 {
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.sidebar-logo span { color: var(--accent2); }
+.sidebar-logo p { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+
+.nav-section { padding: 12px 12px 4px; }
+.nav-label { font-size: 9px; font-family: var(--mono); letter-spacing: 2px; color: var(--text3); text-transform: uppercase; padding: 0 8px 8px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  cursor: pointer; color: var(--text2);
+  font-size: 13px; font-weight: 500;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent2);
+  border-color: rgba(37,99,255,0.3);
+}
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.sync-status {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text3); font-family: var(--mono);
+}
+.sync-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s infinite;
+}
+.sync-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── MAIN CONTENT ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── TOP BAR ── */
+#topbar {
+  height: var(--nav-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+.topbar-title span { color: var(--text3); font-size: 13px; font-weight: 400; font-family: var(--body); margin-left: 8px; }
+
+#searchBar {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px 8px 36px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--body);
+  width: 220px;
+  outline: none;
+  transition: border-color 0.2s;
+  position: relative;
+}
+#searchBar:focus { border-color: var(--accent2); }
+.search-wrap { position: relative; }
+.search-wrap::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px;
+  border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  font-family: var(--body);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(37,99,255,0.3); }
+.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+.btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 8px; width: 36px; height: 36px; justify-content: center; }
+
+/* ── CONTENT AREA ── */
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ── STAT CARDS ── */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-color, var(--accent));
+}
+.stat-label { font-size: 11px; font-family: var(--mono); color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+.stat-value { font-size: 32px; font-family: var(--sans); font-weight: 800; margin: 8px 0 4px; }
+.stat-sub { font-size: 12px; color: var(--text3); }
+.stat-icon { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: 0.15; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--surface2); }
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text2);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--surface2); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: 11px; font-family: var(--mono);
+  font-weight: 500; white-space: nowrap;
+}
+.badge-blue { background: rgba(37,99,255,0.15); color: var(--accent2); border: 1px solid rgba(37,99,255,0.2); }
+.badge-green { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.badge-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.2); }
+.badge-purple { background: rgba(139,92,246,0.15); color: var(--purple); border: 1px solid rgba(139,92,246,0.2); }
+.badge-gray { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+.badge-gold { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.2); }
+.badge-cyan { background: rgba(6,182,212,0.15); color: var(--cyan); border: 1px solid rgba(6,182,212,0.2); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(7,11,24,0.85);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 { font-family: var(--sans); font-size: 18px; font-weight: 700; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 12px; font-family: var(--mono); color: var(--text3); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+input, select, textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--body);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+textarea { resize: vertical; min-height: 80px; }
+select { cursor: pointer; }
+select option { background: var(--surface2); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 700;
+}
+.section-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+.tab {
+  padding: 8px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text3);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+/* ── PRIORITY DOTS ── */
+.priority { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.priority::before { content: ''; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.priority-high::before { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.priority-medium::before { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.priority-low::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* ── PROGRESS ── */
+.progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { font-size: 14px; }
+
+/* ── TROUBLESHOOT CARDS ── */
+.trouble-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.trouble-card:hover { border-color: var(--border2); background: var(--surface2); }
+.trouble-card.expanded { border-color: var(--accent2); }
+.trouble-q { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.trouble-tag { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.trouble-answer {
+  display: none;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text2);
+  line-height: 1.7;
+  font-size: 13px;
+}
+.trouble-card.expanded .trouble-answer { display: block; }
+.trouble-steps { margin-top: 10px; }
+.trouble-step {
+  display: flex; gap: 10px; margin-bottom: 8px;
+  align-items: flex-start;
+}
+.step-num {
+  background: var(--accent-glow);
+  color: var(--accent2);
+  border: 1px solid rgba(37,99,255,0.3);
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-family: var(--mono);
+  flex-shrink: 0; margin-top: 1px;
+}
+
+/* ── SHIPPING TRACKER ── */
+.tracking-timeline { position: relative; padding-left: 24px; }
+.tracking-timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 8px; bottom: 8px;
+  width: 2px;
+  background: var(--border);
+}
+.track-event { position: relative; margin-bottom: 16px; }
+.track-event::before {
+  content: '';
+  position: absolute;
+  left: -20px; top: 4px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--surface3);
+  border: 2px solid var(--border2);
+}
+.track-event.done::before { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+.track-event.current::before { background: var(--accent); border-color: var(--accent2); box-shadow: 0 0 8px rgba(37,99,255,0.5); animation: pulse 1.5s infinite; }
+.track-date { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-bottom: 2px; }
+.track-desc { font-size: 13px; color: var(--text2); }
+.track-loc { font-size: 11px; color: var(--text3); }
+
+/* ── MOBILE NAV ── */
+#mobileNav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+}
+.mobile-nav-items { display: flex; }
+.mobile-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 6px 4px; cursor: pointer;
+  color: var(--text3); font-size: 10px; transition: color 0.15s;
+  font-family: var(--mono); letter-spacing: 0.3px;
+}
+.mobile-nav-item .icon { font-size: 20px; }
+.mobile-nav-item.active { color: var(--accent2); }
+
+/* ── FIREBASE SETUP NOTICE ── */
+.setup-banner {
+  background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05));
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 20px;
+}
+.setup-banner .icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.setup-banner p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.setup-banner strong { color: var(--gold); }
+.setup-banner a { color: var(--accent2); text-decoration: none; }
+.setup-banner a:hover { text-decoration: underline; }
+
+/* ── HAMBURGER (Mobile) ── */
+#menuBtn { display: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  #sidebar { 
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+    z-index: 300;
+    width: 260px;
+  }
+  #sidebar.open { transform: translateX(0); box-shadow: 4px 0 40px rgba(0,0,0,0.5); }
+  #mobileNav { display: block; }
+  #content { padding: 14px 14px calc(80px + env(safe-area-inset-bottom)); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  #topbar { padding: 0 14px; }
+  #searchBar { width: 140px; }
+  #menuBtn { display: flex; }
+  .form-row { grid-template-columns: 1fr; }
+  .modal { max-height: 95vh; }
+  .tabs { overflow-x: auto; }
+}
+
+@media (max-width: 480px) {
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 24px; }
+  .topbar-title { font-size: 16px; }
+  #searchBar { display: none; }
+}
+
+/* ── OVERLAY (Mobile sidebar close) ── */
+#sidebarOverlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 299;
+}
+#sidebarOverlay.open { display: block; }
+
+/* ── DETAIL PANEL ── */
+.detail-row { display: flex; align-items: flex-start; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; width: 120px; flex-shrink: 0; padding-top: 1px; }
+.detail-val { font-size: 13px; color: var(--text2); flex: 1; }
+
+/* ── NOTES ── */
+.note-card {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--accent);
+}
+.note-meta { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-bottom: 6px; }
+.note-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; }
+
+/* ── CATEGORY COLORS ── */
+.cat-electrical { --accent-color: #f59e0b; }
+.cat-dimming { --accent-color: #8b5cf6; }
+.cat-commissioning { --accent-color: #06b6d4; }
+.cat-hardware { --accent-color: #ef4444; }
+.cat-network { --accent-color: #10b981; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <h1>FieldOps<span> Pro</span></h1>
+      <p>⚡ Lighting Control Suite</p>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Workspace</div>
+        <div class="nav-item active" onclick="switchView('dashboard')">
+          <span class="icon">🏠</span> Dashboard
+        </div>
+        <div class="nav-item" onclick="switchView('projects')">
+          <span class="icon">📋</span> Projects
+          <span class="nav-badge" id="badge-projects">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('tasks')">
+          <span class="icon">✅</span> Tasks
+          <span class="nav-badge" id="badge-tasks">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Operations</div>
+        <div class="nav-item" onclick="switchView('pos')">
+          <span class="icon">🧾</span> Purchase Orders
+          <span class="nav-badge" id="badge-pos">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('shipping')">
+          <span class="icon">📦</span> Shipping
+          <span class="nav-badge" id="badge-shipping">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Knowledge</div>
+        <div class="nav-item" onclick="switchView('troubleshoot')">
+          <span class="icon">🔧</span> Troubleshoot DB
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Settings</div>
+        <div class="nav-item" onclick="switchView('settings')">
+          <span class="icon">⚙️</span> Firebase Setup
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">Local only</span>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <button class="btn btn-ghost btn-icon" id="menuBtn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
+      <div class="search-wrap">
+        <input type="text" id="searchBar" placeholder="Search…" oninput="globalSearch(this.value)">
+      </div>
+      <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ Add</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="view active" id="view-dashboard">
+        <div id="firebaseNotice" class="setup-banner" style="display:none">
+          <span class="icon">🔥</span>
+          <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Firebase Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
+        </div>
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="stat-card" style="--accent-color:var(--accent2)">
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">Active Projects</div>
+            <div class="stat-value" id="stat-projects">0</div>
+            <div class="stat-sub">total projects</div>
+          </div>
+          <div class="stat-card" style="--accent-color:var(--yellow)">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">Open Tasks</div>
+            <div class="stat-value" id="stat-tasks">0</div>
+            <div class="stat-sub" id="stat-tasks-sub">0 high priority</div>
+          </div>
+          <div class="stat-card" style="--accent-color:var(--gold)">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-label">Purchase Orders</div>
+            <div class="stat-value" id="stat-pos">0</div>
+            <div class="stat-sub" id="stat-pos-sub">$0 total</div>
+          </div>
+          <div class="stat-card" style="--accent-color:var(--green)">
+            <div class="stat-icon">📦</div>
+            <div class="stat-label">Shipments</div>
+            <div class="stat-value" id="stat-shipping">0</div>
+            <div class="stat-sub" id="stat-ship-sub">0 in transit</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Recent Tasks</div>
+                <div class="section-sub">Latest open items</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
+            </div>
+            <div id="dash-tasks"></div>
+          </div>
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <div class="section-title">Shipment Status</div>
+                <div class="section-sub">Active tracking</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
+            </div>
+            <div id="dash-shipping"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PROJECTS ═══ -->
+      <div class="view" id="view-projects">
+        <div class="tabs">
+          <div class="tab active" onclick="filterProjects('all',this)">All</div>
+          <div class="tab" onclick="filterProjects('active',this)">Active</div>
+          <div class="tab" onclick="filterProjects('planning',this)">Planning</div>
+          <div class="tab" onclick="filterProjects('completed',this)">Completed</div>
+        </div>
+        <div id="projects-list"></div>
+      </div>
+
+      <!-- ═══ TASKS ═══ -->
+      <div class="view" id="view-tasks">
+        <div class="tabs">
+          <div class="tab active" onclick="filterTasks('all',this)">All</div>
+          <div class="tab" onclick="filterTasks('todo',this)">To Do</div>
+          <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
+          <div class="tab" onclick="filterTasks('done',this)">Done</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Project</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due</th>
+                <th>Assignee</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ PURCHASE ORDERS ═══ -->
+      <div class="view" id="view-pos">
+        <div class="tabs">
+          <div class="tab active" onclick="filterPOs('all',this)">All</div>
+          <div class="tab" onclick="filterPOs('draft',this)">Draft</div>
+          <div class="tab" onclick="filterPOs('submitted',this)">Submitted</div>
+          <div class="tab" onclick="filterPOs('approved',this)">Approved</div>
+          <div class="tab" onclick="filterPOs('received',this)">Received</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>PO #</th>
+                <th>Vendor</th>
+                <th>Project</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pos-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ SHIPPING ═══ -->
+      <div class="view" id="view-shipping">
+        <div class="tabs">
+          <div class="tab active" onclick="filterShipping('all',this)">All</div>
+          <div class="tab" onclick="filterShipping('pending',this)">Pending</div>
+          <div class="tab" onclick="filterShipping('transit',this)">In Transit</div>
+          <div class="tab" onclick="filterShipping('delivered',this)">Delivered</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tracking #</th>
+                <th>Description</th>
+                <th>Carrier</th>
+                <th>Project/PO</th>
+                <th>Status</th>
+                <th>ETA</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="shipping-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ TROUBLESHOOT ═══ -->
+      <div class="view" id="view-troubleshoot">
+        <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap">
+          <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
+            <option value="all">All Categories</option>
+            <option value="electrical">Electrical</option>
+            <option value="dimming">Dimming</option>
+            <option value="commissioning">Commissioning</option>
+            <option value="hardware">Hardware</option>
+            <option value="network">Network/DALI</option>
+          </select>
+          <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:200px" oninput="renderTroubleshoot()">
+        </div>
+        <div id="troubleshoot-list"></div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div class="view" id="view-settings">
+        <div class="card" style="max-width:600px">
+          <div class="section-header">
+            <div>
+              <div class="section-title">🔥 Firebase Configuration</div>
+              <div class="section-sub">Connect to sync data across all your devices for free</div>
+            </div>
+          </div>
+          <div class="setup-banner" style="margin-bottom:20px">
+            <span class="icon">ℹ️</span>
+            <p>
+              <strong>Free Setup:</strong> Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a>, create a project, add a <strong>Firestore Database</strong> (free tier), then get your Web App config keys and paste them below. This enables real-time sync across iPhone, iPad, and Desktop.
+            </p>
+          </div>
+          <div class="form-group"><label>API Key</label><input type="text" id="cfg-apiKey" placeholder="AIzaSy…"></div>
+          <div class="form-group"><label>Auth Domain</label><input type="text" id="cfg-authDomain" placeholder="yourapp.firebaseapp.com"></div>
+          <div class="form-group"><label>Project ID</label><input type="text" id="cfg-projectId" placeholder="yourapp-12345"></div>
+          <div class="form-group"><label>App ID</label><input type="text" id="cfg-appId" placeholder="1:123:web:abc"></div>
+          <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 Save & Connect</button>
+          <button class="btn btn-danger" style="margin-left:10px" onclick="clearFirebaseConfig()">Disconnect</button>
+          <div id="firebase-status" style="margin-top:16px; font-size:13px; color:var(--text3)"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBILE NAV -->
+<nav id="mobileNav">
+  <div class="mobile-nav-items">
+    <div class="mobile-nav-item active" onclick="switchView('dashboard')"><span class="icon">🏠</span>Home</div>
+    <div class="mobile-nav-item" onclick="switchView('projects')"><span class="icon">📋</span>Projects</div>
+    <div class="mobile-nav-item" onclick="switchView('tasks')"><span class="icon">✅</span>Tasks</div>
+    <div class="mobile-nav-item" onclick="switchView('pos')"><span class="icon">🧾</span>POs</div>
+    <div class="mobile-nav-item" onclick="switchView('shipping')"><span class="icon">📦</span>Ship</div>
+    <div class="mobile-nav-item" onclick="switchView('troubleshoot')"><span class="icon">🔧</span>Fix</div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODALS -->
+<!-- Project Modal -->
+<div class="modal-overlay" id="modal-project">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="project-modal-title">New Project</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-project')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="project-id">
+      <div class="form-group"><label>Project Name *</label><input type="text" id="project-name" placeholder="e.g. Office HQ Retrofit"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Client</label><input type="text" id="project-client" placeholder="Client name"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="project-status">
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="on-hold">On Hold</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Date</label><input type="date" id="project-start"></div>
+        <div class="form-group"><label>End Date</label><input type="date" id="project-end"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Budget ($)</label><input type="number" id="project-budget" placeholder="0.00"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="project-location" placeholder="Site address"></div>
+      </div>
+      <div class="form-group"><label>Control System</label>
+        <select id="project-system">
+          <option value="">Select system…</option>
+          <option value="Lutron Quantum">Lutron Quantum</option>
+          <option value="Lutron RadioRA3">Lutron RadioRA3</option>
+          <option value="Lutron Caseta">Lutron Caseta</option>
+          <option value="Lutron HomeWorks">Lutron HomeWorks QS</option>
+          <option value="Leviton">Leviton</option>
+          <option value="Crestron">Crestron</option>
+          <option value="DALI">DALI/KNX</option>
+          <option value="Savant">Savant</option>
+          <option value="Control4">Control4</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="task-modal-title">New Task</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-task')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="task-id">
+      <div class="form-group"><label>Task Title *</label><input type="text" id="task-title" placeholder="e.g. Program zone scenes"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="task-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Assignee</label><input type="text" id="task-assignee" placeholder="Name or initials"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Priority</label>
+          <select id="task-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="task-status">
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Due Date</label><input type="date" id="task-due"></div>
+        <div class="form-group"><label>Category</label>
+          <select id="task-category">
+            <option value="">General</option>
+            <option value="install">Installation</option>
+            <option value="program">Programming</option>
+            <option value="commission">Commissioning</option>
+            <option value="testing">Testing</option>
+            <option value="punch">Punch List</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- PO Modal -->
+<div class="modal-overlay" id="modal-po">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="po-modal-title">New Purchase Order</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-po')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="po-id">
+      <div class="form-row">
+        <div class="form-group"><label>PO Number *</label><input type="text" id="po-number" placeholder="PO-2025-001"></div>
+        <div class="form-group"><label>Vendor *</label><input type="text" id="po-vendor" placeholder="Vendor name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="po-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="po-status">
+            <option value="draft">Draft</option>
+            <option value="submitted">Submitted</option>
+            <option value="approved">Approved</option>
+            <option value="ordered">Ordered</option>
+            <option value="received">Received</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Order Date</label><input type="date" id="po-date"></div>
+        <div class="form-group"><label>Expected Delivery</label><input type="date" id="po-delivery"></div>
+      </div>
+      <div class="form-group"><label>Line Items (one per line: Qty × Description — Price)</label>
+        <textarea id="po-items" placeholder="2 × Lutron GRAFIK-T dimmer — $89.99&#10;1 × Keypad GRAFIK-QS — $245.00" style="min-height:100px"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Total Amount ($)</label><input type="number" id="po-total" placeholder="0.00"></div>
+        <div class="form-group"><label>Shipping Method</label>
+          <select id="po-shipmethod">
+            <option value="">Standard</option>
+            <option value="ground">Ground</option>
+            <option value="2day">2-Day</option>
+            <option value="overnight">Overnight</option>
+            <option value="freight">Freight</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="po-notes" placeholder="Special instructions, shipping address, contact…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-po')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePO()">Save PO</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shipping Modal -->
+<div class="modal-overlay" id="modal-shipping">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="ship-modal-title">Track Shipment</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-shipping')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ship-id">
+      <div class="form-row">
+        <div class="form-group"><label>Tracking Number *</label><input type="text" id="ship-tracking" placeholder="1Z999AA…"></div>
+        <div class="form-group"><label>Carrier</label>
+          <select id="ship-carrier">
+            <option value="UPS">UPS</option>
+            <option value="FedEx">FedEx</option>
+            <option value="USPS">USPS</option>
+            <option value="DHL">DHL</option>
+            <option value="OnTrac">OnTrac</option>
+            <option value="XPO">XPO Logistics</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="ship-desc" placeholder="e.g. Lutron dimmers + keypads for Office HQ"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project/PO Ref</label>
+          <select id="ship-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="ship-status">
+            <option value="pending">Pending</option>
+            <option value="transit">In Transit</option>
+            <option value="out">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="exception">Exception</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Ship Date</label><input type="date" id="ship-date"></div>
+        <div class="form-group"><label>Est. Delivery</label><input type="date" id="ship-eta"></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Contents, delivery instructions, contact…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-shipping')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipment()">Save Shipment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 id="detail-title">Details</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-footer" id="detail-footer"></div>
+  </div>
+</div>
+
+<!-- Firebase Compat SDK (no modules, no scope issues) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA LAYER — Local + Firebase sync
+// ═══════════════════════════════════════════════
+let db = null;
+let unsubscribers = [];
+
+const COLLECTIONS = ['projects','tasks','pos','shipping'];
+
+// Local storage fallback
+const LOCAL = {
+  get(col) { try { return JSON.parse(localStorage.getItem('fop_'+col)||'[]'); } catch { return []; } },
+  set(col, data) { localStorage.setItem('fop_'+col, JSON.stringify(data)); },
+  add(col, item) { const d = LOCAL.get(col); d.push(item); LOCAL.set(col,d); },
+  update(col, id, item) { const d = LOCAL.get(col); const i = d.findIndex(x=>x.id===id); if(i>=0) d[i]={...d[i],...item}; LOCAL.set(col,d); },
+  delete(col, id) { LOCAL.set(col, LOCAL.get(col).filter(x=>x.id!==id)); }
+};
+
+// In-memory state
+let state = { projects:[], tasks:[], pos:[], shipping:[] };
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+async function addItem(col, item) {
+  item.id = item.id || genId();
+  item.createdAt = item.createdAt || new Date().toISOString();
+  if (db) {
+    try {
+      await db.collection(col).doc(item.id).set(item);
+      return item;
+    } catch(e) { console.warn('Firebase error, falling back to local:', e); }
+  }
+  LOCAL.add(col, item);
+  state[col] = LOCAL.get(col);
+  renderAll();
+  return item;
+}
+
+async function updateItem(col, id, data) {
+  if (db) {
+    try { await db.collection(col).doc(id).set(data, {merge: true}); return; } catch(e) { console.warn(e); }
+  }
+  LOCAL.update(col, id, data);
+  state[col] = LOCAL.get(col);
+  renderAll();
+}
+
+async function deleteItem(col, id) {
+  if (db) {
+    try { await db.collection(col).doc(id).delete(); return; } catch(e) { console.warn(e); }
+  }
+  LOCAL.delete(col, id);
+  state[col] = LOCAL.get(col);
+  renderAll();
+}
+
+function initFirebase(config) {
+  try {
+    // Delete any existing app with this name to allow re-init
+    var existingApp = firebase.apps.find(function(a){ return a.name === 'fieldops'; });
+    if (existingApp) existingApp.delete();
+
+    var app = firebase.initializeApp(config, 'fieldops');
+    db = firebase.firestore(app);
+
+    unsubscribers.forEach(function(u){ u(); });
+    unsubscribers = [];
+
+    COLLECTIONS.forEach(function(col) {
+      var unsub = db.collection(col)
+        .orderBy('createdAt', 'asc')
+        .onSnapshot(function(snap) {
+          state[col] = snap.docs.map(function(d){ return Object.assign({id: d.id}, d.data()); });
+          renderAll();
+        }, function(err) { console.warn('Firestore error:', err); });
+      unsubscribers.push(unsub);
+    });
+
+    document.getElementById('syncDot').classList.remove('offline');
+    document.getElementById('syncLabel').textContent = 'Synced';
+    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--green)">&#x2705; Connected to Firebase!</span>';
+    toast('🔥 Firebase connected — syncing!');
+  } catch(e) {
+    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--red)">&#x274C; Error: ' + e.message + '</span>';
+    toast('Firebase error: ' + e.message);
+  }
+}
+
+function loadLocalData() {
+  COLLECTIONS.forEach(col => { state[col] = LOCAL.get(col); });
+  document.getElementById('syncDot').classList.add('offline');
+  document.getElementById('syncLabel').textContent = 'Local only';
+  renderAll();
+}
+
+// Firebase config persistence
+function saveFirebaseConfig() {
+  const cfg = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    appId: document.getElementById('cfg-appId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) { toast('Fill in API Key and Project ID'); return; }
+  localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
+  initFirebase(cfg);
+}
+function clearFirebaseConfig() {
+  localStorage.removeItem('fop_firebase_cfg');
+  db = null;
+  unsubscribers.forEach(u=>u()); unsubscribers=[];
+  loadLocalData();
+  toast('Disconnected from Firebase');
+  document.getElementById('firebase-status').innerHTML = '';
+}
+function loadSavedConfig() {
+  const raw = localStorage.getItem('fop_firebase_cfg');
+  if (!raw) { loadLocalData(); document.getElementById('firebaseNotice').style.display='flex'; return; }
+  try {
+    const cfg = JSON.parse(raw);
+    document.getElementById('cfg-apiKey').value = cfg.apiKey||'';
+    document.getElementById('cfg-authDomain').value = cfg.authDomain||'';
+    document.getElementById('cfg-projectId').value = cfg.projectId||'';
+    document.getElementById('cfg-appId').value = cfg.appId||'';
+    initFirebase(cfg);
+  } catch { loadLocalData(); }
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+let currentView = 'dashboard';
+const viewTitles = {
+  dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks',
+  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Firebase Setup'
+};
+
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(el=>el.classList.remove('active'));
+  const ni = document.querySelector(`.nav-item[onclick*="'${v}'"]`);
+  if(ni) ni.classList.add('active');
+  const mi = document.querySelector(`.mobile-nav-item[onclick*="'${v}'"]`);
+  if(mi) mi.classList.add('active');
+  document.getElementById('topbarTitle').textContent = viewTitles[v];
+  closeSidebar();
+  if(v==='troubleshoot') renderTroubleshoot();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════
+let editingId = null;
+
+function openAddModal() {
+  editingId = null;
+  const modals = {
+    dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
+    pos: 'modal-po', shipping: 'modal-shipping'
+  };
+  const m = modals[currentView] || 'modal-task';
+  clearForm(m);
+  populateProjectSelects();
+  openModal(m);
+}
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function clearForm(modalId) {
+  document.querySelectorAll(`#${modalId} input, #${modalId} textarea`).forEach(el=>el.value='');
+  document.querySelectorAll(`#${modalId} select`).forEach(el=>el.selectedIndex=0);
+}
+
+function populateProjectSelects() {
+  const opts = '<option value="">— None —</option>' + state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  ['task-project','po-project','ship-project'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = opts;
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER HELPERS
+// ═══════════════════════════════════════════════
+function statusBadge(s) {
+  const map = {
+    active:'badge-green', planning:'badge-blue', 'on-hold':'badge-yellow', completed:'badge-gray',
+    todo:'badge-blue', inprogress:'badge-yellow', done:'badge-green',
+    draft:'badge-gray', submitted:'badge-blue', approved:'badge-green',
+    ordered:'badge-cyan', received:'badge-green', cancelled:'badge-red',
+    pending:'badge-gray', transit:'badge-blue', out:'badge-yellow', delivered:'badge-green', exception:'badge-red',
+    freight:'badge-gold', ground:'badge-gray', '2day':'badge-blue', overnight:'badge-purple'
+  };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s||'—'}</span>`;
+}
+function priorityBadge(p) {
+  return `<span class="priority priority-${p||'low'}">${p||'low'}</span>`;
+}
+function projectName(id) {
+  const p = state.projects.find(x=>x.id===id);
+  return p ? p.name : '—';
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function fmtCurrency(v) {
+  return v ? '$'+parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const openTasks = state.tasks.filter(t=>t.status!=='done');
+  const highTasks = openTasks.filter(t=>t.priority==='high').length;
+  const inTransit = state.shipping.filter(s=>s.status==='transit'||s.status==='out').length;
+  const totalPO = state.pos.reduce((a,p)=>a+parseFloat(p.total||0),0);
+
+  document.getElementById('stat-projects').textContent = state.projects.length;
+  document.getElementById('stat-tasks').textContent = openTasks.length;
+  document.getElementById('stat-tasks-sub').textContent = highTasks+' high priority';
+  document.getElementById('stat-pos').textContent = state.pos.length;
+  document.getElementById('stat-pos-sub').textContent = fmtCurrency(totalPO)+' total';
+  document.getElementById('stat-shipping').textContent = state.shipping.length;
+  document.getElementById('stat-ship-sub').textContent = inTransit+' in transit';
+
+  document.getElementById('badge-projects').textContent = state.projects.length;
+  document.getElementById('badge-tasks').textContent = openTasks.length;
+  document.getElementById('badge-pos').textContent = state.pos.filter(p=>p.status!=='received'&&p.status!=='cancelled').length;
+  document.getElementById('badge-shipping').textContent = inTransit;
+
+  // Recent tasks
+  const dt = document.getElementById('dash-tasks');
+  const recent = openTasks.slice(-5).reverse();
+  if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
+  else dt.innerHTML = recent.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('tasks','${t.id}')">
+      <span class="priority priority-${t.priority}" style="min-width:60px">${t.priority}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${projectName(t.project)||'No project'}</div>
+      </div>
+      ${statusBadge(t.status)}
+    </div>`).join('');
+
+  // Shipping
+  const ds = document.getElementById('dash-shipping');
+  const active = state.shipping.filter(s=>s.status!=='delivered').slice(-5).reverse();
+  if(!active.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
+  else ds.innerHTML = active.map(s=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('shipping','${s.id}')">
+      <span style="font-size:20px">${s.carrier==='UPS'?'🟤':s.carrier==='FedEx'?'🟣':s.carrier==='USPS'?'🔵':'📦'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.desc||s.tracking}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
+      </div>
+      ${statusBadge(s.status)}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  PROJECTS
+// ═══════════════════════════════════════════════
+let projectFilter = 'all';
+function filterProjects(f, el) {
+  projectFilter = f;
+  document.querySelectorAll('#view-projects .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProjects();
+}
+
+function renderProjects() {
+  let data = state.projects;
+  if(projectFilter !== 'all') data = data.filter(p=>p.status===projectFilter);
+  const el = document.getElementById('projects-list');
+  if(!data.length) { el.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>No projects yet — click + Add to create one</p></div>'; return; }
+  el.innerHTML = `<div class="grid-2">${data.map(p=>{
+    const tasks = state.tasks.filter(t=>t.project===p.id);
+    const done = tasks.filter(t=>t.status==='done').length;
+    const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+    return `<div class="card" style="cursor:pointer" onclick="openDetail('projects','${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-family:var(--sans);font-weight:700;font-size:16px;margin-bottom:4px">${p.name}</div>
+          <div style="font-size:12px;color:var(--text3)">${p.client||'No client'} ${p.location?'· '+p.location:''}</div>
+        </div>
+        ${statusBadge(p.status)}
+      </div>
+      ${p.system?`<div style="margin-bottom:10px"><span class="badge badge-cyan">⚡ ${p.system}</span></div>`:''}
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--text3)">
+        <span>📅 ${fmtDate(p.start)||'—'}</span>
+        <span>🎯 ${fmtDate(p.end)||'—'}</span>
+        ${p.budget?`<span>💰 ${fmtCurrency(p.budget)}</span>`:''}
+      </div>
+      <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:var(--text3)">
+        <span>Tasks: ${done}/${tasks.length}</span><span>${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editProject('${p.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteItem('projects','${p.id}');toast('Project deleted')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function saveProject() {
+  const name = document.getElementById('project-name').value.trim();
+  if(!name) { toast('Enter project name'); return; }
+  const item = {
+    name, client: document.getElementById('project-client').value.trim(),
+    status: document.getElementById('project-status').value,
+    start: document.getElementById('project-start').value,
+    end: document.getElementById('project-end').value,
+    budget: document.getElementById('project-budget').value,
+    location: document.getElementById('project-location').value.trim(),
+    system: document.getElementById('project-system').value,
+    notes: document.getElementById('project-notes').value.trim(),
+  };
+  if(editingId) { updateItem('projects', editingId, item); toast('Project updated'); }
+  else { addItem('projects', item); toast('Project created'); }
+  closeModal('modal-project');
+}
+
+function editProject(id) {
+  const p = state.projects.find(x=>x.id===id);
+  if(!p) return;
+  editingId = id;
+  document.getElementById('project-modal-title').textContent = 'Edit Project';
+  document.getElementById('project-name').value = p.name||'';
+  document.getElementById('project-client').value = p.client||'';
+  document.getElementById('project-status').value = p.status||'planning';
+  document.getElementById('project-start').value = p.start||'';
+  document.getElementById('project-end').value = p.end||'';
+  document.getElementById('project-budget').value = p.budget||'';
+  document.getElementById('project-location').value = p.location||'';
+  document.getElementById('project-system').value = p.system||'';
+  document.getElementById('project-notes').value = p.notes||'';
+  openModal('modal-project');
+}
+
+// ═══════════════════════════════════════════════
+//  TASKS
+// ═══════════════════════════════════════════════
+let taskFilter = 'all';
+function filterTasks(f, el) {
+  taskFilter = f;
+  document.querySelectorAll('#view-tasks .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  let data = state.tasks;
+  if(taskFilter!=='all') data=data.filter(t=>t.status===taskFilter);
+  const tb = document.getElementById('tasks-tbody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No tasks</p></div></td></tr>`;return;}
+  tb.innerHTML = data.slice().reverse().map(t=>`<tr onclick="openDetail('tasks','${t.id}')">
+    <td><div style="font-weight:600;color:var(--text)">${t.title}</div>${t.category?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${t.category}</div>`:''}
+    </td>
+    <td>${t.project?`<span style="font-size:12px">${projectName(t.project)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${priorityBadge(t.priority)}</td>
+    <td>${statusBadge(t.status)}</td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(t.due)}</span></td>
+    <td><span style="font-size:12px">${t.assignee||'—'}</span></td>
+    <td>
+      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('tasks','${t.id}');toast('Task deleted')">🗑️</button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function saveTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if(!title){toast('Enter task title');return;}
+  const item = {
+    title, project:document.getElementById('task-project').value,
+    assignee:document.getElementById('task-assignee').value.trim(),
+    priority:document.getElementById('task-priority').value,
+    status:document.getElementById('task-status').value,
+    due:document.getElementById('task-due').value,
+    category:document.getElementById('task-category').value,
+    desc:document.getElementById('task-desc').value.trim(),
+  };
+  if(editingId){updateItem('tasks',editingId,item);toast('Task updated');}
+  else{addItem('tasks',item);toast('Task added');}
+  closeModal('modal-task');
+}
+
+function editTask(id) {
+  const t = state.tasks.find(x=>x.id===id);
+  if(!t)return;
+  editingId=id;
+  populateProjectSelects();
+  document.getElementById('task-modal-title').textContent='Edit Task';
+  document.getElementById('task-title').value=t.title||'';
+  document.getElementById('task-project').value=t.project||'';
+  document.getElementById('task-assignee').value=t.assignee||'';
+  document.getElementById('task-priority').value=t.priority||'medium';
+  document.getElementById('task-status').value=t.status||'todo';
+  document.getElementById('task-due').value=t.due||'';
+  document.getElementById('task-category').value=t.category||'';
+  document.getElementById('task-desc').value=t.desc||'';
+  openModal('modal-task');
+}
+
+// ═══════════════════════════════════════════════
+//  PURCHASE ORDERS
+// ═══════════════════════════════════════════════
+let poFilter = 'all';
+function filterPOs(f,el){
+  poFilter=f;
+  document.querySelectorAll('#view-pos .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderPOs();
+}
+
+function renderPOs() {
+  let data = state.pos;
+  if(poFilter!=='all') data=data.filter(p=>p.status===poFilter);
+  const tb = document.getElementById('pos-tbody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><p>No purchase orders</p></div></td></tr>`;return;}
+  tb.innerHTML = data.slice().reverse().map(p=>`<tr onclick="openDetail('pos','${p.id}')">
+    <td><span style="font-family:var(--mono);font-size:12px;color:var(--accent2)">${p.number||'—'}</span></td>
+    <td><span style="font-weight:600">${p.vendor||'—'}</span></td>
+    <td><span style="font-size:12px;color:var(--text3)">${p.project?projectName(p.project):'—'}</span></td>
+    <td><span style="font-size:12px;color:var(--text3)">${(p.items||'').split('\n').filter(Boolean).length} line items</span></td>
+    <td><span style="font-family:var(--mono);font-size:13px;color:var(--gold)">${fmtCurrency(p.total)}</span></td>
+    <td>${statusBadge(p.status)}</td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(p.date)}</span></td>
+    <td>
+      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="editPO('${p.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('pos','${p.id}');toast('PO deleted')">🗑️</button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function savePO() {
+  const number = document.getElementById('po-number').value.trim();
+  const vendor = document.getElementById('po-vendor').value.trim();
+  if(!number||!vendor){toast('Enter PO number and vendor');return;}
+  const item = {
+    number, vendor, project:document.getElementById('po-project').value,
+    status:document.getElementById('po-status').value,
+    date:document.getElementById('po-date').value,
+    delivery:document.getElementById('po-delivery').value,
+    items:document.getElementById('po-items').value.trim(),
+    total:document.getElementById('po-total').value,
+    shipmethod:document.getElementById('po-shipmethod').value,
+    notes:document.getElementById('po-notes').value.trim(),
+  };
+  if(editingId){updateItem('pos',editingId,item);toast('PO updated');}
+  else{addItem('pos',item);toast('PO created');}
+  closeModal('modal-po');
+}
+
+function editPO(id) {
+  const p = state.pos.find(x=>x.id===id);
+  if(!p)return;
+  editingId=id;
+  populateProjectSelects();
+  document.getElementById('po-modal-title').textContent='Edit PO';
+  document.getElementById('po-number').value=p.number||'';
+  document.getElementById('po-vendor').value=p.vendor||'';
+  document.getElementById('po-project').value=p.project||'';
+  document.getElementById('po-status').value=p.status||'draft';
+  document.getElementById('po-date').value=p.date||'';
+  document.getElementById('po-delivery').value=p.delivery||'';
+  document.getElementById('po-items').value=p.items||'';
+  document.getElementById('po-total').value=p.total||'';
+  document.getElementById('po-shipmethod').value=p.shipmethod||'';
+  document.getElementById('po-notes').value=p.notes||'';
+  openModal('modal-po');
+}
+
+// ═══════════════════════════════════════════════
+//  SHIPPING
+// ═══════════════════════════════════════════════
+let shipFilter='all';
+function filterShipping(f,el){
+  shipFilter=f;
+  document.querySelectorAll('#view-shipping .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderShipping();
+}
+
+function renderShipping() {
+  let data=state.shipping;
+  if(shipFilter==='transit') data=data.filter(s=>s.status==='transit'||s.status==='out');
+  else if(shipFilter!=='all') data=data.filter(s=>s.status===shipFilter);
+  const tb=document.getElementById('shipping-tbody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>`;return;}
+  const carrierIcon={UPS:'🟤',FedEx:'🟣',USPS:'🔵',DHL:'🟡'};
+  tb.innerHTML = data.slice().reverse().map(s=>`<tr onclick="openDetail('shipping','${s.id}')">
+    <td><span style="font-family:var(--mono);font-size:12px;color:var(--accent2)">${s.tracking||'—'}</span></td>
+    <td><span style="font-weight:600">${s.desc||'—'}</span></td>
+    <td><span>${carrierIcon[s.carrier]||'📦'} ${s.carrier||'—'}</span></td>
+    <td><span style="font-size:12px;color:var(--text3)">${s.project?projectName(s.project):'—'}</span></td>
+    <td>${statusBadge(s.status)}</td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(s.eta)}</span></td>
+    <td>
+      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+        <button class="btn btn-ghost btn-sm" onclick="editShipment('${s.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('shipping','${s.id}');toast('Shipment removed')">🗑️</button>
+      </div>
+    </td>
+  </tr>`).join('');
+}
+
+function saveShipment() {
+  const tracking=document.getElementById('ship-tracking').value.trim();
+  if(!tracking){toast('Enter tracking number');return;}
+  const item = {
+    tracking, carrier:document.getElementById('ship-carrier').value,
+    desc:document.getElementById('ship-desc').value.trim(),
+    project:document.getElementById('ship-project').value,
+    status:document.getElementById('ship-status').value,
+    date:document.getElementById('ship-date').value,
+    eta:document.getElementById('ship-eta').value,
+    notes:document.getElementById('ship-notes').value.trim(),
+  };
+  if(editingId){updateItem('shipping',editingId,item);toast('Shipment updated');}
+  else{addItem('shipping',item);toast('Shipment added');}
+  closeModal('modal-shipping');
+}
+
+function editShipment(id) {
+  const s=state.shipping.find(x=>x.id===id);
+  if(!s)return;
+  editingId=id;
+  populateProjectSelects();
+  document.getElementById('ship-modal-title').textContent='Edit Shipment';
+  document.getElementById('ship-tracking').value=s.tracking||'';
+  document.getElementById('ship-carrier').value=s.carrier||'UPS';
+  document.getElementById('ship-desc').value=s.desc||'';
+  document.getElementById('ship-project').value=s.project||'';
+  document.getElementById('ship-status').value=s.status||'pending';
+  document.getElementById('ship-date').value=s.date||'';
+  document.getElementById('ship-eta').value=s.eta||'';
+  document.getElementById('ship-notes').value=s.notes||'';
+  openModal('modal-shipping');
+}
+
+// ═══════════════════════════════════════════════
+//  DETAIL VIEW
+// ═══════════════════════════════════════════════
+function openDetail(col, id) {
+  const item = state[col].find(x=>x.id===id);
+  if(!item) return;
+  const t=document.getElementById('detail-title');
+  const b=document.getElementById('detail-body');
+  const f=document.getElementById('detail-footer');
+
+  if(col==='projects') {
+    const tasks = state.tasks.filter(t=>t.project===id);
+    const done = tasks.filter(t=>t.status==='done').length;
+    t.textContent = item.name;
+    b.innerHTML=`
+      <div class="detail-row"><div class="detail-label">Client</div><div class="detail-val">${item.client||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
+      <div class="detail-row"><div class="detail-label">Control System</div><div class="detail-val">${item.system?`<span class="badge badge-cyan">⚡ ${item.system}</span>`:'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Location</div><div class="detail-val">${item.location||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Timeline</div><div class="detail-val">${fmtDate(item.start)||'—'} → ${fmtDate(item.end)||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Budget</div><div class="detail-val">${fmtCurrency(item.budget)}</div></div>
+      <div class="detail-row"><div class="detail-label">Task Progress</div><div class="detail-val">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span>${done}/${tasks.length} tasks complete</span>
+          <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${tasks.length?Math.round(done/tasks.length*100):0}%"></div></div>
+        </div>
+      </div></div>
+      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
+    `;
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editProject('${id}')">✏️ Edit</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+  }
+  else if(col==='tasks') {
+    t.textContent = item.title;
+    b.innerHTML=`
+      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
+      <div class="detail-row"><div class="detail-label">Priority</div><div class="detail-val">${priorityBadge(item.priority)}</div></div>
+      <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Assignee</div><div class="detail-val">${item.assignee||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Category</div><div class="detail-val">${item.category||'General'}</div></div>
+      <div class="detail-row"><div class="detail-label">Due Date</div><div class="detail-val">${fmtDate(item.due)}</div></div>
+      ${item.desc?`<div class="detail-row"><div class="detail-label">Description</div><div class="detail-val" style="white-space:pre-wrap">${item.desc}</div></div>`:''}
+    `;
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editTask('${id}')">✏️ Edit</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+  }
+  else if(col==='pos') {
+    t.textContent = 'PO '+item.number;
+    const lines=(item.items||'').split('\n').filter(Boolean);
+    b.innerHTML=`
+      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:var(--mono);color:var(--accent2)">${item.number}</div></div>
+      <div class="detail-row"><div class="detail-label">Vendor</div><div class="detail-val" style="font-weight:600">${item.vendor}</div></div>
+      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
+      <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Order Date</div><div class="detail-val">${fmtDate(item.date)}</div></div>
+      <div class="detail-row"><div class="detail-label">Expected</div><div class="detail-val">${fmtDate(item.delivery)}</div></div>
+      <div class="detail-row"><div class="detail-label">Ship Method</div><div class="detail-val">${item.shipmethod||'Standard'}</div></div>
+      ${lines.length?`<div class="detail-row"><div class="detail-label">Line Items</div><div class="detail-val">
+        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono)">${l}</div>`).join('')}
+      </div></div>`:''}
+      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:var(--sans);font-weight:700;color:var(--gold)">${fmtCurrency(item.total)}</div></div>
+      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
+    `;
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">✏️ Edit</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+  }
+  else if(col==='shipping') {
+    t.textContent = item.tracking;
+    const carrierLinks={UPS:`https://www.ups.com/track?tracknum=${item.tracking}`,FedEx:`https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${item.tracking}`,USPS:`https://tools.usps.com/go/TrackConfirmAction?tLabels=${item.tracking}`,DHL:`https://www.dhl.com/en/express/tracking.html?AWB=${item.tracking}`};
+    const link=carrierLinks[item.carrier];
+    b.innerHTML=`
+      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:var(--mono);color:var(--accent2)">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:var(--text3);margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
+      <div class="detail-row"><div class="detail-label">Carrier</div><div class="detail-val">${item.carrier||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Description</div><div class="detail-val">${item.desc||'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
+      <div class="detail-row"><div class="detail-label">Project/PO</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Shipped</div><div class="detail-val">${fmtDate(item.date)}</div></div>
+      <div class="detail-row"><div class="detail-label">Est. Delivery</div><div class="detail-val">${fmtDate(item.eta)}</div></div>
+      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
+    `;
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editShipment('${id}')">✏️ Edit</button>
+      ${link?`<a href="${link}" target="_blank" class="btn btn-primary">📦 Track on ${item.carrier}</a>`:''}
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+  }
+  openModal('modal-detail');
+}
+
+// ═══════════════════════════════════════════════
+//  TROUBLESHOOT DATABASE
+// ═══════════════════════════════════════════════
+const TROUBLE_DB = [
+  // ELECTRICAL
+  { cat:'electrical', q:'Dimmer buzzes or hums after installation', tags:'buzz hum noise',
+    a:'Buzzing is usually caused by load incompatibility or a wiring issue. Check the following:',
+    steps:['Verify the dimmer is rated for the connected load type (LED, incandescent, magnetic low-voltage, or electronic low-voltage).','Check that the neutral wire is properly connected if required by the dimmer model.','Ensure load wattage is within the dimmer\'s min/max range. Many LED dimmers require a minimum load of 25–40W.','Try a different LED lamp from the compatible lamp list published by the dimmer manufacturer.','If buzzing is in the fixture, install a de-buzzing coil (inductor) inline with the load.','If on Lutron Quantum/Homeworks, run auto-calibration from the programming software.'] },
+  { cat:'electrical', q:'Circuit breaker trips when dimmer is loaded', tags:'breaker trip overload',
+    a:'Repeated breaker trips indicate overload or a ground fault. Diagnose systematically:',
+    steps:['Calculate total connected wattage and compare to dimmer\'s rated capacity. Never exceed 80% of rated load.','Check for a ground fault — use a clamp meter to measure leakage current on the hot wire.','Inspect wiring at the fixture canopy for insulation damage or exposed conductors that could short to the box.','Confirm dimmer is properly grounded and mounted in a metal or approved plastic box.','If a Lutron Quantum panel-mount dimmer, check that each circuit uses an appropriately-rated fuse or breaker in the panel.'] },
+  { cat:'electrical', q:'Lights flicker randomly or on a schedule', tags:'flicker random blink strobe',
+    a:'Flickering can be load, wiring, or communication-related:',
+    steps:['Check for loose wire connections at the dimmer and at the fixture — this is the #1 cause.','Verify LED driver is dimmable and compatible with phase-cut dimming (forward/reverse phase).','Look for shared neutrals between circuits — a floating neutral causes severe flickering in LED systems.','On DALI or 0–10V systems, inspect the control wiring for noise sources (run separately from line voltage).','Check if flickering correlates with HVAC cycling or large motor starts — may need line filtering.','On Lutron systems, enable "compatibility mode" or adjust fade settings in the Quantum software.'] },
+  { cat:'electrical', q:'Dimmer gets hot to the touch during operation', tags:'hot heat warm temperature',
+    a:'Some warmth is normal but excessive heat indicates a problem:',
+    steps:['Confirm the dimmer is not overloaded — verify actual connected wattage with a clamp meter.','Ensure the dimmer is mounted in a box with adequate airflow — never in a completely sealed enclosure without derating.','Check if multiple dimmers are ganged in a single multi-gang box — follow manufacturer derating tables.','On Lutron panel dimmers, confirm the cooling fans are operational and the unit is not blocked.','If heat is excessive (cannot hold your hand near for 2 seconds), remove from service immediately and inspect for loose connections.'] },
+
+  // DIMMING
+  { cat:'dimming', q:'Lights do not dim below a certain level (dim bottom is too high)', tags:'dim bottom min level floor',
+    a:'Most dimmers have a configurable low-end trim. Adjust as follows:',
+    steps:['On Lutron wallbox dimmers: press and hold the bottom of the paddle while tapping the top button to enter adjustment mode. Use the bottom button to lower the low-end trim.','On Lutron Quantum: open the programming software → Device properties → Low-end trim slider. Set to 1% and test.','On 0–10V dimmers: verify the driver\'s 0V state — some drivers do not go below 10% without a full off signal. Enable the "dim-to-off" feature or add a relay in parallel.','On DALI: use the DALI commissioning tool to set the MIN level for individual drivers (DALI address 0–63).','On phase-cut dimmers with LED loads, a too-high low end means the LED driver minimum input voltage is not being reached — try a different dimming curve (square law vs. linear).'] },
+  { cat:'dimming', q:'Lights pop on at a high level when turned on (no soft start)', tags:'pop on flash start abrupt',
+    a:'Pop-on occurs when the signal output jumps before the load stabilizes:',
+    steps:['On Lutron Quantum: set a fade-on time of 500ms to 1 second in the output properties.','Check the start level setting in the dimmer — it may be set to resume at last level rather than start at 0%.','For LED drivers: verify the driver supports a soft-start feature. Some drivers always start at 100% regardless of input.','On 0–10V systems, add a time-delay relay or use a driver with an adjustable ramp rate.','If using relay outputs switching into a dimmable circuit, ensure the relay closes before the dimmer signal is applied.'] },
+  { cat:'dimming', q:'Lights flash or strobe when at low dim levels', tags:'strobe flash low level pulse',
+    a:'Strobing at low dim levels is almost always a load compatibility issue:',
+    steps:['Change the dimming curve in software from linear to square-law — this provides finer control in the lower range.','Increase the low-end trim slightly (e.g., from 1% to 5%) to stay above the driver\'s instability threshold.','Replace the LED driver/bulb with one rated for deep dimming (look for 0.1% or TRIAC dimming compatibility).','On 0–10V: confirm wiring polarity is correct (violet wire = dimming signal, gray = common). Reversed wires cause erratic behavior.','Check for PWM frequency conflicts between the dimmer and the LED driver — some combinations produce visible flicker.'] },
+  { cat:'dimming', q:'Some fixtures dim differently than others on the same circuit', tags:'uneven dim inconsistent match',
+    a:'Mixed loads or different driver lots cause dimming inconsistency:',
+    steps:['Verify all fixtures are using the same model and lot of LED driver/lamp — even the same SKU from different production runs can behave differently.','On individually-addressable systems (DALI, Lutron Ecosystem), calibrate each fixture\'s high-end and low-end trim individually.','Check for impedance variations on long cable runs — voltage drop on 0–10V wiring causes some drivers to receive a weaker signal.','On phase-cut systems, use a load balancer or line conditioning to normalize the waveform across the circuit.','If using Lutron Ecosystem fixtures, run the auto-calibration routine to equalize all fixtures.'] },
+
+  // COMMISSIONING
+  { cat:'commissioning', q:'Lutron Quantum processor does not communicate with field devices', tags:'lutron quantum offline communicate lost',
+    a:'Communication failures between the main processor and field devices follow a diagnostic tree:',
+    steps:['Check the green LEDs on each GRAFIK Eye QS or QS module — solid green = linked, blinking = not linked.','In the Quantum software: go to Diagnostics → Device Status and note any devices showing "Offline."','Verify QS link wiring is daisy-chained and not star-wired. Use Cat5 or 18/2 shielded cable, max 2000 ft total.','Confirm the QS link wiring polarity (tip/ring or + / -) is consistent throughout the run.','Cycle power to offline devices (breaker off 10 seconds) and watch them reconnect.','Check for cable lengths that exceed spec or tight bends that could damage the conductors.','On RS-485 integrations, verify the termination resistor (120Ω) is installed at both ends of the bus.'] },
+  { cat:'commissioning', q:'DALI commissioning tool shows missing addresses', tags:'dali missing address gap commissioning',
+    a:'Missing DALI addresses indicate a device is not responding on the bus:',
+    steps:['Check bus voltage — DALI requires 9.5–22.5V DC on the bus. Measure at the controller output.','Count connected ballasts/drivers — DALI supports max 64 devices per line. Exceeding this causes address conflicts.','Inspect for short circuits on the DALI bus — even one shorted driver brings down the entire bus.','Try re-assigning addresses: initiate a fresh "randomize + assign" sequence. Power down all drivers first, then power up with commissioning tool running.','Verify DALI wiring polarity is not reversed — DALI is technically polarity-independent but some controllers require correct polarity.','Look for a driver that has failed with its output shorted — isolate sections of the bus to find the faulty device.'] },
+  { cat:'commissioning', q:'Scenes are not recalling correctly or lights go to wrong levels', tags:'scene recall wrong level preset incorrect',
+    a:'Incorrect scene recall usually points to programming errors or communication delays:',
+    steps:['In Lutron Quantum or HomeWorks QS, review the scene table for the affected keypad/zone. Confirm the correct output levels and fade times are assigned.','Check for multiple competing scene triggers (time clock + occupancy + keypad) that may conflict.','Verify the "default scene" on each partition is correctly set, as power-up state is often the culprit.','If using DALI scenes (groups 0–15), confirm the group membership of each driver matches the design.','Look for a fade time that is very long — the recall appears "wrong" because it has not finished fading.','After reprogramming, always save and download the project file to the processor.'] },
+  { cat:'commissioning', q:'Occupancy sensor does not trigger lights correctly', tags:'occupancy sensor trigger pir ultrasonic',
+    a:'Occupancy sensor issues are usually coverage, sensitivity, or wiring-related:',
+    steps:['Verify sensor mounting location and height match the manufacturer\'s coverage diagram. Most PIR sensors require line-of-sight to the occupant.','Confirm the "time delay" (vacancy timeout) is set appropriately — 15–30 minutes is typical for offices.','Check sensitivity settings — in cold climates or when HVAC is cycling, thermal sensors may false-trigger or miss occupants.','On Lutron Quantum, use the Occupancy Sensor Diagnostic screen to view real-time sensor state.','Verify the low-voltage wiring from sensor to controller is within the maximum cable length specification.','For ultrasonic sensors in open spaces, check for HVAC drafts causing false triggering.'] },
+
+  // HARDWARE
+  { cat:'hardware', q:'Keypad buttons are unresponsive or stuck', tags:'keypad button stuck unresponsive press',
+    a:'Non-responsive keypad buttons can be mechanical or electrical:',
+    steps:['Inspect the button for physical damage or debris lodged under the rocker.','Remove the faceplate and check the connector ribbon cable from keypad to the main body — re-seat if loose.','In Lutron programming software: send a "test LED" command to the keypad. If the LEDs respond, the keypad is communicating and the button itself may be failed.','For water or contamination ingress, remove power, dry the unit with low-heat air and allow 24 hours before reconnecting.','If one button on a multi-button keypad works and others don\'t, the issue is likely the keypad membrane — replace the engraving kit.','If keypad shows offline in Diagnostics, the QS link connection to that unit is the issue — inspect the line voltage and 4-wire QS link at the keypad terminals.'] },
+  { cat:'hardware', q:'LED indicator lights on keypad are the wrong color or not lit', tags:'led indicator color wrong status light',
+    a:'LED status indication issues are usually programming or LED driver failures:',
+    steps:['Open programming software → Keypad properties → Button LED settings. Verify LED feedback logic (Active High/Low) matches the fixture state.','For Lutron Seetouch keypads, confirm the LED color is correctly assigned (green = scene active, amber = occupied, red = off, etc.).','Check if the LED is a shared source from a 5V or 12V aux power supply — measure voltage at the keypad LED terminals.','If all LEDs are dim or the same color, a firmware update may be needed. Check the Lutron technical support site for current firmware.','For third-party keypads on RS-485, verify the LED feedback command bytes in the integration configuration file.'] },
+  { cat:'hardware', q:'Dimmer display shows error code or flashes rapidly', tags:'error code display flash fault indicator',
+    a:'Error codes indicate hardware or thermal faults:',
+    steps:['Count the LED flash pattern. Most Lutron products have documented fault codes: 1 flash = thermal overload, 2 = overcurrent, 3 = load short, 4 = firmware fault.','For thermal overload (1 flash): the unit has cooled itself down. Check for excessive load, poor ventilation, or ganging derating.','For load short (3 flashes): disconnect the load and test continuity of the fixture wiring to ground. Locate and repair the fault before reconnecting.','For firmware fault (4 flashes): attempt a factory reset by holding the top and bottom buttons simultaneously for 6 seconds while applying power.','Document all error codes and contact Lutron Technical Support with the dimmer model number and fault history for RMA evaluation.'] },
+
+  // NETWORK / DALI
+  { cat:'network', q:'Building management system (BMS) integration not communicating', tags:'bms bacnet modbus integration protocol',
+    a:'BMS integration failures are usually protocol configuration or firewall issues:',
+    steps:['Confirm the protocol: Lutron Quantum natively supports BACnet/IP. Verify the BACnet device instance, network number, and UDP port (default 47808) match the BMS configuration.','Ping the Quantum processor from the BMS server to confirm IP connectivity.','In Quantum software: enable the BACnet/IP integration and verify the license is active.','Check firewall rules on the lighting network VLAN — BACnet UDP traffic must be allowed.','Use a BACnet explorer (Yabe or BACnet Scan) to discover the Quantum device and verify objects are readable.','For Modbus integrations: verify register map, baud rate (9600 or 19200), and parity settings match both devices.','Enable integration logging in Quantum and send the logs to Lutron TSC for in-depth diagnosis.'] },
+  { cat:'network', q:'DALI bus voltage is low or unstable', tags:'dali voltage low unstable bus power supply',
+    a:'Low DALI bus voltage causes erratic or failed device communication:',
+    steps:['Measure DALI bus voltage with a DMM — should be 9.5–22.5V DC between DALI+ and DALI−.','If voltage is below 9V: the bus is overloaded. DALI supplies typically source 250mA max. Count connected devices (max 64, each drawing ~2mA = ~128mA total); add a second DALI power supply if needed.','Check for short circuits on the bus — disconnect devices one by one, measuring voltage after each removal. When voltage recovers, the last removed device is shorted.','Inspect cable runs for damage or pinched conductors. DALI wiring must be at least 1.5mm² for runs over 100m.','Use a DALI bus analyzer to log voltage dips and correlate with device activity.','Ensure the DALI power supply has a minimum 50ms hold-up time to prevent drops during mains transients.'] },
+  { cat:'network', q:'Wireless lighting controls lose connectivity intermittently', tags:'wireless wifi zigbee mesh disconnect drop',
+    a:'Wireless signal drops are usually RF interference or mesh topology issues:',
+    steps:['Map the wireless coverage area — ensure no "dark zones" exist where the mesh signal must travel more than 30 ft through multiple walls.','Check for 2.4GHz interference from WiFi access points, microwaves, and Bluetooth devices. If using Zigbee, switch overlapping WiFi channels away from Zigbee channels 11–26.','On Lutron Clear Connect (RF): run the RF diagnostic from Lutron Connect Bridge app → Device details to view signal strength. Below −75dBm is marginal.','Add repeater devices (plug-in dimmers, Pico remotes) to extend mesh coverage in large spaces.','Power-cycle the bridge/hub to force a mesh refresh and re-routing.','For commercial Lutron RR3 systems, verify each repeating device has power and is included in the programming database.'] },
+];
+
+function renderTroubleshoot() {
+  const cat=document.getElementById('troubleCategory').value;
+  const search=document.getElementById('troubleSearch').value.toLowerCase();
+  let data=TROUBLE_DB;
+  if(cat!=='all') data=data.filter(t=>t.cat===cat);
+  if(search) data=data.filter(t=>t.q.toLowerCase().includes(search)||t.tags.includes(search)||t.a.toLowerCase().includes(search));
+
+  const el=document.getElementById('troubleshoot-list');
+  if(!data.length){el.innerHTML='<div class="empty-state"><div class="icon">🔍</div><p>No matching issues found</p></div>';return;}
+
+  const catColors={electrical:'#f59e0b',dimming:'#8b5cf6',commissioning:'#06b6d4',hardware:'#ef4444',network:'#10b981'};
+  el.innerHTML=data.map((t,i)=>`
+    <div class="trouble-card cat-${t.cat}" id="tc-${i}" onclick="toggleTrouble(${i})">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div class="trouble-q">${t.q}</div>
+          <div class="trouble-tag" style="margin-top:4px">
+            <span class="badge badge-gray" style="border-color:${catColors[t.cat]}20;color:${catColors[t.cat]};background:${catColors[t.cat]}15">${t.cat}</span>
+          </div>
+        </div>
+        <span style="color:var(--text3);font-size:18px;margin-top:2px" id="tc-arrow-${i}">›</span>
+      </div>
+      <div class="trouble-answer">
+        <p style="margin-bottom:12px;color:var(--text2)">${t.a}</p>
+        <div class="trouble-steps">
+          ${t.steps.map((s,n)=>`<div class="trouble-step"><div class="step-num">${n+1}</div><div>${s}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleTrouble(i) {
+  const el=document.getElementById('tc-'+i);
+  const arrow=document.getElementById('tc-arrow-'+i);
+  el.classList.toggle('expanded');
+  arrow.textContent=el.classList.contains('expanded')?'∨':'›';
+}
+
+// ═══════════════════════════════════════════════
+//  GLOBAL SEARCH
+// ═══════════════════════════════════════════════
+function globalSearch(q) {
+  if(!q) { renderAll(); return; }
+  q=q.toLowerCase();
+  // Could be expanded — just re-render with filter for now
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderProjects();
+  renderTasks();
+  renderPOs();
+  renderShipping();
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  loadSavedConfig();
+  renderTroubleshoot();
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+    overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+  });
+
+  // Add some sample data if empty
+  setTimeout(()=>{
+    if(!state.projects.length && !state.tasks.length) {
+      addItem('projects', {name:'Office Tower HQ', client:'Acme Corp', status:'active', system:'Lutron Quantum', location:'123 Main St', start:'2025-01-15', end:'2025-06-30', budget:185000, notes:'Full lighting controls replacement. 12 floors.'});
+      addItem('tasks', {title:'Verify GRAFIK Eye QS panel wiring', priority:'high', status:'inprogress', category:'install', due:'2025-04-01', assignee:'Mike T.'});
+      addItem('tasks', {title:'Commission floor 3–5 scenes', priority:'medium', status:'todo', category:'commission', due:'2025-04-15', assignee:'Sara K.'});
+      addItem('pos', {number:'PO-2025-042', vendor:'Lutron Electronics', status:'ordered', date:'2025-03-10', delivery:'2025-03-20', total:24850, items:'48 × GRAFIK Eye QS 6-zone — $295.00\n12 × Seetouch QS Keypad — $185.00\n1 × Quantum 3 Processor — $4200.00'});
+      addItem('shipping', {tracking:'1Z9F92860318165784', carrier:'UPS', desc:'Lutron GRAFIK Eye QS units', status:'transit', eta:'2025-03-20'});
+    }
+  }, 1000);
+});
+
+// Expose functions globally
+Object.assign(window, {
+  switchView, openAddModal, openModal, closeModal,
+  saveProject, editProject, filterProjects,
+  saveTask, editTask, filterTasks,
+  savePO, editPO, filterPOs,
+  saveShipment, editShipment, filterShipping,
+  deleteItem, openDetail,
+  renderTroubleshoot, toggleTrouble,
+  saveFirebaseConfig, clearFirebaseConfig, globalSearch,
+  toggleSidebar, closeSidebar, toast
+});
+</script>
+</body>
+</html>
