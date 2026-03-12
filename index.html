@@ -10,39 +10,63 @@
 <meta name="theme-color" content="#0a0f1e">
 <title>FieldOps Pro</title>
 <link rel="manifest" href="manifest.json">
+<script>
+(function(){
+  var t = localStorage.getItem('fop_theme');
+  document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
+:root, [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #070b18;
   --surface: #0d1426;
   --surface2: #131d35;
   --surface3: #1a2540;
   --border: #1e2d50;
   --border2: #2a3d6a;
+  --text: #e8edf8;
+  --text2: #94a3b8;
+  --text3: #4a5568;
   --accent: #2563ff;
   --accent2: #3b82f6;
   --accent-glow: rgba(37,99,255,0.15);
   --gold: #f59e0b;
-  --gold-dim: #92400e;
   --green: #10b981;
-  --green-dim: #064e3b;
   --red: #ef4444;
-  --red-dim: #7f1d1d;
   --yellow: #fbbf24;
-  --yellow-dim: #78350f;
   --purple: #8b5cf6;
-  --purple-dim: #4c1d95;
   --cyan: #06b6d4;
-  --text: #e8edf8;
-  --text2: #94a3b8;
-  --text3: #4a5568;
   --mono: 'DM Mono', monospace;
   --sans: 'Syne', sans-serif;
   --body: 'Inter', sans-serif;
   --nav-h: 64px;
   --radius: 12px;
   --radius-lg: 18px;
+}
+
+[data-theme=“light”] {
+color-scheme: light;
+–bg: #f0f4fa;
+–surface: #ffffff;
+–surface2: #f4f6fb;
+–surface3: #e8ecf4;
+–border: #dce1ee;
+–border2: #c2cbde;
+–text: #0f172a;
+–text2: #475569;
+–text3: #94a3b8;
+–accent: #1d4ed8;
+–accent2: #2563eb;
+–accent-glow: rgba(29,78,216,0.1);
+–gold: #d97706;
+–green: #059669;
+–red: #dc2626;
+–yellow: #d97706;
+–purple: #7c3aed;
+–cyan: #0891b2;
 }
 
 - { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -62,7 +86,7 @@ font-size: 14px;
 ::-webkit-scrollbar-thumb { background: var(–border2); border-radius: 2px; }
 
 /* ── LAYOUT ── */
-#app { display: flex; height: 100vh; overflow: hidden; }
+#app { display: flex; height: 100vh; overflow: hidden; background: var(–bg); }
 
 /* ── SIDEBAR (Desktop) ── */
 #sidebar {
@@ -145,6 +169,7 @@ flex: 1;
 display: flex;
 flex-direction: column;
 overflow: hidden;
+background: var(–bg);
 }
 
 /* ── TOP BAR ── */
@@ -170,7 +195,7 @@ flex: 1;
 background: var(–surface2);
 border: 1px solid var(–border);
 border-radius: 8px;
-padding: 8px 14px 8px 36px;
+padding: 8px 14px 8px 32px;
 color: var(–text);
 font-size: 13px;
 font-family: var(–body);
@@ -181,7 +206,19 @@ position: relative;
 }
 #searchBar:focus { border-color: var(–accent2); }
 .search-wrap { position: relative; }
-.search-wrap::before { content: ‘🔍’; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; }
+.search-wrap::before {
+content: ‘’;
+position: absolute;
+left: 11px;
+top: 50%;
+transform: translateY(-50%);
+width: 14px;
+height: 14px;
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘14’ viewBox=‘0 0 24 24’ fill=‘none’ stroke=’%2364748b’ stroke-width=‘2’ stroke-linecap=‘round’ stroke-linejoin=‘round’%3E%3Ccircle cx=‘11’ cy=‘11’ r=‘8’/%3E%3Cpath d=‘m21 21-4.35-4.35’/%3E%3C/svg%3E”);
+background-repeat: no-repeat;
+background-size: contain;
+pointer-events: none;
+}
 
 .btn {
 display: inline-flex; align-items: center; gap: 6px;
@@ -206,6 +243,7 @@ white-space: nowrap;
 flex: 1;
 overflow-y: auto;
 padding: 20px;
+background: var(–bg);
 }
 
 /* ── VIEWS ── */
@@ -293,7 +331,7 @@ font-weight: 500; white-space: nowrap;
 .modal-overlay {
 display: none;
 position: fixed; inset: 0;
-background: rgba(7,11,24,0.85);
+background: rgba(0,0,0,0.7);
 backdrop-filter: blur(4px);
 z-index: 1000;
 align-items: center;
@@ -328,16 +366,27 @@ justify-content: space-between;
 label { display: block; font-size: 12px; font-family: var(–mono); color: var(–text3); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
 input, select, textarea {
 width: 100%;
-background: var(–surface2);
+background: var(–surface2) !important;
 border: 1px solid var(–border);
 border-radius: 8px;
 padding: 10px 14px;
-color: var(–text);
+color: var(–text) !important;
 font-size: 13px;
 font-family: var(–body);
 outline: none;
-transition: border-color 0.2s;
+transition: border-color 0.2s, background 0.2s, color 0.2s;
 -webkit-appearance: none;
+appearance: none;
+}
+/* Kill browser autofill yellow/white override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+-webkit-box-shadow: 0 0 0 1000px var(–surface2) inset !important;
+-webkit-text-fill-color: var(–text) !important;
+caret-color: var(–text);
 }
 input:focus, select:focus, textarea:focus { border-color: var(–accent2); }
 textarea { resize: vertical; min-height: 80px; }
@@ -597,8 +646,72 @@ transition: background 0.1s;
 .location-item .loc-name { font-weight: 600; color: var(–text); font-size: 13px; }
 .location-item .loc-detail { font-size: 11px; color: var(–text3); margin-top: 2px; font-family: var(–mono); }
 .location-no-results { padding: 12px 14px; font-size: 13px; color: var(–text3); text-align: center; }
-</style>
 
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 14px 18px;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+margin-bottom: 20px;
+cursor: pointer;
+user-select: none;
+transition: border-color 0.2s;
+}
+.theme-toggle:hover { border-color: var(–border2); }
+.theme-toggle-label { flex: 1; }
+.theme-toggle-label strong { display: block; font-size: 14px; color: var(–text); }
+.theme-toggle-label span { font-size: 12px; color: var(–text3); }
+.toggle-pill {
+width: 48px; height: 26px;
+background: var(–border2);
+border-radius: 13px;
+position: relative;
+transition: background 0.25s;
+flex-shrink: 0;
+}
+.toggle-pill.on { background: var(–accent); }
+.toggle-pill::after {
+content: ‘’;
+position: absolute;
+width: 20px; height: 20px;
+background: #fff;
+border-radius: 50%;
+top: 3px; left: 3px;
+transition: transform 0.25s;
+box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle-pill.on::after { transform: translateX(22px); }
+.theme-icons { font-size: 18px; }
+
+/* light mode adjustments */
+[data-theme=“light”] .setup-banner {
+background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04));
+}
+[data-theme=“light”] .note-card { border-left-color: var(–accent2); }
+[data-theme=“light”] thead { background: var(–surface3); }
+[data-theme=“light”] .stat-card { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+[data-theme=“light”] .card { box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+[data-theme=“light”] .modal { box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+[data-theme=“light”] #sidebar { box-shadow: 2px 0 12px rgba(0,0,0,0.06); }
+[data-theme=“light”] .sync-dot { box-shadow: 0 0 6px var(–green); }
+[data-theme=“light”] .badge-blue { background: rgba(37,99,255,0.1); }
+[data-theme=“light”] .badge-green { background: rgba(16,185,129,0.1); }
+[data-theme=“light”] .badge-red { background: rgba(239,68,68,0.1); }
+[data-theme=“light”] .badge-yellow { background: rgba(251,191,36,0.1); }
+[data-theme=“light”] .badge-gray { background: var(–surface3); }
+[data-theme=“light”] .progress-bar { background: var(–surface3); }
+[data-theme=“light”] .tabs { background: var(–surface3); }
+[data-theme=“light”] .tab.active { background: var(–surface); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+[data-theme=“light”] input, [data-theme=“light”] select, [data-theme=“light”] textarea { background: var(–surface) !important; }
+[data-theme=“light”] .search-wrap::before {
+background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘14’ height=‘14’ viewBox=‘0 0 24 24’ fill=‘none’ stroke=’%2394a3b8’ stroke-width=‘2’ stroke-linecap=‘round’ stroke-linejoin=‘round’%3E%3Ccircle cx=‘11’ cy=‘11’ r=‘8’/%3E%3Cpath d=‘m21 21-4.35-4.35’/%3E%3C/svg%3E”);
+}
+
+</style>
 </head>
 <body>
 
@@ -841,7 +954,23 @@ transition: background 0.1s;
 
   <!-- ═══ SETTINGS ═══ -->
   <div class="view" id="view-settings">
-    <div class="card" style="max-width:580px">
+    <div style="max-width:580px">
+
+    <!-- Theme Toggle Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-family:var(--sans);font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
+      <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
+        <span class="theme-icons" id="theme-icon">🌙</span>
+        <div class="theme-toggle-label">
+          <strong id="theme-label">Dark Mode</strong>
+          <span id="theme-sub">Currently using dark theme</span>
+        </div>
+        <div class="toggle-pill on" id="toggle-pill"></div>
+      </div>
+    </div>
+
+    <!-- Firebase Card -->
+    <div class="card" style="margin-bottom:20px">
 
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
         <span style="font-size:24px">🔥</span>
@@ -889,7 +1018,8 @@ appId: "1:123456:web:abc"
         <div id="cfg-current" style="font-size:13px;font-family:var(--mono);color:var(--text2)"></div>
       </div>
 
-    </div>
+    </div><!-- /firebase card -->
+    </div><!-- /settings max-width -->
   </div>
 
 </div><!-- /content -->
@@ -2108,6 +2238,7 @@ function renderAll() {
 //  INIT
 // ═══════════════════════════════════════════════
 window.addEventListener('load', ()=>{
+  loadTheme();
   loadSavedConfig();
 
   // Close modals on overlay click
@@ -2178,6 +2309,36 @@ window.addEventListener('load', ()=>{
   }, 1000);
 });
 
+
+
+// ═══════════════════════════════════════════════
+//  THEME — dark / light
+// ═══════════════════════════════════════════════
+function applyTheme(theme) {
+  // theme is 'dark' or 'light'
+  document.documentElement.setAttribute('data-theme', theme);
+  var isDark = (theme === 'dark');
+  var pill  = document.getElementById('toggle-pill');
+  var icon  = document.getElementById('theme-icon');
+  var label = document.getElementById('theme-label');
+  var sub   = document.getElementById('theme-sub');
+  if (pill)  pill.classList.toggle('on', !isDark);   // pill ON = light mode active
+  if (icon)  icon.textContent  = isDark ? '🌙' : '☀️';
+  if (label) label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+  if (sub)   sub.textContent   = isDark ? 'Currently using dark theme' : 'Currently using light theme';
+}
+
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme') || 'dark';
+  var next = (current === 'dark') ? 'light' : 'dark';
+  localStorage.setItem('fop_theme', next);
+  applyTheme(next);
+}
+
+function loadTheme() {
+  var saved = localStorage.getItem('fop_theme') || 'dark';
+  applyTheme(saved);
+}
 
 // ═══════════════════════════════════════════════
 //  LOCATION AUTOCOMPLETE — OpenStreetMap Nominatim
@@ -2337,6 +2498,7 @@ Object.assign(window, {
   renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue, seedBuiltinIssues,
   saveFirebaseConfig, clearFirebaseConfig, globalSearch,
   toggleSidebar, closeSidebar, toast,
+  toggleTheme, loadTheme,
   locationSearch, locationKeydown, selectLocation, highlightLocation, closeLocationDropdown
 });
 </script>
