@@ -257,12 +257,12 @@ overflow: hidden;
 content: ‘’;
 position: absolute;
 top: 0; left: 0; right: 0;
-height: 2px;
-background: var(–accent-color, var(–accent));
+height: 3px;
+background: var(–accent-color, #2563ff);
 }
-.stat-label { font-size: 11px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); letter-spacing: 1px; text-transform: uppercase; }
-.stat-value { font-size: 32px; font-family: Helvetica, Arial, sans-serif; font-weight: 800; margin: 8px 0 4px; }
-.stat-sub { font-size: 12px; color: var(–text3); }
+.stat-label { font-size: 11px; font-family: Helvetica, Arial, sans-serif; color: #94a3b8 !important; letter-spacing: 1px; text-transform: uppercase; }
+.stat-value { font-size: 32px; font-family: Helvetica, Arial, sans-serif; font-weight: 800; margin: 8px 0 4px; color: #e8edf8 !important; }
+.stat-sub { font-size: 12px; color: #94a3b8 !important; }
 .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: 0.15; }
 
 /* -u2500 TABLE -u2500 */
@@ -282,9 +282,9 @@ white-space: nowrap;
 }
 td {
 padding: 12px 16px;
-border-bottom: 1px solid var(–border);
+border-bottom: 1px solid #1e2d50;
 font-size: 13px;
-color: var(–text2);
+color: #94a3b8 !important;
 vertical-align: middle;
 }
 tr:last-child td { border-bottom: none; }
@@ -298,13 +298,13 @@ padding: 3px 8px; border-radius: 20px;
 font-size: 11px; font-family: Helvetica, Arial, sans-serif;
 font-weight: 500; white-space: nowrap;
 }
-.badge-blue { background: rgba(37,99,255,0.15); color: var(–accent2); border: 1px solid rgba(37,99,255,0.2); }
-.badge-green { background: rgba(16,185,129,0.15); color: var(–green); border: 1px solid rgba(16,185,129,0.2); }
-.badge-red { background: rgba(239,68,68,0.15); color: var(–red); border: 1px solid rgba(239,68,68,0.2); }
-.badge-yellow { background: rgba(251,191,36,0.15); color: var(–yellow); border: 1px solid rgba(251,191,36,0.2); }
+.badge-blue { background: rgba(37,99,255,0.2) !important; color: #3b82f6 !important; border: 1px solid rgba(59,130,246,0.4) !important; }
+.badge-green { background: rgba(16,185,129,0.2) !important; color: #10b981 !important; border: 1px solid rgba(16,185,129,0.4) !important; }
+.badge-red { background: rgba(239,68,68,0.2) !important; color: #ef4444 !important; border: 1px solid rgba(239,68,68,0.4) !important; }
+.badge-yellow { background: rgba(251,191,36,0.15) !important; color: #fbbf24 !important; border: 1px solid rgba(251,191,36,0.4) !important; }
 .badge-purple { background: rgba(139,92,246,0.15); color: var(–purple); border: 1px solid rgba(139,92,246,0.2); }
 .badge-gray { background: var(–surface2); color: var(–text3); border: 1px solid var(–border); }
-.badge-gold { background: rgba(245,158,11,0.15); color: var(–gold); border: 1px solid rgba(245,158,11,0.2); }
+.badge-gold { background: rgba(245,158,11,0.15) !important; color: #f59e0b !important; border: 1px solid rgba(245,158,11,0.4) !important; }
 .badge-cyan { background: rgba(6,182,212,0.15); color: var(–cyan); border: 1px solid rgba(6,182,212,0.2); }
 
 /* -u2500 MODAL -u2500 */
@@ -374,6 +374,7 @@ margin-bottom: 16px;
 font-family: Helvetica, Arial, sans-serif;
 font-size: 16px;
 font-weight: 700;
+color: #e8edf8 !important;
 }
 .section-sub { font-size: 12px; color: var(–text3); margin-top: 2px; }
 
@@ -402,9 +403,9 @@ white-space: nowrap;
 /* -u2500 PRIORITY DOTS -u2500 */
 .priority { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
 .priority::before { content: ‘’; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.priority-high::before { background: var(–red); box-shadow: 0 0 6px var(–red); }
-.priority-medium::before { background: var(–yellow); box-shadow: 0 0 6px var(–yellow); }
-.priority-low::before { background: var(–green); box-shadow: 0 0 6px var(–green); }
+.priority-high::before { background: #ef4444 !important; box-shadow: 0 0 6px #ef4444; }
+.priority-medium::before { background: #fbbf24 !important; box-shadow: 0 0 6px #fbbf24; }
+.priority-low::before { background: #10b981 !important; box-shadow: 0 0 6px #10b981; }
 
 /* -u2500 PROGRESS -u2500 */
 .progress-bar { height: 4px; background: var(–surface3); border-radius: 2px; overflow: hidden; }
@@ -698,25 +699,25 @@ body, #app, #main, #content { background: #070b18 !important; }
       <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Sync Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
     </div>
     <div class="grid-4" style="margin-bottom:20px">
-      <div class="stat-card" style="--accent-color:var(--accent2)">
+      <div class="stat-card" style="--accent-color:#3b82f6">
         <div class="stat-icon">📋</div>
         <div class="stat-label">Active Projects</div>
         <div class="stat-value" id="stat-projects">0</div>
         <div class="stat-sub">total projects</div>
       </div>
-      <div class="stat-card" style="--accent-color:var(--yellow)">
+      <div class="stat-card" style="--accent-color:#fbbf24">
         <div class="stat-icon">✅</div>
         <div class="stat-label">Open Tasks</div>
         <div class="stat-value" id="stat-tasks">0</div>
         <div class="stat-sub" id="stat-tasks-sub">0 high priority</div>
       </div>
-      <div class="stat-card" style="--accent-color:var(--gold)">
+      <div class="stat-card" style="--accent-color:#f59e0b">
         <div class="stat-icon">🧾</div>
         <div class="stat-label">Purchase Orders</div>
         <div class="stat-value" id="stat-pos">0</div>
         <div class="stat-sub" id="stat-pos-sub">$0 total</div>
       </div>
-      <div class="stat-card" style="--accent-color:var(--green)">
+      <div class="stat-card" style="--accent-color:#10b981">
         <div class="stat-icon">📦</div>
         <div class="stat-label">Shipments</div>
         <div class="stat-value" id="stat-shipping">0</div>
