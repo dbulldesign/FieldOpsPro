@@ -769,6 +769,35 @@ body.compact #content { padding: 12px !important; }
 /* UNDO TOAST button */
 #toast button { vertical-align: middle; }
 
+/* KANBAN CARD — theme-aware */
+.kb-card {
+  background: #0c1220;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f0f4ff;
+}
+.kb-card.kb-hover {
+  border-color: rgba(79,142,247,0.35) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  background: #0f1a2e;
+}
+[data-theme="light"] .kb-card {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(0,0,0,0.1) !important;
+  color: #0f172a !important;
+}
+[data-theme="light"] .kb-card.kb-hover {
+  background: #f8faff !important;
+  border-color: rgba(37,99,255,0.35) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+  transform: translateY(-1px);
+}
+[data-theme="light"] .kb-card * { color: inherit; }
+[data-theme="light"] .kb-card [style*="color:#f0f4ff"],
+[data-theme="light"] .kb-card [style*="color:#f0f4ff"] { color: #0f172a !important; }
+[data-theme="light"] .kb-card [style*="color:#4a5e7a"] { color: #64748b !important; }
+[data-theme="light"] .kb-card [style*="color:#8da0c0"] { color: #475569 !important; }
+
 </style>
 
 </head>
@@ -848,9 +877,22 @@ body.compact #content { padding: 12px !important; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span id="notif-badge" class="notif-badge" style="display:none">0</span>
       </button>
-      <button class="btn btn-ghost btn-icon" onclick="openModal('modal-shortcuts')" title="Keyboard shortcuts (?)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </button>
+      <div style="position:relative" id="shortcut-btn-wrap">
+        <button class="btn btn-ghost btn-icon" onclick="openModal('modal-shortcuts')" onmouseenter="document.getElementById('shortcut-tip').style.display='block'" onmouseleave="document.getElementById('shortcut-tip').style.display='none'" title="Keyboard shortcuts">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <div id="shortcut-tip" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;min-width:200px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,0.5);font-size:12px;white-space:nowrap">
+          <div style="font-weight:700;color:#f0f4ff;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase">Quick Shortcuts</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Search</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">/</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Add item</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">N</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Kanban toggle</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">K</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Close / Cancel</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">Esc</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Nav 1–7</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">1–7</span></div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);color:#4a5e7a;font-size:11px">Click for full list</div>
+        </div>
+      </div>
       <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ Add</button>
       <!-- Notification Panel -->
       <div id="notif-panel">
@@ -2263,65 +2305,6 @@ function onTaskTouchEnd(e) {
   });
 }
 
-function renderKanban(data) {
-  const cols = [
-    { id:'todo',       label:'To Do',      color:'#6b7fa8', bg:'rgba(74,94,122,0.10)',  border:'rgba(74,94,122,0.22)'  },
-    { id:'inprogress', label:'In Progress', color:'#fbbf24', bg:'rgba(251,191,36,0.07)', border:'rgba(251,191,36,0.22)' },
-    { id:'done',       label:'Done',        color:'#10b981', bg:'rgba(16,185,129,0.07)', border:'rgba(16,185,129,0.22)' },
-  ];
-  const allTasks = (taskFilter==='all' ? state.tasks.slice() : data).filter(t=>!t.archived).reverse();
-  const kb = document.getElementById('tasks-kanban-view');
-
-  kb.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start">
-    ${cols.map(col => {
-      const tasks = allTasks.filter(t => t.status === col.id);
-      return `<div class="kanban-col"
-          data-status="${col.id}" data-border="${col.border}" data-bg="${col.bg}"
-          style="background:${col.bg};border:1.5px solid ${col.border};border-radius:16px;padding:14px;min-height:160px;transition:border-color 0.15s,background 0.15s"
-          ondragover="onColDragOver(event,this)"
-          ondragleave="onColDragLeave(event,this)"
-          ondrop="onColDrop(event,'${col.id}')">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${col.color}">${col.label}</span>
-          <span style="background:${col.border};color:${col.color};font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px">${tasks.length}</span>
-        </div>
-        ${tasks.map(t => `
-          <div draggable="true"
-            ondragstart="onTaskDragStart(event,'${t.id}')"
-            ondragend="onTaskDragEnd(event)"
-            ontouchstart="onTaskTouchStart(event,'${t.id}')"
-            ontouchmove="onTaskTouchMove(event)"
-            ontouchend="onTaskTouchEnd(event)"
-            onclick="openDetail('tasks','${t.id}')"
-            style="background:#0c1220;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:8px;cursor:grab;user-select:none;transition:transform 0.1s,box-shadow 0.1s,border-color 0.15s;-webkit-user-select:none;touch-action:none"
-            onmouseover="this.style.borderColor='rgba(79,142,247,0.35)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.4)'"
-            onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.transform='';this.style.boxShadow=''">
-            <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">
-              <div style="width:14px;height:14px;flex-shrink:0;margin-top:1px;opacity:0.3">
-                <svg viewBox="0 0 14 14" fill="none"><circle cx="4" cy="3.5" r="1.2" fill="#fff"/><circle cx="10" cy="3.5" r="1.2" fill="#fff"/><circle cx="4" cy="7" r="1.2" fill="#fff"/><circle cx="10" cy="7" r="1.2" fill="#fff"/><circle cx="4" cy="10.5" r="1.2" fill="#fff"/><circle cx="10" cy="10.5" r="1.2" fill="#fff"/></svg>
-              </div>
-              <div style="font-size:13px;font-weight:600;color:#f0f4ff;line-height:1.35;flex:1">${t.title}</div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-              <span class="priority priority-${t.priority}" style="font-size:11px">${t.priority}</span>
-              ${t.due ? `<span style="font-size:11px;color:#4a5e7a">${fmtDate(t.due)}</span>` : ''}
-            </div>
-            ${t.project ? `<div style="font-size:11px;color:#4a5e7a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${projectName(t.project)}</div>` : ''}
-            <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:5px" onclick="event.stopPropagation()">
-              <button onclick="archiveTask('${t.id}',event);renderTasks()" title="Archive" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#4a5e7a;transition:color 0.15s" onmouseover="this.style.color='#f59e0b'" onmouseout="this.style.color='#4a5e7a'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-              </button>
-            </div>
-          </div>`).join('')}
-        ${tasks.length === 0 ? `<div style="text-align:center;padding:24px 0;color:#2a3a5c;font-size:12px;border:1.5px dashed rgba(255,255,255,0.07);border-radius:12px;font-weight:600">Drop here</div>` : ''}
-      </div>`;
-    }).join('')}
-  </div>`;
-
-  // Attach document-level touch handlers (needed for cross-element touch tracking)
-  const kb2 = document.getElementById('tasks-kanban-view');
-  kb2.addEventListener('touchmove', onTaskTouchMove, { passive: false });
-}
 
 function saveTask() {
   const title = document.getElementById('task-title').value.trim();
@@ -2401,8 +2384,8 @@ function renderPOs() {
     html += '<td>'+statusBadge(p.status)+'</td>';
     html += '<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(p.date))+'</span></td>';
     html += '<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
-    html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editPO(this.dataset.uid)">Edit</button>';
-    html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" titleonclick="softDeletePO(this.dataset.uid)">Del</button>';
+    html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editPO(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeletePO(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
     html += '</div></td></tr>';
   }
   tb.innerHTML = html;
@@ -2479,8 +2462,8 @@ function renderShipping() {
     html+=statusBadge(s.status)+'</td>';
     html+='<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(s.eta))+'</span></td>';
     html+='<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
-    html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editShipment(this.dataset.uid)">Edit</button>';
-    html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" titleonclick="softDeleteShipment(this.dataset.uid)">Del</button>';
+    html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editShipment(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeleteShipment(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
     html+='</div></td></tr>';
   }
   tb.innerHTML=html;
