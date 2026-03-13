@@ -503,6 +503,11 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
 .cat-commissioning { --accent-line: #22d3ee; }
 .cat-hardware      { --accent-line: #f87171; }
 .cat-network       { --accent-line: #34d399; }
+
+/* KANBAN */
+@media (max-width: 600px) {
+  #tasks-kanban-view > div { grid-template-columns: 1fr !important; }
+}
 </style>
 
 </head>
@@ -649,28 +654,42 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
 
       <!-- ═══ TASKS ═══ -->
       <div class="view" id="view-tasks">
-        <div class="tabs">
-          <div class="tab active" onclick="filterTasks('all',this)">All</div>
-          <div class="tab" onclick="filterTasks('todo',this)">To Do</div>
-          <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
-          <div class="tab" onclick="filterTasks('done',this)">Done</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
+            <div class="tab active" onclick="filterTasks('all',this)">All</div>
+            <div class="tab" onclick="filterTasks('todo',this)">To Do</div>
+            <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
+            <div class="tab" onclick="filterTasks('done',this)">Done</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button id="task-view-list" class="btn btn-primary btn-sm" onclick="setTaskView('list')" title="List view">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              List
+            </button>
+            <button id="task-view-kanban" class="btn btn-ghost btn-sm" onclick="setTaskView('kanban')" title="Kanban view">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+              Kanban
+            </button>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Project</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Due</th>
-                <th>Assignee</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tasks-tbody"></tbody>
-          </table>
+        <div id="tasks-list-view">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Project</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Due</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tasks-tbody"></tbody>
+            </table>
+          </div>
         </div>
+        <div id="tasks-kanban-view" style="display:none"></div>
       </div>
 
       <!-- ═══ PURCHASE ORDERS ═══ -->
@@ -857,7 +876,6 @@ const firebaseConfig = {
         <div class="form-group"><label>End Date</label><input type="date" id="project-end"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Budget ($)</label><input type="number" id="project-budget" placeholder="0.00"></div>
         <div class="form-group">
           <label>Location</label>
           <div style="position:relative">
@@ -918,8 +936,7 @@ const firebaseConfig = {
         <div class="form-group"><label>Project</label>
           <select id="task-project"><option value="">— None —</option></select>
         </div>
-        <div class="form-group"><label>Assignee</label><input type="text" id="task-assignee" placeholder="Name or initials"></div>
-      </div>
+        </div>
       <div class="form-row">
         <div class="form-group"><label>Priority</label>
           <select id="task-priority">
@@ -1040,8 +1057,8 @@ const firebaseConfig = {
       </div>
       <div class="form-group"><label>Description</label><input type="text" id="ship-desc" placeholder="e.g. Lutron dimmers + keypads for Office HQ"></div>
       <div class="form-row">
-        <div class="form-group"><label>Project/PO Ref</label>
-          <select id="ship-project"><option value="">— None —</option></select>
+        <div class="form-group"><label>Linked PO</label>
+          <select id="ship-po"><option value="">— None —</option></select>
         </div>
         <div class="form-group"><label>Status</label>
           <select id="ship-status">
@@ -1353,10 +1370,16 @@ function clearForm(modalId) {
 
 function populateProjectSelects() {
   const opts = '<option value="">— None —</option>' + state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  ['task-project','po-project','ship-project'].forEach(id=>{
+  ['task-project','po-project'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.innerHTML = opts;
   });
+  // Populate ship-po with PO options
+  const poEl = document.getElementById('ship-po');
+  if(poEl) {
+    poEl.innerHTML = '<option value="">— None —</option>' +
+      state.pos.map(p=>`<option value="${p.id}">${p.number ? p.number+' - ' : ''}${p.vendor||'PO'}</option>`).join('');
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1375,6 +1398,10 @@ function statusBadge(s) {
 }
 function priorityBadge(p) {
   return `<span class="priority priority-${p||'low'}">${p||'low'}</span>`;
+}
+function poName(id) {
+  const p = state.pos.find(p=>p.id===id);
+  return p ? (p.number ? p.number+' - '+p.vendor : p.vendor||'PO') : '—';
 }
 function projectName(id) {
   const p = state.projects.find(x=>x.id===id);
@@ -1478,7 +1505,6 @@ function renderProjects() {
       <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b">
         <span>📅 ${fmtDate(p.start)||'—'}</span>
         <span>🎯 ${fmtDate(p.end)||'—'}</span>
-        ${p.budget?`<span>💰 ${fmtCurrency(p.budget)}</span>`:''}
       </div>
       <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b">
         <span>Tasks: ${done}/${tasks.length}</span><span>${pct}%</span>
@@ -1500,7 +1526,6 @@ function saveProject() {
     status: document.getElementById('project-status').value,
     start: document.getElementById('project-start').value,
     end: document.getElementById('project-end').value,
-    budget: document.getElementById('project-budget').value,
     location: document.getElementById('project-location').value.trim(),
     system: document.getElementById('project-system').value,
     notes: document.getElementById('project-notes').value.trim(),
@@ -1520,7 +1545,6 @@ function editProject(id) {
   document.getElementById('project-status').value = p.status||'planning';
   document.getElementById('project-start').value = p.start||'';
   document.getElementById('project-end').value = p.end||'';
-  document.getElementById('project-budget').value = p.budget||'';
   document.getElementById('project-location').value = p.location||'';
   document.getElementById('project-system').value = p.system||'';
   document.getElementById('project-notes').value = p.notes||'';
@@ -1538,26 +1562,95 @@ function filterTasks(f, el) {
   renderTasks();
 }
 
+let taskViewMode = 'list';
+
+function setTaskView(mode) {
+  taskViewMode = mode;
+  document.getElementById('tasks-list-view').style.display = mode==='list' ? '' : 'none';
+  document.getElementById('tasks-kanban-view').style.display = mode==='kanban' ? '' : 'none';
+  document.getElementById('task-view-list').className   = 'btn btn-sm ' + (mode==='list'   ? 'btn-primary' : 'btn-ghost');
+  document.getElementById('task-view-kanban').className = 'btn btn-sm ' + (mode==='kanban' ? 'btn-primary' : 'btn-ghost');
+  renderTasks();
+}
+
+function cycleTaskStatus(id, e) {
+  e.stopPropagation();
+  const task = state.tasks.find(t=>t.id===id);
+  if(!task) return;
+  const cycle = ['todo','inprogress','done'];
+  const next = cycle[(cycle.indexOf(task.status)+1) % cycle.length];
+  updateItem('tasks', id, Object.assign({}, task, {status: next}));
+  toast('Status: ' + next);
+}
+
 function renderTasks() {
-  let data = state.tasks;
+  let data = state.tasks.slice();
   if(taskFilter!=='all') data=data.filter(t=>t.status===taskFilter);
+  data.reverse();
+
+  if(taskViewMode === 'kanban') {
+    renderKanban(data);
+    return;
+  }
+
   const tb = document.getElementById('tasks-tbody');
-  if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No tasks</p></div></td></tr>`;return;}
-  tb.innerHTML = data.slice().reverse().map(t=>`<tr onclick="openDetail('tasks','${t.id}')">
-    <td><div style="font-weight:600;color:#e8edf8">${t.title}</div>${t.category?`<div style="font-size:11px;color:#4a5e7a;margin-top:2px">${t.category}</div>`:''}
+  if(!data.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty-state"><p>No tasks</p></div></td></tr>`;return;}
+  tb.innerHTML = data.map(t=>`<tr onclick="openDetail('tasks','${t.id}')">
+    <td>
+      <div style="font-weight:600;color:#f0f4ff">${t.title}</div>
+      ${t.category?`<div style="font-size:11px;color:#4a5e7a;margin-top:2px">${t.category}</div>`:''}
     </td>
-    <td>${t.project?`<span style="font-size:12px">${projectName(t.project)}</span>`:'<span style="color:#64748b">—</span>'}</td>
+    <td>${t.project?`<span style="font-size:12px;color:#8da0c0">${projectName(t.project)}</span>`:'<span style="color:#3a4a6a">—</span>'}</td>
     <td>${priorityBadge(t.priority)}</td>
-    <td>${statusBadge(t.status)}</td>
-    <td><span style="font-size:12px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${fmtDate(t.due)}</span></td>
-    <td><span style="font-size:12px">${t.assignee||'—'}</span></td>
+    <td onclick="event.stopPropagation()">
+      <button onclick="cycleTaskStatus('${t.id}',event)" style="background:none;border:none;cursor:pointer;padding:0">${statusBadge(t.status)}</button>
+    </td>
+    <td><span style="font-size:12px;color:#4a5e7a">${fmtDate(t.due)}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('tasks','${t.id}');toast('Task deleted')">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('tasks','${t.id}');renderTasks();toast('Deleted')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
       </div>
     </td>
   </tr>`).join('');
+}
+
+function renderKanban(data) {
+  const cols = [
+    { id:'todo',       label:'To Do',      color:'#4a5e7a', bg:'rgba(74,94,122,0.12)',  border:'rgba(74,94,122,0.25)'  },
+    { id:'inprogress', label:'In Progress', color:'#fbbf24', bg:'rgba(251,191,36,0.08)', border:'rgba(251,191,36,0.25)' },
+    { id:'done',       label:'Done',        color:'#10b981', bg:'rgba(16,185,129,0.08)', border:'rgba(16,185,129,0.25)' },
+  ];
+  const allTasks = taskFilter==='all' ? state.tasks.slice().reverse() : data;
+  const kb = document.getElementById('tasks-kanban-view');
+  kb.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start">
+    ${cols.map(col => {
+      const tasks = allTasks.filter(t=>t.status===col.id);
+      return `<div style="background:${col.bg};border:1px solid ${col.border};border-radius:16px;padding:14px;min-height:120px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${col.color}">${col.label}</span>
+          <span style="background:${col.border};color:${col.color};font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px">${tasks.length}</span>
+        </div>
+        ${tasks.length ? tasks.map(t=>`
+          <div onclick="openDetail('tasks','${t.id}')" style="background:#0c1220;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='rgba(79,142,247,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff;margin-bottom:6px;line-height:1.3">${t.title}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span class="priority priority-${t.priority}" style="font-size:11px">${t.priority}</span>
+              ${t.due?`<span style="font-size:11px;color:#4a5e7a">${fmtDate(t.due)}</span>`:''}
+            </div>
+            ${t.project?`<div style="font-size:11px;color:#4a5e7a;margin-top:6px">${projectName(t.project)}</div>`:''}
+            <div style="display:flex;gap:4px;margin-top:10px;justify-content:flex-end" onclick="event.stopPropagation()">
+              ${col.id!=='todo'       ? `<button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:10px" onclick="cycleTaskStatus('${t.id}',event);renderTasks()">&#8592; Back</button>` : ''}
+              ${col.id!=='done'       ? `<button class="btn btn-primary btn-sm" style="padding:4px 8px;font-size:10px" onclick="cycleTaskStatus('${t.id}',event);renderTasks()">Next &#8594;</button>` : ''}
+            </div>
+          </div>`).join('') : `<div style="text-align:center;padding:24px 0;color:#3a4a6a;font-size:13px">Empty</div>`}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function saveTask() {
@@ -1565,7 +1658,6 @@ function saveTask() {
   if(!title){toast('Enter task title');return;}
   const item = {
     title, project:document.getElementById('task-project').value,
-    assignee:document.getElementById('task-assignee').value.trim(),
     priority:document.getElementById('task-priority').value,
     status:document.getElementById('task-status').value,
     due:document.getElementById('task-due').value,
@@ -1585,7 +1677,6 @@ function editTask(id) {
   document.getElementById('task-modal-title').textContent='Edit Task';
   document.getElementById('task-title').value=t.title||'';
   document.getElementById('task-project').value=t.project||'';
-  document.getElementById('task-assignee').value=t.assignee||'';
   document.getElementById('task-priority').value=t.priority||'medium';
   document.getElementById('task-status').value=t.status||'todo';
   document.getElementById('task-due').value=t.due||'';
@@ -1680,12 +1771,11 @@ function renderShipping() {
   else if(shipFilter!=='all') data=data.filter(s=>s.status===shipFilter);
   const tb=document.getElementById('shipping-tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>`;return;}
-  const carrierIcon={UPS:'🟤',FedEx:'🟣',USPS:'🔵',DHL:'🟡'};
   tb.innerHTML = data.slice().reverse().map(s=>`<tr onclick="openDetail('shipping','${s.id}')">
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#3b82f6">${s.tracking||'—'}</span></td>
-    <td><span style="font-weight:600">${s.desc||'—'}</span></td>
-    <td><span>${carrierIcon[s.carrier]||'📦'} ${s.carrier||'—'}</span></td>
-    <td><span style="font-size:12px;color:#64748b">${s.project?projectName(s.project):'—'}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#4f8ef7">${s.tracking||'—'}</span></td>
+    <td><span style="font-weight:600;color:#f0f4ff">${s.desc||'—'}</span></td>
+    <td><span style="font-size:12px;font-weight:600;color:#8da0c0">${s.carrier||'—'}</span></td>
+    <td><span style="font-size:12px;color:#8da0c0">${s.po?poName(s.po):'—'}</span></td>
     <td>${statusBadge(s.status)}</td>
     <td><span style="font-size:12px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${fmtDate(s.eta)}</span></td>
     <td>
@@ -1703,7 +1793,7 @@ function saveShipment() {
   const item = {
     tracking, carrier:document.getElementById('ship-carrier').value,
     desc:document.getElementById('ship-desc').value.trim(),
-    project:document.getElementById('ship-project').value,
+    po:document.getElementById('ship-po').value,
     status:document.getElementById('ship-status').value,
     date:document.getElementById('ship-date').value,
     eta:document.getElementById('ship-eta').value,
@@ -1723,7 +1813,7 @@ function editShipment(id) {
   document.getElementById('ship-tracking').value=s.tracking||'';
   document.getElementById('ship-carrier').value=s.carrier||'UPS';
   document.getElementById('ship-desc').value=s.desc||'';
-  document.getElementById('ship-project').value=s.project||'';
+  document.getElementById('ship-po').value=s.po||'';
   document.getElementById('ship-status').value=s.status||'pending';
   document.getElementById('ship-date').value=s.date||'';
   document.getElementById('ship-eta').value=s.eta||'';
@@ -1751,7 +1841,6 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Control System</div><div class="detail-val">${item.system?`<span class="badge badge-cyan">⚡ ${item.system}</span>`:'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Location</div><div class="detail-val">${item.location||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Timeline</div><div class="detail-val">${fmtDate(item.start)||'—'} → ${fmtDate(item.end)||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Budget</div><div class="detail-val">${fmtCurrency(item.budget)}</div></div>
       <div class="detail-row"><div class="detail-label">Task Progress</div><div class="detail-val">
         <div style="display:flex;align-items:center;gap:10px">
           <span>${done}/${tasks.length} tasks complete</span>
@@ -1768,7 +1857,7 @@ function openDetail(col, id) {
     b.innerHTML=`
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
       <div class="detail-row"><div class="detail-label">Priority</div><div class="detail-val">${priorityBadge(item.priority)}</div></div>
-      <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Linked PO</div><div class="detail-val">${item.po ? poName(item.po) : '—'}</div></div>
       <div class="detail-row"><div class="detail-label">Assignee</div><div class="detail-val">${item.assignee||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Category</div><div class="detail-val">${item.category||'General'}</div></div>
       <div class="detail-row"><div class="detail-label">Due Date</div><div class="detail-val">${fmtDate(item.due)}</div></div>
@@ -1784,7 +1873,7 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:#3b82f6">${item.number}</div></div>
       <div class="detail-row"><div class="detail-label">Vendor</div><div class="detail-val" style="font-weight:600">${item.vendor}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
-      <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
+      <div class="detail-row"><div class="detail-label">Linked PO</div><div class="detail-val">${item.po ? poName(item.po) : '—'}</div></div>
       <div class="detail-row"><div class="detail-label">Order Date</div><div class="detail-val">${fmtDate(item.date)}</div></div>
       <div class="detail-row"><div class="detail-label">Expected</div><div class="detail-val">${fmtDate(item.delivery)}</div></div>
       <div class="detail-row"><div class="detail-label">Ship Method</div><div class="detail-val">${item.shipmethod||'Standard'}</div></div>
@@ -2077,7 +2166,7 @@ window.addEventListener('load', ()=>{
     renderTroubleshoot();
 
     if(!state.projects.length && !state.tasks.length) {
-      addItem('projects', {name:'Office Tower HQ', client:'Acme Corp', status:'active', system:'Lutron Quantum', location:'123 Main St', start:'2025-01-15', end:'2025-06-30', budget:185000, notes:'Full lighting controls replacement. 12 floors.'});
+      addItem('projects', {name:'Office Tower HQ', client:'Acme Corp', status:'active', system:'Lutron Quantum', location:'123 Main St', start:'2025-01-15', end:'2025-06-30', notes:'Full lighting controls replacement. 12 floors.'});
       addItem('tasks', {title:'Verify GRAFIK Eye QS panel wiring', priority:'high', status:'inprogress', category:'install', due:'2025-04-01', assignee:'Mike T.'});
       addItem('tasks', {title:'Commission floor 3–5 scenes', priority:'medium', status:'todo', category:'commission', due:'2025-04-15', assignee:'Sara K.'});
       addItem('pos', {number:'PO-2025-042', vendor:'Lutron Electronics', status:'ordered', date:'2025-03-10', delivery:'2025-03-20', total:24850, items:'48 × GRAFIK Eye QS 6-zone — $295.00\n12 × Seetouch QS Keypad — $185.00\n1 × Quantum 3 Processor — $4200.00'});
@@ -2268,7 +2357,7 @@ document.addEventListener('click', function(e) {
 Object.assign(window, {
   switchView, openAddModal, openModal, closeModal,
   saveProject, editProject, filterProjects,
-  saveTask, editTask, filterTasks,
+  saveTask, editTask, filterTasks, setTaskView, cycleTaskStatus, renderTasks,
   savePO, editPO, filterPOs,
   saveShipment, editShipment, filterShipping,
   deleteItem, openDetail,
