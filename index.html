@@ -193,6 +193,10 @@ body {
   border-color: rgba(79,142,247,0.2) !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
+[data-theme="light"] .card:hover {
+  border-color: rgba(37,99,255,0.25) !important;
+  box-shadow: 0 8px 32px rgba(37,99,255,0.1), 0 0 0 1px rgba(37,99,255,0.1);
+}
 
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -258,7 +262,9 @@ td {
 }
 tr:last-child td { border-bottom: none; }
 tbody tr { transition: background 0.1s; cursor: pointer; }
-tbody tr:hover { background: rgba(79,142,247,0.05) !important; }
+tbody tr:hover { background: rgba(79,142,247,0.06) !important; }
+[data-theme="light"] tbody tr:hover { background: rgba(37,99,255,0.05) !important; box-shadow: inset 0 0 0 1px rgba(37,99,255,0.15); }
+[data-theme="light"] tbody tr:hover td { color: #1e293b !important; }
 
 /* BADGES */
 .badge {
@@ -713,7 +719,7 @@ tr[data-id] { transition: transform 0.25s ease; }
             <div class="stat-icon" style="background:rgba(245,158,11,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
             <div class="stat-label">Purchase Orders</div>
             <div class="stat-value" id="stat-pos">0</div>
-            <div class="stat-sub" id="stat-pos-sub">$0 total</div>
+            <div class="stat-sub" id="stat-pos-sub">0 purchase orders</div>
           </div>
           <div class="stat-card" style="--accent-line:#10b981">
             <div class="stat-icon" style="background:rgba(16,185,129,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
@@ -834,7 +840,6 @@ tr[data-id] { transition: transform 0.25s ease; }
                 <th>Vendor</th>
                 <th>Project</th>
                 <th>Items</th>
-                <th>Total</th>
                 <th>Status</th>
                 <th>Date</th>
                 <th>Actions</th>
@@ -952,6 +957,62 @@ const firebaseConfig = {
           </div>
 
         </div><!-- /firebase card -->
+
+        <!-- Danger Zone Card -->
+        <div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <span style="font-size:20px">⚠️</span>
+            <div>
+              <div class="section-title" style="color:#f87171">Danger Zone</div>
+              <div class="section-sub">Permanently delete all data — cannot be undone</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
+              </div>
+              <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
+            </div>
+          </div>
+        </div>
+
         </div><!-- /settings max-width -->
       </div>
 
@@ -1137,7 +1198,6 @@ const firebaseConfig = {
         <textarea id="po-items" placeholder="2 × Lutron GRAFIK-T dimmer — $89.99&#10;1 × Keypad GRAFIK-QS — $245.00" style="min-height:100px"></textarea>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Total Amount ($)</label><input type="number" id="po-total" placeholder="0.00"></div>
         <div class="form-group"><label>Shipping Method</label>
           <select id="po-shipmethod">
             <option value="">Standard</option>
@@ -1585,7 +1645,7 @@ function renderDashboard() {
   document.getElementById('stat-tasks').textContent = openTasks.length;
   document.getElementById('stat-tasks-sub').textContent = highTasks+' high priority';
   document.getElementById('stat-pos').textContent = state.pos.length;
-  document.getElementById('stat-pos-sub').textContent = fmtCurrency(totalPO)+' total';
+  document.getElementById('stat-pos-sub').textContent = state.pos.length + ' purchase orders';
   document.getElementById('stat-shipping').textContent = state.shipping.length;
   document.getElementById('stat-ship-sub').textContent = inTransit+' in transit';
 
@@ -2090,7 +2150,6 @@ function renderPOs() {
     html += '<td><span style="font-weight:600;color:#f0f4ff">'+escH(p.vendor||'-')+'</span></td>';
     html += '<td><span style="font-size:12px;color:#8da0c0">'+(p.project?escH(projectName(p.project)):'-')+'</span></td>';
     html += '<td><span style="font-size:12px;color:#8da0c0">'+items+' line items</span></td>';
-    html += '<td><span style="font-size:13px;color:#f59e0b">'+escH(fmtCurrency(p.total))+'</span></td>';
     html += '<td>'+statusBadge(p.status)+'</td>';
     html += '<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(p.date))+'</span></td>';
     html += '<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
@@ -2117,7 +2176,6 @@ function savePO() {
     date:document.getElementById('po-date').value,
     delivery:document.getElementById('po-delivery').value,
     items:document.getElementById('po-items').value.trim(),
-    total:document.getElementById('po-total').value,
     shipmethod:document.getElementById('po-shipmethod').value,
     notes:document.getElementById('po-notes').value.trim(),
   };
@@ -2139,7 +2197,6 @@ function editPO(id) {
   document.getElementById('po-date').value=p.date||'';
   document.getElementById('po-delivery').value=p.delivery||'';
   document.getElementById('po-items').value=p.items||'';
-  document.getElementById('po-total').value=p.total||'';
   document.getElementById('po-shipmethod').value=p.shipmethod||'';
   document.getElementById('po-notes').value=p.notes||'';
   openModal('modal-po');
@@ -2279,7 +2336,6 @@ function openDetail(col, id) {
       ${lines.length?`<div class="detail-row"><div class="detail-label">Line Items</div><div class="detail-val">
         ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid #1e2d50;font-size:12px;font-family:Helvetica, Arial, sans-serif">${l}</div>`).join('')}
       </div></div>`:''}
-      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:Helvetica, Arial, sans-serif;font-weight:700;color:#f59e0b">${fmtCurrency(item.total)}</div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
     f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">Edit Edit</button>
@@ -2310,75 +2366,8 @@ function openDetail(col, id) {
 //  TROUBLESHOOT DATABASE
 // ═══════════════════════════════════════════════
 // Built-in issues seeded on first load
-const BUILTIN_ISSUES = [
-  { cat:'electrical', q:'Dimmer buzzes or hums after installation', tags:'buzz hum noise',
-    a:'Buzzing is usually caused by load incompatibility or a wiring issue. Check the following:',
-    steps:['Verify the dimmer is rated for the connected load type (LED, incandescent, magnetic low-voltage, or electronic low-voltage).','Check that the neutral wire is properly connected if required by the dimmer model.','Ensure load wattage is within the dimmer\'s min/max range. Many LED dimmers require a minimum load of 25-40W.','Try a different LED lamp from the compatible lamp list published by the dimmer manufacturer.','If buzzing is in the fixture, install a de-buzzing coil (inductor) inline with the load.','If on Lutron Quantum/Homeworks, run auto-calibration from the programming software.'] },
-  { cat:'electrical', q:'Circuit breaker trips when dimmer is loaded', tags:'breaker trip overload',
-    a:'Repeated breaker trips indicate overload or a ground fault. Diagnose systematically:',
-    steps:['Calculate total connected wattage and compare to the dimmer\'s rated capacity. Never exceed 80% of rated load.','Check for a ground fault — use a clamp meter to measure leakage current on the hot wire.','Inspect wiring at the fixture canopy for insulation damage or exposed conductors that could short to the box.','Confirm dimmer is properly grounded and mounted in a metal or approved plastic box.','If a Lutron Quantum panel-mount dimmer, check that each circuit uses an appropriately-rated fuse or breaker in the panel.'] },
-  { cat:'electrical', q:'Lights flicker randomly or on a schedule', tags:'flicker random blink strobe',
-    a:'Flickering can be load, wiring, or communication-related:',
-    steps:['Check for loose wire connections at the dimmer and at the fixture — this is the #1 cause.','Verify LED driver is dimmable and compatible with phase-cut dimming (forward/reverse phase).','Look for shared neutrals between circuits — a floating neutral causes severe flickering in LED systems.','On DALI or 0-10V systems, inspect the control wiring for noise sources (run separately from line voltage).','Check if flickering correlates with HVAC cycling or large motor starts — may need line filtering.','On Lutron systems, enable compatibility mode or adjust fade settings in the Quantum software.'] },
-  { cat:'electrical', q:'Dimmer gets hot to the touch during operation', tags:'hot heat warm temperature',
-    a:'Some warmth is normal but excessive heat indicates a problem:',
-    steps:['Confirm the dimmer is not overloaded — verify actual connected wattage with a clamp meter.','Ensure the dimmer is mounted in a box with adequate airflow — never in a completely sealed enclosure without derating.','Check if multiple dimmers are ganged in a single multi-gang box — follow manufacturer derating tables.','On Lutron panel dimmers, confirm the cooling fans are operational and the unit is not blocked.','If heat is excessive (cannot hold your hand near for 2 seconds), remove from service immediately and inspect for loose connections.'] },
-  { cat:'dimming', q:'Lights do not dim below a certain level (dim bottom is too high)', tags:'dim bottom min level floor',
-    a:'Most dimmers have a configurable low-end trim. Adjust as follows:',
-    steps:['On Lutron wallbox dimmers: press and hold the bottom of the paddle while tapping the top button to enter adjustment mode. Use the bottom button to lower the low-end trim.','On Lutron Quantum: open the programming software, Device properties, Low-end trim slider. Set to 1% and test.','On 0-10V dimmers: verify the driver 0V state — some drivers do not go below 10% without a full off signal. Enable the dim-to-off feature or add a relay in parallel.','On DALI: use the DALI commissioning tool to set the MIN level for individual drivers (DALI address 0-63).','On phase-cut dimmers with LED loads, a too-high low end means the LED driver minimum input voltage is not being reached — try a different dimming curve (square law vs. linear).'] },
-  { cat:'dimming', q:'Lights pop on at a high level when turned on (no soft start)', tags:'pop on flash start abrupt',
-    a:'Pop-on occurs when the signal output jumps before the load stabilizes:',
-    steps:['On Lutron Quantum: set a fade-on time of 500ms to 1 second in the output properties.','Check the start level setting in the dimmer — it may be set to resume at last level rather than start at 0%.','For LED drivers: verify the driver supports a soft-start feature. Some drivers always start at 100% regardless of input.','On 0-10V systems, add a time-delay relay or use a driver with an adjustable ramp rate.','If using relay outputs switching into a dimmable circuit, ensure the relay closes before the dimmer signal is applied.'] },
-  { cat:'dimming', q:'Lights flash or strobe when at low dim levels', tags:'strobe flash low level pulse',
-    a:'Strobing at low dim levels is almost always a load compatibility issue:',
-    steps:['Change the dimming curve in software from linear to square-law — this provides finer control in the lower range.','Increase the low-end trim slightly (e.g., from 1% to 5%) to stay above the driver instability threshold.','Replace the LED driver/bulb with one rated for deep dimming (look for 0.1% or TRIAC dimming compatibility).','On 0-10V: confirm wiring polarity is correct (violet wire = dimming signal, gray = common). Reversed wires cause erratic behavior.','Check for PWM frequency conflicts between the dimmer and the LED driver — some combinations produce visible flicker.'] },
-  { cat:'dimming', q:'Some fixtures dim differently than others on the same circuit', tags:'uneven dim inconsistent match',
-    a:'Mixed loads or different driver lots cause dimming inconsistency:',
-    steps:['Verify all fixtures are using the same model and lot of LED driver/lamp — even the same SKU from different production runs can behave differently.','On individually-addressable systems (DALI, Lutron Ecosystem), calibrate each fixture high-end and low-end trim individually.','Check for impedance variations on long cable runs — voltage drop on 0-10V wiring causes some drivers to receive a weaker signal.','On phase-cut systems, use a load balancer or line conditioning to normalize the waveform across the circuit.','If using Lutron Ecosystem fixtures, run the auto-calibration routine to equalize all fixtures.'] },
-  { cat:'commissioning', q:'Lutron Quantum processor does not communicate with field devices', tags:'lutron quantum offline communicate lost',
-    a:'Communication failures between the main processor and field devices follow a diagnostic tree:',
-    steps:['Check the green LEDs on each GRAFIK Eye QS or QS module — solid green = linked, blinking = not linked.','In the Quantum software: go to Diagnostics, Device Status and note any devices showing Offline.','Verify QS link wiring is daisy-chained and not star-wired. Use Cat5 or 18/2 shielded cable, max 2000 ft total.','Confirm the QS link wiring polarity (tip/ring or + / -) is consistent throughout the run.','Cycle power to offline devices (breaker off 10 seconds) and watch them reconnect.','Check for cable lengths that exceed spec or tight bends that could damage the conductors.','On RS-485 integrations, verify the termination resistor (120 ohm) is installed at both ends of the bus.'] },
-  { cat:'commissioning', q:'DALI commissioning tool shows missing addresses', tags:'dali missing address gap commissioning',
-    a:'Missing DALI addresses indicate a device is not responding on the bus:',
-    steps:['Check bus voltage — DALI requires 9.5-22.5V DC on the bus. Measure at the controller output.','Count connected ballasts/drivers — DALI supports max 64 devices per line. Exceeding this causes address conflicts.','Inspect for short circuits on the DALI bus — even one shorted driver brings down the entire bus.','Try re-assigning addresses: initiate a fresh randomize + assign sequence. Power down all drivers first, then power up with commissioning tool running.','Verify DALI wiring polarity is not reversed — DALI is technically polarity-independent but some controllers require correct polarity.','Look for a driver that has failed with its output shorted — isolate sections of the bus to find the faulty device.'] },
-  { cat:'commissioning', q:'Scenes are not recalling correctly or lights go to wrong levels', tags:'scene recall wrong level preset incorrect',
-    a:'Incorrect scene recall usually points to programming errors or communication delays:',
-    steps:['In Lutron Quantum or HomeWorks QS, review the scene table for the affected keypad/zone. Confirm the correct output levels and fade times are assigned.','Check for multiple competing scene triggers (time clock + occupancy + keypad) that may conflict.','Verify the default scene on each partition is correctly set, as power-up state is often the culprit.','If using DALI scenes (groups 0-15), confirm the group membership of each driver matches the design.','Look for a fade time that is very long — the recall appears wrong because it has not finished fading.','After reprogramming, always save and download the project file to the processor.'] },
-  { cat:'commissioning', q:'Occupancy sensor does not trigger lights correctly', tags:'occupancy sensor trigger pir ultrasonic',
-    a:'Occupancy sensor issues are usually coverage, sensitivity, or wiring-related:',
-    steps:['Verify sensor mounting location and height match the manufacturer coverage diagram. Most PIR sensors require line-of-sight to the occupant.','Confirm the time delay (vacancy timeout) is set appropriately — 15-30 minutes is typical for offices.','Check sensitivity settings — in cold climates or when HVAC is cycling, thermal sensors may false-trigger or miss occupants.','On Lutron Quantum, use the Occupancy Sensor Diagnostic screen to view real-time sensor state.','Verify the low-voltage wiring from sensor to controller is within the maximum cable length specification.','For ultrasonic sensors in open spaces, check for HVAC drafts causing false triggering.'] },
-  { cat:'hardware', q:'Keypad buttons are unresponsive or stuck', tags:'keypad button stuck unresponsive press',
-    a:'Non-responsive keypad buttons can be mechanical or electrical:',
-    steps:['Inspect the button for physical damage or debris lodged under the rocker.','Remove the faceplate and check the connector ribbon cable from keypad to the main body — re-seat if loose.','In Lutron programming software: send a test LED command to the keypad. If the LEDs respond, the keypad is communicating and the button itself may be failed.','For water or contamination ingress, remove power, dry the unit with low-heat air and allow 24 hours before reconnecting.','If one button on a multi-button keypad works and others do not, the issue is likely the keypad membrane — replace the engraving kit.','If keypad shows offline in Diagnostics, the QS link connection to that unit is the issue — inspect the line voltage and 4-wire QS link at the keypad terminals.'] },
-  { cat:'hardware', q:'LED indicator lights on keypad are the wrong color or not lit', tags:'led indicator color wrong status light',
-    a:'LED status indication issues are usually programming or LED driver failures:',
-    steps:['Open programming software, Keypad properties, Button LED settings. Verify LED feedback logic (Active High/Low) matches the fixture state.','For Lutron Seetouch keypads, confirm the LED color is correctly assigned (green = scene active, amber = occupied, red = off, etc.).','Check if the LED is a shared source from a 5V or 12V aux power supply — measure voltage at the keypad LED terminals.','If all LEDs are dim or the same color, a firmware update may be needed. Check the Lutron technical support site for current firmware.','For third-party keypads on RS-485, verify the LED feedback command bytes in the integration configuration file.'] },
-  { cat:'hardware', q:'Dimmer display shows error code or flashes rapidly', tags:'error code display flash fault indicator',
-    a:'Error codes indicate hardware or thermal faults:',
-    steps:['Count the LED flash pattern. Most Lutron products have documented fault codes: 1 flash = thermal overload, 2 = overcurrent, 3 = load short, 4 = firmware fault.','For thermal overload (1 flash): the unit has cooled itself down. Check for excessive load, poor ventilation, or ganging derating.','For load short (3 flashes): disconnect the load and test continuity of the fixture wiring to ground. Locate and repair the fault before reconnecting.','For firmware fault (4 flashes): attempt a factory reset by holding the top and bottom buttons simultaneously for 6 seconds while applying power.','Document all error codes and contact Lutron Technical Support with the dimmer model number and fault history for RMA evaluation.'] },
-  { cat:'network', q:'Building management system (BMS) integration not communicating', tags:'bms bacnet modbus integration protocol',
-    a:'BMS integration failures are usually protocol configuration or firewall issues:',
-    steps:['Confirm the protocol: Lutron Quantum natively supports BACnet/IP. Verify the BACnet device instance, network number, and UDP port (default 47808) match the BMS configuration.','Ping the Quantum processor from the BMS server to confirm IP connectivity.','In Quantum software: enable the BACnet/IP integration and verify the license is active.','Check firewall rules on the lighting network VLAN — BACnet UDP traffic must be allowed.','Use a BACnet explorer (Yabe or BACnet Scan) to discover the Quantum device and verify objects are readable.','For Modbus integrations: verify register map, baud rate (9600 or 19200), and parity settings match both devices.','Enable integration logging in Quantum and send the logs to Lutron TSC for in-depth diagnosis.'] },
-  { cat:'network', q:'DALI bus voltage is low or unstable', tags:'dali voltage low unstable bus power supply',
-    a:'Low DALI bus voltage causes erratic or failed device communication:',
-    steps:['Measure DALI bus voltage with a DMM — should be 9.5-22.5V DC between DALI+ and DALI-.','If voltage is below 9V: the bus is overloaded. DALI supplies typically source 250mA max. Count connected devices (max 64, each drawing ~2mA = ~128mA total); add a second DALI power supply if needed.','Check for short circuits on the bus — disconnect devices one by one, measuring voltage after each removal. When voltage recovers, the last removed device is shorted.','Inspect cable runs for damage or pinched conductors. DALI wiring must be at least 1.5mm squared for runs over 100m.','Use a DALI bus analyzer to log voltage dips and correlate with device activity.','Ensure the DALI power supply has a minimum 50ms hold-up time to prevent drops during mains transients.'] },
-  { cat:'network', q:'Wireless lighting controls lose connectivity intermittently', tags:'wireless wifi zigbee mesh disconnect drop',
-    a:'Wireless signal drops are usually RF interference or mesh topology issues:',
-    steps:['Map the wireless coverage area — ensure no dark zones exist where the mesh signal must travel more than 30 ft through multiple walls.','Check for 2.4GHz interference from WiFi access points, microwaves, and Bluetooth devices. If using Zigbee, switch overlapping WiFi channels away from Zigbee channels 11-26.','On Lutron Clear Connect (RF): run the RF diagnostic from Lutron Connect Bridge app, Device details to view signal strength. Below -75dBm is marginal.','Add repeater devices (plug-in dimmers, Pico remotes) to extend mesh coverage in large spaces.','Power-cycle the bridge/hub to force a mesh refresh and re-routing.','For commercial Lutron RR3 systems, verify each repeating device has power and is included in the programming database.'] },
-];
 
-function seedBuiltinIssues() {
-  if (state.issues.length === 0) {
-    BUILTIN_ISSUES.forEach(function(issue) {
-      var item = Object.assign({}, issue, {
-        id: genId(),
-        createdAt: new Date().toISOString(),
-        builtin: true
-      });
-      addItem('issues', item);
-    });
-  }
-}
+
 
 function renderTroubleshoot() {
   var cat = document.getElementById('troubleCategory').value;
@@ -2565,7 +2554,7 @@ function smartSearch(raw) {
     if (s > 0) results.push({
       type: 'po', icon: '📄', score: s, id: p.id,
       title: p.vendor || p.number || 'PO',
-      sub: [p.number, p.status, fmtCurrency(p.total)].filter(Boolean).join(' · '),
+      sub: [p.number, p.status].filter(Boolean).join(' · '),
       view: 'pos',
       badge: p.status, badgeType: 'badge-blue'
     });
@@ -2859,8 +2848,7 @@ window.addEventListener('load', ()=>{
   // Add some sample data if empty
   setTimeout(()=>{
     // Seed built-in troubleshoot issues on first run
-    seedBuiltinIssues();
-    renderTroubleshoot();
+      renderTroubleshoot();
 
     if(!state.projects.length && !state.tasks.length) {
       addItem('projects', {name:'Office Tower HQ', client:'Acme Corp', status:'active', system:'Lutron Quantum', location:'123 Main St', start:'2025-01-15', end:'2025-06-30', notes:'Full lighting controls replacement. 12 floors.'});
@@ -3051,6 +3039,25 @@ document.addEventListener('click', function(e) {
 });
 
 // Expose functions globally
+function deleteAllData(scope) {
+  var labels = {
+    tasks:'all tasks', projects:'all projects', pos:'all purchase orders',
+    shipping:'all shipments', issues:'all troubleshoot items', all:'ALL data'
+  };
+  var label = labels[scope] || scope;
+  if(!confirm('Permanently delete ' + label + '? This cannot be undone.')) return;
+  if(scope === 'all') {
+    ['tasks','projects','pos','shipping','issues'].forEach(function(key) {
+      state[key].slice().forEach(function(item){ deleteItem(key, item.id); });
+    });
+    toast('All data deleted');
+  } else {
+    state[scope].slice().forEach(function(item){ deleteItem(scope, item.id); });
+    toast('Deleted ' + label);
+  }
+  renderAll();
+}
+
 Object.assign(window, {
   switchView, openAddModal, openModal, closeModal,
   saveProject, editProject, filterProjects,
@@ -3061,10 +3068,10 @@ Object.assign(window, {
   saveShipment, editShipment, filterShipping,
   deleteItem, openDetail,
   confirmDeletePO, confirmDeleteShipment, confirmDeleteTask, bulkDeleteAllArchived, escH,
-  renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue, seedBuiltinIssues,
+  renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue,
   saveFirebaseConfig, clearFirebaseConfig, globalSearch,
   toggleSidebar, closeSidebar, toast, closeSearchDropdown, searchKeyNav, selectSearchResult, setSearchIdx,
-  toggleTheme, loadTheme,
+  toggleTheme, loadTheme, deleteAllData,
   locationSearch, locationKeydown, selectLocation, highlightLocation, closeLocationDropdown,
   toggleQuickAdd, saveQuickTask, applyProjectFilter,
   bulkSelectAll, bulkAction, startBarcodeScan, closeBarcodeScanner,
