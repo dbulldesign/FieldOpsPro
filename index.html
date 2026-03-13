@@ -17,8 +17,6 @@
   document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
 })();
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   color-scheme: dark;
@@ -45,9 +43,9 @@
   --text: #e8edf8;
   --text2: #94a3b8;
   --text3: #4a5568;
-  --mono: 'DM Mono', monospace;
-  --sans: 'Syne', sans-serif;
-  --body: 'Inter', sans-serif;
+  --mono: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --nav-h: 64px;
   --radius: 12px;
   --radius-lg: 18px;
@@ -78,6 +76,7 @@ font-size: 14px;
 #sidebar {
 width: 220px;
 min-width: 220px;
+background: #0d1426;
 background: var(–surface);
 border-right: 1px solid var(–border);
 display: flex;
@@ -162,6 +161,7 @@ background: var(–bg);
 /* -u2500 TOP BAR -u2500 */
 #topbar {
 height: var(–nav-h);
+background: #0d1426;
 background: var(–surface);
 border-bottom: 1px solid var(–border);
 display: flex;
@@ -228,8 +228,10 @@ background: var(–bg);
 
 /* -u2500 CARDS -u2500 */
 .card {
+background: #0d1426;
 background: var(–surface);
-border: 1px solid var(–border);
+border: 1px solid #1e2d50;
+border-color: var(–border);
 border-radius: var(–radius-lg);
 padding: 20px;
 transition: border-color 0.2s;
@@ -242,8 +244,10 @@ transition: border-color 0.2s;
 
 /* -u2500 STAT CARDS -u2500 */
 .stat-card {
+background: #0d1426;
 background: var(–surface);
-border: 1px solid var(–border);
+border: 1px solid #1e2d50;
+border-color: var(–border);
 border-radius: var(–radius-lg);
 padding: 20px;
 position: relative;
@@ -262,7 +266,7 @@ background: var(–accent-color, var(–accent));
 .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: 0.15; }
 
 /* -u2500 TABLE -u2500 */
-.table-wrap { overflow-x: auto; border-radius: var(–radius); border: 1px solid var(–border); background: var(–surface); }
+.table-wrap { overflow-x: auto; border-radius: var(–radius); border: 1px solid #1e2d50; border-color: var(–border); background: #0d1426; background: var(–surface); }
 table { width: 100%; border-collapse: collapse; }
 thead { background: var(–surface2); }
 th {
@@ -413,8 +417,10 @@ white-space: nowrap;
 
 /* -u2500 TROUBLESHOOT CARDS -u2500 */
 .trouble-card {
+background: #0d1426;
 background: var(–surface);
-border: 1px solid var(–border);
+border: 1px solid #1e2d50;
+border-color: var(–border);
 border-radius: var(–radius);
 padding: 16px;
 margin-bottom: 12px;
@@ -591,11 +597,17 @@ background: #070b18 !important;
 –text2: #94a3b8 !important;
 –text3: #4a5568 !important;
 }
-body, #app, #main, #content, #sidebar, #topbar {
-background: #070b18 !important;
+body, #app, #main, #content { background: #070b18 !important; }
+#sidebar, #topbar { background: #0d1426 !important; }
+.stat-card, .card, .table-wrap, .trouble-card, .modal,
+.note-card, .setup-banner, #toast, .tabs {
+background: #0d1426 !important;
+border-color: #1e2d50 !important;
 }
-#sidebar { background: #0d1426 !important; }
-#topbar { background: #0d1426 !important; }
+td, th, thead { background: #131d35 !important; }
+.stat-value, .section-title, h1, h2, h3, .topbar-title { color: #e8edf8 !important; }
+.stat-label, .stat-sub, .detail-label, label { color: #4a5568 !important; }
+td, .detail-val, p { color: #94a3b8 !important; }
 }
 </style>
 
