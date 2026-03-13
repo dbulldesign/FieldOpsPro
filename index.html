@@ -18,37 +18,41 @@
 })();
 </script>
 <style>
+* {
+  font-family: Helvetica, Arial, sans-serif !important;
+}
+
 :root {
-  color-scheme: dark;
-  --bg: #070b18;
-  --surface: #0d1426;
-  --surface2: #131d35;
-  --surface3: #1a2540;
-  --border: #1e2d50;
-  --border2: #2a3d6a;
-  --accent: #2563ff;
-  --accent2: #3b82f6;
-  --accent-glow: rgba(37,99,255,0.15);
-  --gold: #f59e0b;
-  --gold-dim: #92400e;
-  --green: #10b981;
-  --green-dim: #064e3b;
-  --red: #ef4444;
-  --red-dim: #7f1d1d;
-  --yellow: #fbbf24;
-  --yellow-dim: #78350f;
-  --purple: #8b5cf6;
-  --purple-dim: #4c1d95;
-  --cyan: #06b6d4;
-  --text: #e8edf8;
-  --text2: #94a3b8;
-  --text3: #4a5568;
-  --mono: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --nav-h: 64px;
-  --radius: 12px;
-  --radius-lg: 18px;
+color-scheme: dark;
+–bg: #070b18;
+–surface: #0d1426;
+–surface2: #131d35;
+–surface3: #1a2540;
+–border: #1e2d50;
+–border2: #2a3d6a;
+–accent: #2563ff;
+–accent2: #3b82f6;
+–accent-glow: rgba(37,99,255,0.15);
+–gold: #f59e0b;
+–gold-dim: #92400e;
+–green: #10b981;
+–green-dim: #064e3b;
+–red: #ef4444;
+–red-dim: #7f1d1d;
+–yellow: #fbbf24;
+–yellow-dim: #78350f;
+–purple: #8b5cf6;
+–purple-dim: #4c1d95;
+–cyan: #06b6d4;
+–text: #e8edf8;
+–text2: #94a3b8;
+–text3: #4a5568;
+–mono: Helvetica, Arial, sans-serif;
+–sans: Helvetica, Arial, sans-serif;
+–body: Helvetica, Arial, sans-serif;
+–nav-h: 64px;
+–radius: 12px;
+–radius-lg: 18px;
 }
 
 - { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -59,7 +63,7 @@ background: #070b18 !important;
 background: var(–bg) !important;
 color: #e8edf8 !important;
 color: var(–text) !important;
-font-family: var(–body);
+font-family: Helvetica, Arial, sans-serif !important;
 font-size: 14px;
 -webkit-font-smoothing: antialiased;
 }
@@ -90,17 +94,17 @@ padding: 24px 20px 20px;
 border-bottom: 1px solid var(–border);
 }
 .sidebar-logo h1 {
-font-family: var(–sans);
+font-family: Helvetica, Arial, sans-serif;
 font-size: 18px;
 font-weight: 800;
 color: var(–text);
 letter-spacing: -0.5px;
 }
 .sidebar-logo span { color: var(–accent2); }
-.sidebar-logo p { font-size: 10px; color: var(–text3); font-family: var(–mono); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+.sidebar-logo p { font-size: 10px; color: var(–text3); font-family: Helvetica, Arial, sans-serif; margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
 
 .nav-section { padding: 12px 12px 4px; }
-.nav-label { font-size: 9px; font-family: var(–mono); letter-spacing: 2px; color: var(–text3); text-transform: uppercase; padding: 0 8px 8px; }
+.nav-label { font-size: 9px; font-family: Helvetica, Arial, sans-serif; letter-spacing: 2px; color: var(–text3); text-transform: uppercase; padding: 0 8px 8px; }
 .nav-item {
 display: flex; align-items: center; gap: 10px;
 padding: 10px 12px; border-radius: 8px;
@@ -122,7 +126,7 @@ margin-left: auto;
 background: var(–accent);
 color: #fff;
 font-size: 10px;
-font-family: var(–mono);
+font-family: Helvetica, Arial, sans-serif;
 padding: 2px 6px;
 border-radius: 10px;
 min-width: 18px;
@@ -136,7 +140,7 @@ border-top: 1px solid var(–border);
 }
 .sync-status {
 display: flex; align-items: center; gap: 8px;
-font-size: 11px; color: var(–text3); font-family: var(–mono);
+font-size: 11px; color: var(–text3); font-family: Helvetica, Arial, sans-serif;
 }
 .sync-dot {
 width: 6px; height: 6px; border-radius: 50%;
@@ -171,12 +175,12 @@ gap: 12px;
 flex-shrink: 0;
 }
 .topbar-title {
-font-family: var(–sans);
+font-family: Helvetica, Arial, sans-serif;
 font-size: 20px;
 font-weight: 700;
 flex: 1;
 }
-.topbar-title span { color: var(–text3); font-size: 13px; font-weight: 400; font-family: var(–body); margin-left: 8px; }
+.topbar-title span { color: var(–text3); font-size: 13px; font-weight: 400; font-family: Helvetica, Arial, sans-serif; margin-left: 8px; }
 
 #searchBar {
 background: var(–surface2);
@@ -185,7 +189,7 @@ border-radius: 8px;
 padding: 8px 14px 8px 36px;
 color: var(–text);
 font-size: 13px;
-font-family: var(–body);
+font-family: Helvetica, Arial, sans-serif;
 width: 220px;
 outline: none;
 transition: border-color 0.2s;
@@ -200,7 +204,7 @@ display: inline-flex; align-items: center; gap: 6px;
 padding: 8px 16px; border-radius: 8px;
 border: none; cursor: pointer;
 font-size: 13px; font-weight: 600;
-font-family: var(–body);
+font-family: Helvetica, Arial, sans-serif;
 transition: all 0.15s;
 white-space: nowrap;
 }
@@ -256,8 +260,8 @@ top: 0; left: 0; right: 0;
 height: 2px;
 background: var(–accent-color, var(–accent));
 }
-.stat-label { font-size: 11px; font-family: var(–mono); color: var(–text3); letter-spacing: 1px; text-transform: uppercase; }
-.stat-value { font-size: 32px; font-family: var(–sans); font-weight: 800; margin: 8px 0 4px; }
+.stat-label { font-size: 11px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); letter-spacing: 1px; text-transform: uppercase; }
+.stat-value { font-size: 32px; font-family: Helvetica, Arial, sans-serif; font-weight: 800; margin: 8px 0 4px; }
 .stat-sub { font-size: 12px; color: var(–text3); }
 .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: 0.15; }
 
@@ -269,7 +273,7 @@ th {
 padding: 12px 16px;
 text-align: left;
 font-size: 11px;
-font-family: var(–mono);
+font-family: Helvetica, Arial, sans-serif;
 color: var(–text3);
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -291,7 +295,7 @@ tbody tr:hover { background: var(–surface2); }
 .badge {
 display: inline-flex; align-items: center;
 padding: 3px 8px; border-radius: 20px;
-font-size: 11px; font-family: var(–mono);
+font-size: 11px; font-family: Helvetica, Arial, sans-serif;
 font-weight: 500; white-space: nowrap;
 }
 .badge-blue { background: rgba(37,99,255,0.15); color: var(–accent2); border: 1px solid rgba(37,99,255,0.2); }
@@ -333,13 +337,13 @@ display: flex;
 align-items: center;
 justify-content: space-between;
 }
-.modal-header h3 { font-family: var(–sans); font-size: 18px; font-weight: 700; }
+.modal-header h3 { font-family: Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; }
 .modal-body { padding: 24px; }
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(–border); display: flex; gap: 10px; justify-content: flex-end; }
 
 /* -u2500 FORM -u2500 */
 .form-group { margin-bottom: 16px; }
-label { display: block; font-size: 12px; font-family: var(–mono); color: var(–text3); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+label { display: block; font-size: 12px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
 input, select, textarea {
 width: 100%;
 background: var(–surface2);
@@ -348,7 +352,7 @@ border-radius: 8px;
 padding: 10px 14px;
 color: var(–text);
 font-size: 13px;
-font-family: var(–body);
+font-family: Helvetica, Arial, sans-serif;
 outline: none;
 transition: border-color 0.2s;
 -webkit-appearance: none;
@@ -367,7 +371,7 @@ justify-content: space-between;
 margin-bottom: 16px;
 }
 .section-title {
-font-family: var(–sans);
+font-family: Helvetica, Arial, sans-serif;
 font-size: 16px;
 font-weight: 700;
 }
@@ -424,7 +428,7 @@ transition: all 0.15s;
 .trouble-card:hover { border-color: var(–border2); background: var(–surface2); }
 .trouble-card.expanded { border-color: var(–accent2); }
 .trouble-q { font-weight: 600; color: var(–text); margin-bottom: 4px; }
-.trouble-tag { font-size: 11px; color: var(–text3); font-family: var(–mono); }
+.trouble-tag { font-size: 11px; color: var(–text3); font-family: Helvetica, Arial, sans-serif; }
 .trouble-answer {
 display: none;
 margin-top: 14px;
@@ -447,7 +451,7 @@ border: 1px solid rgba(37,99,255,0.3);
 border-radius: 50%;
 width: 22px; height: 22px;
 display: flex; align-items: center; justify-content: center;
-font-size: 11px; font-family: var(–mono);
+font-size: 11px; font-family: Helvetica, Arial, sans-serif;
 flex-shrink: 0; margin-top: 1px;
 }
 
@@ -472,7 +476,7 @@ border: 2px solid var(–border2);
 }
 .track-event.done::before { background: var(–green); border-color: var(–green); box-shadow: 0 0 8px rgba(16,185,129,0.5); }
 .track-event.current::before { background: var(–accent); border-color: var(–accent2); box-shadow: 0 0 8px rgba(37,99,255,0.5); animation: pulse 1.5s infinite; }
-.track-date { font-size: 11px; font-family: var(–mono); color: var(–text3); margin-bottom: 2px; }
+.track-date { font-size: 11px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); margin-bottom: 2px; }
 .track-desc { font-size: 13px; color: var(–text2); }
 .track-loc { font-size: 11px; color: var(–text3); }
 
@@ -539,7 +543,7 @@ z-index: 299;
 /* -u2500 DETAIL PANEL -u2500 */
 .detail-row { display: flex; align-items: flex-start; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(–border); }
 .detail-row:last-child { border-bottom: none; }
-.detail-label { font-size: 11px; font-family: var(–mono); color: var(–text3); text-transform: uppercase; letter-spacing: 0.5px; width: 120px; flex-shrink: 0; padding-top: 1px; }
+.detail-label { font-size: 11px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); text-transform: uppercase; letter-spacing: 0.5px; width: 120px; flex-shrink: 0; padding-top: 1px; }
 .detail-val { font-size: 13px; color: var(–text2); flex: 1; }
 
 /* -u2500 NOTES -u2500 */
@@ -550,7 +554,7 @@ padding: 12px;
 margin-bottom: 8px;
 border-left: 3px solid var(–accent);
 }
-.note-meta { font-size: 10px; font-family: var(–mono); color: var(–text3); margin-bottom: 6px; }
+.note-meta { font-size: 10px; font-family: Helvetica, Arial, sans-serif; color: var(–text3); margin-bottom: 6px; }
 .note-text { font-size: 13px; color: var(–text2); line-height: 1.6; }
 
 /* -u2500 TOAST -u2500 */
@@ -592,20 +596,23 @@ background: #070b18 !important;
 –text3: #4a5568 !important;
 }
 body, #app, #main, #content { background: #070b18 !important; }
-#sidebar, #topbar { background: #0d1426 !important; }
-.stat-card, .card {
-background: #0d1627 !important;
-border: 2px solid #2d4070 !important;
-}
-.table-wrap, .trouble-card, .modal, .note-card, .setup-banner, #toast, .tabs {
-background: #0d1426 !important;
-border-color: #2d4070 !important;
-}
-td, th, thead { background: #131d35 !important; }
-.stat-value, .section-title, h1, h2, h3, .topbar-title { color: #e8edf8 !important; }
-.stat-label, .stat-sub, .detail-label, label { color: #4a5568 !important; }
-td, .detail-val, p { color: #94a3b8 !important; }
-}
+
+- { font-family: Helvetica, Arial, sans-serif !important; }
+  #sidebar, #topbar { background: #0d1426 !important; }
+  .stat-card, .card {
+  background: #0d1627 !important;
+  border: 2px solid #2d4070 !important;
+  }
+  .table-wrap, .trouble-card, .modal, .note-card, .setup-banner, #toast, .tabs {
+  background: #0d1426 !important;
+  border-color: #2d4070 !important;
+  }
+  td, th, thead { background: #131d35 !important; }
+  .stat-value, .section-title, h1, h2, h3, .topbar-title { color: #e8edf8 !important; }
+  .stat-label, .stat-sub, .detail-label, label { color: #4a5568 !important; }
+  td, .detail-val, p { color: #94a3b8 !important; }
+  }
+
 </style>
 
 </head>
@@ -854,7 +861,7 @@ td, .detail-val, p { color: #94a3b8 !important; }
 
     <!-- Theme Toggle Card -->
     <div class="card" style="margin-bottom:20px">
-      <div style="font-family:var(--sans);font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
+      <div style="font-family:Helvetica, Arial, sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
       <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
         <span class="theme-icons" id="theme-icon">🌙</span>
         <div class="theme-toggle-label">
@@ -888,7 +895,7 @@ td, .detail-val, p { color: #94a3b8 !important; }
 
       <div class="form-group">
         <label>Paste your Firebase config block here</label>
-        <textarea id="cfg-paste" style="font-family:var(--mono);font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
+        <textarea id="cfg-paste" style="font-family:Helvetica, Arial, sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
 ```
 
 const firebaseConfig = {
@@ -910,8 +917,8 @@ appId: "1:123456:web:abc"
       <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
 
       <div id="cfg-current-wrap" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Connected Project</div>
-        <div id="cfg-current" style="font-size:13px;font-family:var(--mono);color:var(--text2)"></div>
+        <div style="font-size:11px;font-family:Helvetica, Arial, sans-serif;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Connected Project</div>
+        <div id="cfg-current" style="font-size:13px;font-family:Helvetica, Arial, sans-serif;color:var(--text2)"></div>
       </div>
 
     </div><!-- /firebase card -->
@@ -1545,7 +1552,7 @@ function renderDashboard() {
       <span class="priority priority-${t.priority}" style="min-width:60px">${t.priority}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
-        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${projectName(t.project)||'No project'}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${projectName(t.project)||'No project'}</div>
       </div>
       ${statusBadge(t.status)}
     </div>`).join('');
@@ -1559,7 +1566,7 @@ function renderDashboard() {
       <span style="font-size:20px">${s.carrier==='UPS'?'🟤':s.carrier==='FedEx'?'🟣':s.carrier==='USPS'?'🔵':'📦'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.desc||s.tracking}</div>
-        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
       </div>
       ${statusBadge(s.status)}
     </div>`).join('');
@@ -1588,7 +1595,7 @@ function renderProjects() {
     return `<div class="card" style="cursor:pointer" onclick="openDetail('projects','${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
-          <div style="font-family:var(--sans);font-weight:700;font-size:16px;margin-bottom:4px">${p.name}</div>
+          <div style="font-family:Helvetica, Arial, sans-serif;font-weight:700;font-size:16px;margin-bottom:4px">${p.name}</div>
           <div style="font-size:12px;color:var(--text3)">${p.client||'No client'} ${p.location?'· '+p.location:''}</div>
         </div>
         ${statusBadge(p.status)}
@@ -1668,7 +1675,7 @@ function renderTasks() {
     <td>${t.project?`<span style="font-size:12px">${projectName(t.project)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
     <td>${priorityBadge(t.priority)}</td>
     <td>${statusBadge(t.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(t.due)}</span></td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(t.due)}</span></td>
     <td><span style="font-size:12px">${t.assignee||'—'}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
@@ -1729,13 +1736,13 @@ function renderPOs() {
   const tb = document.getElementById('pos-tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><p>No purchase orders</p></div></td></tr>`;return;}
   tb.innerHTML = data.slice().reverse().map(p=>`<tr onclick="openDetail('pos','${p.id}')">
-    <td><span style="font-family:var(--mono);font-size:12px;color:var(--accent2)">${p.number||'—'}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:var(--accent2)">${p.number||'—'}</span></td>
     <td><span style="font-weight:600">${p.vendor||'—'}</span></td>
     <td><span style="font-size:12px;color:var(--text3)">${p.project?projectName(p.project):'—'}</span></td>
     <td><span style="font-size:12px;color:var(--text3)">${(p.items||'').split('\n').filter(Boolean).length} line items</span></td>
-    <td><span style="font-family:var(--mono);font-size:13px;color:var(--gold)">${fmtCurrency(p.total)}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:13px;color:var(--gold)">${fmtCurrency(p.total)}</span></td>
     <td>${statusBadge(p.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(p.date)}</span></td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(p.date)}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="editPO('${p.id}')">✏️</button>
@@ -1801,12 +1808,12 @@ function renderShipping() {
   if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>`;return;}
   const carrierIcon={UPS:'🟤',FedEx:'🟣',USPS:'🔵',DHL:'🟡'};
   tb.innerHTML = data.slice().reverse().map(s=>`<tr onclick="openDetail('shipping','${s.id}')">
-    <td><span style="font-family:var(--mono);font-size:12px;color:var(--accent2)">${s.tracking||'—'}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:var(--accent2)">${s.tracking||'—'}</span></td>
     <td><span style="font-weight:600">${s.desc||'—'}</span></td>
     <td><span>${carrierIcon[s.carrier]||'📦'} ${s.carrier||'—'}</span></td>
     <td><span style="font-size:12px;color:var(--text3)">${s.project?projectName(s.project):'—'}</span></td>
     <td>${statusBadge(s.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">${fmtDate(s.eta)}</span></td>
+    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(s.eta)}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="editShipment('${s.id}')">✏️</button>
@@ -1900,7 +1907,7 @@ function openDetail(col, id) {
     t.textContent = 'PO '+item.number;
     const lines=(item.items||'').split('\n').filter(Boolean);
     b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:var(--mono);color:var(--accent2)">${item.number}</div></div>
+      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:var(--accent2)">${item.number}</div></div>
       <div class="detail-row"><div class="detail-label">Vendor</div><div class="detail-val" style="font-weight:600">${item.vendor}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
       <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
@@ -1908,9 +1915,9 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Expected</div><div class="detail-val">${fmtDate(item.delivery)}</div></div>
       <div class="detail-row"><div class="detail-label">Ship Method</div><div class="detail-val">${item.shipmethod||'Standard'}</div></div>
       ${lines.length?`<div class="detail-row"><div class="detail-label">Line Items</div><div class="detail-val">
-        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono)">${l}</div>`).join('')}
+        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:Helvetica, Arial, sans-serif">${l}</div>`).join('')}
       </div></div>`:''}
-      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:var(--sans);font-weight:700;color:var(--gold)">${fmtCurrency(item.total)}</div></div>
+      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:Helvetica, Arial, sans-serif;font-weight:700;color:var(--gold)">${fmtCurrency(item.total)}</div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
     f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">✏️ Edit</button>
@@ -1921,7 +1928,7 @@ function openDetail(col, id) {
     const carrierLinks={UPS:`https://www.ups.com/track?tracknum=${item.tracking}`,FedEx:`https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${item.tracking}`,USPS:`https://tools.usps.com/go/TrackConfirmAction?tLabels=${item.tracking}`,DHL:`https://www.dhl.com/en/express/tracking.html?AWB=${item.tracking}`};
     const link=carrierLinks[item.carrier];
     b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:var(--mono);color:var(--accent2)">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:var(--text3);margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
+      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:var(--accent2)">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:var(--text3);margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
       <div class="detail-row"><div class="detail-label">Carrier</div><div class="detail-val">${item.carrier||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Description</div><div class="detail-val">${item.desc||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
@@ -2184,7 +2191,7 @@ window.addEventListener('load', ()=>{
 
   // Show shortcut hint in topbar on desktop
   var hint = document.createElement('span');
-  hint.style.cssText = 'font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap';
+  hint.style.cssText = 'font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif;white-space:nowrap';
   hint.innerHTML = '&#x2318; N&nbsp;&nbsp;/&nbsp;&nbsp;1-6&nbsp;&nbsp;/&nbsp;&nbsp;/ = search';
   var topbar = document.getElementById('topbar');
   if (topbar && window.innerWidth > 768) topbar.appendChild(hint);
