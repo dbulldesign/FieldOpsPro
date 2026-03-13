@@ -25,7 +25,7 @@
 
 - { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: Helvetica, Arial, sans-serif !important; }
   html, body { height: 100%; overflow: hidden; background: #0a0f1e !important; }
-  body { background: #0a0f1e !important; color: #e8edf8 !important; font-size: 14px; -webkit-font-smoothing: antialiased; }
+  body { background: #0a0f1e !important; color: #e8edf8 !important; -webkit-text-fill-color: #e8edf8; font-size: 14px; -webkit-font-smoothing: antialiased; }
 
 /* scrollbar */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
@@ -123,7 +123,7 @@ position: relative; overflow: hidden;
 }
 .stat-card::before {
 content: ‘’; position: absolute; top: 0; left: 0; right: 0;
-height: 3px; background: var(–accent-line, #2563ff);
+height: 3px; background: var(–accent-line, #2563ff); background: #2563ff;
 }
 .stat-label { font-size: 11px; color: #94a3b8 !important; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
 .stat-value { font-size: 36px; font-weight: 800; margin: 10px 0 4px; color: #ffffff !important; line-height: 1; }
@@ -568,9 +568,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 
       <div class="setup-banner" style="margin:18px 0">
         <span class="icon">📋</span>
-        <div style="font-size:13px;color:var(--text2);line-height:1.8">
-          <strong style="color:var(--gold)">3 steps — takes 5 minutes:</strong><br>
-          1. <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent2)">console.firebase.google.com</a> → Add project (any name)<br>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.8">
+          <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
+          1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
           2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
           3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
         </div>
@@ -599,9 +599,9 @@ appId: "1:123456:web:abc"
 
       <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
 
-      <div id="cfg-current-wrap" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;font-family:Helvetica, Arial, sans-serif;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Connected Project</div>
-        <div id="cfg-current" style="font-size:13px;font-family:Helvetica, Arial, sans-serif;color:var(--text2)"></div>
+      <div id="cfg-current-wrap" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid #1e2d50">
+        <div style="font-size:11px;font-family:Helvetica, Arial, sans-serif;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Connected Project</div>
+        <div id="cfg-current" style="font-size:13px;font-family:Helvetica, Arial, sans-serif;color:#94a3b8"></div>
       </div>
 
     </div><!-- /firebase card -->
@@ -666,14 +666,14 @@ appId: "1:123456:web:abc"
           <div style="position:relative">
             <input type="text" id="project-location" placeholder="Start typing an address…" autocomplete="off"
               oninput="locationSearch(this.value)" onkeydown="locationKeydown(event)">
-            <div id="location-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3)">⏳</div>
+            <div id="location-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#64748b">⏳</div>
             <div id="location-dropdown" style="
               display:none;
               position:absolute;
               top:calc(100% + 4px);
               left:0;right:0;
-              background:var(--surface2);
-              border:1px solid var(--border2);
+              background:#111a2e;
+              border:1px solid #2a3a5c;
               border-radius:8px;
               z-index:9999;
               max-height:220px;
@@ -1007,10 +1007,10 @@ async function initFirebase(config) {
 
     document.getElementById('syncDot').classList.remove('offline');
     document.getElementById('syncLabel').textContent = 'Synced';
-    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--green)">&#x2705; Connected to Firebase!</span>';
+    document.getElementById('firebase-status').innerHTML = '<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
     toast('🔥 Firebase connected — syncing!');
   } catch(e) {
-    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--red)">&#x274C; Error: ' + e.message + '</span>';
+    document.getElementById('firebase-status').innerHTML = '<span style="color:#ef4444">&#x274C; Error: ' + e.message + '</span>';
     toast('Firebase error: ' + e.message);
   }
 }
@@ -1061,7 +1061,7 @@ function saveFirebaseConfig() {
 
   var cfg = parseFirebaseConfig(raw);
   if (!cfg || !cfg.apiKey || !cfg.projectId) {
-    document.getElementById('firebase-status').innerHTML = '<span style="color:var(--red)">&#x274C; Could not read config. Make sure you pasted the full block from Firebase.</span>';
+    document.getElementById('firebase-status').innerHTML = '<span style="color:#ef4444">&#x274C; Could not read config. Make sure you pasted the full block from Firebase.</span>';
     return;
   }
   localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
@@ -1084,7 +1084,7 @@ function updateCfgDisplay(cfg) {
   var el = document.getElementById('cfg-current');
   var wrap = document.getElementById('cfg-current-wrap');
   if (el && cfg) {
-    el.innerHTML = 'Project: <span style="color:var(--accent2)">' + (cfg.projectId||'?') + '</span>   API Key: <span style="color:var(--text3)">' + (cfg.apiKey||'').slice(0,14) + '…</span>';
+    el.innerHTML = 'Project: <span style="color:#3b82f6">' + (cfg.projectId||'?') + '</span>   API Key: <span style="color:#64748b">' + (cfg.apiKey||'').slice(0,14) + '…</span>';
     if (wrap) wrap.style.display = 'block';
   }
 }
@@ -1231,11 +1231,11 @@ function renderDashboard() {
   const recent = openTasks.slice(-5).reverse();
   if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
   else dt.innerHTML = recent.map(t=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('tasks','${t.id}')">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d50;cursor:pointer" onclick="openDetail('tasks','${t.id}')">
       <span class="priority priority-${t.priority}" style="min-width:60px">${t.priority}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
-        <div style="font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${projectName(t.project)||'No project'}</div>
+        <div style="font-size:13px;font-weight:600;color:#e8edf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
+        <div style="font-size:11px;color:#64748b;font-family:Helvetica, Arial, sans-serif">${projectName(t.project)||'No project'}</div>
       </div>
       ${statusBadge(t.status)}
     </div>`).join('');
@@ -1245,11 +1245,11 @@ function renderDashboard() {
   const active = state.shipping.filter(s=>s.status!=='delivered').slice(-5).reverse();
   if(!active.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
   else ds.innerHTML = active.map(s=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('shipping','${s.id}')">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e2d50;cursor:pointer" onclick="openDetail('shipping','${s.id}')">
       <span style="font-size:20px">${s.carrier==='UPS'?'🟤':s.carrier==='FedEx'?'🟣':s.carrier==='USPS'?'🔵':'📦'}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.desc||s.tracking}</div>
-        <div style="font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
+        <div style="font-size:13px;font-weight:600;color:#e8edf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.desc||s.tracking}</div>
+        <div style="font-size:11px;color:#64748b;font-family:Helvetica, Arial, sans-serif">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
       </div>
       ${statusBadge(s.status)}
     </div>`).join('');
@@ -1279,17 +1279,17 @@ function renderProjects() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
           <div style="font-family:Helvetica, Arial, sans-serif;font-weight:700;font-size:16px;margin-bottom:4px">${p.name}</div>
-          <div style="font-size:12px;color:var(--text3)">${p.client||'No client'} ${p.location?'· '+p.location:''}</div>
+          <div style="font-size:12px;color:#64748b">${p.client||'No client'} ${p.location?'· '+p.location:''}</div>
         </div>
         ${statusBadge(p.status)}
       </div>
       ${p.system?`<div style="margin-bottom:10px"><span class="badge badge-cyan">⚡ ${p.system}</span></div>`:''}
-      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--text3)">
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b">
         <span>📅 ${fmtDate(p.start)||'—'}</span>
         <span>🎯 ${fmtDate(p.end)||'—'}</span>
         ${p.budget?`<span>💰 ${fmtCurrency(p.budget)}</span>`:''}
       </div>
-      <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:var(--text3)">
+      <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b">
         <span>Tasks: ${done}/${tasks.length}</span><span>${pct}%</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
@@ -1353,12 +1353,12 @@ function renderTasks() {
   const tb = document.getElementById('tasks-tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No tasks</p></div></td></tr>`;return;}
   tb.innerHTML = data.slice().reverse().map(t=>`<tr onclick="openDetail('tasks','${t.id}')">
-    <td><div style="font-weight:600;color:var(--text)">${t.title}</div>${t.category?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${t.category}</div>`:''}
+    <td><div style="font-weight:600;color:#e8edf8">${t.title}</div>${t.category?`<div style="font-size:11px;color:#64748b;margin-top:2px">${t.category}</div>`:''}
     </td>
-    <td>${t.project?`<span style="font-size:12px">${projectName(t.project)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+    <td>${t.project?`<span style="font-size:12px">${projectName(t.project)}</span>`:'<span style="color:#64748b">—</span>'}</td>
     <td>${priorityBadge(t.priority)}</td>
     <td>${statusBadge(t.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(t.due)}</span></td>
+    <td><span style="font-size:12px;color:#64748b;font-family:Helvetica, Arial, sans-serif">${fmtDate(t.due)}</span></td>
     <td><span style="font-size:12px">${t.assignee||'—'}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
@@ -1419,13 +1419,13 @@ function renderPOs() {
   const tb = document.getElementById('pos-tbody');
   if(!data.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><p>No purchase orders</p></div></td></tr>`;return;}
   tb.innerHTML = data.slice().reverse().map(p=>`<tr onclick="openDetail('pos','${p.id}')">
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:var(--accent2)">${p.number||'—'}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#3b82f6">${p.number||'—'}</span></td>
     <td><span style="font-weight:600">${p.vendor||'—'}</span></td>
-    <td><span style="font-size:12px;color:var(--text3)">${p.project?projectName(p.project):'—'}</span></td>
-    <td><span style="font-size:12px;color:var(--text3)">${(p.items||'').split('\n').filter(Boolean).length} line items</span></td>
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:13px;color:var(--gold)">${fmtCurrency(p.total)}</span></td>
+    <td><span style="font-size:12px;color:#64748b">${p.project?projectName(p.project):'—'}</span></td>
+    <td><span style="font-size:12px;color:#64748b">${(p.items||'').split('\n').filter(Boolean).length} line items</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:13px;color:#f59e0b">${fmtCurrency(p.total)}</span></td>
     <td>${statusBadge(p.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(p.date)}</span></td>
+    <td><span style="font-size:12px;color:#64748b;font-family:Helvetica, Arial, sans-serif">${fmtDate(p.date)}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="editPO('${p.id}')">✏️</button>
@@ -1491,12 +1491,12 @@ function renderShipping() {
   if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>`;return;}
   const carrierIcon={UPS:'🟤',FedEx:'🟣',USPS:'🔵',DHL:'🟡'};
   tb.innerHTML = data.slice().reverse().map(s=>`<tr onclick="openDetail('shipping','${s.id}')">
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:var(--accent2)">${s.tracking||'—'}</span></td>
+    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#3b82f6">${s.tracking||'—'}</span></td>
     <td><span style="font-weight:600">${s.desc||'—'}</span></td>
     <td><span>${carrierIcon[s.carrier]||'📦'} ${s.carrier||'—'}</span></td>
-    <td><span style="font-size:12px;color:var(--text3)">${s.project?projectName(s.project):'—'}</span></td>
+    <td><span style="font-size:12px;color:#64748b">${s.project?projectName(s.project):'—'}</span></td>
     <td>${statusBadge(s.status)}</td>
-    <td><span style="font-size:12px;color:var(--text3);font-family:Helvetica, Arial, sans-serif">${fmtDate(s.eta)}</span></td>
+    <td><span style="font-size:12px;color:#64748b;font-family:Helvetica, Arial, sans-serif">${fmtDate(s.eta)}</span></td>
     <td>
       <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="editShipment('${s.id}')">✏️</button>
@@ -1590,7 +1590,7 @@ function openDetail(col, id) {
     t.textContent = 'PO '+item.number;
     const lines=(item.items||'').split('\n').filter(Boolean);
     b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:var(--accent2)">${item.number}</div></div>
+      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:#3b82f6">${item.number}</div></div>
       <div class="detail-row"><div class="detail-label">Vendor</div><div class="detail-val" style="font-weight:600">${item.vendor}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
       <div class="detail-row"><div class="detail-label">Project</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
@@ -1598,9 +1598,9 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Expected</div><div class="detail-val">${fmtDate(item.delivery)}</div></div>
       <div class="detail-row"><div class="detail-label">Ship Method</div><div class="detail-val">${item.shipmethod||'Standard'}</div></div>
       ${lines.length?`<div class="detail-row"><div class="detail-label">Line Items</div><div class="detail-val">
-        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:Helvetica, Arial, sans-serif">${l}</div>`).join('')}
+        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid #1e2d50;font-size:12px;font-family:Helvetica, Arial, sans-serif">${l}</div>`).join('')}
       </div></div>`:''}
-      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:Helvetica, Arial, sans-serif;font-weight:700;color:var(--gold)">${fmtCurrency(item.total)}</div></div>
+      <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:Helvetica, Arial, sans-serif;font-weight:700;color:#f59e0b">${fmtCurrency(item.total)}</div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
     f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">✏️ Edit</button>
@@ -1611,7 +1611,7 @@ function openDetail(col, id) {
     const carrierLinks={UPS:`https://www.ups.com/track?tracknum=${item.tracking}`,FedEx:`https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${item.tracking}`,USPS:`https://tools.usps.com/go/TrackConfirmAction?tLabels=${item.tracking}`,DHL:`https://www.dhl.com/en/express/tracking.html?AWB=${item.tracking}`};
     const link=carrierLinks[item.carrier];
     b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:var(--accent2)">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:var(--text3);margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
+      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:#3b82f6">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:#64748b;margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
       <div class="detail-row"><div class="detail-label">Carrier</div><div class="detail-val">${item.carrier||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Description</div><div class="detail-val">${item.desc||'—'}</div></div>
       <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
@@ -1734,10 +1734,10 @@ function renderTroubleshoot() {
           '<button class="btn btn-ghost btn-sm" onclick="editIssue(\'' + t.id + '\')" title="Edit (E)">✏️</button>' +
           '<button class="btn btn-danger btn-sm" onclick="deleteIssue(\'' + t.id + '\')" title="Delete">🗑️</button>' +
         '</div>' +
-        '<span style="color:var(--text3);font-size:18px;margin-top:2px;cursor:pointer" id="tc-arrow-' + i + '" onclick="toggleTrouble(' + i + ')">›</span>' +
+        '<span style="color:#64748b;font-size:18px;margin-top:2px;cursor:pointer" id="tc-arrow-' + i + '" onclick="toggleTrouble(' + i + ')">›</span>' +
       '</div>' +
       '<div class="trouble-answer">' +
-        '<p style="margin-bottom:12px;color:var(--text2)">' + escHtml(t.a||'') + '</p>' +
+        '<p style="margin-bottom:12px;color:#94a3b8">' + escHtml(t.a||'') + '</p>' +
         '<div class="trouble-steps">' +
           steps.map(function(s, n) {
             return '<div class="trouble-step"><div class="step-num">' + (n+1) + '</div><div>' + escHtml(s) + '</div></div>';
@@ -1874,7 +1874,7 @@ window.addEventListener('load', ()=>{
 
   // Show shortcut hint in topbar on desktop
   var hint = document.createElement('span');
-  hint.style.cssText = 'font-size:11px;color:var(--text3);font-family:Helvetica, Arial, sans-serif;white-space:nowrap';
+  hint.style.cssText = 'font-size:11px;color:#64748b;font-family:Helvetica, Arial, sans-serif;white-space:nowrap';
   hint.innerHTML = '&#x2318; N&nbsp;&nbsp;/&nbsp;&nbsp;1-6&nbsp;&nbsp;/&nbsp;&nbsp;/ = search';
   var topbar = document.getElementById('topbar');
   if (topbar && window.innerWidth > 768) topbar.appendChild(hint);
