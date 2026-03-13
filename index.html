@@ -228,11 +228,9 @@ background: var(–bg);
 
 /* -u2500 CARDS -u2500 */
 .card {
-background: #0d1426;
-background: var(–surface);
-border: 1px solid #1e2d50;
-border-color: var(–border);
-border-radius: var(–radius-lg);
+background: #0d1627 !important;
+border: 2px solid #2d4070 !important;
+border-radius: 16px !important;
 padding: 20px;
 transition: border-color 0.2s;
 }
@@ -244,11 +242,9 @@ transition: border-color 0.2s;
 
 /* -u2500 STAT CARDS -u2500 */
 .stat-card {
-background: #0d1426;
-background: var(–surface);
-border: 1px solid #1e2d50;
-border-color: var(–border);
-border-radius: var(–radius-lg);
+background: #0d1627 !important;
+border: 2px solid #2d4070 !important;
+border-radius: 16px !important;
 padding: 20px;
 position: relative;
 overflow: hidden;
@@ -266,7 +262,7 @@ background: var(–accent-color, var(–accent));
 .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: 0.15; }
 
 /* -u2500 TABLE -u2500 */
-.table-wrap { overflow-x: auto; border-radius: var(–radius); border: 1px solid #1e2d50; border-color: var(–border); background: #0d1426; background: var(–surface); }
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 2px solid #2d4070 !important; background: #0d1627 !important; }
 table { width: 100%; border-collapse: collapse; }
 thead { background: var(–surface2); }
 th {
@@ -417,10 +413,8 @@ white-space: nowrap;
 
 /* -u2500 TROUBLESHOOT CARDS -u2500 */
 .trouble-card {
-background: #0d1426;
-background: var(–surface);
-border: 1px solid #1e2d50;
-border-color: var(–border);
+background: #0d1627 !important;
+border: 2px solid #2d4070 !important;
 border-radius: var(–radius);
 padding: 16px;
 margin-bottom: 12px;
@@ -599,10 +593,13 @@ background: #070b18 !important;
 }
 body, #app, #main, #content { background: #070b18 !important; }
 #sidebar, #topbar { background: #0d1426 !important; }
-.stat-card, .card, .table-wrap, .trouble-card, .modal,
-.note-card, .setup-banner, #toast, .tabs {
+.stat-card, .card {
+background: #0d1627 !important;
+border: 2px solid #2d4070 !important;
+}
+.table-wrap, .trouble-card, .modal, .note-card, .setup-banner, #toast, .tabs {
 background: #0d1426 !important;
-border-color: #1e2d50 !important;
+border-color: #2d4070 !important;
 }
 td, th, thead { background: #131d35 !important; }
 .stat-value, .section-title, h1, h2, h3, .topbar-title { color: #e8edf8 !important; }
