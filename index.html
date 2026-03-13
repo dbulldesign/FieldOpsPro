@@ -516,6 +516,93 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
   #tasks-kanban-view > div { grid-template-columns: 1fr !important; }
 }
 
+/* SEARCH DROPDOWN */
+.search-result-item:hover { background: rgba(79,142,247,0.1) !important; }
+#searchDropdown::-webkit-scrollbar { width: 3px; }
+#searchDropdown::-webkit-scrollbar-thumb { background: #2a3a5c; border-radius: 99px; }
+
+/* ── LIGHT THEME ── */
+[data-theme="light"] body { background: #f0f4fa !important; color: #0f172a !important; -webkit-text-fill-color: #0f172a; }
+[data-theme="light"] html, [data-theme="light"] body { background: #f0f4fa !important; }
+[data-theme="light"] #app, [data-theme="light"] #main, [data-theme="light"] #content { background: #f0f4fa !important; }
+[data-theme="light"] #sidebar { background: #ffffff !important; border-right-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] #topbar { background: rgba(255,255,255,0.95) !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .card, [data-theme="light"] .stat-card, [data-theme="light"] .table-wrap,
+[data-theme="light"] .trouble-card, [data-theme="light"] .modal { background: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .tabs { background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .tab.active { background: #ffffff !important; color: #2563ff !important; }
+[data-theme="light"] .tab { color: #64748b !important; }
+[data-theme="light"] thead { background: rgba(0,0,0,0.03) !important; }
+[data-theme="light"] th { color: #94a3b8 !important; border-bottom-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] td { color: #475569 !important; border-bottom-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] tbody tr:hover { background: rgba(37,99,255,0.04) !important; }
+[data-theme="light"] .topbar-title { color: #0f172a !important; }
+[data-theme="light"] .sidebar-logo h1 { color: #0f172a !important; }
+[data-theme="light"] .nav-item { color: #64748b !important; }
+[data-theme="light"] .nav-item:hover { background: rgba(0,0,0,0.04) !important; color: #0f172a !important; }
+[data-theme="light"] .nav-item.active { background: rgba(37,99,255,0.08) !important; color: #2563ff !important; }
+[data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea { background: #f8fafc !important; border-color: rgba(0,0,0,0.15) !important; color: #0f172a !important; -webkit-text-fill-color: #0f172a; }
+[data-theme="light"] input:focus, [data-theme="light"] select:focus, [data-theme="light"] textarea:focus { border-color: #2563ff !important; background: #fff !important; }
+[data-theme="light"] input::placeholder, [data-theme="light"] textarea::placeholder { color: #94a3b8 !important; }
+[data-theme="light"] .section-title { color: #0f172a !important; }
+[data-theme="light"] .section-sub { color: #94a3b8 !important; }
+[data-theme="light"] .stat-label { color: #94a3b8 !important; }
+[data-theme="light"] .stat-value { color: #0f172a !important; }
+[data-theme="light"] .stat-sub { color: #94a3b8 !important; }
+[data-theme="light"] .btn-ghost { background: rgba(0,0,0,0.05) !important; color: #475569 !important; border-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .btn-ghost:hover { background: rgba(0,0,0,0.08) !important; color: #0f172a !important; }
+[data-theme="light"] label { color: #94a3b8 !important; }
+[data-theme="light"] .modal-header h3, [data-theme="light"] .trouble-q { color: #0f172a !important; }
+[data-theme="light"] .modal-header, [data-theme="light"] .modal-footer { border-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .searchBar, [data-theme="light"] #searchBar { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.1) !important; color: #0f172a !important; }
+[data-theme="light"] #searchDropdown { background: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .search-result-item { color: #0f172a !important; }
+[data-theme="light"] .search-result-item:hover { background: rgba(37,99,255,0.06) !important; }
+[data-theme="light"] .kanban-col { background: rgba(0,0,0,0.03) !important; }
+[data-theme="light"] .kanban-col [style*="background:#0c1220"] { background: #ffffff !important; }
+[data-theme="light"] #toast { background: #1e293b !important; }
+[data-theme="light"] .sidebar-footer { border-top-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .sync-status { color: #94a3b8 !important; }
+[data-theme="light"] .detail-label { color: #94a3b8 !important; }
+[data-theme="light"] .detail-val { color: #475569 !important; }
+[data-theme="light"] #sidebarOverlay { background: rgba(0,0,0,0.3) !important; }
+[data-theme="light"] .note-card { background: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] #menuBtn { color: #0f172a !important; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15) !important; }
+
+/* QUICK-ADD FAB */
+#quickAddFab {
+  position: fixed; bottom: 28px; right: 24px; z-index: 500;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #2563ff; color: #fff; border: none;
+  font-size: 26px; cursor: pointer; display: none;
+  align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(37,99,255,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#quickAddFab:hover { transform: scale(1.1); box-shadow: 0 12px 40px rgba(37,99,255,0.6); }
+#quickAddPanel {
+  position: fixed; bottom: 96px; right: 24px; z-index: 500;
+  background: #0e1525; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px; padding: 20px; width: 300px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  display: none; animation: slideUp 0.2s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] #quickAddPanel { background: #ffffff; border-color: rgba(0,0,0,0.1); }
+
+/* SWIPE HINT */
+tr[data-id] { transition: transform 0.25s ease; }
+/* TASK DUE OVERDUE */
+.task-overdue td:first-of-type { border-left: 3px solid #ef4444; }
+.task-due-soon td:first-of-type { border-left: 3px solid #fbbf24; }
+/* BULK CHECKBOX */
+.task-bulk-cb { accent-color: #2563ff; }
+/* PROJECT FILTER SELECT */
+#task-project-filter option { background: #0e1525; color: #f0f4ff; }
+[data-theme="light"] #task-project-filter { background: rgba(0,0,0,0.04) !important; color: #475569 !important; }
+[data-theme="light"] #bulk-action-bar { background: rgba(37,99,255,0.07) !important; }
+[data-theme="light"] #offlineBar { background: #fee2e2 !important; color: #991b1b !important; border-bottom: 1px solid #fca5a5; }
+
 </style>
 
 </head>
@@ -583,17 +670,28 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
     <div id="topbar">
       <button class="btn btn-ghost btn-icon" id="menuBtn" onclick="toggleSidebar()">☰</button>
       <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
-      <div class="search-wrap">
-        <input type="text" id="searchBar" placeholder="Search…" oninput="globalSearch(this.value)">
+      <div class="search-wrap" style="position:relative">
+        <input type="text" id="searchBar" placeholder="Search projects, tasks, POs…"
+          oninput="globalSearch(this.value)"
+          onfocus="if(this.value) globalSearch(this.value)"
+          onkeydown="searchKeyNav(event)"
+          autocomplete="off" autocorrect="off" spellcheck="false">
+        <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;max-height:480px;overflow-y:auto"></div>
       </div>
       <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ Add</button>
     </div>
 
+    <!-- OFFLINE BAR -->
+    <div id="offlineBar" style="display:none;align-items:center;justify-content:center;gap:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:600;padding:8px 16px;flex-shrink:0;letter-spacing:0.3px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      Offline — changes saved locally and will sync when reconnected
+    </div>
     <!-- CONTENT -->
     <div id="content">
 
       <!-- ═══ DASHBOARD ═══ -->
       <div class="view active" id="view-dashboard">
+        <div id="dash-due-alerts" style="display:none;margin-bottom:16px"></div>
         <div id="firebaseNotice" class="setup-banner" style="display:none">
           <span class="icon">🔥</span>
           <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Sync Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
@@ -668,6 +766,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
             <div class="tab" onclick="filterTasks('todo',this)">To Do</div>
             <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
             <div class="tab" onclick="filterTasks('done',this)">Done</div>
+            <div class="tab" onclick="filterTasks('archived',this)">📦 Archived</div>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button id="task-view-list" class="btn btn-primary btn-sm" onclick="setTaskView('list')" title="List view">
@@ -680,11 +779,29 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
             </button>
           </div>
         </div>
+        <!-- BULK ACTION BAR -->
+        <div id="bulk-action-bar" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(37,99,255,0.1);border:1px solid rgba(37,99,255,0.25);border-radius:12px;margin-bottom:12px;flex-wrap:wrap">
+          <span id="bulk-count" style="font-size:13px;font-weight:600;color:#7ab3fa">0 selected</span>
+          <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="bulkAction('done')">✓ Mark Done</button>
+            <button class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="bulkAction('archive')">📦 Archive</button>
+            <button class="btn btn-danger btn-sm" onclick="bulkAction('delete')">🗑 Delete</button>
+            <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll(false);updateBulkBar()">Cancel</button>
+          </div>
+        </div>
+        <!-- PROJECT FILTER -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <select id="task-project-filter" onchange="applyProjectFilter(this.value)"
+            style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
+            <option value="">All Projects</option>
+          </select>
+        </div>
         <div id="tasks-list-view">
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
+                  <th style="width:36px"><input type="checkbox" onchange="bulkSelectAll(this.checked)" style="width:16px;height:16px;cursor:pointer"></th>
                   <th>Task</th>
                   <th>Project</th>
                   <th>Priority</th>
@@ -1050,7 +1167,14 @@ const firebaseConfig = {
     <div class="modal-body">
       <input type="hidden" id="ship-id">
       <div class="form-row">
-        <div class="form-group"><label>Tracking Number *</label><input type="text" id="ship-tracking" placeholder="1Z999AA…"></div>
+        <div class="form-group"><label>Tracking Number *</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="ship-tracking" placeholder="1Z999AA…" style="flex:1">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="startBarcodeScan()" title="Scan barcode" style="flex-shrink:0;padding:10px 12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
+            </button>
+          </div>
+        </div>
         <div class="form-group"><label>Carrier</label>
           <select id="ship-carrier">
             <option value="UPS">UPS</option>
@@ -1142,6 +1266,7 @@ const firebaseConfig = {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+
 // ═══════════════════════════════════════════════
 //  DATA LAYER — Local + Firebase sync
 // ═══════════════════════════════════════════════
@@ -1325,6 +1450,23 @@ const viewTitles = {
 };
 
 function switchView(v) {
+  if (v === 'tasks') {
+    setTimeout(() => {
+      const pf = document.getElementById('task-project-filter');
+      if (pf) {
+        pf.innerHTML = '<option value="">All Projects</option>' +
+          state.projects.map(p=>`<option value="${p.id}"${taskProjectFilter===p.id?' selected':''}>${p.name}</option>`).join('');
+      }
+      const fab = document.getElementById('quickAddFab');
+      if (fab) fab.style.display = 'flex';
+    }, 50);
+  } else {
+    const fab = document.getElementById('quickAddFab');
+    if (fab) { fab.style.display = 'none'; }
+    const panel = document.getElementById('quickAddPanel');
+    if (panel) panel.style.display = 'none';
+    quickAddOpen = false;
+  }
   currentView = v;
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
@@ -1452,9 +1594,34 @@ function renderDashboard() {
   document.getElementById('badge-pos').textContent = state.pos.filter(p=>p.status!=='received'&&p.status!=='cancelled').length;
   document.getElementById('badge-shipping').textContent = inTransit;
 
+  // Due date alerts
+  const today = new Date(); today.setHours(0,0,0,0);
+  const overdue = openTasks.filter(t => t.due && new Date(t.due) < today && !t.archived);
+  const dueSoon = openTasks.filter(t => t.due && !t.archived && (() => { const d = new Date(t.due); return d >= today && d <= new Date(today.getTime() + 3*86400000); })());
+  const alertEl = document.getElementById('dash-due-alerts');
+  if (alertEl) {
+    if (overdue.length || dueSoon.length) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML = `
+        ${overdue.length ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;margin-bottom:8px">
+          <span style="font-size:16px">🔴</span>
+          <div><span style="font-weight:700;color:#f87171">${overdue.length} overdue task${overdue.length!==1?'s':''}</span>
+          <span style="color:#4a5e7a;font-size:12px;margin-left:8px">${overdue.map(t=>t.title).slice(0,2).join(', ')}${overdue.length>2?' +more':''}</span></div>
+          <button class="btn btn-sm" onclick="switchView('tasks')" style="margin-left:auto;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:4px 10px;font-size:11px">View</button>
+        </div>` : ''}
+        ${dueSoon.length ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:12px">
+          <span style="font-size:16px">🟡</span>
+          <div><span style="font-weight:700;color:#fbbf24">${dueSoon.length} due within 3 days</span>
+          <span style="color:#4a5e7a;font-size:12px;margin-left:8px">${dueSoon.map(t=>t.title).slice(0,2).join(', ')}${dueSoon.length>2?' +more':''}</span></div>
+        </div>` : ''}`;
+    } else {
+      alertEl.style.display = 'none';
+    }
+  }
+
   // Recent tasks
   const dt = document.getElementById('dash-tasks');
-  const recent = openTasks.slice(-5).reverse();
+  const recent = openTasks.filter(t=>!t.archived).slice(-5).reverse();
   if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
   else dt.innerHTML = recent.map(t=>`
     <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer" onclick="openDetail('tasks','${t.id}')">
@@ -1519,8 +1686,8 @@ function renderProjects() {
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
       <div style="margin-top:12px;display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editProject('${p.id}')">✏️ Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteItem('projects','${p.id}');toast('Project deleted')">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editProject('${p.id}')">Edit Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteItem('projects','${p.id}');toast('Project deleted')">Del</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -1591,44 +1758,116 @@ function cycleTaskStatus(id, e) {
   toast('Status: ' + next);
 }
 
-function renderTasks() {
-  let data = state.tasks.slice();
-  if(taskFilter!=='all') data=data.filter(t=>t.status===taskFilter);
-  data.reverse();
+function archiveTask(id, e) {
+  if(e) e.stopPropagation();
+  const task = state.tasks.find(t=>t.id===id);
+  if(!task) return;
+  updateItem('tasks', id, Object.assign({}, task, {archived: true}));
+  renderTasks();
+  toast('Task archived');
+}
+function unarchiveTask(id, e) {
+  if(e) e.stopPropagation();
+  const task = state.tasks.find(t=>t.id===id);
+  if(!task) return;
+  updateItem('tasks', id, Object.assign({}, task, {archived: false}));
+  renderTasks();
+  toast('Task restored');
+}
 
-  if(taskViewMode === 'kanban') {
-    renderKanban(data);
+function renderTasks() {
+  var data = state.tasks.slice();
+  if(taskFilter === 'archived') {
+    data = data.filter(function(t){ return t.archived; });
+  } else if(taskFilter === 'all') {
+    data = data.filter(function(t){ return !t.archived; });
+  } else {
+    data = data.filter(function(t){ return t.status === taskFilter && !t.archived; });
+  }
+  if(taskProjectFilter) data = data.filter(function(t){ return t.project === taskProjectFilter; });
+  data.reverse();
+  bulkSelected.clear();
+
+  if(taskViewMode === 'kanban') { renderKanban(data); return; }
+
+  var existingBar = document.getElementById('archive-bulk-bar');
+  if(existingBar) existingBar.remove();
+  if(taskFilter === 'archived' && data.length) {
+    var bar = document.createElement('div');
+    bar.id = 'archive-bulk-bar';
+    bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;margin-bottom:12px';
+    bar.innerHTML = '<span style="font-size:13px;color:#f59e0b;font-weight:600">Archived: '+data.length+' task'+(data.length!==1?'s':'')+'</span><button class="btn btn-danger btn-sm" onclick="bulkDeleteAllArchived()">Delete All</button>';
+    var listView = document.getElementById('tasks-list-view');
+    if(listView) listView.insertBefore(bar, listView.firstChild);
+  }
+
+  var tb = document.getElementById('tasks-tbody');
+  if(!data.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>'+(taskFilter==='archived'?'No archived tasks':'No tasks')+'</p></div></td></tr>';
     return;
   }
 
-  const tb = document.getElementById('tasks-tbody');
-  if(!data.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty-state"><p>No tasks</p></div></td></tr>`;return;}
-  tb.innerHTML = data.map(t=>`<tr onclick="openDetail('tasks','${t.id}')">
-    <td>
-      <div style="font-weight:600;color:#f0f4ff">${t.title}</div>
-      ${t.category?`<div style="font-size:11px;color:#4a5e7a;margin-top:2px">${t.category}</div>`:''}
-    </td>
-    <td>${t.project?`<span style="font-size:12px;color:#8da0c0">${projectName(t.project)}</span>`:'<span style="color:#3a4a6a">—</span>'}</td>
-    <td>${priorityBadge(t.priority)}</td>
-    <td onclick="event.stopPropagation()">
-      <button onclick="cycleTaskStatus('${t.id}',event)" style="background:none;border:none;cursor:pointer;padding:0">${statusBadge(t.status)}</button>
-    </td>
-    <td><span style="font-size:12px;color:#4a5e7a">${fmtDate(t.due)}</span></td>
-    <td>
-      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('tasks','${t.id}');renderTasks();toast('Deleted')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </button>
-      </div>
-    </td>
-  </tr>`).join('');
+  var today2 = new Date(); today2.setHours(0,0,0,0);
+  var html = '';
+  for(var i=0; i<data.length; i++) {
+    var t = data[i];
+    var isOverdue = !!(t.due && !t.archived && new Date(t.due) < today2 && t.status !== 'done');
+    var d2 = t.due ? new Date(t.due) : null;
+    var isDueSoon = !!(d2 && !t.archived && !isOverdue && d2 >= today2 && d2 <= new Date(today2.getTime()+3*86400000));
+    var rowAttrs = ' data-taskid="'+t.id+'" data-archived="'+(t.archived?1:0)+'"';
+    if(t.archived) rowAttrs += ' style="opacity:0.55"';
+    if(isOverdue) rowAttrs += ' class="task-overdue"';
+    else if(isDueSoon) rowAttrs += ' class="task-due-soon"';
+    html += '<tr'+rowAttrs+'>';
+    html += '<td style="width:36px" onclick="event.stopPropagation()"><input type="checkbox" class="task-bulk-cb" data-id="'+t.id+'" style="width:16px;height:16px;cursor:pointer" onchange="toggleBulkSelect(this.dataset.id,this.checked)"></td>';
+    html += '<td><div style="font-weight:600;color:#f0f4ff">'+escH(t.title)+'</div>'+(t.category?'<div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+escH(t.category)+'</div>':'')+'</td>';
+    html += '<td>'+(t.project?'<span style="font-size:12px;color:#8da0c0">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
+    html += '<td>'+priorityBadge(t.priority)+'</td>';
+    html += '<td onclick="event.stopPropagation()">';
+    if(t.archived) html += '<span class="badge badge-gray" style="opacity:0.7">archived</span>';
+    else html += '<button data-cid="'+t.id+'" onclick="cycleTaskStatus(this.dataset.cid,event)" style="background:none;border:none;cursor:pointer;padding:0">'+statusBadge(t.status)+'</button>';
+    html += '</td>';
+    html += '<td><span style="font-size:12px;color:'+(isOverdue?'#f87171':isDueSoon?'#fbbf24':'#4a5e7a')+'">'+escH(fmtDate(t.due))+'</span></td>';
+    html += '<td><div style="display:flex;gap:5px" onclick="event.stopPropagation()">';
+    if(t.archived) {
+      html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Restore" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchiveTask(this.dataset.uid,event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.43"/></svg></button>';
+      html += '<button data-uid="'+t.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="confirmDeleteTask(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
+    } else {
+      html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editTask(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+      html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Archive" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archiveTask(this.dataset.uid,event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>';
+    }
+    html += '</div></td></tr>';
+  }
+  tb.innerHTML = html;
+
+  tb.onclick = null;
+  tb.addEventListener('click', function(e) {
+    var row = e.target.closest('tr[data-taskid]');
+    if(!row || e.target.closest('td:first-child') || e.target.closest('button') || e.target.closest('input')) return;
+    openDetail('tasks', row.dataset.taskid);
+  });
+
+  var trows = tb.querySelectorAll('tr[data-taskid]');
+  trows.forEach(function(row) {
+    row.addEventListener('touchstart', function(e){ swipeStart(e, row); }, {passive:true});
+    row.addEventListener('touchmove', function(e){ swipeMove(e, row); }, {passive:false});
+    row.addEventListener('touchend', function(e){ swipeEnd(e, row, row.dataset.taskid, row.dataset.archived==='1'?'archived':'active'); });
+  });
 }
 
-// ── DRAG STATE ──────────────────────────────────────────────
-let dragTaskId = null;
+function escH(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+function confirmDeleteTask(id) {
+  if(confirm('Delete permanently?')) { deleteItem('tasks',id); renderTasks(); toast('Deleted'); }
+}
+
+function bulkDeleteAllArchived() {
+  if(!confirm('Permanently delete all archived tasks?')) return;
+  state.tasks.filter(function(t){return t.archived;}).forEach(function(t){deleteItem('tasks',t.id);});
+  renderTasks();
+  toast('Cleared archive');
+}
+
 
 function onTaskDragStart(e, taskId) {
   dragTaskId = taskId;
@@ -1733,7 +1972,7 @@ function renderKanban(data) {
     { id:'inprogress', label:'In Progress', color:'#fbbf24', bg:'rgba(251,191,36,0.07)', border:'rgba(251,191,36,0.22)' },
     { id:'done',       label:'Done',        color:'#10b981', bg:'rgba(16,185,129,0.07)', border:'rgba(16,185,129,0.22)' },
   ];
-  const allTasks = taskFilter==='all' ? state.tasks.slice().reverse() : data;
+  const allTasks = (taskFilter==='all' ? state.tasks.slice() : data).filter(t=>!t.archived).reverse();
   const kb = document.getElementById('tasks-kanban-view');
 
   kb.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start">
@@ -1771,6 +2010,11 @@ function renderKanban(data) {
               ${t.due ? `<span style="font-size:11px;color:#4a5e7a">${fmtDate(t.due)}</span>` : ''}
             </div>
             ${t.project ? `<div style="font-size:11px;color:#4a5e7a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${projectName(t.project)}</div>` : ''}
+            <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:5px" onclick="event.stopPropagation()">
+              <button onclick="archiveTask('${t.id}',event);renderTasks()" title="Archive" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:#4a5e7a;transition:color 0.15s" onmouseover="this.style.color='#f59e0b'" onmouseout="this.style.color='#4a5e7a'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+              </button>
+            </div>
           </div>`).join('')}
         ${tasks.length === 0 ? `<div style="text-align:center;padding:30px 0;color:#2a3a5c;font-size:13px;border:1.5px dashed rgba(255,255,255,0.06);border-radius:12px">Drop here</div>` : ''}
       </div>`;
@@ -1824,26 +2068,43 @@ function filterPOs(f,el){
   el.classList.add('active'); renderPOs();
 }
 
+function confirmDeletePO(id) {
+  if(confirm('Delete this PO?')) { deleteItem('pos',id); renderPOs(); toast('PO deleted'); }
+}
+function confirmDeleteShipment(id) {
+  if(confirm('Delete this shipment?')) { deleteItem('shipping',id); renderShipping(); toast('Deleted'); }
+}
+
 function renderPOs() {
-  let data = state.pos;
-  if(poFilter!=='all') data=data.filter(p=>p.status===poFilter);
-  const tb = document.getElementById('pos-tbody');
-  if(!data.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><p>No purchase orders</p></div></td></tr>`;return;}
-  tb.innerHTML = data.slice().reverse().map(p=>`<tr onclick="openDetail('pos','${p.id}')">
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#3b82f6">${p.number||'—'}</span></td>
-    <td><span style="font-weight:600">${p.vendor||'—'}</span></td>
-    <td><span style="font-size:12px;color:#64748b">${p.project?projectName(p.project):'—'}</span></td>
-    <td><span style="font-size:12px;color:#64748b">${(p.items||'').split('\n').filter(Boolean).length} line items</span></td>
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:13px;color:#f59e0b">${fmtCurrency(p.total)}</span></td>
-    <td>${statusBadge(p.status)}</td>
-    <td><span style="font-size:12px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${fmtDate(p.date)}</span></td>
-    <td>
-      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="editPO('${p.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('pos','${p.id}');toast('PO deleted')">🗑️</button>
-      </div>
-    </td>
-  </tr>`).join('');
+  var data = state.pos.slice();
+  if(poFilter!=='all') data=data.filter(function(p){return p.status===poFilter;});
+  var tb = document.getElementById('pos-tbody');
+  if(!data.length){tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><p>No purchase orders</p></div></td></tr>';return;}
+  data.reverse();
+  var html = '';
+  for(var i=0;i<data.length;i++){
+    var p=data[i];
+    var items=(p.items||'').split('\n').filter(Boolean).length;
+    html += '<tr data-poid="'+p.id+'">';
+    html += '<td><span style="font-size:12px;color:#3b82f6">'+escH(p.number||'-')+'</span></td>';
+    html += '<td><span style="font-weight:600;color:#f0f4ff">'+escH(p.vendor||'-')+'</span></td>';
+    html += '<td><span style="font-size:12px;color:#8da0c0">'+(p.project?escH(projectName(p.project)):'-')+'</span></td>';
+    html += '<td><span style="font-size:12px;color:#8da0c0">'+items+' line items</span></td>';
+    html += '<td><span style="font-size:13px;color:#f59e0b">'+escH(fmtCurrency(p.total))+'</span></td>';
+    html += '<td>'+statusBadge(p.status)+'</td>';
+    html += '<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(p.date))+'</span></td>';
+    html += '<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
+    html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editPO(this.dataset.uid)">Edit</button>';
+    html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" titleonclick="confirmDeletePO(this.dataset.uid)">Del</button>';
+    html += '</div></td></tr>';
+  }
+  tb.innerHTML = html;
+  tb.onclick = null;
+  tb.addEventListener('click', function(e){
+    var row=e.target.closest('tr[data-poid]');
+    if(!row||e.target.closest('button')) return;
+    openDetail('pos',row.dataset.poid);
+  });
 }
 
 function savePO() {
@@ -1895,25 +2156,34 @@ function filterShipping(f,el){
 }
 
 function renderShipping() {
-  let data=state.shipping;
-  if(shipFilter==='transit') data=data.filter(s=>s.status==='transit'||s.status==='out');
-  else if(shipFilter!=='all') data=data.filter(s=>s.status===shipFilter);
-  const tb=document.getElementById('shipping-tbody');
-  if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>`;return;}
-  tb.innerHTML = data.slice().reverse().map(s=>`<tr onclick="openDetail('shipping','${s.id}')">
-    <td><span style="font-family:Helvetica, Arial, sans-serif;font-size:12px;color:#4f8ef7">${s.tracking||'—'}</span></td>
-    <td><span style="font-weight:600;color:#f0f4ff">${s.desc||'—'}</span></td>
-    <td><span style="font-size:12px;font-weight:600;color:#8da0c0">${s.carrier||'—'}</span></td>
-    <td><span style="font-size:12px;color:#8da0c0">${s.po?poName(s.po):'—'}</span></td>
-    <td>${statusBadge(s.status)}</td>
-    <td><span style="font-size:12px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${fmtDate(s.eta)}</span></td>
-    <td>
-      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="editShipment('${s.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteItem('shipping','${s.id}');toast('Shipment removed')">🗑️</button>
-      </div>
-    </td>
-  </tr>`).join('');
+  var data=state.shipping.slice();
+  if(shipFilter==='transit') data=data.filter(function(s){return s.status==='transit'||s.status==='out';});
+  else if(shipFilter!=='all') data=data.filter(function(s){return s.status===shipFilter;});
+  var tb=document.getElementById('shipping-tbody');
+  if(!data.length){tb.innerHTML='<tr><td colspan="7"><div class="empty-state"><p>No shipments</p></div></td></tr>';return;}
+  data.reverse();
+  var html='';
+  for(var i=0;i<data.length;i++){
+    var s=data[i];
+    html+='<tr data-shid="'+s.id+'">';
+    html+='<td><span style="font-size:12px;color:#4f8ef7">'+escH(s.tracking||'-')+'</span></td>';
+    html+='<td><span style="font-weight:600;color:#f0f4ff">'+escH(s.desc||'-')+'</span></td>';
+    html+='<td><span style="font-size:12px;font-weight:600;color:#8da0c0">'+escH(s.carrier||'-')+'</span></td>';
+    html+='<td><span style="font-size:12px;color:#8da0c0">'+(s.po?escH(poName(s.po)):'-')+'</span></td>';
+    html+=statusBadge(s.status)+'</td>';
+    html+='<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(s.eta))+'</span></td>';
+    html+='<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
+    html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editShipment(this.dataset.uid)">Edit</button>';
+    html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" titleonclick="confirmDeleteShipment(this.dataset.uid)">Del</button>';
+    html+='</div></td></tr>';
+  }
+  tb.innerHTML=html;
+  tb.onclick=null;
+  tb.addEventListener('click',function(e){
+    var row=e.target.closest('tr[data-shid]');
+    if(!row||e.target.closest('button')) return;
+    openDetail('shipping',row.dataset.shid);
+  });
 }
 
 function saveShipment() {
@@ -1978,7 +2248,7 @@ function openDetail(col, id) {
       </div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editProject('${id}')">✏️ Edit</button>
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editProject('${id}')">Edit Edit</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
   }
   else if(col==='tasks') {
@@ -1992,7 +2262,7 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Due Date</div><div class="detail-val">${fmtDate(item.due)}</div></div>
       ${item.desc?`<div class="detail-row"><div class="detail-label">Description</div><div class="detail-val" style="white-space:pre-wrap">${item.desc}</div></div>`:''}
     `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editTask('${id}')">✏️ Edit</button>
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editTask('${id}')">Edit Edit</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
   }
   else if(col==='pos') {
@@ -2012,7 +2282,7 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Total</div><div class="detail-val" style="font-size:18px;font-family:Helvetica, Arial, sans-serif;font-weight:700;color:#f59e0b">${fmtCurrency(item.total)}</div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">✏️ Edit</button>
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">Edit Edit</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
   }
   else if(col==='shipping') {
@@ -2029,7 +2299,7 @@ function openDetail(col, id) {
       <div class="detail-row"><div class="detail-label">Est. Delivery</div><div class="detail-val">${fmtDate(item.eta)}</div></div>
       ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
     `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editShipment('${id}')">✏️ Edit</button>
+    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editShipment('${id}')">Edit Edit</button>
       ${link?`<a href="${link}" target="_blank" class="btn btn-primary">📦 Track on ${item.carrier}</a>`:''}
       <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
   }
@@ -2140,8 +2410,8 @@ function renderTroubleshoot() {
           '</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">' +
-          '<button class="btn btn-ghost btn-sm" onclick="editIssue(\'' + t.id + '\')" title="Edit (E)">✏️</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="deleteIssue(\'' + t.id + '\')" title="Delete">🗑️</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="editIssue(\'' + t.id + '\')" title="Edit (E)">Edit</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteIssue(\'' + t.id + '\')" title="Delete">Del</button>' +
         '</div>' +
         '<span style="color:#4a5e7a;font-size:18px;margin-top:2px;cursor:pointer" id="tc-arrow-' + i + '" onclick="toggleTrouble(' + i + ')">›</span>' +
       '</div>' +
@@ -2212,10 +2482,234 @@ function deleteIssue(id) {
 // ═══════════════════════════════════════════════
 //  GLOBAL SEARCH
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  SMART GLOBAL SEARCH
+// ═══════════════════════════════════════════════
+let searchSelectedIdx = -1;
+
 function globalSearch(q) {
-  if(!q) { renderAll(); return; }
-  q=q.toLowerCase();
-  // Could be expanded — just re-render with filter for now
+  const dropdown = document.getElementById('searchDropdown');
+  if (!q || !q.trim()) {
+    dropdown.style.display = 'none';
+    searchSelectedIdx = -1;
+    return;
+  }
+  const results = smartSearch(q.trim());
+  renderSearchDropdown(results, q.trim());
+}
+
+function smartSearch(raw) {
+  const q = raw.toLowerCase();
+  const words = q.split(/\s+/).filter(Boolean);
+  const results = [];
+
+  // Helper: score a string against query
+  function score(str) {
+    if (!str) return 0;
+    const s = str.toLowerCase();
+    if (s.startsWith(q)) return 100;
+    if (s.includes(q)) return 80;
+    // All words present?
+    if (words.every(w => s.includes(w))) return 60;
+    // Any word present?
+    const matched = words.filter(w => s.includes(w)).length;
+    return matched > 0 ? 20 + matched * 10 : 0;
+  }
+
+  // Search PROJECTS
+  state.projects.forEach(p => {
+    const s = Math.max(
+      score(p.name),
+      score(p.client),
+      score(p.location),
+      score(p.system),
+      score(p.notes),
+      score(p.status)
+    );
+    if (s > 0) results.push({
+      type: 'project', icon: '🏗️', score: s, id: p.id,
+      title: p.name,
+      sub: [p.client, p.location, p.status].filter(Boolean).join(' · '),
+      view: 'projects'
+    });
+  });
+
+  // Search TASKS (exclude archived)
+  state.tasks.filter(t => !t.archived).forEach(t => {
+    const s = Math.max(
+      score(t.title),
+      score(t.category),
+      score(t.desc),
+      score(t.status),
+      score(t.priority),
+      score(projectName(t.project))
+    );
+    if (s > 0) results.push({
+      type: 'task', icon: '✓', score: s, id: t.id,
+      title: t.title,
+      sub: [t.status, t.priority, projectName(t.project)].filter(Boolean).join(' · '),
+      view: 'tasks',
+      badge: t.status, badgeType: {todo:'badge-gray',inprogress:'badge-yellow',done:'badge-green'}[t.status]||'badge-gray'
+    });
+  });
+
+  // Search PURCHASE ORDERS
+  state.pos.forEach(p => {
+    const s = Math.max(
+      score(p.vendor),
+      score(p.number),
+      score(p.notes),
+      score(p.status),
+      score(projectName(p.project))
+    );
+    if (s > 0) results.push({
+      type: 'po', icon: '📄', score: s, id: p.id,
+      title: p.vendor || p.number || 'PO',
+      sub: [p.number, p.status, fmtCurrency(p.total)].filter(Boolean).join(' · '),
+      view: 'pos',
+      badge: p.status, badgeType: 'badge-blue'
+    });
+  });
+
+  // Search SHIPMENTS
+  state.shipping.forEach(s => {
+    const sc = Math.max(
+      score(s.tracking),
+      score(s.desc),
+      score(s.carrier),
+      score(s.status),
+      score(poName(s.po))
+    );
+    if (sc > 0) results.push({
+      type: 'shipping', icon: '📦', score: sc, id: s.id,
+      title: s.desc || s.tracking || 'Shipment',
+      sub: [s.carrier, s.tracking, s.status].filter(Boolean).join(' · '),
+      view: 'shipping',
+      badge: s.status, badgeType: {transit:'badge-yellow',delivered:'badge-green',pending:'badge-gray',out:'badge-blue'}[s.status]||'badge-gray'
+    });
+  });
+
+  // Search TROUBLESHOOT
+  state.issues.forEach(issue => {
+    const s = Math.max(
+      score(issue.q),
+      score(issue.a),
+      score(issue.cat),
+      (issue.steps||[]).reduce((m, step) => Math.max(m, score(step)), 0)
+    );
+    if (s > 0) results.push({
+      type: 'issue', icon: '⚡', score: s, id: issue.id,
+      title: issue.q,
+      sub: issue.cat || 'Troubleshoot',
+      view: 'troubleshoot'
+    });
+  });
+
+  // Sort by score desc, then type priority
+  const typePriority = { project:5, task:4, po:3, shipping:2, issue:1 };
+  results.sort((a, b) => b.score - a.score || (typePriority[b.type]||0) - (typePriority[a.type]||0));
+
+  return results.slice(0, 12); // max 12 results
+}
+
+function renderSearchDropdown(results, q) {
+  const dropdown = document.getElementById('searchDropdown');
+  searchSelectedIdx = -1;
+
+  if (!results.length) {
+    dropdown.style.display = 'block';
+    dropdown.innerHTML = `
+      <div style="padding:20px;text-align:center;color:#3a4a6a;font-size:13px">
+        <div style="font-size:24px;margin-bottom:8px;opacity:0.4">🔍</div>
+        No results for "<strong style="color:#6b7fa8">${escHtml(q)}</strong>"
+      </div>`;
+    return;
+  }
+
+  // Group by type
+  const groups = {};
+  const labels = { project:'Projects', task:'Tasks', po:'Purchase Orders', shipping:'Shipments', issue:'Troubleshoot' };
+  results.forEach(r => { (groups[r.type] = groups[r.type]||[]).push(r); });
+
+  const typeOrder = ['project','task','po','shipping','issue'];
+  let html = '';
+  let globalIdx = 0;
+
+  typeOrder.forEach(type => {
+    if (!groups[type]) return;
+    html += `<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a;border-top:1px solid rgba(255,255,255,0.05)">${labels[type]}</div>`;
+    groups[type].forEach(r => {
+      const idx = globalIdx++;
+      html += `<div class="search-result-item" data-idx="${idx}" data-id="${r.id}" data-view="${r.view}" data-type="${r.type}"
+        onclick="selectSearchResult('${r.view}','${r.id}','${r.type}')"
+        onmouseenter="setSearchIdx(${idx})"
+        style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s">
+        <div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(255,255,255,0.05)">${r.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlightMatch(r.title, q)}</div>
+          <div style="font-size:11px;color:#4a5e7a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlightMatch(r.sub||'', q)}</div>
+        </div>
+        ${r.badge ? `<span class="badge ${r.badgeType||'badge-gray'}" style="font-size:10px;flex-shrink:0">${r.badge}</span>` : ''}
+      </div>`;
+    });
+  });
+
+  html += `<div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,0.05);text-align:center">
+    <span style="font-size:11px;color:#3a4a6a">${results.length} result${results.length!==1?'s':''} · press <kbd style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 5px;font-size:10px;color:#6b7fa8">↑↓</kbd> to navigate · <kbd style="background:rgba(255,255,255,0.08);border-radius:4px;padding:1px 5px;font-size:10px;color:#6b7fa8">Enter</kbd> to open</span>
+  </div>`;
+
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = html;
+}
+
+function highlightMatch(text, q) {
+  if (!text || !q) return escHtml(text||'');
+  const escaped = escHtml(text);
+  const eq = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp('(' + eq + ')', 'gi'), '<mark style="background:rgba(79,142,247,0.3);color:#7ab3fa;border-radius:3px;padding:0 2px">$1</mark>');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setSearchIdx(idx) {
+  searchSelectedIdx = idx;
+  document.querySelectorAll('.search-result-item').forEach((el, i) => {
+    el.style.background = i === idx ? 'rgba(79,142,247,0.12)' : '';
+  });
+}
+
+function searchKeyNav(e) {
+  const items = document.querySelectorAll('.search-result-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    setSearchIdx(Math.min(searchSelectedIdx + 1, items.length - 1));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    setSearchIdx(Math.max(searchSelectedIdx - 1, 0));
+  } else if (e.key === 'Enter' && searchSelectedIdx >= 0) {
+    e.preventDefault();
+    items[searchSelectedIdx].click();
+  } else if (e.key === 'Escape') {
+    closeSearchDropdown();
+  }
+}
+
+function selectSearchResult(view, id, type) {
+  closeSearchDropdown();
+  switchView(view);
+  // Open the detail panel after a brief render delay
+  setTimeout(() => openDetail(type === 'issue' ? 'issues' : view.replace('troubleshoot','issues'), id), 80);
+}
+
+function closeSearchDropdown() {
+  const d = document.getElementById('searchDropdown');
+  if (d) d.style.display = 'none';
+  const bar = document.getElementById('searchBar');
+  if (bar) { bar.value = ''; bar.blur(); }
+  searchSelectedIdx = -1;
 }
 
 // ═══════════════════════════════════════════════
@@ -2229,6 +2723,55 @@ function renderAll() {
   renderShipping();
 }
 
+
+// ═══════════════════════════════════════════════
+//  SWIPE ACTIONS ON TASK ROWS
+// ═══════════════════════════════════════════════
+let swipeTouchX = 0, swipeTouchY = 0, swipeEl = null, swipeActive = false;
+function swipeStart(e, el) {
+  swipeTouchX = e.touches[0].clientX;
+  swipeTouchY = e.touches[0].clientY;
+  swipeEl = el;
+  swipeActive = false;
+}
+function swipeMove(e, el) {
+  const dx = e.touches[0].clientX - swipeTouchX;
+  const dy = e.touches[0].clientY - swipeTouchY;
+  if (!swipeActive && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+    swipeActive = true;
+  }
+  if (!swipeActive) return;
+  e.preventDefault();
+  const clamped = Math.max(-120, Math.min(0, dx));
+  el.style.transform = `translateX(${clamped}px)`;
+  el.style.transition = 'none';
+}
+function swipeEnd(e, el, taskId, taskState) {
+  if (!swipeActive) return;
+  const dx = e.changedTouches[0].clientX - swipeTouchX;
+  el.style.transition = 'transform 0.25s ease';
+  el.style.transform = 'translateX(0)';
+  if (dx < -80) {
+    if (taskState === 'archived') {
+      if (confirm('Delete this task permanently?')) {
+        deleteItem('tasks', taskId);
+        renderTasks();
+        toast('Task deleted');
+      }
+    } else {
+      archiveTask(taskId, e);
+    }
+  } else if (dx > 60) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (task && task.status !== 'done') {
+      updateItem('tasks', taskId, Object.assign({}, task, {status:'done'}));
+      renderTasks();
+      toast('Marked done');
+    }
+  }
+  swipeActive = false;
+}
+
 // ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
@@ -2240,6 +2783,31 @@ window.addEventListener('load', ()=>{
   document.querySelectorAll('.modal-overlay').forEach(overlay=>{
     overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
   });
+
+  // Close search dropdown on click outside
+  document.addEventListener('click', function(e) {
+    const wrap = e.target.closest('.search-wrap');
+    if (!wrap) closeSearchDropdown();
+  });
+
+  // Offline/online indicator
+  function updateOnlineStatus() {
+    const dot = document.getElementById('syncDot');
+    const label = document.getElementById('syncLabel');
+    const bar = document.getElementById('offlineBar');
+    if (!navigator.onLine) {
+      if (dot) { dot.classList.add('offline'); }
+      if (label) label.textContent = 'Offline';
+      if (bar) bar.style.display = 'flex';
+    } else {
+      if (dot && !window._fbConnected) dot.classList.remove('offline');
+      if (label && !window._fbConnected) label.textContent = 'Local only';
+      if (bar) bar.style.display = 'none';
+    }
+  }
+  window.addEventListener('online', () => { updateOnlineStatus(); toast('Back online'); });
+  window.addEventListener('offline', () => { updateOnlineStatus(); toast('You are offline — changes saved locally'); });
+  updateOnlineStatus();
 
   // ── Keyboard Shortcuts ─────────────────────────────────────────────────
   document.addEventListener('keydown', function(e) {
@@ -2486,18 +3054,180 @@ document.addEventListener('click', function(e) {
 Object.assign(window, {
   switchView, openAddModal, openModal, closeModal,
   saveProject, editProject, filterProjects,
-  saveTask, editTask, filterTasks, setTaskView, cycleTaskStatus, renderTasks,
+  saveTask, editTask, filterTasks, setTaskView, cycleTaskStatus, renderTasks, archiveTask, unarchiveTask, bulkDeleteAllArchived, confirmDeleteTask, escH,
   onTaskDragStart, onTaskDragEnd, onColDragOver, onColDragLeave, onColDrop,
   onTaskTouchStart, onTaskTouchMove, onTaskTouchEnd,
   savePO, editPO, filterPOs,
   saveShipment, editShipment, filterShipping,
   deleteItem, openDetail,
+  confirmDeletePO, confirmDeleteShipment, confirmDeleteTask, bulkDeleteAllArchived, escH,
   renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue, seedBuiltinIssues,
   saveFirebaseConfig, clearFirebaseConfig, globalSearch,
-  toggleSidebar, closeSidebar, toast,
+  toggleSidebar, closeSidebar, toast, closeSearchDropdown, searchKeyNav, selectSearchResult, setSearchIdx,
   toggleTheme, loadTheme,
-  locationSearch, locationKeydown, selectLocation, highlightLocation, closeLocationDropdown
+  locationSearch, locationKeydown, selectLocation, highlightLocation, closeLocationDropdown,
+  toggleQuickAdd, saveQuickTask, applyProjectFilter,
+  bulkSelectAll, bulkAction, startBarcodeScan, closeBarcodeScanner,
+  toggleQuickAdd, saveQuickTask
 });
+
+// ═══════════════════════════════════════════════
+//  QUICK ADD
+// ═══════════════════════════════════════════════
+let quickAddOpen = false;
+function toggleQuickAdd() {
+  quickAddOpen = !quickAddOpen;
+  const panel = document.getElementById('quickAddPanel');
+  const fab = document.getElementById('quickAddFab');
+  panel.style.display = quickAddOpen ? 'block' : 'none';
+  if (fab) fab.textContent = quickAddOpen ? '×' : '+';
+  if (quickAddOpen) {
+    populateProjectSelects();
+    const qaProj = document.getElementById('qa-project');
+    if (qaProj) {
+      qaProj.innerHTML = '<option value="">No project</option>' +
+        state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    }
+    setTimeout(() => document.getElementById('qa-title').focus(), 50);
+  }
+}
+function saveQuickTask() {
+  const title = (document.getElementById('qa-title').value||'').trim();
+  if (!title) { document.getElementById('qa-title').focus(); return; }
+  const item = {
+    title,
+    priority: document.getElementById('qa-priority').value || 'medium',
+    project: document.getElementById('qa-project').value || '',
+    status: 'todo',
+  };
+  addItem('tasks', item);
+  toast('Task added: ' + title);
+  document.getElementById('qa-title').value = '';
+  document.getElementById('qa-priority').selectedIndex = 0;
+  renderDashboard();
+  if (currentView === 'tasks') renderTasks();
+}
+
+// ═══════════════════════════════════════════════
+//  FILTER TASKS BY PROJECT
+// ═══════════════════════════════════════════════
+let taskProjectFilter = '';
+function applyProjectFilter(pid) {
+  taskProjectFilter = pid;
+  renderTasks();
+}
+
+// ═══════════════════════════════════════════════
+//  BULK TASK ACTIONS
+// ═══════════════════════════════════════════════
+let bulkSelected = new Set();
+function bulkSelectAll(checked) {
+  const checkboxes = document.querySelectorAll('.task-bulk-cb');
+  checkboxes.forEach(cb => {
+    cb.checked = checked;
+    if (checked) bulkSelected.add(cb.dataset.id);
+    else bulkSelected.delete(cb.dataset.id);
+  });
+  updateBulkBar();
+}
+function toggleBulkSelect(id, checked) {
+  if (checked) bulkSelected.add(id);
+  else bulkSelected.delete(id);
+  updateBulkBar();
+}
+function updateBulkBar() {
+  let bar = document.getElementById('bulk-action-bar');
+  if (!bar) return;
+  if (bulkSelected.size > 0) {
+    bar.style.display = 'flex';
+    bar.querySelector('#bulk-count').textContent = bulkSelected.size + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+function bulkAction(action) {
+  if (!bulkSelected.size) return;
+  const ids = [...bulkSelected];
+  if (action === 'archive') {
+    ids.forEach(id => {
+      const t = state.tasks.find(x=>x.id===id);
+      if (t) updateItem('tasks', id, Object.assign({}, t, {archived: true}));
+    });
+    toast(ids.length + ' tasks archived');
+  } else if (action === 'done') {
+    ids.forEach(id => {
+      const t = state.tasks.find(x=>x.id===id);
+      if (t) updateItem('tasks', id, Object.assign({}, t, {status: 'done', archived: false}));
+    });
+    toast(ids.length + ' tasks marked done');
+  } else if (action === 'delete') {
+    if (!confirm('Permanently delete ' + ids.length + ' tasks?')) return;
+    ids.forEach(id => deleteItem('tasks', id));
+    toast(ids.length + ' tasks deleted');
+  }
+  bulkSelected.clear();
+  renderTasks();
+}
+
+// ═══════════════════════════════════════════════
+//  BARCODE / QR SCANNER
+// ═══════════════════════════════════════════════
+let barcodeStream = null;
+function startBarcodeScan() {
+  const overlay = document.getElementById('barcode-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast('Camera not available on this device');
+    overlay.style.display = 'none';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      barcodeStream = stream;
+      const video = document.getElementById('barcode-video');
+      video.srcObject = stream;
+      video.play();
+      scanBarcode(video);
+    })
+    .catch(() => {
+      toast('Camera permission denied');
+      overlay.style.display = 'none';
+    });
+}
+function scanBarcode(video) {
+  if (!window.BarcodeDetector) {
+    // Fallback: manual entry
+    const overlay = document.getElementById('barcode-overlay');
+    const manual = document.getElementById('barcode-manual');
+    if (manual) manual.style.display = 'block';
+    return;
+  }
+  const detector = new BarcodeDetector({ formats: ['code_128','code_39','qr_code','data_matrix','ean_13'] });
+  const scan = () => {
+    if (!barcodeStream) return;
+    detector.detect(video).then(codes => {
+      if (codes.length > 0) {
+        const val = codes[0].rawValue;
+        closeBarcodeScanner();
+        document.getElementById('ship-tracking').value = val;
+        toast('Scanned: ' + val);
+      } else {
+        requestAnimationFrame(scan);
+      }
+    }).catch(() => requestAnimationFrame(scan));
+  };
+  video.addEventListener('loadeddata', scan);
+}
+function closeBarcodeScanner() {
+  if (barcodeStream) {
+    barcodeStream.getTracks().forEach(t => t.stop());
+    barcodeStream = null;
+  }
+  const overlay = document.getElementById('barcode-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 </script>
 </body>
 </html>
