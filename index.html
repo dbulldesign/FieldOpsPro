@@ -1614,6 +1614,14 @@ async function updateItem(col, id, data) {
   LOCAL.update(col, id, data);
   state[col] = LOCAL.get(col);
   renderAll();
+  // Check recurring task completion
+  if (col === 'tasks' && data && data.status === 'done') {
+    var prev = state['tasks'] ? state['tasks'].find(function(x){ return x.id === id; }) : null;
+    if (prev && prev.status !== 'done' && data.recur) {
+      scheduleNextRecur(data);
+      toast('Done! Next recurrence scheduled.');
+    }
+  }
 }
 
 async function deleteItem(col, id) {
@@ -1823,9 +1831,7 @@ function openAddModal() {
   if(m !== 'modal-issue') populateProjectSelects();
   openModal(m);
 }
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
+// openModal defined below with combo init
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
@@ -2517,6 +2523,7 @@ function editShipment(id) {
 //  DETAIL VIEW
 // ═══════════════════════════════════════════════
 function openDetail(col, id) {
+  trackView(col, id);
   const item = state[col].find(x=>x.id===id);
   if(!item) return;
   const t=document.getElementById('detail-title');
@@ -2894,9 +2901,7 @@ function highlightMatch(text, q) {
   return escaped.replace(new RegExp('(' + eq + ')', 'gi'), '<mark style="background:rgba(79,142,247,0.3);color:#7ab3fa;border-radius:3px;padding:0 2px">$1</mark>');
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+
 
 function setSearchIdx(idx) {
   searchSelectedIdx = idx;
@@ -3462,13 +3467,13 @@ function comboSet(id, val) {
 }
 
 // Init all combos when a modal opens
-var _origOpenModal = openModal;
 function openModal(id) {
-  _origOpenModal(id);
+  // Show the modal
+  var el = document.getElementById(id);
+  if (el) el.classList.add('open');
+  // Init combo dropdowns after the modal is visible
   setTimeout(function() {
-    // Task modal
     if (id === 'modal-task') comboInit('task-category', comboGet('task-category'));
-    // Project modal - convert fixed selects to combos
     if (id === 'modal-project') {
       replaceSelectWithCombo('project-system');
       replaceSelectWithCombo('project-status');
@@ -3549,11 +3554,7 @@ function renderRecentlyViewed() {
 }
 
 // Patch openDetail to track views
-var _origOpenDetail = typeof openDetail === 'function' ? openDetail : null;
-function openDetail(type, id) {
-  if (_origOpenDetail) _origOpenDetail(type, id);
-  trackView(type, id);
-}
+
 
 // ═══════════════════════════════════════════════
 //  IN-APP NOTIFICATIONS
@@ -3688,15 +3689,7 @@ function scheduleNextRecur(task) {
 }
 
 // Patch updateItem to spawn next recurrence when task is marked done
-var _origUpdateItem = updateItem;
-function updateItem(collection, id, data) {
-  var old = state[collection] ? state[collection].find(function(x){ return x.id === id; }) : null;
-  _origUpdateItem(collection, id, data);
-  if (collection === 'tasks' && data.status === 'done' && old && old.status !== 'done' && data.recur) {
-    scheduleNextRecur(data);
-    toast('Done! Next recurrence scheduled.');
-  }
-}
+
 
 
 
