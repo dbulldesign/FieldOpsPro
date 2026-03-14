@@ -1147,7 +1147,10 @@ background: rgba(255,255,255,0.05);
 border: 1px solid rgba(255,255,255,0.08);
 border-radius: 16px;
 cursor: pointer;
+touch-action: manipulation;
 -webkit-tap-highlight-color: transparent;
+user-select: none;
+-webkit-user-select: none;
 transition: transform 0.12s ease, background 0.12s ease;
 will-change: transform;
 }
@@ -1335,6 +1338,15 @@ right: 12px !important;
 left: 12px !important;
 width: auto !important;
 }
+/* Ensure Things cards receive touch events */
+#things-home-wrap, #things-home-cards, .things-card {
+pointer-events: auto !important;
+}
+/* Prevent scroll momentum from swallowing taps */
+#things-home-cards {
+touch-action: pan-y;
+}
+
 }
 
 </style>
@@ -1471,8 +1483,8 @@ width: auto !important;
     <span id="mob-notif-badge" style="display:none;position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:99px;min-width:14px;text-align:center;line-height:1.6"></span>
   </button>
 </div>
-<!-- Mobile search dropdown anchored here -->
-<div id="mob-search-dropdown" style="display:none;position:absolute;left:14px;right:14px;z-index:2001;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:60vh;overflow-y:auto"></div>
+<!-- Mobile search dropdown (positioned by JS) -->
+<div id="mob-search-dropdown" style="display:none;position:fixed;top:108px;left:14px;right:14px;z-index:2001;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:60vh;overflow-y:auto"></div>
 <div id="mob-large-title-wrap">
   <div id="mob-large-title">FieldOps Pro</div>
 </div>
@@ -4940,6 +4952,8 @@ function renderThingsHome() {
     var div = document.createElement('div');
     div.className = 'things-card';
     div.dataset.view = s.view;
+    div.style.cursor = 'pointer';
+    div.style.touchAction = 'manipulation';
 
     // Icon
     var iconWrap = document.createElement('div');
@@ -4978,9 +4992,10 @@ function renderThingsHome() {
     chev.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
     div.appendChild(chev);
 
-    div.addEventListener('click', function(){
-      switchView(s.view);
-    });
+    (function(view) {
+      div.addEventListener('click', function(){ switchView(view); });
+      div.addEventListener('touchend', function(e){ e.preventDefault(); switchView(view); });
+    })(s.view);
     el.appendChild(div);
   });
 }
