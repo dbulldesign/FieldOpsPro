@@ -1802,6 +1802,18 @@ body.compact #content { padding: 12px !important; }
                 Paste from clipboard
               </button>
             </label>
+            <div style="margin-bottom:14px">
+              <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Connect FieldOps Pro to Firebase
+              </button>
+              <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+              <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
+              <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+            </div>
             <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
 
 const firebaseConfig = {
@@ -5007,6 +5019,22 @@ function thingsIcon(view, color) {
     settings:  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   };
   return icons[view] || icons.settings;
+}
+
+
+function useBuiltInConfig() {
+  var cfg = {
+    apiKey: "AIzaSyCgRSws8fOvssYsqED4QSkzIw2mwxk2XVs",
+    authDomain: "fieldopspro-e47cd.firebaseapp.com",
+    projectId: "fieldopspro-e47cd",
+    storageBucket: "fieldopspro-e47cd.firebasestorage.app",
+    messagingSenderId: "130089981211",
+    appId: "1:130089981211:web:200b400a16c4cfd838afbe"
+  };
+  localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
+  updateCfgDisplay(cfg);
+  toast('Connecting to Firebase…');
+  initFirebase(cfg);
 }
 
 Object.assign(window, {
