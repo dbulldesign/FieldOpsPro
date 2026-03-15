@@ -1246,6 +1246,7 @@ body.compact #content { padding: 12px !important; }
 }
 @media (max-width: 768px) {
   #menuBtn { display: none !important; }
+  #addBtn { display: none !important; }
   #mob-back-btn {
     align-items: center !important;
     gap: 2px !important;
@@ -1407,6 +1408,51 @@ body.compact #content { padding: 12px !important; }
 #main::before, #main::after,
 #content::before, #content::after,
 #topbar::before, #topbar::after { content: none !important; }
+
+/* ── iOS LIGHT MODE TEXT FIX ── */
+html[data-theme="light"] * {
+  -webkit-text-fill-color: initial;
+}
+html[data-theme="light"] .card,
+html[data-theme="light"] .stat-card { 
+  background: #ffffff !important; 
+  color: #0f172a !important; 
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html[data-theme="light"] .nav-item,
+html[data-theme="light"] .nav-label { color: #334155 !important; }
+html[data-theme="light"] .nav-item.active { color: #2563ff !important; }
+html[data-theme="light"] h1, html[data-theme="light"] h2, html[data-theme="light"] h3,
+html[data-theme="light"] p, html[data-theme="light"] span, html[data-theme="light"] div,
+html[data-theme="light"] td, html[data-theme="light"] th, html[data-theme="light"] label { 
+  color: inherit; 
+}
+html[data-theme="light"] .things-card-title { color: #0f172a !important; }
+html[data-theme="light"] .things-card-sub { color: #64748b !important; }
+html[data-theme="light"] .topbar-title { color: #0f172a !important; }
+html[data-theme="light"] #mob-large-title { color: #0f172a !important; }
+html[data-theme="light"] input, 
+html[data-theme="light"] textarea,
+html[data-theme="light"] select { 
+  color: #0f172a !important; 
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.15) !important;
+}
+html[data-theme="light"] .section-title { color: #0f172a !important; }
+html[data-theme="light"] #topbar { 
+  background: rgba(255,255,255,0.95) !important; 
+  border-bottom-color: rgba(0,0,0,0.1) !important;
+}
+html[data-theme="light"] #sidebar {
+  background: #f8fafc !important;
+  border-right: 1px solid rgba(0,0,0,0.08) !important;
+}
+html[data-theme="light"] .sidebar-logo h1 { color: #0f172a !important; }
+html[data-theme="light"] .sidebar-logo p { color: #64748b !important; }
+/* Fix search icon overlap on mobile */
+@media (max-width: 768px) {
+  #mob-search-input { padding-left: 36px !important; }
+}
 
 </style>
 
@@ -5286,7 +5332,7 @@ function closeBarcodeScanner() {
 </div>
 
 <!-- QUICK ADD FAB -->
-<button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none">+</button>
+<button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"></button>
 <div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:24px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px;width:300px;box-shadow:0 24px 60px rgba(0,0,0,0.6)">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add Task</span>
