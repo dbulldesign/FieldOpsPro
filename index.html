@@ -2440,7 +2440,7 @@ function switchView(v) {
       const pf = document.getElementById('task-project-filter');
       if (pf) {
         pf.innerHTML = '<option value="">All Projects</option>' +
-          state.projects.map(p=>`<option value="${p.id}"${taskProjectFilter===p.id?' selected':''}>${p.name}</option>`).join('');
+          state.projects.map(function(p){return '<option value="'+p.id+'"'+(taskProjectFilter===p.id?' selected':'')+'>'+escH(p.name)+'</option>';}).join('');
       }
       const fab = document.getElementById('quickAddFab');
       if (fab) fab.style.display = 'flex';
@@ -2457,9 +2457,9 @@ function switchView(v) {
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item').forEach(el=>el.classList.remove('active'));
-  const ni = document.querySelector(`.nav-item[onclick*="'${v}'"]`);
+  var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
   if(ni) ni.classList.add('active');
-  const mi = document.querySelector(`.mobile-nav-item[onclick*="'${v}'"]`);
+  var mi=null;
   if(mi) mi.classList.add('active');
   document.getElementById('topbarTitle').textContent = viewTitles[v];
   closeSidebar();
@@ -2506,7 +2506,7 @@ function clearForm(modalId) {
 }
 
 function populateProjectSelects() {
-  const projOpts = '<option value="">— None —</option>' + state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
   ['task-project','po-project','ship-project'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.innerHTML = projOpts;
@@ -2515,19 +2515,19 @@ function populateProjectSelects() {
   const poEl = document.getElementById('ship-po');
   if(poEl) {
     poEl.innerHTML = '<option value="">— None —</option>' +
-      state.pos.map(p=>`<option value="${p.id}">${p.number ? p.number+' - ' : ''}${p.vendor||'PO'}</option>`).join('');
+      state.pos.map(function(p){return '<option value="'+p.id+'">'+(p.number?escH(p.number)+' - ':'')+escH(p.vendor||'PO')+'</option>';}).join('');
   }
   // Populate task-shipment with shipping options
   const taskShipEl = document.getElementById('task-shipment');
   if(taskShipEl) {
     taskShipEl.innerHTML = '<option value="">— None —</option>' +
-      state.shipping.map(s=>`<option value="${s.id}">${s.desc||s.tracking||'Shipment'}</option>`).join('');
+      state.shipping.map(function(s){return '<option value="'+s.id+'">'+escH(s.desc||s.tracking||'Shipment')+'</option>';}).join('');
   }
   // Populate ship-task with task options
   const taskEl = document.getElementById('ship-task');
   if(taskEl) {
     taskEl.innerHTML = '<option value="">— None —</option>' +
-      state.tasks.filter(t=>!t.archived).map(t=>`<option value="${t.id}">${t.title}</option>`).join('');
+      state.tasks.filter(function(t){return !t.archived;}).map(function(t){return '<option value="'+t.id+'">'+escH(t.title)+'</option>';}).join('');
   }
 }
 
@@ -2543,10 +2543,10 @@ function statusBadge(s) {
     pending:'badge-gray', transit:'badge-blue', out:'badge-yellow', delivered:'badge-green', exception:'badge-red',
     freight:'badge-gold', ground:'badge-gray', '2day':'badge-blue', overnight:'badge-purple'
   };
-  return `<span class="badge ${map[s]||'badge-gray'}">${s||'—'}</span>`;
+  return '<span class="badge '+(map[s]||'badge-gray')+'">'+escH(s||'—')+'</span>';
 }
 function priorityBadge(p) {
-  return `<span class="priority priority-${p||'low'}">${p||'low'}</span>`;
+  return '<span class="priority priority-'+(p||'low')+'">'+escH(p||'low')+'</span>';
 }
 function poName(id) {
   const p = state.pos.find(p=>p.id===id);
@@ -2605,18 +2605,7 @@ function renderDashboard() {
   if (alertEl) {
     if (overdue.length || dueSoon.length) {
       alertEl.style.display = 'block';
-      alertEl.innerHTML = `
-        ${overdue.length ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;margin-bottom:8px">
-          <span style="font-size:16px">🔴</span>
-          <div><span style="font-weight:700;color:#f87171">${overdue.length} overdue task${overdue.length!==1?'s':''}</span>
-          <span style="color:#4a5e7a;font-size:12px;margin-left:8px">${overdue.map(t=>t.title).slice(0,2).join(', ')}${overdue.length>2?' +more':''}</span></div>
-          <button class="btn btn-sm" onclick="switchView('tasks')" style="margin-left:auto;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:4px 10px;font-size:11px">View</button>
-        </div>` : ''}
-        ${dueSoon.length ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:12px">
-          <span style="font-size:16px">🟡</span>
-          <div><span style="font-weight:700;color:#fbbf24">${dueSoon.length} due within 3 days</span>
-          <span style="color:#4a5e7a;font-size:12px;margin-left:8px">${dueSoon.map(t=>t.title).slice(0,2).join(', ')}${dueSoon.length>2?' +more':''}</span></div>
-        </div>` : ''}`;
+      var aH='';if(overdue.length)aH+='<div style="padding:8px 12px;background:rgba(239,68,68,0.12);border-radius:10px;margin-bottom:6px;color:#f87171;font-weight:600">'+overdue.length+' overdue task'+(overdue.length>1?'s':'')+'</div>';if(dueSoon.length)aH+='<div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:10px;margin-bottom:6px;color:#fbbf24;font-weight:600">'+dueSoon.length+' due soon</div>';alertEl.innerHTML=aH;alertEl.style.display=aH?'block':'none';
     } else {
       alertEl.style.display = 'none';
     }
@@ -2626,29 +2615,34 @@ function renderDashboard() {
   const dt = document.getElementById('dash-tasks');
   const recent = openTasks.filter(t=>!t.archived).slice(-5).reverse();
   if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
-  else dt.innerHTML = recent.map(t=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer" onclick="openDetail('tasks','${t.id}')">
-      <span class="priority priority-${t.priority}" style="min-width:64px;font-size:12px;font-weight:600">${t.priority}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
-        <div style="font-size:11px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${projectName(t.project)||'No project'}</div>
-      </div>
-      ${statusBadge(t.status)}
-    </div>`).join('');
+  else {
+    dt.innerHTML='';
+    recent.forEach(function(t){
+      var d=document.createElement('div');
+      d.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer';
+      d.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(t.title)+'</div><div style="font-size:11px">'+fmtDateSmart(t.due)+'</div></div>'+statusBadge(t.status);
+      (function(tid){d.addEventListener('click',function(){switchView('tasks');setTimeout(function(){openDetail('tasks',tid);},100);});
+      d.addEventListener('touchend',function(e){e.preventDefault();switchView('tasks');setTimeout(function(){openDetail('tasks',tid);},100);});})(t.id);
+      dt.appendChild(d);
+    });
+  }
 
   // Shipping
   const ds = document.getElementById('dash-shipping');
   const active = state.shipping.filter(s=>s.status!=='delivered').slice(-5).reverse();
   if(!active.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
-  else ds.innerHTML = active.map(s=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer" onclick="openDetail('shipping','${s.id}')">
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(79,142,247,0.12);font-size:11px;font-weight:800;color:#4f8ef7;letter-spacing:-0.5px;flex-shrink:0">${s.carrier?s.carrier.slice(0,3).toUpperCase():'PKG'}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.desc||s.tracking}</div>
-        <div style="font-size:11px;color:#4a5e7a;font-family:Helvetica, Arial, sans-serif">${s.carrier} · ETA ${fmtDate(s.eta)}</div>
-      </div>
-      ${statusBadge(s.status)}
-    </div>`).join('');
+  if(!inTransitShip.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
+  else {
+    ds.innerHTML='';
+    inTransitShip.forEach(function(s){
+      var d=document.createElement('div');
+      d.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer';
+      d.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(s.desc||s.tracking||'Shipment')+'</div><div style="font-size:11px;color:#4a5e7a">'+escH(s.carrier||'')+'</div></div>'+statusBadge(s.status);
+      (function(sid){d.addEventListener('click',function(){switchView('shipping');setTimeout(function(){openDetail('shipping',sid);},100);});
+      d.addEventListener('touchend',function(e){e.preventDefault();switchView('shipping');setTimeout(function(){openDetail('shipping',sid);},100);});})(s.id);
+      ds.appendChild(d);
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -2663,39 +2657,38 @@ function filterProjects(f, el) {
 }
 
 function renderProjects() {
-  let data = state.projects;
-  if(projectFilter !== 'all') data = data.filter(p=>p.status===projectFilter);
-  const el = document.getElementById('projects-list');
-  if(!data.length) { el.innerHTML=buildEmptyState('🏗','rgba(79,142,247,0.12)','No projects yet','Tap + Add to create your first project and start tracking work.'); return; }
-  el.innerHTML = `<div class="grid-2">${data.map(p=>{
-    const tasks = state.tasks.filter(t=>t.project===p.id);
-    const done = tasks.filter(t=>t.status==='done').length;
-    const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
-    const _sc = {active:'#10b981',planning:'#3b82f6','on-hold':'#fbbf24',completed:'#64748b'};
-    const _bc = _sc[p.status] || '#3b82f6';
-    return `<div class="card" style="cursor:pointer;border-left:4px solid ${_bc} !important" onclick="openDetail('projects','${p.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-        <div>
-          <div style="font-family:Helvetica, Arial, sans-serif;font-weight:700;font-size:16px;margin-bottom:4px"><span style="width:9px;height:9px;border-radius:50%;background:${projectHealth(p).color};box-shadow:0 0 7px ${projectHealth(p).color}55;display:inline-block;margin-right:7px;vertical-align:middle" title="${projectHealth(p).label}"></span>${p.name}</div>
-          <div style="font-size:12px;color:#64748b">${p.client||'No client'} ${p.location?'· '+p.location:''}</div>
-        </div>
-        ${statusBadge(p.status)}
-      </div>
-      ${p.system?`<div style="margin-bottom:10px"><span class="badge badge-cyan">&#x26A1; ${p.system}</span></div>`:''}
-      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b">
-        <span>&#x1F4C5; ${fmtDate(p.start)||'—'}</span>
-        <span>&#x1F3AF; ${fmtDate(p.end)||'—'}</span>
-      </div>
-      <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b">
-        <span>Tasks: ${done}/${tasks.length}</span><span>${pct}%</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      <div style="margin-top:12px;display:flex;gap:8px" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost btn-sm" onclick="editProject('${p.id}')" title="Edit"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="btn btn-danger btn-sm" onclick="softDelete('projects','${p.id}',p.name);renderProjects()" title="Delete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+  var data=state.projects;
+  if(projectFilter!=='all') data=data.filter(function(p){return p.status===projectFilter;});
+  var el=document.getElementById('projects-list');
+  if(!data.length){el.innerHTML=buildEmptyState('X','rgba(79,142,247,0.12)','No projects yet','Tap + Add to create your first project.');return;}
+  var sC={active:'#10b981',planning:'#3b82f6','on-hold':'#fbbf24',completed:'#64748b'};
+  el.innerHTML='';var wrap=document.createElement('div');wrap.className='grid-2';
+  data.forEach(function(p){
+    var tasks=state.tasks.filter(function(t){return t.project===p.id;}),done=tasks.filter(function(t){return t.status==='done';}).length,pct=tasks.length?Math.round(done/tasks.length*100):0,bc=sC[p.status]||'#3b82f6',health=projectHealth(p);
+    var card=document.createElement('div');card.className='card';card.style.cssText='cursor:pointer;border-left:4px solid '+bc+' !important';
+    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div>'
+      +'<div style="font-weight:700;font-size:16px;margin-bottom:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+health.color+';display:inline-block;margin-right:7px;vertical-align:middle"></span>'+escH(p.name)+'</div>'
+      +'<div style="font-size:12px;color:#64748b">'+escH(p.client||'No client')+(p.location?' &middot; '+escH(p.location):'')+' </div></div>'+statusBadge(p.status)+'</div>'
+      +(p.system?'<div style="margin-bottom:10px"><span class="badge badge-cyan">&#x26A1; '+escH(p.system)+'</span></div>':'')
+      +'<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b"><span>'+escH(fmtDate(p.start)||'—')+'</span><span>'+escH(fmtDate(p.end)||'—')+'</span></div>'
+      +'<div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b"><span>Tasks: '+done+'/'+tasks.length+'</span><span>'+pct+'%</span></div>'
+      +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px">'
+      +'<button class="btn btn-ghost btn-sm"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      +'<button class="btn btn-danger btn-sm"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
+      +'</div>';
+    (function(pid,pn){
+      card.addEventListener('click',function(){openDetail('projects',pid);});
+      card.addEventListener('touchend',function(e){e.preventDefault();openDetail('projects',pid);});
+      var b=card.querySelectorAll('button');
+      b[0].addEventListener('click',function(e){e.stopPropagation();editProject(pid);});
+      b[0].addEventListener('touchend',function(e){e.stopPropagation();e.preventDefault();editProject(pid);});
+      b[1].addEventListener('click',function(e){e.stopPropagation();softDelete('projects',pid,pn);renderProjects();});
+      b[1].addEventListener('touchend',function(e){e.stopPropagation();e.preventDefault();softDelete('projects',pid,pn);renderProjects();});
+    })(p.id,p.name||'Project');
+    wrap.appendChild(card);
+  });
+  el.appendChild(wrap);
 }
 
 function saveProject() {
@@ -2932,7 +2925,7 @@ function onTaskTouchStart(e, taskId) {
   touchDragEl = e.currentTarget;
   const rect = touchDragEl.getBoundingClientRect();
   touchClone = touchDragEl.cloneNode(true);
-  touchClone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;opacity:0.85;pointer-events:none;z-index:9999;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);transition:none`;
+  touchClone.style.cssText = 'position:fixed;top:'+rect.top+'px;left:'+rect.left+'px;width:'+rect.width+'px;opacity:0.85;pointer-events:none;z-index:9999;';
   document.body.appendChild(touchClone);
   touchDragEl.style.opacity = '0.3';
 }
@@ -3192,94 +3185,97 @@ function editShipment(id) {
 // ═══════════════════════════════════════════════
 //  DETAIL VIEW
 // ═══════════════════════════════════════════════
+
+function setDetailFooter(f, editFn, id) {
+  f.innerHTML = '';
+  if (editFn) {
+    var editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-ghost';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', function(){ closeModal('modal-detail'); window[editFn](id); });
+    f.appendChild(editBtn);
+  }
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-ghost';
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', function(){ closeModal('modal-detail'); });
+  f.appendChild(closeBtn);
+}
+
 function openDetail(col, id) {
   trackView(col, id);
-  const item = state[col].find(x=>x.id===id);
+  var item = state[col] ? state[col].find(function(x){ return x.id===id; }) : null;
   if(!item) return;
-  const t=document.getElementById('detail-title');
-  const b=document.getElementById('detail-body');
-  const f=document.getElementById('detail-footer');
-
+  var modal = document.getElementById('modal-detail');
+  var t = document.getElementById('detail-title');
+  var b = document.getElementById('detail-body');
+  var f = document.getElementById('detail-footer');
+  if(!modal||!t||!b) return;
+  modal.classList.add('open');
+  function row(label, val) {
+    return '<div class="detail-row"><div class="detail-label">'+escH(label)+'</div><div class="detail-val">'+val+'</div></div>';
+  }
   if(col==='projects') {
-    const tasks = state.tasks.filter(t=>t.project===id);
-    const done = tasks.filter(t=>t.status==='done').length;
+    var ptasks = state.tasks.filter(function(x){ return x.project===id; });
+    var pdone = ptasks.filter(function(x){ return x.status==='done'; }).length;
+    var ppct = ptasks.length ? Math.round(pdone/ptasks.length*100) : 0;
     t.textContent = item.name;
-    b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">Client</div><div class="detail-val">${item.client||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
-      <div class="detail-row"><div class="detail-label">Control System</div><div class="detail-val">${item.system?`<span class="badge badge-cyan">⚡ ${item.system}</span>`:'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Location</div><div class="detail-val">${item.location||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Timeline</div><div class="detail-val">${fmtDate(item.start)||'—'} → ${fmtDate(item.end)||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Task Progress</div><div class="detail-val">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span>${done}/${tasks.length} tasks complete</span>
-          <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${tasks.length?Math.round(done/tasks.length*100):0}%"></div></div>
-        </div>
-      </div></div>
-      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
-    `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editProject('${id}')">Edit Edit</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+    b.innerHTML = row('Client', escH(item.client||'—'))
+      + row('Status', statusBadge(item.status))
+      + row('Control System', item.system?'<span class="badge badge-cyan">'+escH(item.system)+'</span>':'—')
+      + row('Location', escH(item.location||'—'))
+      + row('Start', escH(fmtDate(item.start)))
+      + row('End', escH(fmtDate(item.end)))
+      + row('Progress', '<div style="display:flex;align-items:center;gap:10px"><span>'+pdone+'/'+ptasks.length+' tasks</span><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>')
+      + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
+    setDetailFooter(f, 'editProject', id);
   }
   else if(col==='tasks') {
     t.textContent = item.title;
-    b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
-      <div class="detail-row"><div class="detail-label">Priority</div><div class="detail-val">${priorityBadge(item.priority)}</div></div>
-      <div class="detail-row"><div class="detail-label">Category</div><div class="detail-val">${item.category||'General'}</div></div>
-      <div class="detail-row"><div class="detail-label">Due Date</div><div class="detail-val">${fmtDate(item.due)}</div></div>
-      ${item.recur?`<div class="detail-row"><div class="detail-label">Repeats</div><div class="detail-val">${item.recur}</div></div>`:''}
-      ${item.shipment?(()=>{const sh=state.shipping.find(x=>x.id===item.shipment);return sh?`<div class="detail-row"><div class="detail-label">Linked Shipment</div><div class="detail-val"><span style="cursor:pointer;color:#4f8ef7" onclick="openDetail('shipping','${item.shipment}')">${sh.desc||sh.tracking||'Shipment'}</span> <span class="badge ${sh.status==='delivered'?'badge-green':sh.status==='transit'?'badge-yellow':'badge-gray'}">${sh.status}</span></div></div>`:'';})():''}
-      ${item.desc?`<div class="detail-row"><div class="detail-label">Description</div><div class="detail-val" style="white-space:pre-wrap">${item.desc}</div></div>`:''}
-    `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editTask('${id}')">Edit Edit</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+    b.innerHTML = row('Status', statusBadge(item.status))
+      + row('Priority', priorityBadge(item.priority))
+      + row('Category', escH(item.category||'General'))
+      + row('Due', fmtDateSmart(item.due))
+      + (item.recur?row('Repeats', escH(item.recur)):'')
+      + (item.project?row('Project', escH(projectName(item.project))):'')
+      + (item.desc?row('Notes','<span style="white-space:pre-wrap">'+escH(item.desc)+'</span>'):'');
+    setDetailFooter(f, 'editTask', id);
   }
   else if(col==='pos') {
-    t.textContent = 'PO '+item.number;
-    const lines=(item.items||'').split('\n').filter(Boolean);
-    b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">PO Number</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:#3b82f6">${item.number}</div></div>
-      <div class="detail-row"><div class="detail-label">Vendor</div><div class="detail-val" style="font-weight:600">${item.vendor}</div></div>
-      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
-      <div class="detail-row"><div class="detail-label">Linked PO</div><div class="detail-val">${item.po ? poName(item.po) : '—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Order Date</div><div class="detail-val">${fmtDate(item.date)}</div></div>
-      <div class="detail-row"><div class="detail-label">Expected</div><div class="detail-val">${fmtDate(item.delivery)}</div></div>
-      <div class="detail-row"><div class="detail-label">Ship Method</div><div class="detail-val">${item.shipmethod||'Standard'}</div></div>
-      ${lines.length?`<div class="detail-row"><div class="detail-label">Line Items</div><div class="detail-val">
-        ${lines.map(l=>`<div style="padding:4px 0;border-bottom:1px solid #1e2d50;font-size:12px;font-family:Helvetica, Arial, sans-serif">${l}</div>`).join('')}
-      </div></div>`:''}
-      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
-    `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editPO('${id}')">Edit Edit</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+    t.textContent = item.number||item.vendor||'PO';
+    var poLines = (item.items||'').split('\n').filter(Boolean);
+    b.innerHTML = row('PO Number', escH(item.number||'—'))
+      + row('Vendor', escH(item.vendor||'—'))
+      + row('Project', item.project?escH(projectName(item.project)):'—')
+      + row('Status', statusBadge(item.status))
+      + row('Date', escH(fmtDate(item.date)))
+      + row('Ship Method', escH(item.shipmethod||'—'))
+      + row('Total', '<span style="color:#f59e0b;font-weight:600">'+escH(fmtCurrency(item.total))+'</span>')
+      + (poLines.length?row('Line Items','<div style="font-size:12px">'+poLines.map(function(l){ return '<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'+escH(l)+'</div>'; }).join('')+'</div>'):'')
+      + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
+    setDetailFooter(f, 'editPO', id);
   }
   else if(col==='shipping') {
-    t.textContent = item.tracking;
-    const carrierLinks={UPS:`https://www.ups.com/track?tracknum=${item.tracking}`,FedEx:`https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=${item.tracking}`,USPS:`https://tools.usps.com/go/TrackConfirmAction?tLabels=${item.tracking}`,DHL:`https://www.dhl.com/en/express/tracking.html?AWB=${item.tracking}`};
-    const link=carrierLinks[item.carrier];
-    b.innerHTML=`
-      <div class="detail-row"><div class="detail-label">Tracking #</div><div class="detail-val" style="font-family:Helvetica, Arial, sans-serif;color:#3b82f6">${item.tracking}${link?` <a href="${link}" target="_blank" style="font-size:12px;color:#4a5e7a;margin-left:8px">Track on ${item.carrier} ↗</a>`:''}</div></div>
-      <div class="detail-row"><div class="detail-label">Carrier</div><div class="detail-val">${item.carrier||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Description</div><div class="detail-val">${item.desc||'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Status</div><div class="detail-val">${statusBadge(item.status)}</div></div>
-      <div class="detail-row"><div class="detail-label">Project/PO</div><div class="detail-val">${item.project?projectName(item.project):'—'}</div></div>
-      <div class="detail-row"><div class="detail-label">Shipped</div><div class="detail-val">${fmtDate(item.date)}</div></div>
-      <div class="detail-row"><div class="detail-label">Est. Delivery</div><div class="detail-val">${fmtDate(item.eta)}</div></div>
-      ${item.notes?`<div class="detail-row"><div class="detail-label">Notes</div><div class="detail-val" style="white-space:pre-wrap">${item.notes}</div></div>`:''}
-    `;
-    f.innerHTML=`<button class="btn btn-ghost" onclick="closeModal('modal-detail');editShipment('${id}')">Edit Edit</button>
-      ${link?`<a href="${link}" target="_blank" class="btn btn-primary">📦 Track on ${item.carrier}</a>`:''}
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+    t.textContent = item.desc||item.tracking||'Shipment';
+    var trackVal = item.tracking ? escH(item.tracking) : '<span style="color:#4a5e7a">Pending</span>';
+    b.innerHTML = row('Tracking', trackVal)
+      + row('Carrier', escH(item.carrier||'—'))
+      + row('Description', escH(item.desc||'—'))
+      + row('Status', statusBadge(item.status))
+      + row('Linked PO', item.po?escH(poName(item.po)):'—')
+      + row('Shipped', escH(fmtDate(item.date)))
+      + row('Est. Delivery', fmtDateSmart(item.eta))
+      + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
+    setDetailFooter(f, 'editShipment', id);
   }
-  openModal('modal-detail');
+  else if(col==='issues') {
+    t.textContent = item.q||'Issue';
+    b.innerHTML = row('Category', escH(item.cat||'—'))
+      + row('Issue', escH(item.q||'—'))
+      + row('Solution', '<span style="white-space:pre-wrap">'+escH((item.steps||[]).join('\n'))+'</span>');
+    setDetailFooter(f, null, id);
+  }
 }
-
-// ═══════════════════════════════════════════════
-//  TROUBLESHOOT DATABASE
-// ═══════════════════════════════════════════════
-// Built-in issues seeded on first load
-
 
 
 function renderTroubleshoot() {
@@ -3539,7 +3535,7 @@ function renderSearchDropdown(results, q) {
 
   typeOrder.forEach(function(type) {
     if (!groups[type]) return;
-    html += `<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a;border-top:1px solid rgba(255,255,255,0.05)">${labels[type]}</div>`;
+    html+='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a;border-top:1px solid rgba(255,255,255,0.05)">'+escH(labels[type]||type)+'</div>';
         groups[type].forEach(function(r) {
       var ridx = globalIdx++;
       var badge = r.badge ? '<span class="badge '+(r.badgeType||'badge-gray')+'" style="font-size:10px;flex-shrink:0">'+escH(r.badge)+'</span>' : '';
@@ -3653,7 +3649,7 @@ function swipeMove(e, el) {
   if (!swipeActive) return;
   e.preventDefault();
   const clamped = Math.max(-120, Math.min(0, dx));
-  el.style.transform = `translateX(${clamped}px)`;
+  el.style.transform = 'translateX('+clamped+'px)';
   el.style.transition = 'none';
 }
 function swipeEnd(e, el, taskId, taskState) {
@@ -4690,70 +4686,26 @@ function populateTemplatePicker() {
 // ═══════════════════════════════════════════════
 function downloadWithConfig() {
   var raw = localStorage.getItem('fop_firebase_cfg');
-  if (!raw) {
-    toast('No Firebase config saved yet — connect first');
-    return;
-  }
+  if (!raw) { toast('No Firebase config saved yet — connect first'); return; }
   var cfg;
   try { cfg = JSON.parse(raw); } catch(e) { toast('Invalid config'); return; }
-
-  // Get the current page HTML
   var html = document.documentElement.outerHTML;
-
-  // Remove any previously baked config script tag
-  html = html.replace(/<script id="embedded-firebase-cfg"[\s\S]*?<\/script>\s*/g, '');
-
-  // Inject the config right after <head>
-  var configScript = '<script id="embedded-firebase-cfg">window._embeddedFirebaseConfig = '
-    + JSON.stringify(cfg)
-    + ';<\/script>';
+  // Use split string to avoid HTML parser misreading script tags
+  var scr = '<scr'+'ipt';
+  var escr = '<'+'/scr'+'ipt>';
+  html = html.replace(new RegExp(scr+'[^>]*id=["\']embedded-firebase-cfg["\'][\\s\\S]*?'+escr, 'g'), '');
+  var configScript = scr+' id="embedded-firebase-cfg">window._embeddedFirebaseConfig = '
+    + JSON.stringify(cfg) + ';'+escr;
   html = html.replace('<head>', '<head>\n' + configScript);
-
-  // Download as file
   var blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = url;
-  a.download = 'FieldOps-Pro.html';
-  document.body.appendChild(a);
-  a.click();
+  a.href = url; a.download = 'FieldOps-Pro.html';
+  document.body.appendChild(a); a.click();
   setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
   toast('Downloaded FieldOps-Pro.html with Firebase config saved');
 }
 
-
-// ═══════════════════════════════════════════════
-//  TASK TEMPLATES
-// ═══════════════════════════════════════════════
-var taskTemplates = JSON.parse(localStorage.getItem('fop_templates') || JSON.stringify([
-  { id:'lutron-commission', name:'Lutron Commissioning', tasks:[
-    {title:'Verify panel wiring and load labeling', priority:'high', category:'commissioning', status:'todo'},
-    {title:'Program device database in software', priority:'high', category:'program', status:'todo'},
-    {title:'Assign loads to keypads and dimmers', priority:'medium', category:'program', status:'todo'},
-    {title:'Program scenes (on/off/presets)', priority:'medium', category:'program', status:'todo'},
-    {title:'Test all scenes on each keypad', priority:'medium', category:'testing', status:'todo'},
-    {title:'Commission occupancy sensors', priority:'medium', category:'commissioning', status:'todo'},
-    {title:'Verify timeclock schedules', priority:'low', category:'commissioning', status:'todo'},
-    {title:'Client walkthrough and sign-off', priority:'high', category:'admin', status:'todo'},
-    {title:'Submit as-built documentation', priority:'medium', category:'admin', status:'todo'}
-  ]},
-  { id:'new-project-setup', name:'New Project Setup', tasks:[
-    {title:'Review contract scope and drawings', priority:'high', category:'admin', status:'todo'},
-    {title:'Order materials and submit PO', priority:'high', category:'admin', status:'todo'},
-    {title:'Schedule rough-in with GC', priority:'medium', category:'admin', status:'todo'},
-    {title:'Rough-in wiring and conduit', priority:'high', category:'install', status:'todo'},
-    {title:'Device installation and mounting', priority:'medium', category:'install', status:'todo'},
-    {title:'Low-voltage wiring terminations', priority:'medium', category:'install', status:'todo'}
-  ]},
-  { id:'punch-list', name:'Punch List', tasks:[
-    {title:'Walk site and document deficiencies', priority:'high', category:'punch', status:'todo'},
-    {title:'Correct all wiring issues', priority:'high', category:'punch', status:'todo'},
-    {title:'Replace damaged devices', priority:'medium', category:'punch', status:'todo'},
-    {title:'Final dimmer adjustments', priority:'medium', category:'punch', status:'todo'},
-    {title:'Clean all devices and faceplates', priority:'low', category:'punch', status:'todo'},
-    {title:'Final client demonstration', priority:'high', category:'admin', status:'todo'}
-  ]}
-]));
 
 function saveTemplates() { localStorage.setItem('fop_templates', JSON.stringify(taskTemplates)); }
 
@@ -5021,7 +4973,7 @@ Object.assign(window, {
   onTaskTouchStart, onTaskTouchMove, onTaskTouchEnd,
   savePO, editPO, filterPOs,
   saveShipment, editShipment, filterShipping,
-  deleteItem, openDetail,
+  deleteItem, openDetail, setDetailFooter,
   confirmDeletePO, confirmDeleteShipment, confirmDeleteTask, bulkDeleteAllArchived, escH,
   renderTroubleshoot, toggleTrouble, editIssue, saveIssue, deleteIssue,
   saveFirebaseConfig, clearFirebaseConfig, globalSearch,
@@ -5057,7 +5009,7 @@ function toggleQuickAdd() {
     const qaProj = document.getElementById('qa-project');
     if (qaProj) {
       qaProj.innerHTML = '<option value="">No project</option>' +
-        state.projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+        state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
     }
     setTimeout(() => document.getElementById('qa-title').focus(), 50);
   }
