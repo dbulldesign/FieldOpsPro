@@ -19,7 +19,10 @@
   document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
 })();
 </script>
-<style>
+<style>html {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 /* FIELDOPS PRO - Modern iOS Dark UI
    All colors hardcoded. Zero CSS variable dependencies. */
 
@@ -28,6 +31,8 @@
   -webkit-tap-highlight-color: transparent;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }
+#mob-large-title-wrap { display: none; }
+
 html, body {
   height: 100%; overflow: hidden;
   background: #080d1a !important;
@@ -633,17 +638,15 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
     position: sticky; bottom: 0;
   }
   .modal h3 { font-size: 18px !important; font-weight: 700 !important; }
-  /* Drag handle on all modals */
-  .modal::before {
-    content: '';
-    display: block;
+  /* Drag handle via JS only - CSS ::before causes rendering artifacts on iOS */
+  .modal-drag-handle {
     width: 36px; height: 4px;
     background: rgba(255,255,255,0.2);
     border-radius: 99px;
-    margin: 10px auto 0;
+    margin: 10px auto 4px;
     flex-shrink: 0;
   }
-  [data-theme="light"] .modal::before { background: rgba(0,0,0,0.15); }
+  html[data-theme="light"] .modal-drag-handle { background: rgba(0,0,0,0.15); }
 
   /* ── Tabs: scroll horizontally ── */
   .tabs {
@@ -823,9 +826,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus {
 #searchDropdown::-webkit-scrollbar-thumb { background: #2a3a5c; border-radius: 99px; }
 
 /* ── LIGHT THEME ── */
-[data-theme="light"] body { background: #f0f4fa !important; color: #0f172a !important; -webkit-text-fill-color: #0f172a; }
-[data-theme="light"] html, [data-theme="light"] body { background: #f0f4fa !important; }
-[data-theme="light"] #app, [data-theme="light"] #main, [data-theme="light"] #content { background: #f0f4fa !important; }
+html[data-theme="light"] body { background: #f0f4fa !important; color: #0f172a !important; }
+html[data-theme="light"], html[data-theme="light"] body { background: #f0f4fa !important; }
+html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="light"] #content { background: #f0f4fa !important; }
 [data-theme="light"] #sidebar { background: #ffffff !important; border-right-color: rgba(0,0,0,0.08) !important; }
 [data-theme="light"] #topbar { background: rgba(255,255,255,0.95) !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
 [data-theme="light"] .card, [data-theme="light"] .stat-card, [data-theme="light"] .table-wrap,
@@ -1398,6 +1401,12 @@ body.compact #content { padding: 12px !important; }
 }
 /* Ensure mob-search-wrap contains absolute SVG */
 #mob-search-wrap { position: relative; }
+
+/* Prevent phantom pseudo-element rendering on iOS */
+#app::before, #app::after,
+#main::before, #main::after,
+#content::before, #content::after,
+#topbar::before, #topbar::after { content: none !important; }
 
 </style>
 
