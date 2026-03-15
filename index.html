@@ -1127,8 +1127,8 @@ body:not(.mob-subview) #view-dashboard .widget-toolbar { display: none !importan
 
 /* Things home cards container */
 #things-home-wrap {
+display: block;
 padding: 0 14px;
-flex: 1;
 }
 #things-home-cards {
 display: flex;
@@ -1344,7 +1344,7 @@ pointer-events: auto !important;
 }
 /* Prevent scroll momentum from swallowing taps */
 #things-home-cards {
-touch-action: pan-y;
+touch-action: auto;
 }
 
 }
@@ -1416,9 +1416,9 @@ touch-action: pan-y;
     <!-- TOP BAR -->
     <div id="topbar">
       <button class="btn btn-ghost btn-icon" id="menuBtn" onclick="toggleSidebar()">&#9776;</button>
-      <button class="btn btn-ghost btn-icon" id="mob-back-btn" onclick="switchView('dashboard')" style="display:none;align-items:center;gap:4px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-        <span style="font-size:15px;font-weight:600;color:var(--accent,#4f8ef7)">Home</span>
+      <button id="mob-back-btn" onclick="switchView('dashboard')" style="display:none;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:10px;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="15 18 9 12 15 6"/></svg>
+        <span style="font-size:16px;font-weight:600;color:#4f8ef7;white-space:nowrap">Home</span>
       </button>
       <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
       <div class="search-wrap" style="position:relative">
@@ -2204,13 +2204,14 @@ appId: "1:123456:web:abc"
 
 <script>
 
+
 // ═══════════════════════════════════════════════
 //  DATA LAYER — Local + Firebase sync
 // ═══════════════════════════════════════════════
-let db = null;
-let unsubscribers = [];
+var db = null;
+var unsubscribers = [];
 
-const COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
+var COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
 
 // Local storage fallback
 var LOCAL = {
@@ -2227,7 +2228,7 @@ var LOCAL = {
 };
 
 // In-memory state
-let state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -2322,7 +2323,7 @@ function initFirebase(config) {
 }
 
 function loadLocalData() {
-  COLLECTIONS.forEach(col => { state[col] = LOCAL.get(col); });
+  COLLECTIONS.forEach(function(col){ state[col] = LOCAL.get(col); });
   document.getElementById('syncDot').classList.add('offline');
   document.getElementById('syncLabel').textContent = 'Local only';
   renderAll();
@@ -2332,10 +2333,10 @@ function loadLocalData() {
 function parseFirebaseConfig(raw) {
   // Strip JS variable declarations and extract just the object
   var text = raw.trim();
-  // Remove: const firebaseConfig = ... or var firebaseConfig = ... or firebase.initializeApp(
-  text = text.replace(/const\s+\w+\s*=\s*/g, '');
+  // Remove: var firebaseConfig = ... or var firebaseConfig = ... or firebase.initializeApp(
   text = text.replace(/var\s+\w+\s*=\s*/g, '');
-  text = text.replace(/let\s+\w+\s*=\s*/g, '');
+  text = text.replace(/var\s+\w+\s*=\s*/g, '');
+  text = text.replace(/var\s+\w+\s*=\s*/g, '');
   text = text.replace(/firebase\.initializeApp\s*\(/g, '');
   text = text.replace(/initializeApp\s*\(/g, '');
   // Remove trailing ); or ;
@@ -2399,7 +2400,7 @@ function updateCfgDisplay(cfg) {
   if (paste && raw) {
     try {
       var stored = JSON.parse(raw);
-      paste.value = 'const firebaseConfig = ' + JSON.stringify(stored, null, 2) + ';';
+      paste.value = 'var firebaseConfig = ' + JSON.stringify(stored, null, 2) + ';';
     } catch(ex) {}
   }
 }
@@ -2428,35 +2429,35 @@ function loadSavedConfig() {
 // ═══════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════
-let currentView = 'dashboard';
-const viewTitles = {
+var currentView = 'dashboard';
+var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
 };
 
 function switchView(v) {
   if (v === 'tasks') {
-    setTimeout(() => {
-      const pf = document.getElementById('task-project-filter');
+    setTimeout(function() {
+      var pf = document.getElementById('task-project-filter');
       if (pf) {
         pf.innerHTML = '<option value="">All Projects</option>' +
           state.projects.map(function(p){return '<option value="'+p.id+'"'+(taskProjectFilter===p.id?' selected':'')+'>'+escH(p.name)+'</option>';}).join('');
       }
-      const fab = document.getElementById('quickAddFab');
+      var fab = document.getElementById('quickAddFab');
       if (fab) fab.style.display = 'flex';
     }, 50);
   } else {
-    const fab = document.getElementById('quickAddFab');
+    var fab = document.getElementById('quickAddFab');
     if (fab) { fab.style.display = 'none'; }
-    const panel = document.getElementById('quickAddPanel');
+    var panel = document.getElementById('quickAddPanel');
     if (panel) panel.style.display = 'none';
     quickAddOpen = false;
   }
   currentView = v;
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.mobile-nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.mobile-nav-item').forEach(function(el){el.classList.remove('active');});
   var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
   if(ni) ni.classList.add('active');
   var mi=null;
@@ -2481,15 +2482,15 @@ function closeSidebar() {
 // ═══════════════════════════════════════════════
 //  MODAL
 // ═══════════════════════════════════════════════
-let editingId = null;
+var editingId = null;
 
 function openAddModal() {
   editingId = null;
-  const modals = {
+  var modals = {
     dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
     pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue'
   };
-  const m = modals[currentView] || 'modal-task';
+  var m = modals[currentView] || 'modal-task';
   clearForm(m);
   if(m !== 'modal-issue') populateProjectSelects();
   openModal(m);
@@ -2506,25 +2507,25 @@ function clearForm(modalId) {
 }
 
 function populateProjectSelects() {
-  const projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
-  ['task-project','po-project','ship-project'].forEach(id=>{
-    const el = document.getElementById(id);
+  var projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
+  ['task-project','po-project','ship-project'].forEach(function(id){
+    var el = document.getElementById(id);
     if(el) el.innerHTML = projOpts;
   });
   // Populate ship-po with PO options
-  const poEl = document.getElementById('ship-po');
+  var poEl = document.getElementById('ship-po');
   if(poEl) {
     poEl.innerHTML = '<option value="">— None —</option>' +
       state.pos.map(function(p){return '<option value="'+p.id+'">'+(p.number?escH(p.number)+' - ':'')+escH(p.vendor||'PO')+'</option>';}).join('');
   }
   // Populate task-shipment with shipping options
-  const taskShipEl = document.getElementById('task-shipment');
+  var taskShipEl = document.getElementById('task-shipment');
   if(taskShipEl) {
     taskShipEl.innerHTML = '<option value="">— None —</option>' +
       state.shipping.map(function(s){return '<option value="'+s.id+'">'+escH(s.desc||s.tracking||'Shipment')+'</option>';}).join('');
   }
   // Populate ship-task with task options
-  const taskEl = document.getElementById('ship-task');
+  var taskEl = document.getElementById('ship-task');
   if(taskEl) {
     taskEl.innerHTML = '<option value="">— None —</option>' +
       state.tasks.filter(function(t){return !t.archived;}).map(function(t){return '<option value="'+t.id+'">'+escH(t.title)+'</option>';}).join('');
@@ -2535,7 +2536,7 @@ function populateProjectSelects() {
 //  RENDER HELPERS
 // ═══════════════════════════════════════════════
 function statusBadge(s) {
-  const map = {
+  var map = {
     active:'badge-green', planning:'badge-blue', 'on-hold':'badge-yellow', completed:'badge-gray',
     todo:'badge-blue', inprogress:'badge-yellow', done:'badge-green',
     draft:'badge-gray', submitted:'badge-blue', approved:'badge-green',
@@ -2549,11 +2550,11 @@ function priorityBadge(p) {
   return '<span class="priority priority-'+(p||'low')+'">'+escH(p||'low')+'</span>';
 }
 function poName(id) {
-  const p = state.pos.find(p=>p.id===id);
+  var p = state.pos.find(function(p){return p.id===id;});
   return p ? (p.number ? p.number+' - '+p.vendor : p.vendor||'PO') : '—';
 }
 function projectName(id) {
-  const p = state.projects.find(x=>x.id===id);
+  var p = state.projects.find(function(x){return x.id===id;});
   return p ? p.name : '—';
 }
 function fmtDate(d) {
@@ -2565,10 +2566,10 @@ function fmtCurrency(v) {
 }
 
 function toast(msg) {
-  const el = document.getElementById('toast');
+  var el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 2500);
+  setTimeout(function(){el.classList.remove('show');}, 2500);
 }
 
 // ═══════════════════════════════════════════════
@@ -2578,10 +2579,10 @@ function renderDashboard() {
   if (window.innerWidth <= 768 && currentView === 'dashboard') {
     renderThingsHome();
   }
-  const openTasks = state.tasks.filter(t=>t.status!=='done');
-  const highTasks = openTasks.filter(t=>t.priority==='high').length;
-  const inTransit = state.shipping.filter(s=>s.status==='transit'||s.status==='out').length;
-  const totalPO = state.pos.reduce((a,p)=>a+parseFloat(p.total||0),0);
+  var openTasks = state.tasks.filter(function(t){return t.status!=='done';});
+  var highTasks = openTasks.filter(function(t){return t.priority==='high';}).length;
+  var inTransit = state.shipping.filter(function(s){return s.status==='transit'||s.status==='out';}).length;
+  var totalPO = state.pos.reduce(function(a,p){return a+parseFloat(p.total||0);},0);
 
   animateCount('stat-projects',state.projects.length);
   animateCount('stat-tasks',openTasks.length);
@@ -2594,14 +2595,14 @@ function renderDashboard() {
 
   document.getElementById('badge-projects').textContent = state.projects.length;
   document.getElementById('badge-tasks').textContent = openTasks.length;
-  document.getElementById('badge-pos').textContent = state.pos.filter(p=>p.status!=='received'&&p.status!=='cancelled').length;
+  document.getElementById('badge-pos').textContent = state.pos.filter(function(p){return p.status!=='received'&&p.status!=='cancelled';}).length;
   document.getElementById('badge-shipping').textContent = inTransit;
 
   // Due date alerts
-  const today = new Date(); today.setHours(0,0,0,0);
-  const overdue = openTasks.filter(t => t.due && new Date(t.due) < today && !t.archived);
-  const dueSoon = openTasks.filter(t => t.due && !t.archived && (() => { const d = new Date(t.due); return d >= today && d <= new Date(today.getTime() + 3*86400000); })());
-  const alertEl = document.getElementById('dash-due-alerts');
+  var today = new Date(); today.setHours(0,0,0,0);
+  var overdue = openTasks.filter(function(t){return t.due && new Date(t.due)<today && !t.archived;});
+    var dueSoon = openTasks.filter(function(t){ if(!t.due||t.archived) return false; var d=new Date(t.due); return d>=today && d<=new Date(today.getTime()+3*86400000); });
+  var alertEl = document.getElementById('dash-due-alerts');
   if (alertEl) {
     if (overdue.length || dueSoon.length) {
       alertEl.style.display = 'block';
@@ -2612,8 +2613,8 @@ function renderDashboard() {
   }
 
   // Recent tasks
-  const dt = document.getElementById('dash-tasks');
-  const recent = openTasks.filter(t=>!t.archived).slice(-5).reverse();
+  var dt = document.getElementById('dash-tasks');
+  var recent = openTasks.filter(function(t){return !t.archived;}).slice(-5).reverse();
   if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
   else {
     dt.innerHTML='';
@@ -2628,13 +2629,13 @@ function renderDashboard() {
   }
 
   // Shipping
-  const ds = document.getElementById('dash-shipping');
-  const active = state.shipping.filter(s=>s.status!=='delivered').slice(-5).reverse();
+  var ds = document.getElementById('dash-shipping');
+  var active = state.shipping.filter(function(s){return s.status!=='delivered';}).slice(-5).reverse();
   if(!active.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
-  if(!inTransitShip.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
+  if(!active.length) { ds.innerHTML='<div class="empty-state"><p>No active shipments</p></div>'; }
   else {
     ds.innerHTML='';
-    inTransitShip.forEach(function(s){
+    active.forEach(function(s){
       var d=document.createElement('div');
       d.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer';
       d.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(s.desc||s.tracking||'Shipment')+'</div><div style="font-size:11px;color:#4a5e7a">'+escH(s.carrier||'')+'</div></div>'+statusBadge(s.status);
@@ -2648,10 +2649,10 @@ function renderDashboard() {
 // ═══════════════════════════════════════════════
 //  PROJECTS
 // ═══════════════════════════════════════════════
-let projectFilter = 'all';
+var projectFilter = 'all';
 function filterProjects(f, el) {
   projectFilter = f;
-  document.querySelectorAll('#view-projects .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#view-projects .tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
   renderProjects();
 }
@@ -2678,13 +2679,11 @@ function renderProjects() {
       +'<button class="btn btn-danger btn-sm"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
       +'</div>';
     (function(pid,pn){
-      card.addEventListener('click',function(){openDetail('projects',pid);});
-      card.addEventListener('touchend',function(e){e.preventDefault();openDetail('projects',pid);});
+      card.onclick = function() { openDetail('projects',pid); };
+      card.ontouchend = function(e) { e.preventDefault(); openDetail('projects',pid); };
       var b=card.querySelectorAll('button');
-      b[0].addEventListener('click',function(e){e.stopPropagation();editProject(pid);});
-      b[0].addEventListener('touchend',function(e){e.stopPropagation();e.preventDefault();editProject(pid);});
-      b[1].addEventListener('click',function(e){e.stopPropagation();softDelete('projects',pid,pn);renderProjects();});
-      b[1].addEventListener('touchend',function(e){e.stopPropagation();e.preventDefault();softDelete('projects',pid,pn);renderProjects();});
+      b[0].onclick = function(e) { e.stopPropagation(); editProject(pid); };
+      b[1].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
     })(p.id,p.name||'Project');
     wrap.appendChild(card);
   });
@@ -2692,9 +2691,9 @@ function renderProjects() {
 }
 
 function saveProject() {
-  const name = document.getElementById('project-name').value.trim();
+  var name = document.getElementById('project-name').value.trim();
   if(!name) { toast('Enter project name'); return; }
-  const item = {
+  var item = {
     name, client: document.getElementById('project-client').value.trim(),
     status: document.getElementById('project-status').value,
     start: document.getElementById('project-start').value,
@@ -2709,7 +2708,7 @@ function saveProject() {
 }
 
 function editProject(id) {
-  const p = state.projects.find(x=>x.id===id);
+  var p = state.projects.find(function(x){return x.id===id;});
   if(!p) return;
   editingId = id;
   document.getElementById('project-modal-title').textContent = 'Edit Project';
@@ -2727,15 +2726,15 @@ function editProject(id) {
 // ═══════════════════════════════════════════════
 //  TASKS
 // ═══════════════════════════════════════════════
-let taskFilter = 'all';
+var taskFilter = 'all';
 function filterTasks(f, el) {
   taskFilter = f;
-  document.querySelectorAll('#view-tasks .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#view-tasks .tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
   renderTasks();
 }
 
-let taskViewMode = 'list';
+var taskViewMode = 'list';
 
 function setTaskView(mode) {
   taskViewMode = mode;
@@ -2748,17 +2747,17 @@ function setTaskView(mode) {
 
 function cycleTaskStatus(id, e) {
   e.stopPropagation();
-  const task = state.tasks.find(t=>t.id===id);
+  var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
-  const cycle = ['todo','inprogress','done'];
-  const next = cycle[(cycle.indexOf(task.status)+1) % cycle.length];
+  var cycle = ['todo','inprogress','done'];
+  var next = cycle[(cycle.indexOf(task.status)+1) % cycle.length];
   updateItem('tasks', id, Object.assign({}, task, {status: next}));
   toast('Status: ' + next);
 }
 
 function archiveTask(id, e) {
   if(e) e.stopPropagation();
-  const task = state.tasks.find(t=>t.id===id);
+  var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
   updateItem('tasks', id, Object.assign({}, task, {archived: true}));
   haptic('medium');
@@ -2767,7 +2766,7 @@ function archiveTask(id, e) {
 }
 function unarchiveTask(id, e) {
   if(e) e.stopPropagation();
-  const task = state.tasks.find(t=>t.id===id);
+  var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
   updateItem('tasks', id, Object.assign({}, task, {archived: false}));
   renderTasks();
@@ -2881,11 +2880,11 @@ function onTaskDragStart(e, taskId) {
   dragTaskId = taskId;
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', taskId);
-  setTimeout(() => e.target.style.opacity = '0.4', 0);
+  setTimeout(function(){e.target.style.opacity='0.4';}, 0);
 }
 function onTaskDragEnd(e) {
   e.target.style.opacity = '';
-  document.querySelectorAll('.kanban-col').forEach(col => {
+  document.querySelectorAll('.kanban-col').forEach(function(col) {
     col.classList.remove('drag-over');
     col.style.borderColor = col.dataset.border;
   });
@@ -2893,7 +2892,7 @@ function onTaskDragEnd(e) {
 function onColDragOver(e, colEl) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('.kanban-col').forEach(c => {
+  document.querySelectorAll('.kanban-col').forEach(function(c) {
     c.classList.remove('drag-over');
     c.style.borderColor = c.dataset.border;
   });
@@ -2908,9 +2907,9 @@ function onColDragLeave(e, colEl) {
 }
 function onColDrop(e, status) {
   e.preventDefault();
-  const id = dragTaskId || e.dataTransfer.getData('text/plain');
+  var id = dragTaskId || e.dataTransfer.getData('text/plain');
   if (!id) return;
-  const task = state.tasks.find(t => t.id === id);
+  var task = state.tasks.find(function(t){return t.id===id;});
   if (!task || task.status === status) return;
   updateItem('tasks', id, Object.assign({}, task, { status }));
   toast('Moved to ' + { todo:'To Do', inprogress:'In Progress', done:'Done' }[status]);
@@ -2918,12 +2917,12 @@ function onColDrop(e, status) {
 }
 
 // ── TOUCH DRAG (mobile) ─────────────────────────────────────
-let touchDragEl = null, touchClone = null, touchTaskId = null;
+var touchDragEl = null, touchClone = null, touchTaskId = null;
 
 function onTaskTouchStart(e, taskId) {
   touchTaskId = taskId;
   touchDragEl = e.currentTarget;
-  const rect = touchDragEl.getBoundingClientRect();
+  var rect = touchDragEl.getBoundingClientRect();
   touchClone = touchDragEl.cloneNode(true);
   touchClone.style.cssText = 'position:fixed;top:'+rect.top+'px;left:'+rect.left+'px;width:'+rect.width+'px;opacity:0.85;pointer-events:none;z-index:9999;';
   document.body.appendChild(touchClone);
@@ -2932,19 +2931,19 @@ function onTaskTouchStart(e, taskId) {
 function onTaskTouchMove(e) {
   if (!touchClone) return;
   e.preventDefault();
-  const t = e.touches[0];
-  const rect = touchClone.getBoundingClientRect();
+  var t = e.touches[0];
+  var rect = touchClone.getBoundingClientRect();
   touchClone.style.left = (t.clientX - rect.width/2) + 'px';
   touchClone.style.top  = (t.clientY - rect.height/2) + 'px';
   // Highlight drop target
   touchClone.style.display = 'none';
-  const el = document.elementFromPoint(t.clientX, t.clientY);
+  var el = document.elementFromPoint(t.clientX, t.clientY);
   touchClone.style.display = '';
-  document.querySelectorAll('.kanban-col').forEach(c => {
+  document.querySelectorAll('.kanban-col').forEach(function(c) {
     c.style.borderColor = c.dataset.border;
     c.style.background = c.dataset.bg;
   });
-  const col = el && el.closest('.kanban-col');
+  var col = el && el.closest('.kanban-col');
   if (col) {
     col.style.borderColor = 'rgba(79,142,247,0.7)';
     col.style.background = 'rgba(79,142,247,0.1)';
@@ -2952,14 +2951,14 @@ function onTaskTouchMove(e) {
 }
 function onTaskTouchEnd(e) {
   if (!touchClone) return;
-  const t = e.changedTouches[0];
+  var t = e.changedTouches[0];
   touchClone.style.display = 'none';
-  const el = document.elementFromPoint(t.clientX, t.clientY);
+  var el = document.elementFromPoint(t.clientX, t.clientY);
   touchClone.style.display = '';
-  const col = el && el.closest('.kanban-col');
+  var col = el && el.closest('.kanban-col');
   if (col && touchTaskId) {
-    const status = col.dataset.status;
-    const task = state.tasks.find(t => t.id === touchTaskId);
+    var status = col.dataset.status;
+    var task = state.tasks.find(function(t){return t.id===touchTaskId;});
     if (task && task.status !== status) {
       updateItem('tasks', touchTaskId, Object.assign({}, task, { status }));
       toast('Moved to ' + { todo:'To Do', inprogress:'In Progress', done:'Done' }[status]);
@@ -2968,7 +2967,7 @@ function onTaskTouchEnd(e) {
   document.body.removeChild(touchClone);
   if (touchDragEl) touchDragEl.style.opacity = '';
   touchClone = null; touchDragEl = null; touchTaskId = null;
-  document.querySelectorAll('.kanban-col').forEach(c => {
+  document.querySelectorAll('.kanban-col').forEach(function(c) {
     c.style.borderColor = c.dataset.border;
     c.style.background = c.dataset.bg;
   });
@@ -2976,10 +2975,10 @@ function onTaskTouchEnd(e) {
 
 
 function saveTask() {
-  const title = document.getElementById('task-title').value.trim();
+  var title = document.getElementById('task-title').value.trim();
   if(!title){toast('Enter task title');return;}
-  const recur = document.getElementById('task-recur').value;
-  const item = {
+  var recur = document.getElementById('task-recur').value;
+  var item = {
     title, project:document.getElementById('task-project').value,
     priority:document.getElementById('task-priority').value,
     status:document.getElementById('task-status').value,
@@ -3001,7 +3000,7 @@ function saveTask() {
 }
 
 function editTask(id) {
-  const t = state.tasks.find(x=>x.id===id);
+  var t = state.tasks.find(function(x){return x.id===id;});
   if(!t)return;
   editingId=id;
   populateProjectSelects();
@@ -3021,10 +3020,10 @@ function editTask(id) {
 // ═══════════════════════════════════════════════
 //  PURCHASE ORDERS
 // ═══════════════════════════════════════════════
-let poFilter = 'all';
+var poFilter = 'all';
 function filterPOs(f,el){
   poFilter=f;
-  document.querySelectorAll('#view-pos .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#view-pos .tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active'); renderPOs();
 }
 
@@ -3068,10 +3067,10 @@ function renderPOs() {
 }
 
 function savePO() {
-  const number = document.getElementById('po-number').value.trim();
-  const vendor = document.getElementById('po-vendor').value.trim();
+  var number = document.getElementById('po-number').value.trim();
+  var vendor = document.getElementById('po-vendor').value.trim();
   if(!number||!vendor){toast('Enter PO number and vendor');return;}
-  const item = {
+  var item = {
     number, vendor, project:document.getElementById('po-project').value,
     status:document.getElementById('po-status').value,
     date:document.getElementById('po-date').value,
@@ -3086,7 +3085,7 @@ function savePO() {
 }
 
 function editPO(id) {
-  const p = state.pos.find(x=>x.id===id);
+  var p = state.pos.find(function(x){return x.id===id;});
   if(!p)return;
   editingId=id;
   populateProjectSelects();
@@ -3106,10 +3105,10 @@ function editPO(id) {
 // ═══════════════════════════════════════════════
 //  SHIPPING
 // ═══════════════════════════════════════════════
-let shipFilter='all';
+var shipFilter='all';
 function filterShipping(f,el){
   shipFilter=f;
-  document.querySelectorAll('#view-shipping .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#view-shipping .tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active'); renderShipping();
 }
 
@@ -3146,10 +3145,10 @@ function renderShipping() {
 }
 
 function saveShipment() {
-  const desc=document.getElementById('ship-desc').value.trim();
-  const tracking=document.getElementById('ship-tracking').value.trim();
+  var desc=document.getElementById('ship-desc').value.trim();
+  var tracking=document.getElementById('ship-tracking').value.trim();
   if(!desc && !tracking){toast('Enter a description or tracking number');return;}
-  const item = {
+  var item = {
     tracking, carrier:document.getElementById('ship-carrier').value,
     desc, po:document.getElementById('ship-po').value,
     task:document.getElementById('ship-task').value,
@@ -3164,7 +3163,7 @@ function saveShipment() {
 }
 
 function editShipment(id) {
-  const s=state.shipping.find(x=>x.id===id);
+  var s=state.shipping.find(function(x){return x.id===id;});
   if(!s)return;
   editingId=id;
   populateProjectSelects();
@@ -3383,41 +3382,41 @@ function deleteIssue(id) {
 // ═══════════════════════════════════════════════
 //  SMART GLOBAL SEARCH
 // ═══════════════════════════════════════════════
-let searchSelectedIdx = -1;
+var searchSelectedIdx = -1;
 
 function globalSearch(q) {
-  const dropdown = document.getElementById('searchDropdown');
-  const mobDrop = document.getElementById('mob-search-dropdown');
+  var dropdown = document.getElementById('searchDropdown');
+  var mobDrop = document.getElementById('mob-search-dropdown');
   if (!q || !q.trim()) {
     showSearchHistory();
     searchSelectedIdx = -1;
     return;
   }
-  const results = smartSearch(q.trim());
+  var results = smartSearch(q.trim());
   renderSearchDropdown(results, q.trim());
 }
 
 function smartSearch(raw) {
-  const q = raw.toLowerCase();
-  const words = q.split(/\s+/).filter(Boolean);
-  const results = [];
+  var q = raw.toLowerCase();
+  var words = q.split(/\s+/).filter(Boolean);
+  var results = [];
 
   // Helper: score a string against query
   function score(str) {
     if (!str) return 0;
-    const s = str.toLowerCase();
+    var s = str.toLowerCase();
     if (s.startsWith(q)) return 100;
     if (s.includes(q)) return 80;
     // All words present?
-    if (words.every(w => s.includes(w))) return 60;
+    if (words.every(function(w){return s.includes(w);})) return 60;
     // Any word present?
-    const matched = words.filter(w => s.includes(w)).length;
+    var matched = words.filter(function(w){return s.includes(w);}).length;
     return matched > 0 ? 20 + matched * 10 : 0;
   }
 
   // Search PROJECTS
-  state.projects.forEach(p => {
-    const s = Math.max(
+  state.projects.forEach(function(p) {
+    var s = Math.max(
       score(p.name),
       score(p.client),
       score(p.location),
@@ -3434,8 +3433,8 @@ function smartSearch(raw) {
   });
 
   // Search TASKS (exclude archived)
-  state.tasks.filter(t => !t.archived).forEach(t => {
-    const s = Math.max(
+  state.tasks.filter(function(t){return !t.archived;}).forEach(function(t) {
+    var s = Math.max(
       score(t.title),
       score(t.category),
       score(t.desc),
@@ -3453,8 +3452,8 @@ function smartSearch(raw) {
   });
 
   // Search PURCHASE ORDERS
-  state.pos.forEach(p => {
-    const s = Math.max(
+  state.pos.forEach(function(p) {
+    var s = Math.max(
       score(p.vendor),
       score(p.number),
       score(p.notes),
@@ -3471,8 +3470,8 @@ function smartSearch(raw) {
   });
 
   // Search SHIPMENTS
-  state.shipping.forEach(s => {
-    const sc = Math.max(
+  state.shipping.forEach(function(s) {
+    var sc = Math.max(
       score(s.tracking),
       score(s.desc),
       score(s.carrier),
@@ -3489,8 +3488,8 @@ function smartSearch(raw) {
   });
 
   // Search TROUBLESHOOT
-  state.issues.forEach(issue => {
-    const s = Math.max(
+  state.issues.forEach(function(issue) {
+    var s = Math.max(
       score(issue.q),
       score(issue.a),
       score(issue.cat),
@@ -3505,14 +3504,14 @@ function smartSearch(raw) {
   });
 
   // Sort by score desc, then type priority
-  const typePriority = { project:5, task:4, po:3, shipping:2, issue:1 };
-  results.sort((a, b) => b.score - a.score || (typePriority[b.type]||0) - (typePriority[a.type]||0));
+  var typePriority = { project:5, task:4, po:3, shipping:2, issue:1 };
+  results.sort(function(a,b){ return b.score-a.score || (typePriority[a.type]||9)-(typePriority[b.type]||9); });
 
   return results.slice(0, 12); // max 12 results
 }
 
 function renderSearchDropdown(results, q) {
-  const dropdown = document.getElementById('searchDropdown');
+  var dropdown = document.getElementById('searchDropdown');
   searchSelectedIdx = -1;
 
   if (!results.length) {
@@ -3525,13 +3524,13 @@ function renderSearchDropdown(results, q) {
   }
 
   // Group by type
-  const groups = {};
-  const labels = { project:'Projects', task:'Tasks', po:'Purchase Orders', shipping:'Shipments', issue:'Troubleshoot' };
+  var groups = {};
+  var labels = { project:'Projects', task:'Tasks', po:'Purchase Orders', shipping:'Shipments', issue:'Troubleshoot' };
   results.forEach(function(r) { (groups[r.type] = groups[r.type]||[]).push(r); });
 
-  const typeOrder = ['project','task','po','shipping','issue'];
-  let html = '';
-  let globalIdx = 0;
+  var typeOrder = ['project','task','po','shipping','issue'];
+  var html = '';
+  var globalIdx = 0;
 
   typeOrder.forEach(function(type) {
     if (!groups[type]) return;
@@ -3564,8 +3563,8 @@ function renderSearchDropdown(results, q) {
 
 function highlightMatch(text, q) {
   if (!text || !q) return escHtml(text||'');
-  const escaped = escHtml(text);
-  const eq = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  var escaped = escHtml(text);
+  var eq = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return escaped.replace(new RegExp('(' + eq + ')', 'gi'), '<mark style="background:rgba(79,142,247,0.3);color:#7ab3fa;border-radius:3px;padding:0 2px">$1</mark>');
 }
 
@@ -3573,13 +3572,13 @@ function highlightMatch(text, q) {
 
 function setSearchIdx(idx) {
   searchSelectedIdx = idx;
-  document.querySelectorAll('.search-result-item').forEach((el, i) => {
+  document.querySelectorAll('.search-result-item').forEach(function(el, i) {
     el.style.background = i === idx ? 'rgba(79,142,247,0.12)' : '';
   });
 }
 
 function searchKeyNav(e) {
-  const items = document.querySelectorAll('.search-result-item');
+  var items = document.querySelectorAll('.search-result-item');
   if (!items.length) return;
   if (e.key === 'ArrowDown') {
     e.preventDefault();
@@ -3603,7 +3602,7 @@ function selectSearchResult(view, id, type) {
   if(_qEl)_qEl.value='';
   switchView(view);
   // Open the detail panel after a brief render delay
-  setTimeout(() => openDetail(type === 'issue' ? 'issues' : view.replace('troubleshoot','issues'), id), 80);
+  setTimeout(function(){ openDetail(type === 'issue' ? 'issues' : view.replace('troubleshoot','issues'), id); }, 80);
 }
 
 function closeSearchDropdown() {
@@ -3633,7 +3632,7 @@ function renderAll() {
 // ═══════════════════════════════════════════════
 //  SWIPE ACTIONS ON TASK ROWS
 // ═══════════════════════════════════════════════
-let swipeTouchX = 0, swipeTouchY = 0, swipeEl = null, swipeActive = false;
+var swipeTouchX = 0, swipeTouchY = 0, swipeEl = null, swipeActive = false;
 function swipeStart(e, el) {
   swipeTouchX = e.touches[0].clientX;
   swipeTouchY = e.touches[0].clientY;
@@ -3641,20 +3640,20 @@ function swipeStart(e, el) {
   swipeActive = false;
 }
 function swipeMove(e, el) {
-  const dx = e.touches[0].clientX - swipeTouchX;
-  const dy = e.touches[0].clientY - swipeTouchY;
+  var dx = e.touches[0].clientX - swipeTouchX;
+  var dy = e.touches[0].clientY - swipeTouchY;
   if (!swipeActive && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
     swipeActive = true;
   }
   if (!swipeActive) return;
   e.preventDefault();
-  const clamped = Math.max(-120, Math.min(0, dx));
+  var clamped = Math.max(-120, Math.min(0, dx));
   el.style.transform = 'translateX('+clamped+'px)';
   el.style.transition = 'none';
 }
 function swipeEnd(e, el, taskId, taskState) {
   if (!swipeActive) return;
-  const dx = e.changedTouches[0].clientX - swipeTouchX;
+  var dx = e.changedTouches[0].clientX - swipeTouchX;
   el.style.transition = 'transform 0.25s ease';
   el.style.transform = 'translateX(0)';
   if (dx < -80) {
@@ -3668,7 +3667,7 @@ function swipeEnd(e, el, taskId, taskState) {
       archiveTask(taskId, e);
     }
   } else if (dx > 60) {
-    const task = state.tasks.find(t => t.id === taskId);
+    var task = state.tasks.find(function(t){return t.id===taskId;});
     if (task && task.status !== 'done') {
       updateItem('tasks', taskId, Object.assign({}, task, {status:'done'}));
       renderTasks();
@@ -3686,21 +3685,21 @@ window.addEventListener('load', function(){
   loadSavedConfig();
 
   // Close modals on overlay click
-  document.querySelectorAll('.modal-overlay').forEach(overlay=>{
-    overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay){
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.classList.remove('open'); });
   });
 
   // Close search dropdown on click outside
   document.addEventListener('click', function(e) {
-    const wrap = e.target.closest('.search-wrap');
+    var wrap = e.target.closest('.search-wrap');
     if (!wrap) closeSearchDropdown();
   });
 
   // Offline/online indicator
   function updateOnlineStatus() {
-    const dot = document.getElementById('syncDot');
-    const label = document.getElementById('syncLabel');
-    const bar = document.getElementById('offlineBar');
+    var dot = document.getElementById('syncDot');
+    var label = document.getElementById('syncLabel');
+    var bar = document.getElementById('offlineBar');
     if (!navigator.onLine) {
       if (dot) { dot.classList.add('offline'); }
       if (label) label.textContent = 'Offline';
@@ -3711,8 +3710,8 @@ window.addEventListener('load', function(){
       if (bar) bar.style.display = 'none';
     }
   }
-  window.addEventListener('online', () => { updateOnlineStatus(); toast('Back online'); });
-  window.addEventListener('offline', () => { updateOnlineStatus(); toast('You are offline — changes saved locally'); });
+  window.addEventListener('online', function() { updateOnlineStatus(); toast('Back online'); });
+  window.addEventListener('offline', function() { updateOnlineStatus(); toast('You are offline — changes saved locally'); });
   updateOnlineStatus();
 
   // Init notifications + features
@@ -3792,7 +3791,7 @@ window.addEventListener('load', function(){
   if (topbar && window.innerWidth > 768) topbar.appendChild(hint);
 
   // Add some sample data if empty
-  setTimeout(()=>{
+  setTimeout(function(){
     // Seed built-in troubleshoot issues on first run
       renderTroubleshoot();
 
@@ -4806,7 +4805,9 @@ function inlineConfirmYes(){var cb=window._icb;clearTimeout(window._ict);var el=
 function inlineConfirmNo(){clearTimeout(window._ict);window._icb=null;var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}}
 var _srchHist=JSON.parse(localStorage.getItem('fop_srch')||'[]');
 function addSearchHistory(q){if(!q||q.length<2)return;_srchHist=_srchHist.filter(function(s){return s!==q;});_srchHist.unshift(q);if(_srchHist.length>8)_srchHist=_srchHist.slice(0,8);localStorage.setItem('fop_srch',JSON.stringify(_srchHist));}
-function showSearchHistory(){var dd=document.getElementById('searchDropdown');if(!dd)return;if(!_srchHist.length){dd.style.display='none';return;}dd.style.display='block';dd.innerHTML='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a">Recent</div>'+_srchHist.map(function(s){return'<div class="search-result-item" style="display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer" onmousedown="event.preventDefault();document.getElementById(\'searchBar\').value=\''+escH(s)+'\';globalSearch(\''+escH(s)+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="flex:1;font-size:13px;color:#8da0c0">'+escH(s)+'</span><span onmousedown="event.stopPropagation();removeSearchHistory(\''+escH(s)+'\')" style="color:#3a4a6a;cursor:pointer;font-size:16px;padding:0 4px">&times;</span></div>';}).join('');}
+function showSearchHistory(){var dd=document.getElementById('searchDropdown');if(!dd)return;if(!_srchHist.length){dd.style.display='none';return;}dd.style.display='block';dd.innerHTML='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a">Recent</div>'+_srchHist.map(function(s){return'<div class="search-result-item" style="display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer" onmousedown="event.preventDefault();document.getElementById(\'searchBar\').value=\''+escH(s)+'\';globalSearch(\''+escH(s)+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="flex:1;font-size:13px;color:#8da0c0">'+escH(s)+'</span><span onmousedown="event.stopPropagation();removeSearchHistory(\''+escH(s)+'\')" style="color:#3a4a6a;cursor:pointer;font-size:16px;padding:0 4px">&times;</span></div>';}).join('');
+  var _mobDd=document.getElementById('mob-search-dropdown');if(_mobDd){_mobDd.style.display='block';_mobDd.innerHTML=dd.innerHTML;}
+}
 function removeSearchHistory(q){_srchHist=_srchHist.filter(function(s){return s!==q;});localStorage.setItem('fop_srch',JSON.stringify(_srchHist));showSearchHistory();}
 function initBottomSheets(){if(window.innerWidth>768)return;document.querySelectorAll('.modal').forEach(function(modal){if(modal.dataset.bsinit)return;modal.dataset.bsinit='1';var h=document.createElement('div');h.style.cssText='width:40px;height:4px;background:rgba(255,255,255,0.18);border-radius:99px;margin:8px auto 0;cursor:grab;flex-shrink:0';modal.insertBefore(h,modal.firstChild);var y0=0;h.addEventListener('touchstart',function(e){y0=e.touches[0].clientY;},{passive:true});h.addEventListener('touchmove',function(e){var dy=e.touches[0].clientY-y0;if(dy>0)modal.style.transform='translateY('+dy+'px)';},{passive:true});h.addEventListener('touchend',function(e){var dy=e.changedTouches[0].clientY-y0;modal.style.transform='';modal.style.transition='transform 0.25s';setTimeout(function(){modal.style.transition='';},300);if(dy>90){var ov=modal.closest('.modal-overlay');if(ov)ov.classList.remove('open');}});});}
 
@@ -4825,8 +4826,6 @@ window.addEventListener('unhandledrejection', function(e) {
   document.addEventListener('touchmove',function(e){if(!_ptpulling)return;var dy=e.touches[0].clientY-_pty;if(dy>10){var i=_ptget();i.style.opacity=Math.min(dy/60,1);i.style.transform='translateX(-50%) translateY('+Math.min(dy/3,20)+'px)';i.textContent=dy>60?'Release to refresh':'Pull to refresh';}},{passive:true});
   document.addEventListener('touchend',function(e){if(!_ptpulling)return;var dy=e.changedTouches[0].clientY-_pty;_ptpulling=false;var i=_ptget();if(dy>60){i.textContent='Refreshing…';i.style.opacity='1';setTimeout(function(){renderAll();if(typeof haptic==='function')haptic('medium');i.style.opacity='0';},700);}else{i.style.opacity='0';}});
 
-  var mobDd2=document.getElementById('mob-search-dropdown');
-  if(mobDd2){mobDd2.style.display=_srchHist.length?'block':'none';mobDd2.innerHTML=dd.innerHTML;}
 })();
 
 // ── THINGS-STYLE NAVIGATION ───────────────────────────────────────────
@@ -4837,11 +4836,15 @@ function updateThingsNav(v) {
     if (backBtn) backBtn.style.display = 'none';
     if (menuBtn) menuBtn.style.display = 'flex';
     document.body.classList.remove('mob-subview');
+    var hw=document.getElementById('things-home-wrap');
+    if(hw) hw.style.display='block';
     setTimeout(renderThingsHome, 0);
   } else {
     if (backBtn) backBtn.style.display = 'flex';
     if (menuBtn) menuBtn.style.display = 'none';
     document.body.classList.add('mob-subview');
+    var hw=document.getElementById('things-home-wrap');
+    if(hw) hw.style.display='none';
   }
   // Update large title
   var lt = document.getElementById('mob-large-title');
@@ -4853,6 +4856,8 @@ function updateThingsNav(v) {
 }
 
 function renderThingsHome() {
+  var wrap = document.getElementById('things-home-wrap');
+  if (wrap) wrap.style.display = 'block';
   var el = document.getElementById('things-home-cards');
   if (!el) return;
   var today = new Date(); today.setHours(0,0,0,0);
@@ -4900,6 +4905,12 @@ function renderThingsHome() {
   ];
 
   el.innerHTML = '';
+  // Fallback delegated handler on container
+  el.onclick = function(e) {
+    var card = e.target.closest ? e.target.closest('.things-card') : null;
+    if (!card && e.target.className && e.target.className.indexOf('things-card') !== -1) card = e.target;
+    if (card && card.dataset && card.dataset.view) { switchView(card.dataset.view); }
+  };
   sections.forEach(function(s) {
     var div = document.createElement('div');
     div.className = 'things-card';
@@ -4945,8 +4956,7 @@ function renderThingsHome() {
     div.appendChild(chev);
 
     (function(view) {
-      div.addEventListener('click', function(){ switchView(view); });
-      div.addEventListener('touchend', function(e){ e.preventDefault(); switchView(view); });
+      div.onclick = function() { switchView(view); };
     })(s.view);
     el.appendChild(div);
   });
@@ -4997,27 +5007,27 @@ Object.assign(window, {
 // ═══════════════════════════════════════════════
 //  QUICK ADD
 // ═══════════════════════════════════════════════
-let quickAddOpen = false;
+var quickAddOpen = false;
 function toggleQuickAdd() {
   quickAddOpen = !quickAddOpen;
-  const panel = document.getElementById('quickAddPanel');
-  const fab = document.getElementById('quickAddFab');
+  var panel = document.getElementById('quickAddPanel');
+  var fab = document.getElementById('quickAddFab');
   panel.style.display = quickAddOpen ? 'block' : 'none';
   if (fab) fab.textContent = quickAddOpen ? '×' : '+';
   if (quickAddOpen) {
     populateProjectSelects();
-    const qaProj = document.getElementById('qa-project');
+    var qaProj = document.getElementById('qa-project');
     if (qaProj) {
       qaProj.innerHTML = '<option value="">No project</option>' +
         state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
     }
-    setTimeout(() => document.getElementById('qa-title').focus(), 50);
+    setTimeout(function(){ document.getElementById('qa-title').focus(); }, 50);
   }
 }
 function saveQuickTask() {
-  const title = (document.getElementById('qa-title').value||'').trim();
+  var title = (document.getElementById('qa-title').value||'').trim();
   if (!title) { document.getElementById('qa-title').focus(); return; }
-  const item = {
+  var item = {
     title,
     priority: document.getElementById('qa-priority').value || 'medium',
     project: document.getElementById('qa-project').value || '',
@@ -5034,7 +5044,7 @@ function saveQuickTask() {
 // ═══════════════════════════════════════════════
 //  FILTER TASKS BY PROJECT
 // ═══════════════════════════════════════════════
-let taskProjectFilter = '';
+var taskProjectFilter = '';
 function applyProjectFilter(pid) {
   taskProjectFilter = pid;
   renderTasks();
@@ -5043,10 +5053,10 @@ function applyProjectFilter(pid) {
 // ═══════════════════════════════════════════════
 //  BULK TASK ACTIONS
 // ═══════════════════════════════════════════════
-let bulkSelected = new Set();
+var bulkSelected = new Set();
 function bulkSelectAll(checked) {
-  const checkboxes = document.querySelectorAll('.task-bulk-cb');
-  checkboxes.forEach(cb => {
+  var checkboxes = document.querySelectorAll('.task-bulk-cb');
+  checkboxes.forEach(function(cb) {
     cb.checked = checked;
     if (checked) bulkSelected.add(cb.dataset.id);
     else bulkSelected.delete(cb.dataset.id);
@@ -5059,7 +5069,7 @@ function toggleBulkSelect(id, checked) {
   updateBulkBar();
 }
 function updateBulkBar() {
-  let bar = document.getElementById('bulk-action-bar');
+  var bar = document.getElementById('bulk-action-bar');
   if (!bar) return;
   if (bulkSelected.size > 0) {
     bar.style.display = 'flex';
@@ -5072,20 +5082,20 @@ function bulkAction(action) {
   if (!bulkSelected.size) return;
   var ids = Array.from ? Array.from(bulkSelected) : (function(){ var a=[]; bulkSelected.forEach(function(v){ a.push(v); }); return a; })();
   if (action === 'archive') {
-    ids.forEach(id => {
-      const t = state.tasks.find(x=>x.id===id);
+    ids.forEach(function(id) {
+      var t = state.tasks.find(function(x){return x.id===id;});
       if (t) updateItem('tasks', id, Object.assign({}, t, {archived: true}));
     });
     toast(ids.length + ' tasks archived');
   } else if (action === 'done') {
-    ids.forEach(id => {
-      const t = state.tasks.find(x=>x.id===id);
+    ids.forEach(function(id) {
+      var t = state.tasks.find(function(x){return x.id===id;});
       if (t) updateItem('tasks', id, Object.assign({}, t, {status: 'done', archived: false}));
     });
     toast(ids.length + ' tasks marked done');
   } else if (action === 'delete') {
     if (!confirm('Permanently delete ' + ids.length + ' tasks?')) return;
-    ids.forEach(id => deleteItem('tasks', id));
+    ids.forEach(function(id){ deleteItem('tasks', id); });
     toast(ids.length + ' tasks deleted');
   }
   bulkSelected.clear();
@@ -5095,9 +5105,9 @@ function bulkAction(action) {
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
 // ═══════════════════════════════════════════════
-let barcodeStream = null;
+var barcodeStream = null;
 function startBarcodeScan() {
-  const overlay = document.getElementById('barcode-overlay');
+  var overlay = document.getElementById('barcode-overlay');
   if (!overlay) return;
   overlay.style.display = 'flex';
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -5106,14 +5116,14 @@ function startBarcodeScan() {
     return;
   }
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
+    .then(function(stream) {
       barcodeStream = stream;
-      const video = document.getElementById('barcode-video');
+      var video = document.getElementById('barcode-video');
       video.srcObject = stream;
       video.play();
       scanBarcode(video);
     })
-    .catch(() => {
+    .catch(function() {
       toast('Camera permission denied');
       overlay.style.display = 'none';
     });
@@ -5121,33 +5131,33 @@ function startBarcodeScan() {
 function scanBarcode(video) {
   if (!window.BarcodeDetector) {
     // Fallback: manual entry
-    const overlay = document.getElementById('barcode-overlay');
-    const manual = document.getElementById('barcode-manual');
+    var overlay = document.getElementById('barcode-overlay');
+    var manual = document.getElementById('barcode-manual');
     if (manual) manual.style.display = 'block';
     return;
   }
-  const detector = new BarcodeDetector({ formats: ['code_128','code_39','qr_code','data_matrix','ean_13'] });
-  const scan = () => {
+  var detector = new BarcodeDetector({ formats: ['code_128','code_39','qr_code','data_matrix','ean_13'] });
+  var scan = function() {
     if (!barcodeStream) return;
-    detector.detect(video).then(codes => {
+    detector.detect(video).then(function(codes) {
       if (codes.length > 0) {
-        const val = codes[0].rawValue;
+        var val = codes[0].rawValue;
         closeBarcodeScanner();
         document.getElementById('ship-tracking').value = val;
         toast('Scanned: ' + val);
       } else {
         requestAnimationFrame(scan);
       }
-    }).catch(() => requestAnimationFrame(scan));
+    }).catch(function(){ requestAnimationFrame(scan); });
   };
   video.addEventListener('loadeddata', scan);
 }
 function closeBarcodeScanner() {
   if (barcodeStream) {
-    barcodeStream.getTracks().forEach(t => t.stop());
+    barcodeStream.getTracks().forEach(function(t){ t.stop(); });
     barcodeStream = null;
   }
-  const overlay = document.getElementById('barcode-overlay');
+  var overlay = document.getElementById('barcode-overlay');
   if (overlay) overlay.style.display = 'none';
 }
 
