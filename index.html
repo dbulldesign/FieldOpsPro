@@ -2366,6 +2366,14 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
     </div>
     <div class="modal-body">
       <input type="hidden" id="ship-id">
+      <div class="form-group"><label>Tracking Number</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="ship-tracking" placeholder="Pending…" style="flex:1" oninput="autoDetectCarrier(this.value)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="startBarcodeScan()" title="Scan barcode" style="flex-shrink:0;padding:10px 12px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
+          </button>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>Carrier</label>
           <select id="ship-carrier">
@@ -2379,20 +2387,6 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
             <option value="Other">Other</option>
           </select>
         </div>
-        <div class="form-group"><label>Project</label>
-          <select id="ship-project"><option value="">— None —</option></select>
-        </div>
-      </div>
-      <div class="form-group"><label>Description</label><input type="text" id="ship-desc" placeholder="e.g. Lutron dimmers + keypads for Office HQ"></div>
-      <div class="form-row">
-        <div class="form-group"><label>Linked PO</label>
-          <select id="ship-po"><option value="">— None —</option></select>
-        </div>
-        <div class="form-group"><label>Linked Task</label>
-          <select id="ship-task"><option value="">— None —</option></select>
-        </div>
-      </div>
-      <div class="form-row">
         <div class="form-group"><label>Status</label>
           <select id="ship-status">
             <option value="pending">Pending</option>
@@ -2402,21 +2396,25 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
             <option value="exception">Exception</option>
           </select>
         </div>
-        <div class="form-group"><label>Tracking Number</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" id="ship-tracking" placeholder="Pending…" style="flex:1" oninput="autoDetectCarrier(this.value)">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="startBarcodeScan()" title="Scan barcode" style="flex-shrink:0;padding:10px 12px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
-            </button>
-          </div>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="ship-desc" placeholder="e.g. Lutron dimmers + keypads for Office HQ"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="ship-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Linked PO</label>
+          <select id="ship-po"><option value="">— None —</option></select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Ship Date</label><input type="date" id="ship-date"></div>
         <div class="form-group"><label>Est. Delivery</label><input type="date" id="ship-eta"></div>
       </div>
-      <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Contents, delivery instructions, contact…"></textarea></div>
-    </div>
+      <div class="form-group"><label>Linked Task</label>
+        <select id="ship-task"><option value="">— None —</option></select>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Delivery instructions, contact…"></textarea></div>
+    </div>v>
     
   </div>
 </div>
