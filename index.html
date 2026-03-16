@@ -2539,20 +2539,20 @@ function initFirebase(config) {
       unsubscribers.push(unsub);
     });
 
-    document.getElementById('syncDot').classList.remove('offline');
-    document.getElementById('syncLabel').textContent = 'Synced';
-    document.getElementById('firebase-status').innerHTML = '<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
+    var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
+    var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
+    var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
     toast('🔥 Firebase connected — syncing!');
   } catch(e) {
-    document.getElementById('firebase-status').innerHTML = '<span style="color:#ef4444">&#x274C; Error: ' + e.message + '</span>';
+    var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
     toast('Firebase error: ' + e.message);
   }
 }
 
 function loadLocalData() {
   COLLECTIONS.forEach(function(col){ state[col] = LOCAL.get(col); });
-  document.getElementById('syncDot').classList.add('offline');
-  document.getElementById('syncLabel').textContent = 'Local only';
+  var _sd=document.getElementById('syncDot'); if(_sd) _sd.classList.add('offline');
+  var _sl=document.getElementById('syncLabel'); if(_sl) _sl.textContent='Local only';
   try { renderAll(); } catch(e) {
     console.error('renderAll error:', e);
     if(document.body) {
@@ -2603,7 +2603,7 @@ function saveFirebaseConfig() {
 
   var cfg = parseFirebaseConfig(raw);
   if (!cfg || !cfg.apiKey || !cfg.projectId) {
-    document.getElementById('firebase-status').innerHTML = '<span style="color:#ef4444">&#x274C; Could not read config. Make sure you pasted the full block from Firebase.</span>';
+    var _fsv=document.getElementById('firebase-status'); if(_fsv) _fsv.innerHTML='<span style="color:#ef4444">&#x274C; Could not read config. Make sure you pasted the full block from Firebase.</span>';
     return;
   }
   localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
@@ -2617,7 +2617,7 @@ function clearFirebaseConfig() {
   unsubscribers.forEach(function(u){u();}); unsubscribers=[];
   loadLocalData();
   toast('Disconnected from Firebase');
-  document.getElementById('firebase-status').innerHTML = '';
+  var _fsc=document.getElementById('firebase-status'); if(_fsc) _fsc.innerHTML='';
   var wrap = document.getElementById('cfg-current-wrap'); if(wrap) wrap.style.display='none';
   var paste = document.getElementById('cfg-paste'); if(paste) paste.value = '';
 }
