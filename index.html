@@ -1502,6 +1502,10 @@ box-sizing: border-box !important;
 }
 }
 
+#quickAddFab.qa-open::before { content: ‘×’ !important; font-size: 28px !important; font-weight: 400 !important; }
+
+.modal-overlay:not(.open) { display: none !important; }
+.modal-overlay:not(.open) * { visibility: hidden !important; }
 </style>
 
 </head>
@@ -5468,7 +5472,7 @@ function toggleQuickAdd() {
   var panel = document.getElementById('quickAddPanel');
   var fab = document.getElementById('quickAddFab');
   panel.style.display = quickAddOpen ? 'block' : 'none';
-  if (fab) fab.textContent = quickAddOpen ? '×' : '+';
+  if (fab) { fab.classList.toggle('qa-open', quickAddOpen); }
   if (quickAddOpen) {
     populateProjectSelects();
     var qaProj = document.getElementById('qa-project');
