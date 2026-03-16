@@ -1862,8 +1862,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
         <div class="tab" onclick="filterTasks('all',this)">All</div>
-        <div class="tab active" onclick="filterTasks('todo',this)">To Do</div>
-        <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
+        <div class="tab active" onclick="filterTasks('active',this)">To Do / In Progress</div>
         <div class="tab" onclick="filterTasks('done',this)">Done</div>
         <div class="tab" onclick="filterTasks('archived',this)">📦 Archived</div>
       </div>
@@ -2473,6 +2472,8 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// Explicit global assignments for iOS WKWebView compatibility
+wind
 // Explicit global assignments for iOS WKWebView compatibility
 window.toggleTheme = toggleTheme;
 window.applyTheme = applyTheme;
@@ -3162,7 +3163,7 @@ function editProject(id) {
 // ═══════════════════════════════════════════════
 //  TASKS
 // ═══════════════════════════════════════════════
-var taskFilter = 'todo';
+var taskFilter = 'active';
 function filterTasks(f, el) {
   taskFilter = f;
   document.querySelectorAll('#view-tasks .tab').forEach(function(t){t.classList.remove('active');});
@@ -3216,6 +3217,8 @@ function renderTasks() {
     data = data.filter(function(t){ return t.archived; });
   } else if(taskFilter === 'all') {
     data = data.filter(function(t){ return !t.archived; });
+  } else if(taskFilter === 'active') {
+    data = data.filter(function(t){ return (t.status === 'todo' || t.status === 'inprogress') && !t.archived; });
   } else {
     data = data.filter(function(t){ return t.status === taskFilter && !t.archived; });
   }
@@ -5965,8 +5968,6 @@ function closeBarcodeScanner() {
 }
 
 </script>
-
-<!-- TEMPLATES MODAL -->
 
 <div class="modal-overlay" id="modal-templates" style="display:none">
   <div class="modal" style="max-width:520px">
