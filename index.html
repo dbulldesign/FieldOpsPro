@@ -1554,6 +1554,31 @@ body.light-mode #mob-tasks-cards>div,body.light-mode #mob-pos-cards>div,body.lig
   #view-tasks .kanban-board { display: none !important; }
 }
 
+/* Modal form: single column and full-width on mobile */
+@media (max-width: 768px) {
+  .modal-overlay { padding: 0 !important; align-items: flex-end !important; }
+  .modal {
+    border-radius: 22px 22px 0 0 !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+  .modal-body { padding: 14px 16px !important; }
+  .form-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .form-row .form-group { width: 100% !important; }
+  .form-group input:not([type=hidden]),
+  .form-group select,
+  .form-group textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
 </style>
 
 </head>
@@ -3013,10 +3038,11 @@ function renderProjects() {
       +'</div>';
     (function(pid,pn){
       card.onclick = function() { openDetail('projects',pid); };
-      card.ontouchend = function(e) { e.preventDefault(); openDetail('projects',pid); };
       var b=card.querySelectorAll('button');
       b[0].onclick = function(e) { e.stopPropagation(); editProject(pid); };
+      b[0].ontouchend = function(e) { e.stopPropagation(); e.preventDefault(); editProject(pid); };
       b[1].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
+      b[1].ontouchend = function(e) { e.stopPropagation(); e.preventDefault(); softDelete('projects',pid,pn); renderProjects(); };
     })(p.id,p.name||'Project');
     wrap.appendChild(card);
   });
