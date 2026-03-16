@@ -1847,12 +1847,14 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 
   <!-- ═══ PROJECTS ═══ -->
   <div class="view" id="view-projects">
-    <div class="tabs">
-      <div class="tab active" onclick="filterProjects('all',this)">All</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
+        <div class="tab active" onclick="filterProjects('all',this)">All</div>
         <div class="tab" onclick="filterProjects('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterProjects('active',this)">Active</div>
       <div class="tab" onclick="filterProjects('planning',this)">Planning</div>
       <div class="tab" onclick="filterProjects('completed',this)">Completed</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add</button>
     </div>
     <div id="projects-list"></div>
   </div>
@@ -1897,6 +1899,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
         style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
         <option value="">All Projects</option>
       </select>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Task</button>
     </div>
     <div id="tasks-list-view">
       <div class="table-wrap">
@@ -1921,13 +1924,16 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 
   <!-- ═══ PURCHASE ORDERS ═══ -->
   <div class="view" id="view-pos">
-    <div class="tabs">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
       <div class="tab active" onclick="filterPOs('all',this)">All</div>
         <div class="tab" onclick="filterPOs('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterPOs('draft',this)">Draft</div>
       <div class="tab" onclick="filterPOs('submitted',this)">Submitted</div>
       <div class="tab" onclick="filterPOs('approved',this)">Approved</div>
       <div class="tab" onclick="filterPOs('received',this)">Received</div>
+    </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add PO</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -1949,12 +1955,15 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 
   <!-- ═══ SHIPPING ═══ -->
   <div class="view" id="view-shipping">
-    <div class="tabs">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
       <div class="tab active" onclick="filterShipping('all',this)">All</div>
         <div class="tab" onclick="filterShipping('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterShipping('pending',this)">Pending</div>
       <div class="tab" onclick="filterShipping('transit',this)">In Transit</div>
       <div class="tab" onclick="filterShipping('delivered',this)">Delivered</div>
+    </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Shipment</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -1986,6 +1995,8 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
         <option value="network">Network/DALI</option>
       </select>
       <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:200px" oninput="renderTroubleshoot()">
+    
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
     </div>
     <div id="troubleshoot-list"></div>
   </div>
@@ -2848,8 +2859,9 @@ function switchView(v) {
       if (fab) fab.style.display = 'flex';
     }, 50);
   } else {
+    // Show FAB on all views - it opens the appropriate modal for that view
     var fab = document.getElementById('quickAddFab');
-    if (fab) { fab.style.display = 'none'; }
+    if (fab) fab.style.display = 'flex';
     var panel = document.getElementById('quickAddPanel');
     if (panel) panel.style.display = 'none';
     quickAddOpen = false;
@@ -5798,6 +5810,11 @@ _merge(window, {
 // ═══════════════════════════════════════════════
 var quickAddOpen = false;
 function toggleQuickAdd() {
+  // On non-task views, just open the appropriate add modal directly
+  if (currentView !== 'tasks' && currentView !== 'dashboard') {
+    openAddModal();
+    return;
+  }
   quickAddOpen = !quickAddOpen;
   var panel = document.getElementById('quickAddPanel');
   var fab = document.getElementById('quickAddFab');
