@@ -1384,9 +1384,7 @@ content: none !important;  /* remove the ‘N’ keyboard hint */
 transform: scale(0.9) !important;
 box-shadow: 0 2px 10px rgba(37,99,255,0.4) !important;
 }
-#quickAddFab svg, #quickAddFab span {
-display: none !important; /* hide any text content */
-}
+
 /* Recreate the + via ::before */
 #quickAddFab::before {
 content: “+” !important;
@@ -2168,10 +2166,7 @@ appId: “1:123456:web:abc”
       </div>
       <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-project')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
-    </div>
+
   </div>
 </div>
 
@@ -2227,10 +2222,7 @@ appId: “1:123456:web:abc”
       </div>
       <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-task')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
-    </div>
+
   </div>
 </div>
 
@@ -2283,10 +2275,7 @@ appId: “1:123456:web:abc”
       </div>
       <div class="form-group"><label>Notes</label><textarea id="po-notes" placeholder="Special instructions, shipping address, contact…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-po')">Cancel</button>
-      <button class="btn btn-primary" onclick="savePO()">Save PO</button>
-    </div>
+
   </div>
 </div>
 
@@ -2351,10 +2340,7 @@ appId: “1:123456:web:abc”
       </div>
       <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Contents, delivery instructions, contact…"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-shipping')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveShipment()">Save Shipment</button>
-    </div>
+
   </div>
 </div>
 
@@ -2385,10 +2371,7 @@ appId: “1:123456:web:abc”
         <textarea id="issue-steps" style="min-height:150px" placeholder="Check the neutral wire connection.&#10;Verify load wattage is within dimmer rating.&#10;Try a compatible LED driver."></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-issue')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveIssue()">Save Issue</button>
-    </div>
+
   </div>
 </div>
 
