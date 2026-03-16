@@ -16,8 +16,13 @@
 <link rel="manifest" href="manifest.json">
 <script>
 (function(){
-  var t = localStorage.getItem('fop_theme');
-  document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+  var t = localStorage.getItem('fop_theme') || 'dark';
+  var isLight = (t === 'light');
+  document.documentElement.setAttribute('data-theme', t);
+  document.addEventListener('DOMContentLoaded', function(){
+    if(isLight){ document.body.classList.add('light-mode'); }
+    else { document.body.classList.add('dark-mode'); }
+  });
 })();
 </script>
 <style>html {
@@ -39,9 +44,8 @@ height: 100%; overflow: hidden;
 background: #080d1a !important;
 }
 body {
-background: #080d1a !important;
-color: #f0f4ff !important;
--webkit-text-fill-color: #f0f4ff;
+background: #080d1a;
+color: #f0f4ff;
 font-size: 14px;
 -webkit-font-smoothing: antialiased;
 }
@@ -147,7 +151,7 @@ width: 240px;
 }
 #searchBar::placeholder { color: #3a4a6a; }
 .search-wrap::before {
-content: ‘’; position: absolute; left: 11px; top: 50%;
+content: “”; position: absolute; left: 11px; top: 50%;
 transform: translateY(-50%); width: 13px; height: 13px;
 background-image: url(“data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2713%27 height=%2713%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%233a4a6a%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Ccircle cx=%2711%27 cy=%2711%27 r=%278%27/%3E%3Cpath d=%27m21 21-4.35-4.35%27/%3E%3C/svg%3E”);
 background-repeat: no-repeat; background-size: contain; pointer-events: none;
@@ -224,12 +228,12 @@ transform: translateY(-2px);
 box-shadow: 0 12px 40px rgba(0,0,0,0.4);
 }
 .stat-card::before {
-content: ‘’; position: absolute; top: 0; left: 0; right: 0;
+content: “”; position: absolute; top: 0; left: 0; right: 0;
 height: 2px; background: #2563ff;
 background: var(–accent-line, #2563ff);
 }
 .stat-card::after {
-content: ‘’; position: absolute; top: -40px; right: -20px;
+content: “”; position: absolute; top: -40px; right: -20px;
 width: 100px; height: 100px; border-radius: 50%;
 background: rgba(79,142,247,0.04);
 pointer-events: none;
@@ -376,7 +380,7 @@ color: #4a5e7a; transition: all 0.18s; white-space: nowrap;
 
 /* PRIORITY DOTS */
 .priority { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #6b7fa8; }
-.priority::before { content: ‘’; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.priority::before { content: “”; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .priority-high::before   { background: #ef4444 !important; box-shadow: 0 0 7px rgba(239,68,68,0.7); }
 .priority-medium::before { background: #fbbf24 !important; box-shadow: 0 0 7px rgba(251,191,36,0.7); }
 .priority-low::before    { background: #10b981 !important; box-shadow: 0 0 7px rgba(16,185,129,0.7); }
@@ -419,9 +423,9 @@ flex-shrink: 0; margin-top: 1px;
 
 /* SHIPPING */
 .tracking-timeline { position: relative; padding-left: 24px; }
-.tracking-timeline::before { content: ‘’; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: rgba(255,255,255,0.08); }
+.tracking-timeline::before { content: “”; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: rgba(255,255,255,0.08); }
 .track-event { position: relative; margin-bottom: 16px; }
-.track-event::before { content: ‘’; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #1a2540; border: 2px solid #2a3a5c; }
+.track-event::before { content: “”; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #1a2540; border: 2px solid #2a3a5c; }
 .track-event.done::before    { background: #10b981; border-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
 .track-event.current::before { background: #2563ff; border-color: #4f8ef7; box-shadow: 0 0 10px rgba(37,99,255,0.6); animation: pulse 1.5s infinite; }
 .track-date { font-size: 11px; color: #4a5e7a; margin-bottom: 2px; }
@@ -477,7 +481,7 @@ box-shadow: 12px 0 60px rgba(0,0,0,0.7);
 }
 /* Sidebar backdrop */
 #sidebar.open::after {
-content: ‘’;
+content: “”;
 position: fixed; inset: 0; left: min(85vw, 300px);
 background: rgba(0,0,0,0.5);
 z-index: -1;
@@ -680,8 +684,6 @@ width: 56px !important; height: 56px !important;
 font-size: 26px !important;
 box-shadow: 0 6px 24px rgba(37,99,255,0.45) !important;
 }
-#quickAddFab::before { content: '+'; font-size: 28px; font-weight: 300; color: #fff; line-height: 1; }
-
 #quickAddPanel {
 bottom: calc(140px + env(safe-area-inset-bottom, 12px)) !important;
 right: 14px !important;
@@ -802,7 +804,7 @@ margin-top: 5px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
 /* TOGGLE PILL */
 .toggle-pill { width: 46px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 99px; position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0; }
 .toggle-pill.on { background: #2563ff; }
-.toggle-pill::after { content: ‘’; position: absolute; width: 22px; height: 22px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.25s cubic-bezier(.4,0,.2,1); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.toggle-pill::after { content: “”; position: absolute; width: 22px; height: 22px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.25s cubic-bezier(.4,0,.2,1); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
 .toggle-pill.on::after { transform: translateX(18px); }
 
 /* CATEGORY ACCENT COLORS */
@@ -1457,49 +1459,53 @@ html[data-theme=“light”] .sidebar-logo p { color: #64748b !important; }
 #mob-search-input { padding-left: 36px !important; }
 }
 
-/* ── LIGHT MODE (body.light-mode — reliable on iOS WKWebView) ── */
-body.light-mode { background: #f0f4fa !important; color: #0f172a !important; }
-body.light-mode #app, body.light-mode #main, body.light-mode #content { background: #f0f4fa !important; }
-body.light-mode #topbar { background: rgba(255,255,255,0.96) !important; border-bottom-color: rgba(0,0,0,0.1) !important; }
-body.light-mode #sidebar { background: #f8fafc !important; border-right: 1px solid rgba(0,0,0,0.07) !important; }
-body.light-mode .sidebar-logo h1, body.light-mode .topbar-title, body.light-mode #mob-large-title { color: #0f172a !important; }
-body.light-mode .sidebar-logo p { color: #64748b !important; }
-body.light-mode .nav-label { color: #94a3b8 !important; }
-body.light-mode .nav-item { color: #334155 !important; background: none !important; }
-body.light-mode .nav-item.active { color: #2563ff !important; background: rgba(37,99,255,0.08) !important; }
-body.light-mode .nav-item:hover { background: rgba(0,0,0,0.04) !important; }
-body.light-mode .card, body.light-mode .stat-card {
-  background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; color: #0f172a !important;
+/* Dark mode explicit (default) */
+body, body.dark-mode {
+background: #080d1a !important;
+color: #f0f4ff !important;
 }
-body.light-mode .things-card { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important; }
-body.light-mode .things-card-title { color: #0f172a !important; }
-body.light-mode .things-card-sub { color: #64748b !important; }
-body.light-mode .things-card-count { background: rgba(0,0,0,0.06) !important; color: #334155 !important; }
-body.light-mode .things-card-chevron { color: rgba(0,0,0,0.3) !important; }
-body.light-mode input, body.light-mode textarea, body.light-mode select {
-  background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.15) !important; color: #0f172a !important;
+/* ── LIGHT MODE ── */
+body.light-mode{background:#f0f4fa!important;color:#0f172a!important;}
+body.light-mode #app,body.light-mode #main,body.light-mode #content{background:#f0f4fa!important;}
+body.light-mode #topbar{background:rgba(255,255,255,0.96)!important;border-bottom-color:rgba(0,0,0,0.1)!important;}
+body.light-mode #sidebar{background:#f8fafc!important;}
+body.light-mode .card,body.light-mode .stat-card{background:#fff!important;border-color:rgba(0,0,0,0.07)!important;color:#0f172a!important;}
+body.light-mode .things-card{background:#fff!important;border-color:rgba(0,0,0,0.07)!important;}
+body.light-mode .things-card-title{color:#0f172a!important;}
+body.light-mode .things-card-sub{color:#64748b!important;}
+body.light-mode input,body.light-mode textarea,body.light-mode select{background:rgba(0,0,0,0.04)!important;border-color:rgba(0,0,0,0.15)!important;color:#0f172a!important;}
+body.light-mode .modal{background:#fff!important;color:#0f172a!important;}
+body.light-mode .modal-header{background:#f8fafc!important;border-bottom-color:rgba(0,0,0,0.08)!important;}
+body.light-mode table,body.light-mode td{color:#0f172a!important;}
+body.light-mode th{background:rgba(0,0,0,0.04)!important;color:#64748b!important;}
+body.light-mode .sidebar-logo h1,body.light-mode .topbar-title,body.light-mode #mob-large-title{color:#0f172a!important;}
+body.light-mode .nav-item{color:#334155!important;}
+body.light-mode .nav-item.active{color:#2563ff!important;background:rgba(37,99,255,0.08)!important;}
+body.light-mode #mob-search-input{background:rgba(0,0,0,0.06)!important;color:#0f172a!important;}
+body.light-mode *{-webkit-text-fill-color:unset!important;}
+body.light-mode #mob-tasks-cards>div,body.light-mode #mob-pos-cards>div,body.light-mode #mob-shipping-cards>div{background:#fff!important;border-color:rgba(0,0,0,0.07)!important;color:#0f172a!important;}
+
+@media (max-width: 768px) {
+#quickAddPanel {
+left: 14px !important;
+right: 14px !important;
+bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+width: auto !important;
+max-width: none !important;
+box-sizing: border-box !important;
 }
-body.light-mode .modal { background: #ffffff !important; color: #0f172a !important; }
-body.light-mode .modal-header { background: #f8fafc !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
-body.light-mode .modal-footer { background: #f8fafc !important; border-top-color: rgba(0,0,0,0.08) !important; }
-body.light-mode table, body.light-mode td { color: #0f172a !important; }
-body.light-mode th { background: rgba(0,0,0,0.04) !important; color: #64748b !important; border-color: rgba(0,0,0,0.07) !important; }
-body.light-mode tbody tr:hover { background: rgba(37,99,255,0.04) !important; }
-body.light-mode #mob-search-input { background: rgba(0,0,0,0.06) !important; color: #0f172a !important; border-color: rgba(0,0,0,0.12) !important; }
-body.light-mode #mob-notif-btn { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.1) !important; }
-body.light-mode #mobileNav { background: rgba(249,249,251,0.95) !important; border-top-color: rgba(0,0,0,0.12) !important; }
-body.light-mode .mobile-nav-item { color: #8e8e93 !important; }
-body.light-mode .mobile-nav-item.active { color: #2563ff !important; }
-body.light-mode .section-title, body.light-mode .section-header, body.light-mode label { color: #334155 !important; }
-body.light-mode .badge { color: #fff !important; }
-body.light-mode .priority { color: #0f172a !important; }
-body.light-mode * { -webkit-text-fill-color: unset !important; }
+#quickAddPanel input,
+#quickAddPanel select,
+#quickAddPanel textarea {
+width: 100% !important;
+box-sizing: border-box !important;
+}
+}
 
 </style>
 
 </head>
-<body style="background:#070b18;color:#e8edf8">
+<body>
 
 <div id="app">
   <!-- SIDEBAR -->
@@ -1607,8 +1613,8 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
       </div>
     </div>
 
-```
 <!-- OFFLINE BAR -->
+
 <div id="offlineBar" style="display:none;align-items:center;justify-content:center;gap:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:600;padding:8px 16px;flex-shrink:0;letter-spacing:0.3px">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
   Offline — changes saved locally and will sync when reconnected
@@ -1638,6 +1644,7 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
 <div id="content">
 
   <!-- ═══ DASHBOARD ═══ -->
+
   <div class="view active" id="view-dashboard">
     <!-- Things-style home cards (mobile only) -->
     <div id="things-home-wrap">
@@ -1688,31 +1695,35 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
       </div>
     </div><!-- /dash-stat-grid -->
 
-    <div class="grid-2" id="dash-recent-grid">
-      <div class="card" id="dash-task-card">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Recent Tasks</div>
-            <div class="section-sub">Latest open items</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
-        </div>
-        <div id="dash-tasks"></div>
+```
+<div class="grid-2" id="dash-recent-grid">
+  <div class="card" id="dash-task-card">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Recent Tasks</div>
+        <div class="section-sub">Latest open items</div>
       </div>
-      <div class="card" id="dash-ship-card">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Shipment Status</div>
-            <div class="section-sub">Active tracking</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
-        </div>
-        <div id="dash-shipping"></div>
-      </div>
+      <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
     </div>
+    <div id="dash-tasks"></div>
+  </div>
+  <div class="card" id="dash-ship-card">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Shipment Status</div>
+        <div class="section-sub">Active tracking</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
+    </div>
+    <div id="dash-shipping"></div>
+  </div>
+</div>
+```
+
   </div>
 
   <!-- ═══ PROJECTS ═══ -->
+
   <div class="view" id="view-projects">
     <div class="tabs">
       <div class="tab active" onclick="filterProjects('all',this)">All</div>
@@ -1724,6 +1735,7 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
   </div>
 
   <!-- ═══ TASKS ═══ -->
+
   <div class="view" id="view-tasks">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
@@ -1787,6 +1799,7 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
   </div>
 
   <!-- ═══ PURCHASE ORDERS ═══ -->
+
   <div class="view" id="view-pos">
     <div class="tabs">
       <div class="tab active" onclick="filterPOs('all',this)">All</div>
@@ -1814,6 +1827,7 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
   </div>
 
   <!-- ═══ SHIPPING ═══ -->
+
   <div class="view" id="view-shipping">
     <div class="tabs">
       <div class="tab active" onclick="filterShipping('all',this)">All</div>
@@ -1840,6 +1854,7 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
   </div>
 
   <!-- ═══ TROUBLESHOOT ═══ -->
+
   <div class="view" id="view-troubleshoot">
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap">
       <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
@@ -1856,164 +1871,168 @@ body.light-mode * { -webkit-text-fill-color: unset !important; }
   </div>
 
   <!-- ═══ SETTINGS ═══ -->
+
   <div class="view" id="view-settings">
     <div style="max-width:580px">
 
-    <!-- Theme Toggle Card -->
-    <div class="card" style="margin-bottom:20px">
-      <div style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
-      <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
-        <span class="theme-icons" id="theme-icon">🌙</span>
-        <div class="theme-toggle-label">
-          <strong id="theme-label">Dark Mode</strong>
-          <span id="theme-sub">Currently using dark theme</span>
-        </div>
-        <div class="toggle-pill on" id="toggle-pill"></div>
-      </div>
+```
+<!-- Theme Toggle Card -->
+<div class="card" style="margin-bottom:20px">
+  <div style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
+  <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
+    <span class="theme-icons" id="theme-icon">🌙</span>
+    <div class="theme-toggle-label">
+      <strong id="theme-label">Dark Mode</strong>
+      <span id="theme-sub">Currently using dark theme</span>
     </div>
+    <div class="toggle-pill on" id="toggle-pill"></div>
+  </div>
+</div>
 
-    <!-- Firebase Card -->
-    <div class="card" style="margin-bottom:20px">
+<!-- Firebase Card -->
+<div class="card" style="margin-bottom:20px">
 
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-        <span style="font-size:24px">🔥</span>
-        <div>
-          <div class="section-title">Firebase Sync</div>
-          <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
-        </div>
-      </div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+    <span style="font-size:24px">🔥</span>
+    <div>
+      <div class="section-title">Firebase Sync</div>
+      <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
+    </div>
+  </div>
 
-      <div class="setup-banner" style="margin:18px 0">
-        <span class="icon">📋</span>
-        <div style="font-size:13px;color:#8da0c0;line-height:1.8">
-          <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
-          1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
-          2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
-          3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
-        </div>
-      </div>
+  <div class="setup-banner" style="margin:18px 0">
+    <span class="icon">📋</span>
+    <div style="font-size:13px;color:#8da0c0;line-height:1.8">
+      <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
+      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
+      2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
+      3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
+    </div>
+  </div>
 
-      <div class="form-group">
-        <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>Paste your Firebase config block here</span>
-          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="pasteFromClipboard()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-            Paste from clipboard
-          </button>
-        </label>
-        <div style="margin-bottom:14px">
-          <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            Connect FieldOps Pro to Firebase
-          </button>
-          <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
-          <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
-          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
-        </div>
-        <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
+  <div class="form-group">
+    <label style="display:flex;align-items:center;justify-content:space-between">
+      <span>Paste your Firebase config block here</span>
+      <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="pasteFromClipboard()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+        Paste from clipboard
+      </button>
+    </label>
+    <div style="margin-bottom:14px">
+      <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Connect FieldOps Pro to Firebase
+      </button>
+      <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+      <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+    </div>
+    <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
 ```
 
 const firebaseConfig = {
-apiKey: "AIzaSy…",
-authDomain: "myapp.firebaseapp.com",
-projectId: "myapp-12345",
-appId: "1:123456:web:abc"
+apiKey: “AIzaSy…”,
+authDomain: “myapp.firebaseapp.com”,
+projectId: “myapp-12345”,
+appId: “1:123456:web:abc”
 };”></textarea>
+
 </div>
 
 ```
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
-          🔥 Connect &amp; Sync
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
+      🔥 Connect &amp; Sync
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
+  </div>
+  <div id="cfg-current-wrap" style="display:none;margin-top:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">&#x2705; Firebase Connected</div>
+        <div id="cfg-current" style="font-size:12px;color:#4a5e7a"></div>
       </div>
-      <div id="cfg-current-wrap" style="display:none;margin-top:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">&#x2705; Firebase Connected</div>
-            <div id="cfg-current" style="font-size:12px;color:#4a5e7a"></div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="downloadWithConfig()" style="background:#10b981;flex-shrink:0">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Save config to HTML file
-          </button>
-        </div>
-        <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:#8da0c0;line-height:1.6">
-          Download a new copy of this app with your Firebase config permanently saved inside it. 
-          Open that file in Safari to connect instantly — no pasting required.
-        </div>
-      </div>
-
-      <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
-
-
-
-    </div><!-- /firebase card -->
-
-    <!-- Danger Zone Card -->
-    <div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-        <span style="font-size:20px">⚠️</span>
-        <div>
-          <div class="section-title" style="color:#f87171">Danger Zone</div>
-          <div class="section-sub">Permanently delete all data — cannot be undone</div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
-          </div>
-          <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
-        </div>
-      </div>
+      <button class="btn btn-primary btn-sm" onclick="downloadWithConfig()" style="background:#10b981;flex-shrink:0">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Save config to HTML file
+      </button>
     </div>
+    <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:#8da0c0;line-height:1.6">
+      Download a new copy of this app with your Firebase config permanently saved inside it. 
+      Open that file in Safari to connect instantly — no pasting required.
+    </div>
+  </div>
 
-    </div><!-- /settings max-width -->
+  <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
+
+
+
+</div><!-- /firebase card -->
+
+<!-- Danger Zone Card -->
+<div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <span style="font-size:20px">⚠️</span>
+    <div>
+      <div class="section-title" style="color:#f87171">Danger Zone</div>
+      <div class="section-sub">Permanently delete all data — cannot be undone</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
+      </div>
+      <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /settings max-width -->
+```
+
   </div>
 
 </div><!-- /content -->
-```
 
   </div><!-- /main -->
 </div><!-- /app -->
@@ -2361,7 +2380,36 @@ appId: "1:123456:web:abc"
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<script>
+<script>window.onerror = function(msg, src, line, col, err) {
+  // Line 0 = cross-origin script error (Firebase CDN from file://) — suppress
+  if (!line || line === 0) return true;
+  try {
+    var div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px;font-size:13px;z-index:99999;font-family:monospace;word-break:break-all';
+    div.textContent = 'JS ERR L'+line+': '+msg+(err?' '+err.stack:'');
+    document.body && document.body.appendChild(div);
+    setTimeout(function(){ if(div&&div.parentNode) div.parentNode.removeChild(div); }, 10000);
+  } catch(e2) {}
+  return true;
+};
+
+// Element.closest polyfill for older WebKit
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function(sel) {
+    var el = this;
+    while (el && el.nodeType === 1) {
+      if (el.matches ? el.matches(sel) : el.msMatchesSelector(sel)) return el;
+      el = el.parentElement || el.parentNode;
+    }
+    return null;
+  };
+}
+if (!Element.prototype.matches) {
+  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+}
+
+function isMobile(){ return window.innerWidth<=768; }
+
 
 
 // ═══════════════════════════════════════════════
@@ -2379,7 +2427,8 @@ var LOCAL = {
   add: function(col, item) { var d = LOCAL.get(col); d.push(item); LOCAL.set(col,d); },
   update: function(col, id, item) {
     var d = LOCAL.get(col);
-    var i = d.findIndex(function(x){ return x.id===id; });
+    var i = -1;
+    for(var _j=0;_j<d.length;_j++){ if(d[_j].id===id){i=_j;break;} }
     if(i>=0) { var merged = {}; var k; for(k in d[i]) { merged[k] = d[i][k]; } for(k in item) { merged[k] = item[k]; } d[i] = merged; }
     LOCAL.set(col,d);
   },
@@ -2388,6 +2437,16 @@ var LOCAL = {
 
 // In-memory state
 var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
+
+function _merge() {
+  var r = {};
+  for(var a=0;a<arguments.length;a++){
+    var o=arguments[a]; if(!o) continue;
+    for(var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)) r[k]=o[k]; }
+  }
+  return r;
+}
+
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -2465,8 +2524,17 @@ function initFirebase(config) {
       var unsub = db.collection(col)
         .orderBy('createdAt', 'asc')
         .onSnapshot(function(snap) {
-          state[col] = snap.docs.map(function(d){ return Object.assign({id: d.id}, d.data()); });
-          renderAll();
+          try {
+            state[col] = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
+            renderAll();
+          } catch(renderErr) {
+            console.error('renderAll error in onSnapshot:', renderErr);
+            if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
+            window._dbgDiv = document.createElement('div');
+            window._dbgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all;max-height:120px;overflow:auto';
+            window._dbgDiv.textContent = 'RENDER ERR: '+(renderErr.message||renderErr)+(renderErr.stack ? ' @ '+renderErr.stack.split('\n')[1] : '');
+            document.body && document.body.appendChild(window._dbgDiv);
+          }
         }, function(err) { console.warn('Firestore error:', err); });
       unsubscribers.push(unsub);
     });
@@ -2485,7 +2553,15 @@ function loadLocalData() {
   COLLECTIONS.forEach(function(col){ state[col] = LOCAL.get(col); });
   document.getElementById('syncDot').classList.add('offline');
   document.getElementById('syncLabel').textContent = 'Local only';
-  renderAll();
+  try { renderAll(); } catch(e) {
+    console.error('renderAll error:', e);
+    if(document.body) {
+      var dbg = document.createElement('div');
+      dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all';
+      dbg.textContent = 'RENDER ERR: '+(e.message||e);
+      document.body.appendChild(dbg);
+    }
+  }
 }
 
 // Firebase config persistence
@@ -2910,7 +2986,7 @@ function cycleTaskStatus(id, e) {
   if(!task) return;
   var cycle = ['todo','inprogress','done'];
   var next = cycle[(cycle.indexOf(task.status)+1) % cycle.length];
-  updateItem('tasks', id, Object.assign({}, task, {status: next}));
+  updateItem('tasks', id, _merge({}, task, {status: next}));
   toast('Status: ' + next);
 }
 
@@ -2918,7 +2994,7 @@ function archiveTask(id, e) {
   if(e) e.stopPropagation();
   var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
-  updateItem('tasks', id, Object.assign({}, task, {archived: true}));
+  updateItem('tasks', id, _merge({}, task, {archived: true}));
   haptic('medium');
   renderTasks();
   toast('Task archived');
@@ -2927,7 +3003,7 @@ function unarchiveTask(id, e) {
   if(e) e.stopPropagation();
   var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
-  updateItem('tasks', id, Object.assign({}, task, {archived: false}));
+  updateItem('tasks', id, _merge({}, task, {archived: false}));
   renderTasks();
   toast('Task restored');
 }
@@ -2942,7 +3018,47 @@ function renderTasks() {
     data = data.filter(function(t){ return t.status === taskFilter && !t.archived; });
   }
   if(taskProjectFilter) data = data.filter(function(t){ return t.project === taskProjectFilter; });
-  data.reverse();
+  
+  if(isMobile()){
+    var mWrap=document.getElementById('tasks-list-view');
+    var mOld=document.getElementById('mob-tasks-cards');
+    if(mOld) mOld.remove();
+    var mList=document.createElement('div');
+    mList.id='mob-tasks-cards';
+    mList.style.cssText='padding:0 0 80px 0';
+    var today3=new Date(); today3.setHours(0,0,0,0);
+    for(var mi=0;mi<data.length;mi++){
+      var mt=data[mi];
+      var mOver=!!(mt.due&&!mt.archived&&new Date(mt.due)<today3&&mt.status!=='done');
+      var card=document.createElement('div');
+      card.style.cssText='background:rgba(255,255,255,0.04);border:1px solid '+(mOver?'rgba(239,68,68,0.4)':'rgba(255,255,255,0.09)')+';border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer';
+      card.innerHTML='<div style="font-size:15px;font-weight:700;color:#f0f4ff;margin-bottom:6px">'+escH(mt.title)+'</div>'
+        +(mt.category?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px">'+escH(mt.category)+'</div>':'')
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+priorityBadge(mt.priority)+statusBadge(mt.status)
+        +(mt.project?'<span style="font-size:11px;color:#8da0c0;background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(projectName(mt.project))+'</span>':'')
+        +(mt.due?'<span style="font-size:11px;color:'+(mOver?'#ef4444':'#8da0c0')+';background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(fmtDate(mt.due))+'</span>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
+        +'<button class="btn btn-ghost btn-sm" data-mid="'+mt.id+'">Edit</button>'
+        +'<button class="btn btn-danger btn-sm" data-mdel="'+mt.id+'" data-mtitle="'+escH(mt.title)+'">Delete</button>'
+        +'</div>';
+      var editBtn=card.querySelectorAll('button')[0];
+      var delBtn=card.querySelectorAll('button')[1];
+      (function(tid,ttitle){
+        editBtn.onclick=function(e){e.stopPropagation();editTask(tid);};
+        delBtn.onclick=function(e){e.stopPropagation();softDelete('tasks',tid,ttitle);renderTasks();};
+        card.onclick=function(){openDetail('tasks',tid);};
+      })(mt.id,mt.title||'Task');
+      mList.appendChild(card);
+    }
+    var tWrap=document.querySelector('#tasks-list-view .table-wrap');
+    if(tWrap) tWrap.style.display='none';
+    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    return;
+  }
+  var mOldT=document.getElementById('mob-tasks-cards');
+  if(mOldT){ mOldT.remove(); var tW2=document.querySelector('#tasks-list-view .table-wrap'); if(tW2) tW2.style.display=''; }
+data.reverse();
   bulkSelected.clear();
 
   if(taskViewMode === 'kanban') { renderKanban(data); return; }
@@ -3070,7 +3186,7 @@ function onColDrop(e, status) {
   if (!id) return;
   var task = state.tasks.find(function(t){return t.id===id;});
   if (!task || task.status === status) return;
-  updateItem('tasks', id, Object.assign({}, task, { status }));
+  updateItem('tasks', id, _merge({}, task, { status }));
   toast('Moved to ' + { todo:'To Do', inprogress:'In Progress', done:'Done' }[status]);
   dragTaskId = null;
 }
@@ -3119,7 +3235,7 @@ function onTaskTouchEnd(e) {
     var status = col.dataset.status;
     var task = state.tasks.find(function(t){return t.id===touchTaskId;});
     if (task && task.status !== status) {
-      updateItem('tasks', touchTaskId, Object.assign({}, task, { status }));
+      updateItem('tasks', touchTaskId, _merge({}, task, { status }));
       toast('Moved to ' + { todo:'To Do', inprogress:'In Progress', done:'Done' }[status]);
     }
   }
@@ -3198,7 +3314,46 @@ function renderPOs() {
   if(poFilter!=='all') data=data.filter(function(p){return p.status===poFilter;});
   var tb = document.getElementById('pos-tbody');
   if(!data.length){tb.innerHTML='<tr><td colspan="8">'+buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Create a PO to track vendor orders and approvals.')+'</td></tr>';return;}
-  data.reverse();
+  
+  if(isMobile()){
+    var mWrap=document.getElementById('view-pos');
+    var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
+    var mOld=document.getElementById('mob-pos-cards');
+    if(mOld) mOld.remove();
+    var mList=document.createElement('div');
+    mList.id='mob-pos-cards';
+    mList.style.cssText='padding:0 0 80px 0';
+    for(var mi=0;mi<data.length;mi++){
+      var mp=data[mi];
+      var mitems=(mp.items||'').split('\n').filter(Boolean).length;
+      var card=document.createElement('div');
+      card.style.cssText='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer';
+      card.innerHTML='<div style="font-size:15px;font-weight:700;color:#f0f4ff;margin-bottom:6px">'+(mp.number?'<span style="color:#3b82f6">'+escH(mp.number)+'</span> — ':'')+escH(mp.vendor||'PO')+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+statusBadge(mp.status)
+        +(mp.project?'<span style="font-size:11px;color:#8da0c0;background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(projectName(mp.project))+'</span>':'')
+        +'</div>'
+        +(mitems?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">'+mitems+' line item'+(mitems!==1?'s':'')+'</div>':'')
+        +(mp.date?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">Date: '+escH(fmtDate(mp.date))+'</div>':'')
+        +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
+        +'<button class="btn btn-ghost btn-sm">Edit</button>'
+        +'<button class="btn btn-danger btn-sm">Delete</button>'
+        +'</div>';
+      var eb=card.querySelectorAll('button')[0], db=card.querySelectorAll('button')[1];
+      (function(pid,pv){
+        eb.onclick=function(e){e.stopPropagation();editPO(pid);};
+        db.onclick=function(e){e.stopPropagation();softDeletePO(pid);};
+        card.onclick=function(){openDetail('pos',pid);};
+      })(mp.id,mp.vendor||'PO');
+      mList.appendChild(card);
+    }
+    var tWrap=document.querySelector('#view-pos .table-wrap');
+    if(tWrap) tWrap.style.display='none';
+    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    return;
+  }
+  var mOldP=document.getElementById('mob-pos-cards');
+  if(mOldP){ mOldP.remove(); var pW2=document.querySelector('#view-pos .table-wrap'); if(pW2) pW2.style.display=''; }
+data.reverse();
   var html = '';
   for(var i=0;i<data.length;i++){
     var p=data[i];
@@ -3277,7 +3432,46 @@ function renderShipping() {
   else if(shipFilter!=='all') data=data.filter(function(s){return s.status===shipFilter;});
   var tb=document.getElementById('shipping-tbody');
   if(!data.length){tb.innerHTML='<tr><td colspan="7">'+buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Add a shipment to track deliveries — tracking number is optional.')+'</td></tr>';return;}
-  data.reverse();
+  
+  if(isMobile()){
+    var mWrap=document.getElementById('view-shipping');
+    var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
+    var mOld=document.getElementById('mob-shipping-cards');
+    if(mOld) mOld.remove();
+    var mList=document.createElement('div');
+    mList.id='mob-shipping-cards';
+    mList.style.cssText='padding:0 0 80px 0';
+    for(var mi=0;mi<data.length;mi++){
+      var ms=data[mi];
+      var card=document.createElement('div');
+      card.style.cssText='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer';
+      card.innerHTML='<div style="font-size:15px;font-weight:700;color:#f0f4ff;margin-bottom:6px">'+escH(ms.desc||ms.tracking||'Shipment')+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+statusBadge(ms.status)
+        +(ms.carrier?'<span style="font-size:11px;color:#8da0c0;background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(ms.carrier)+'</span>':'')
+        +'</div>'
+        +(ms.tracking?'<div style="font-size:12px;color:#4f8ef7;margin-bottom:4px">'+escH(ms.tracking)+'</div>':'')
+        +(ms.po?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">PO: '+escH(poName(ms.po))+'</div>':'')
+        +(ms.eta?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">ETA: '+escH(fmtDate(ms.eta))+'</div>':'')
+        +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
+        +'<button class="btn btn-ghost btn-sm">Edit</button>'
+        +'<button class="btn btn-danger btn-sm">Delete</button>'
+        +'</div>';
+      var eb=card.querySelectorAll('button')[0], db=card.querySelectorAll('button')[1];
+      (function(sid){
+        eb.onclick=function(e){e.stopPropagation();editShipment(sid);};
+        db.onclick=function(e){e.stopPropagation();softDeleteShipment(sid);};
+        card.onclick=function(){openDetail('shipping',sid);};
+      })(ms.id);
+      mList.appendChild(card);
+    }
+    var tWrap=document.querySelector('#view-shipping .table-wrap');
+    if(tWrap) tWrap.style.display='none';
+    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    return;
+  }
+  var mOldS=document.getElementById('mob-shipping-cards');
+  if(mOldS){ mOldS.remove(); var sW2=document.querySelector('#view-shipping .table-wrap'); if(sW2) sW2.style.display=''; }
+data.reverse();
   var html='';
   for(var i=0;i<data.length;i++){
     var s=data[i];
@@ -3442,9 +3636,9 @@ function renderTroubleshoot() {
   var data = state.issues.slice();
   if (cat !== 'all') data = data.filter(function(t){ return t.cat === cat; });
   if (search) data = data.filter(function(t){
-    return (t.q||'').toLowerCase().includes(search) ||
-           (t.tags||'').toLowerCase().includes(search) ||
-           (t.a||'').toLowerCase().includes(search);
+    return (t.q||'').toLowerCase().indexOf(search)>=0 ||
+           (t.tags||'').toLowerCase().indexOf(search)>=0 ||
+           (t.a||'').toLowerCase().indexOf(search)>=0;
   });
 
   var el = document.getElementById('troubleshoot-list');
@@ -3564,12 +3758,12 @@ function smartSearch(raw) {
   function score(str) {
     if (!str) return 0;
     var s = str.toLowerCase();
-    if (s.startsWith(q)) return 100;
-    if (s.includes(q)) return 80;
+    if (s.indexOf(q)===0) return 100;
+    if ((s.indexOf(q)>=0)) return 80;
     // All words present?
-    if (words.every(function(w){return s.includes(w);})) return 60;
+    if (words.every(function(w){return (s.indexOf(w)>=0);})) return 60;
     // Any word present?
-    var matched = words.filter(function(w){return s.includes(w);}).length;
+    var matched = words.filter(function(w){return (s.indexOf(w)>=0);}).length;
     return matched > 0 ? 20 + matched * 10 : 0;
   }
 
@@ -3652,7 +3846,7 @@ function smartSearch(raw) {
       score(issue.q),
       score(issue.a),
       score(issue.cat),
-      (issue.steps||[]).reduce((m, step) => Math.max(m, score(step)), 0)
+      (issue.steps||[]).reduce(function(m,step){return Math.max(m,score(step));},0)
     );
     if (s > 0) results.push({
       type: 'issue', icon: '⚡', score: s, id: issue.id,
@@ -3828,7 +4022,7 @@ function swipeEnd(e, el, taskId, taskState) {
   } else if (dx > 60) {
     var task = state.tasks.find(function(t){return t.id===taskId;});
     if (task && task.status !== 'done') {
-      updateItem('tasks', taskId, Object.assign({}, task, {status:'done'}));
+      updateItem('tasks', taskId, _merge({}, task, {status:'done'}));
       renderTasks();
       toast('Marked done');
     }
@@ -3969,24 +4163,19 @@ window.addEventListener('load', function(){
 // ═══════════════════════════════════════════════
 //  THEME — dark / light
 // ═══════════════════════════════════════════════
-function applyTheme(theme) {
-  var isDark = (theme === 'dark');
-  document.documentElement.setAttribute('data-theme', theme);
-  if (isDark) {
-    document.body.classList.remove('light-mode');
-    document.body.classList.add('dark-mode');
-  } else {
-    document.body.classList.remove('dark-mode');
-    document.body.classList.add('light-mode');
-  }
-  var pill  = document.getElementById('toggle-pill');
-  var icon  = document.getElementById('theme-icon');
-  var label = document.getElementById('theme-label');
-  var sub   = document.getElementById('theme-sub');
-  if (pill)  pill.classList.toggle('on', !isDark);
-  if (icon)  icon.textContent  = isDark ? '🌙' : '☀️';
-  if (label) label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-  if (sub)   sub.textContent   = isDark ? 'Currently using dark theme' : 'Currently using light theme';
+function applyTheme(theme){
+  var isDark=(theme==='dark');
+  document.documentElement.setAttribute('data-theme',theme);
+  if(isDark){document.body.classList.remove('light-mode');document.body.classList.add('dark-mode');}
+  else{document.body.classList.remove('dark-mode');document.body.classList.add('light-mode');}
+  var pill=document.getElementById('toggle-pill');
+  var icon=document.getElementById('theme-icon');
+  var label=document.getElementById('theme-label');
+  var sub=document.getElementById('theme-sub');
+  if(pill) pill.classList.toggle('on',!isDark);
+  if(icon) icon.textContent=isDark?'🌙':'☀️';
+  if(label) label.textContent=isDark?'Dark Mode':'Light Mode';
+  if(sub) sub.textContent=isDark?'Currently using dark theme':'Currently using light theme';
 }
 function toggleTheme() {
   var current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -4222,7 +4411,7 @@ function comboInit(id, currentVal) {
 
   function renderOptions(filter) {
     var opts = comboOptions(id);
-    var filtered = filter ? opts.filter(function(o){ return o.toLowerCase().includes(filter.toLowerCase()); }) : opts;
+    var filtered = filter ? opts.filter(function(o){ return (o.toLowerCase().indexOf(filter.toLowerCase())>=0); }) : opts;
     var html = '';
     if (!filtered.length && filter) {
       html = '<div class="combo-option add-new" data-val="'+escH(filter)+'">' + escH(filter) + ' (add new)</div>';
@@ -4268,7 +4457,7 @@ function comboInit(id, currentVal) {
       var val = input.value.trim();
       if (!val) return;
       if (!comboCustomOptions[id]) comboCustomOptions[id] = [];
-      if (comboCustomOptions[id].indexOf(val) === -1 && !(COMBO_DEFAULTS[id]||[]).includes(val)) {
+      if (comboCustomOptions[id].indexOf(val) === -1 && !((COMBO_DEFAULTS[id]||[]).indexOf(val)>=0)) {
         comboCustomOptions[id].push(val);
         saveComboOpts();
         toast('Saved "' + val + '" for future use');
@@ -4529,7 +4718,7 @@ function scheduleNextRecur(task) {
   var offsets = { daily:1, weekly:7, biweekly:14, monthly:30 };
   var days = offsets[task.recur] || 7;
   due.setDate(due.getDate() + days);
-  var next = Object.assign({}, task, {
+  var next = _merge({}, task, {
     id: genId(),
     status: 'todo',
     archived: false,
@@ -4877,7 +5066,7 @@ function applyTemplate(templateId, projectId) {
   if (!tmpl) return;
   var added = 0;
   tmpl.tasks.forEach(function(taskDef) {
-    addItem('tasks', Object.assign({}, taskDef, { id: genId(), project: projectId||'', createdAt: new Date().toISOString() }));
+    addItem('tasks', _merge({}, taskDef, { id: genId(), project: projectId||'', createdAt: new Date().toISOString() }));
     added++;
   });
   toast(added + ' tasks added from "' + tmpl.name + '"');
@@ -5155,7 +5344,7 @@ function useBuiltInConfig() {
   initFirebase(cfg);
 }
 
-Object.assign(window, {
+_merge(window, {
   switchView, openAddModal, openModal, closeModal,
   saveProject, editProject, filterProjects,
   saveTask, editTask, filterTasks, setTaskView, cycleTaskStatus, renderTasks, archiveTask, unarchiveTask, bulkDeleteAllArchived, confirmDeleteTask, escH,
@@ -5233,7 +5422,16 @@ function applyProjectFilter(pid) {
 // ═══════════════════════════════════════════════
 //  BULK TASK ACTIONS
 // ═══════════════════════════════════════════════
-var bulkSelected = new Set();
+var bulkSelected = {
+  _d: {},
+  add: function(v){ this._d[String(v)]=1; },
+  remove: function(v){ delete this._d[String(v)]; },
+  has: function(v){ return this._d[String(v)]===1; },
+  clear: function(){ this._d={}; },
+  count: function(){ var n=0; for(var k in this._d){ if(this._d[k]) n++; } return n; },
+  forEach: function(fn){ for(var k in this._d){ if(this._d[k]) fn(k); } }
+};
+bulkSelected.delete = bulkSelected.remove;
 function bulkSelectAll(checked) {
   var checkboxes = document.querySelectorAll('.task-bulk-cb');
   checkboxes.forEach(function(cb) {
@@ -5251,26 +5449,26 @@ function toggleBulkSelect(id, checked) {
 function updateBulkBar() {
   var bar = document.getElementById('bulk-action-bar');
   if (!bar) return;
-  if (bulkSelected.size > 0) {
+  if (bulkSelected.count() > 0) {
     bar.style.display = 'flex';
-    bar.querySelector('#bulk-count').textContent = bulkSelected.size + ' selected';
+    bar.querySelector('#bulk-count').textContent = bulkSelected.count() + ' selected';
   } else {
     bar.style.display = 'none';
   }
 }
 function bulkAction(action) {
-  if (!bulkSelected.size) return;
-  var ids = Array.from ? Array.from(bulkSelected) : (function(){ var a=[]; bulkSelected.forEach(function(v){ a.push(v); }); return a; })();
+  if (!bulkSelected.count()) return;
+  var ids = true ? (function(){ var a=[]; bulkSelected.forEach(function(v){a.push(v);}); return a; })() : (function(){ var a=[]; bulkSelected.forEach(function(v){ a.push(v); }); return a; })();
   if (action === 'archive') {
     ids.forEach(function(id) {
       var t = state.tasks.find(function(x){return x.id===id;});
-      if (t) updateItem('tasks', id, Object.assign({}, t, {archived: true}));
+      if (t) updateItem('tasks', id, _merge({}, t, {archived: true}));
     });
     toast(ids.length + ' tasks archived');
   } else if (action === 'done') {
     ids.forEach(function(id) {
       var t = state.tasks.find(function(x){return x.id===id;});
-      if (t) updateItem('tasks', id, Object.assign({}, t, {status: 'done', archived: false}));
+      if (t) updateItem('tasks', id, _merge({}, t, {status: 'done', archived: false}));
     });
     toast(ids.length + ' tasks marked done');
   } else if (action === 'delete') {
@@ -5400,12 +5598,12 @@ function closeBarcodeScanner() {
 
 <button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"></button>
 
-<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:24px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px;width:300px;box-shadow:0 24px 60px rgba(0,0,0,0.6)">
+<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:360px;margin:0 auto;box-sizing:border-box">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
     <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add Task</span>
     <button onclick="toggleQuickAdd()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:20px;line-height:1">x</button>
   </div>
-  <input type="text" id="qa-title" placeholder="Task title..." style="margin-bottom:10px" onkeydown="if(event.key==='Enter')saveQuickTask()">
+  <input type="text" id="qa-title" placeholder="Task title..." style="margin-bottom:10px;width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')saveQuickTask()">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
     <select id="qa-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select>
     <select id="qa-project"><option value="">No project</option></select>
