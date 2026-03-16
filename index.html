@@ -1531,6 +1531,11 @@ left: -9999px !important;
 .modal-footer { display: none !important; }
 }
 
+/* Mobile sync status in topbar */
+#mob-sync-status { display: none; }
+@media (max-width: 768px) {
+#mob-sync-status { display: flex !important; }
+}
 </style>
 
 </head>
@@ -1603,6 +1608,10 @@ left: -9999px !important;
         <span style="font-size:16px;font-weight:600;color:#4f8ef7;white-space:nowrap">Home</span>
       </button>
       <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
+      <div id="mob-sync-status" style="display:none;align-items:center;gap:4px;margin-left:auto;flex-shrink:0">
+        <div id="mobSyncDot" style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
+        <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
+      </div>
       <div class="search-wrap" style="position:relative">
         <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
           oninput="globalSearch(this.value)"
@@ -1914,7 +1923,7 @@ left: -9999px !important;
       <strong id="theme-label">Dark Mode</strong>
       <span id="theme-sub">Currently using dark theme</span>
     </div>
-    <div class="toggle-pill on" id="toggle-pill"></div>
+    <div class="toggle-pill on" id="toggle-pill" onclick="toggleTheme()" style="cursor:pointer"></div>
   </div>
 </div>
 
@@ -1959,15 +1968,8 @@ left: -9999px !important;
       <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
       <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
     </div>
-    <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works:
+    <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works: const firebaseConfig = { apiKey: "AIzaSy…", authDomain: "myapp.firebaseapp.com", projectId: "myapp-12345", appId: "1:123456:web:abc" };"></textarea>
 ```
-
-const firebaseConfig = {
-apiKey: “AIzaSy…”,
-authDomain: “myapp.firebaseapp.com”,
-projectId: “myapp-12345”,
-appId: “1:123456:web:abc”
-};”></textarea>
 
 </div>
 
@@ -2384,7 +2386,7 @@ appId: “1:123456:web:abc”
       <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-detail')">✕</button>
     </div>
     <div class="modal-body" id="detail-body"></div>
-    <div class="modal-footer" id="detail-footer"></div>
+    <div id="detail-footer" style="padding:12px 20px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.07)"></div>
   </div>
 </div>
 
@@ -2555,6 +2557,10 @@ function initFirebase(config) {
 
     var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
     var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
+    var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
+    var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
+    var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
+    var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
     var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
     toast('🔥 Firebase connected — syncing!');
   } catch(e) {
@@ -2567,6 +2573,10 @@ function loadLocalData() {
   COLLECTIONS.forEach(function(col){ state[col] = LOCAL.get(col); });
   var _sd=document.getElementById('syncDot'); if(_sd) _sd.classList.add('offline');
   var _sl=document.getElementById('syncLabel'); if(_sl) _sl.textContent='Local only';
+  var _msd=document.getElementById('mobSyncDot'); if(_msd) _msd.style.background='#f59e0b';
+  var _msl=document.getElementById('mobSyncLabel'); if(_msl) _msl.textContent='Local';
+  var _msd=document.getElementById('mobSyncDot'); if(_msd) _msd.style.background='#f59e0b';
+  var _msl=document.getElementById('mobSyncLabel'); if(_msl) _msl.textContent='Local';
   try { renderAll(); } catch(e) {
     console.error('renderAll error:', e);
     if(document.body) {
