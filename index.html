@@ -2396,7 +2396,69 @@ left: -9999px !important;
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<script>window.onerror = function(msg, src, line, col, err) {
+<script>
+// Explicit global assignments for iOS WKWebView compatibility
+window.toggleTheme = toggleTheme;
+window.applyTheme = applyTheme;
+window.editTask = editTask;
+window.editProject = editProject;
+window.editPO = editPO;
+window.editShipment = editShipment;
+window.softDelete = softDelete;
+window.softDeletePO = softDeletePO;
+window.softDeleteShipment = softDeleteShipment;
+window.openDetail = openDetail;
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.switchView = switchView;
+window.saveTask = saveTask;
+window.saveProject = saveProject;
+window.savePO = savePO;
+window.saveShipment = saveShipment;
+window.filterTasks = filterTasks;
+window.filterPOs = filterPOs;
+window.filterShipping = filterShipping;
+window.toggleQuickAdd = toggleQuickAdd;
+window.saveQuickTask = saveQuickTask;
+window.useBuiltInConfig = useBuiltInConfig;
+window.saveFirebaseConfig = saveFirebaseConfig;
+window.clearFirebaseConfig = clearFirebaseConfig;
+window.toggleWidget = toggleWidget;
+window.toggleCompact = toggleCompact;
+window.deleteAllData = deleteAllData;
+window.renderTroubleshoot = renderTroubleshoot;
+window.deleteIssue = deleteIssue;
+window.editIssue = editIssue;
+window.saveIssue = saveIssue;
+window.openAddModal = openAddModal;
+window.haptic = haptic;
+window.closeSidebar = closeSidebar;
+window.toggleSidebar = toggleSidebar;
+window.toggleNotifPanel = toggleNotifPanel;
+window.markAllRead = markAllRead;
+window.bulkSelectAll = bulkSelectAll;
+window.bulkAction = bulkAction;
+window.startBarcodeScan = startBarcodeScan;
+window.closeBarcodeScanner = closeBarcodeScanner;
+window.globalSearch = globalSearch;
+window.closeSearchDropdown = closeSearchDropdown;
+window.searchKeyNav = searchKeyNav;
+window.selectSearchResult = selectSearchResult;
+window.renderThingsHome = renderThingsHome;
+window.updateThingsNav = updateThingsNav;
+window.applyProjectFilter = applyProjectFilter;
+window.cycleTaskStatus = cycleTaskStatus;
+window.confirmDeleteTask = confirmDeleteTask;
+window.bulkDeleteAllArchived = bulkDeleteAllArchived;
+window.setTaskView = setTaskView;
+window.archiveTask = archiveTask;
+window.unarchiveTask = unarchiveTask;
+window.filterProjects = filterProjects;
+window.softDeleteTask = softDeleteTask;
+window.setDetailFooter = setDetailFooter;
+window.autoDetectCarrier = autoDetectCarrier;
+
+window.onerror = function(msg, src, line, col, err) {
   // Line 0 = cross-origin script error (Firebase CDN from file://) — suppress
   if (!line || line === 0) return true;
   try {
