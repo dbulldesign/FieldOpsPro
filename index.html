@@ -3241,13 +3241,22 @@ function renderTasks() {
         +(mt.due?'<span style="font-size:11px;color:'+(mOver?'#ef4444':'#8da0c0')+';background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(fmtDate(mt.due))+'</span>':'')
         +'</div>'
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
-        +'<button class="btn btn-danger btn-sm" data-mdel="'+mt.id+'" data-mtitle="'+escH(mt.title)+'">Delete</button>'
+        +(mt.archived
+          ? ('<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#10b981;border-color:rgba(16,185,129,0.4)" data-restore="1">Restore</button>'
+             +'<button class="btn btn-danger btn-sm" style="font-size:11px" data-delete="1">Delete</button>')
+          : '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>')
         +'</div>';
-      var delBtn=card.querySelectorAll('button')[0];
-      (function(tid,ttitle){
-        delBtn.onclick=function(e){e.stopPropagation();softDelete('tasks',tid,ttitle);renderTasks()};
-        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}editTask(tid);};
-      })(mt.id,mt.title||'Task');
+      (function(tid,ttitle,isArch){
+        var btns=card.querySelectorAll('button');
+        for(var bi=0;bi<btns.length;bi++){(function(btn){
+          btn.onclick=function(e){e.stopPropagation();
+            if(btn.dataset.archive)archiveTask(tid,e);
+            else if(btn.dataset.restore)unarchiveTask(tid,e);
+            else if(btn.dataset.delete)confirmInline('Delete permanently?',function(){deleteItem('tasks',tid);renderTasks();});
+          };
+        })(btns[bi]);}
+        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}if(!isArch)editTask(tid);};
+      })(mt.id,mt.title||'Task',!!mt.archived);
       mList.appendChild(card);
     }
     var tWrap=document.querySelector('#tasks-list-view .table-wrap');
