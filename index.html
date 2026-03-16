@@ -1861,8 +1861,8 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="view" id="view-tasks">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
-        <div class="tab active" onclick="filterTasks('all',this)">All</div>
-        <div class="tab" onclick="filterTasks('todo',this)">To Do</div>
+        <div class="tab" onclick="filterTasks('all',this)">All</div>
+        <div class="tab active" onclick="filterTasks('todo',this)">To Do</div>
         <div class="tab" onclick="filterTasks('inprogress',this)">In Progress</div>
         <div class="tab" onclick="filterTasks('done',this)">Done</div>
         <div class="tab" onclick="filterTasks('archived',this)">📦 Archived</div>
@@ -3162,7 +3162,7 @@ function editProject(id) {
 // ═══════════════════════════════════════════════
 //  TASKS
 // ═══════════════════════════════════════════════
-var taskFilter = 'all';
+var taskFilter = 'todo';
 function filterTasks(f, el) {
   taskFilter = f;
   document.querySelectorAll('#view-tasks .tab').forEach(function(t){t.classList.remove('active');});
