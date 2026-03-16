@@ -494,7 +494,7 @@ padding: 0 12px;
 padding-top: env(safe-area-inset-top, 0px);
 height: calc(52px + env(safe-area-inset-top, 0px));
 flex-shrink: 0;
-position: sticky; top: 0; z-index: 200;
+position: static; top: 0; z-index: 200;
 }
 .topbar-title {
 font-size: 17px !important;
@@ -634,7 +634,7 @@ padding-bottom: env(safe-area-inset-bottom, 0px);
 .modal-header {
 padding: 16px 20px 12px !important;
 border-radius: 22px 22px 0 0 !important;
-position: sticky; top: 0; z-index: 2;
+position: static; top: 0; z-index: 2;
 }
 .modal-body { padding: 0 20px 20px !important; }
 .modal-footer {
@@ -1515,6 +1515,18 @@ bottom: auto !important;
 .modal-overlay:not(.open) .modal-footer {
 display: none !important;
 visibility: hidden !important;
+}
+
+/* Nuclear modal hide - nothing bleeds when closed */
+.modal-overlay { clip: rect(0,0,0,0); }
+.modal-overlay.open { clip: auto; }
+.modal-overlay:not(.open) .modal {
+display: none !important;
+visibility: hidden !important;
+pointer-events: none !important;
+position: absolute !important;
+top: -9999px !important;
+left: -9999px !important;
 }
 
 </style>
@@ -5484,7 +5496,11 @@ function toggleQuickAdd() {
   var panel = document.getElementById('quickAddPanel');
   var fab = document.getElementById('quickAddFab');
   panel.style.display = quickAddOpen ? 'block' : 'none';
-  if (fab) { fab.classList.toggle('qa-open', quickAddOpen); }
+  if (fab) {
+    fab.classList.toggle('qa-open', quickAddOpen);
+    var fabSpan = fab.querySelector('span');
+    if (fabSpan) fabSpan.textContent = quickAddOpen ? '×' : '+';
+  }
   if (quickAddOpen) {
     populateProjectSelects();
     var qaProj = document.getElementById('qa-project');
@@ -5698,7 +5714,7 @@ function closeBarcodeScanner() {
 
 <!-- QUICK ADD FAB -->
 
-<button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"></button>
+<button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"><span style="font-size:30px;font-weight:300;line-height:1;color:#fff;pointer-events:none">+</span></button>
 
 <div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:360px;margin:0 auto;box-sizing:border-box">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
