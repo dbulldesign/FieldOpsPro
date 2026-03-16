@@ -1160,7 +1160,6 @@ touch-action: manipulation;
 user-select: none;
 -webkit-user-select: none;
 transition: transform 0.12s ease, background 0.12s ease;
-will-change: transform;
 }
 .things-card:active {
 transform: scale(0.97);
@@ -1527,6 +1526,11 @@ pointer-events: none !important;
 position: absolute !important;
 top: -9999px !important;
 left: -9999px !important;
+}
+
+/* Hide modal footer on mobile - use header X button instead */
+@media (max-width: 768px) {
+.modal-footer { display: none !important; }
 }
 
 </style>
