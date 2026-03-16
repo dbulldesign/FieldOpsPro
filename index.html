@@ -611,7 +611,7 @@ table { min-width: 600px; }
 }
 
 /* ── Forms: full-width stacked ── */
-.form-row { grid-template-columns: 1fr !important; gap: 12px !important; }
+/* form-row mobile handled below */
 input[type="text"], input[type="date"], input[type="email"],
 select, textarea {
 font-size: 16px !important; /* prevents iOS zoom */
@@ -1577,6 +1577,45 @@ body.light-mode #mob-tasks-cards>div,body.light-mode #mob-pos-cards>div,body.lig
     width: 100% !important;
     box-sizing: border-box !important;
   }
+}
+
+/* ═══ COMPREHENSIVE FORM FIX ═══ */
+/* All modals: no overflow, scroll inside */
+.modal-overlay {
+  padding: 0 !important;
+}
+.modal {
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+}
+.modal-body {
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Form rows always single column - no side-by-side fields */
+.form-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  width: 100% !important;
+}
+.form-group {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.form-group input:not([type="hidden"]),
+.form-group select,
+.form-group textarea,
+.form-group .combo-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
 }
 
 </style>
@@ -3037,12 +3076,17 @@ function renderProjects() {
       +'<button class="btn btn-danger btn-sm"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
       +'</div>';
     (function(pid,pn){
-      card.onclick = function() { openDetail('projects',pid); };
+      card.onclick = function(e) {
+        var t = e.target;
+        while(t && t !== card) {
+          if(t.tagName === 'BUTTON') return;
+          t = t.parentNode;
+        }
+        openDetail('projects',pid);
+      };
       var b=card.querySelectorAll('button');
       b[0].onclick = function(e) { e.stopPropagation(); editProject(pid); };
-      b[0].ontouchend = function(e) { e.stopPropagation(); e.preventDefault(); editProject(pid); };
       b[1].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
-      b[1].ontouchend = function(e) { e.stopPropagation(); e.preventDefault(); softDelete('projects',pid,pn); renderProjects(); };
     })(p.id,p.name||'Project');
     wrap.appendChild(card);
   });
