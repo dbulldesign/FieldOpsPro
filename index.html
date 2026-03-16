@@ -1390,13 +1390,11 @@ display: none !important; /* hide any text content */
 }
 /* Recreate the + via ::before */
 #quickAddFab::before {
-content: ‘+’ !important;
+content: “+” !important;
 font-size: 32px !important;
 font-weight: 300 !important;
 color: #fff !important;
 line-height: 1 !important;
-font-family: “Helvetica Neue”, Helvetica, Arial, sans-serif !important;
-margin-top: -2px !important;
 }
 }
 
@@ -2090,7 +2088,7 @@ appId: “1:123456:web:abc”
 
 <!-- Project Modal -->
 
-<div class="modal-overlay" id="modal-project">
+<div class="modal-overlay" id="modal-project" style="display:none">
   <div class="modal">
     <div class="modal-header">
       <h3 id="project-modal-title">New Project</h3>
@@ -2163,7 +2161,7 @@ appId: “1:123456:web:abc”
 
 <!-- Task Modal -->
 
-<div class="modal-overlay" id="modal-task">
+<div class="modal-overlay" id="modal-task" style="display:none">
   <div class="modal">
     <div class="modal-header">
       <h3 id="task-modal-title">New Task</h3>
@@ -2222,7 +2220,7 @@ appId: “1:123456:web:abc”
 
 <!-- PO Modal -->
 
-<div class="modal-overlay" id="modal-po">
+<div class="modal-overlay" id="modal-po" style="display:none">
   <div class="modal">
     <div class="modal-header">
       <h3 id="po-modal-title">New Purchase Order</h3>
@@ -2278,7 +2276,7 @@ appId: “1:123456:web:abc”
 
 <!-- Shipping Modal -->
 
-<div class="modal-overlay" id="modal-shipping">
+<div class="modal-overlay" id="modal-shipping" style="display:none">
   <div class="modal">
     <div class="modal-header">
       <h3 id="ship-modal-title">Track Shipment</h3>
@@ -2346,7 +2344,7 @@ appId: “1:123456:web:abc”
 
 <!-- Issue Modal -->
 
-<div class="modal-overlay" id="modal-issue">
+<div class="modal-overlay" id="modal-issue" style="display:none">
   <div class="modal">
     <div class="modal-header">
       <h3 id="issue-modal-title">New Troubleshoot Issue</h3>
@@ -2380,7 +2378,7 @@ appId: “1:123456:web:abc”
 
 <!-- Detail Modal -->
 
-<div class="modal-overlay" id="modal-detail">
+<div class="modal-overlay" id="modal-detail" style="display:none">
   <div class="modal" style="max-width:680px">
     <div class="modal-header">
       <h3 id="detail-title">Details</h3>
@@ -5647,7 +5645,7 @@ function closeBarcodeScanner() {
 
 <!-- TEMPLATES MODAL -->
 
-<div class="modal-overlay" id="modal-templates">
+<div class="modal-overlay" id="modal-templates" style="display:none">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <h3>Task Templates</h3>
@@ -5669,7 +5667,7 @@ function closeBarcodeScanner() {
 
 <!-- SHORTCUTS MODAL -->
 
-<div class="modal-overlay" id="modal-shortcuts">
+<div class="modal-overlay" id="modal-shortcuts" style="display:none">
   <div class="modal" style="max-width:460px">
     <div class="modal-header">
       <h3>Keyboard Shortcuts</h3>
