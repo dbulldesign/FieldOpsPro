@@ -640,7 +640,8 @@ position: sticky; top: 0; z-index: 2;
 .modal-footer {
 padding: 12px 20px !important;
 padding-bottom: max(20px, env(safe-area-inset-bottom));
-position: sticky; bottom: 0;
+position: static !important;
+bottom: auto !important;
 }
 .modal h3 { font-size: 18px !important; font-weight: 700 !important; }
 /* Drag handle via JS only - CSS ::before causes rendering artifacts on iOS */
@@ -1506,6 +1507,18 @@ box-sizing: border-box !important;
 
 .modal-overlay:not(.open) { display: none !important; }
 .modal-overlay:not(.open) * { visibility: hidden !important; }
+
+/* Ensure modal footer never bleeds outside its modal on iOS */
+.modal-footer {
+position: static !important;
+bottom: auto !important;
+}
+.modal-overlay:not(.open) .modal,
+.modal-overlay:not(.open) .modal-footer {
+display: none !important;
+visibility: hidden !important;
+}
+
 </style>
 
 </head>
@@ -2736,7 +2749,8 @@ function openAddModal() {
 }
 // openModal defined below with combo init
 function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('open');
 }
 
 function clearForm(modalId) {
@@ -2937,7 +2951,7 @@ function renderProjects() {
 }
 
 function saveProject() {
-  var name = document.getElementById('project-name').value.trim();
+  var _pn = document.getElementById('project-name'); if(!_pn) return; var name = _pn.value.trim();
   if(!name) { toast('Enter project name'); return; }
   var item = {
     name, client: document.getElementById('project-client').value.trim(),
