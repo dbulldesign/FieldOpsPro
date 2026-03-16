@@ -680,6 +680,8 @@ width: 56px !important; height: 56px !important;
 font-size: 26px !important;
 box-shadow: 0 6px 24px rgba(37,99,255,0.45) !important;
 }
+#quickAddFab::before { content: '+'; font-size: 28px; font-weight: 300; color: #fff; line-height: 1; }
+
 #quickAddPanel {
 bottom: calc(140px + env(safe-area-inset-bottom, 12px)) !important;
 right: 14px !important;
@@ -1454,6 +1456,45 @@ html[data-theme=“light”] .sidebar-logo p { color: #64748b !important; }
 @media (max-width: 768px) {
 #mob-search-input { padding-left: 36px !important; }
 }
+
+/* ── LIGHT MODE (body.light-mode — reliable on iOS WKWebView) ── */
+body.light-mode { background: #f0f4fa !important; color: #0f172a !important; }
+body.light-mode #app, body.light-mode #main, body.light-mode #content { background: #f0f4fa !important; }
+body.light-mode #topbar { background: rgba(255,255,255,0.96) !important; border-bottom-color: rgba(0,0,0,0.1) !important; }
+body.light-mode #sidebar { background: #f8fafc !important; border-right: 1px solid rgba(0,0,0,0.07) !important; }
+body.light-mode .sidebar-logo h1, body.light-mode .topbar-title, body.light-mode #mob-large-title { color: #0f172a !important; }
+body.light-mode .sidebar-logo p { color: #64748b !important; }
+body.light-mode .nav-label { color: #94a3b8 !important; }
+body.light-mode .nav-item { color: #334155 !important; background: none !important; }
+body.light-mode .nav-item.active { color: #2563ff !important; background: rgba(37,99,255,0.08) !important; }
+body.light-mode .nav-item:hover { background: rgba(0,0,0,0.04) !important; }
+body.light-mode .card, body.light-mode .stat-card {
+  background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important; color: #0f172a !important;
+}
+body.light-mode .things-card { background: #ffffff !important; border-color: rgba(0,0,0,0.07) !important; box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important; }
+body.light-mode .things-card-title { color: #0f172a !important; }
+body.light-mode .things-card-sub { color: #64748b !important; }
+body.light-mode .things-card-count { background: rgba(0,0,0,0.06) !important; color: #334155 !important; }
+body.light-mode .things-card-chevron { color: rgba(0,0,0,0.3) !important; }
+body.light-mode input, body.light-mode textarea, body.light-mode select {
+  background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.15) !important; color: #0f172a !important;
+}
+body.light-mode .modal { background: #ffffff !important; color: #0f172a !important; }
+body.light-mode .modal-header { background: #f8fafc !important; border-bottom-color: rgba(0,0,0,0.08) !important; }
+body.light-mode .modal-footer { background: #f8fafc !important; border-top-color: rgba(0,0,0,0.08) !important; }
+body.light-mode table, body.light-mode td { color: #0f172a !important; }
+body.light-mode th { background: rgba(0,0,0,0.04) !important; color: #64748b !important; border-color: rgba(0,0,0,0.07) !important; }
+body.light-mode tbody tr:hover { background: rgba(37,99,255,0.04) !important; }
+body.light-mode #mob-search-input { background: rgba(0,0,0,0.06) !important; color: #0f172a !important; border-color: rgba(0,0,0,0.12) !important; }
+body.light-mode #mob-notif-btn { background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.1) !important; }
+body.light-mode #mobileNav { background: rgba(249,249,251,0.95) !important; border-top-color: rgba(0,0,0,0.12) !important; }
+body.light-mode .mobile-nav-item { color: #8e8e93 !important; }
+body.light-mode .mobile-nav-item.active { color: #2563ff !important; }
+body.light-mode .section-title, body.light-mode .section-header, body.light-mode label { color: #334155 !important; }
+body.light-mode .badge { color: #fff !important; }
+body.light-mode .priority { color: #0f172a !important; }
+body.light-mode * { -webkit-text-fill-color: unset !important; }
 
 </style>
 
@@ -3929,19 +3970,24 @@ window.addEventListener('load', function(){
 //  THEME — dark / light
 // ═══════════════════════════════════════════════
 function applyTheme(theme) {
-  // theme is 'dark' or 'light'
-  document.documentElement.setAttribute('data-theme', theme);
   var isDark = (theme === 'dark');
+  document.documentElement.setAttribute('data-theme', theme);
+  if (isDark) {
+    document.body.classList.remove('light-mode');
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+    document.body.classList.add('light-mode');
+  }
   var pill  = document.getElementById('toggle-pill');
   var icon  = document.getElementById('theme-icon');
   var label = document.getElementById('theme-label');
   var sub   = document.getElementById('theme-sub');
-  if (pill)  pill.classList.toggle('on', !isDark);   // pill ON = light mode active
+  if (pill)  pill.classList.toggle('on', !isDark);
   if (icon)  icon.textContent  = isDark ? '🌙' : '☀️';
   if (label) label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
   if (sub)   sub.textContent   = isDark ? 'Currently using dark theme' : 'Currently using light theme';
 }
-
 function toggleTheme() {
   var current = document.documentElement.getAttribute('data-theme') || 'dark';
   var next = (current === 'dark') ? 'light' : 'dark';
