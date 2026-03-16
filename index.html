@@ -2194,7 +2194,10 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="modal">
     <div class="modal-header">
       <h3 id="project-modal-title">New Project</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-project')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveProject()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-project')">✕</button>
+      </div>
     </div>
     <div class="modal-body">
       <input type="hidden" id="project-id">
@@ -2264,7 +2267,10 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="modal">
     <div class="modal-header">
       <h3 id="task-modal-title">New Task</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-task')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveTask()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-task')">✕</button>
+      </div>
     </div>
     <div class="modal-body">
       <input type="hidden" id="task-id">
@@ -2320,7 +2326,10 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="modal">
     <div class="modal-header">
       <h3 id="po-modal-title">New Purchase Order</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-po')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="savePO()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-po')">✕</button>
+      </div>
     </div>
     <div class="modal-body">
       <input type="hidden" id="po-id">
@@ -2373,7 +2382,10 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="modal">
     <div class="modal-header">
       <h3 id="ship-modal-title">Track Shipment</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-shipping')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveShipment()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-shipping')">✕</button>
+      </div>
     </div>
     <div class="modal-body">
       <input type="hidden" id="ship-id">
@@ -2436,7 +2448,10 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="modal">
     <div class="modal-header">
       <h3 id="issue-modal-title">New Troubleshoot Issue</h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-issue')">&#x2715;</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveIssue()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-issue')">&#x2715;</button>
+      </div>
     </div>
     <div class="modal-body">
       <div class="form-group"><label>Issue / Question *</label><input type="text" id="issue-q" placeholder="e.g. Dimmer buzzes after installation"></div>
