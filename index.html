@@ -3077,16 +3077,11 @@ function renderProjects() {
       +'</div>';
     (function(pid,pn){
       card.onclick = function(e) {
-        var t = e.target;
-        while(t && t !== card) {
-          if(t.tagName === 'BUTTON') return;
-          t = t.parentNode;
-        }
-        openDetail('projects',pid);
+        if(e.target.tagName==='BUTTON' || e.target.closest('button')) return;
+        editProject(pid);
       };
       var b=card.querySelectorAll('button');
-      b[0].onclick = function(e) { e.stopPropagation(); editProject(pid); };
-      b[1].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
+      b[0].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
     })(p.id,p.name||'Project');
     wrap.appendChild(card);
   });
@@ -3211,12 +3206,10 @@ function renderTasks() {
         +'<button class="btn btn-ghost btn-sm" data-mid="'+mt.id+'">Edit</button>'
         +'<button class="btn btn-danger btn-sm" data-mdel="'+mt.id+'" data-mtitle="'+escH(mt.title)+'">Delete</button>'
         +'</div>';
-      var editBtn=card.querySelectorAll('button')[0];
-      var delBtn=card.querySelectorAll('button')[1];
+      var delBtn=card.querySelectorAll('button')[0];
       (function(tid,ttitle){
-        editBtn.onclick=function(e){e.stopPropagation();editTask(tid);};
-        delBtn.onclick=function(e){e.stopPropagation();softDelete('tasks',tid,ttitle);renderTasks();};
-        card.onclick=function(){openDetail('tasks',tid);};
+        delBtn.onclick=function(e){e.stopPropagation();softDelete('tasks',tid,ttitle);renderTasks()};
+        card.onclick=function(e){if(e.target.tagName==='BUTTON'||(e.target.closest&&e.target.closest('button')))return;editTask(tid);};
       })(mt.id,mt.title||'Task');
       mList.appendChild(card);
     }
@@ -3275,7 +3268,6 @@ data.reverse();
       html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Restore" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchiveTask(this.dataset.uid,event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.43"/></svg></button>';
       html += '<button data-uid="'+t.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeleteTask(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
     } else {
-      html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editTask(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
       html += '<button data-uid="'+t.id+'" class="btn btn-ghost btn-sm" title="Archive" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archiveTask(this.dataset.uid,event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>';
     }
     html += '</div></td></tr>';
@@ -3286,7 +3278,7 @@ data.reverse();
   tb.addEventListener('click', function(e) {
     var row = e.target.closest('tr[data-taskid]');
     if(!row || e.target.closest('td:first-child') || e.target.closest('button') || e.target.closest('input')) return;
-    openDetail('tasks', row.dataset.taskid);
+    editTask(row.dataset.taskid);
   });
 
   var trows = tb.querySelectorAll('tr[data-taskid]');
@@ -3504,14 +3496,12 @@ function renderPOs() {
         +(mitems?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">'+mitems+' line item'+(mitems!==1?'s':'')+'</div>':'')
         +(mp.date?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">Date: '+escH(fmtDate(mp.date))+'</div>':'')
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
-        +'<button class="btn btn-ghost btn-sm">Edit</button>'
         +'<button class="btn btn-danger btn-sm">Delete</button>'
         +'</div>';
-      var eb=card.querySelectorAll('button')[0], db=card.querySelectorAll('button')[1];
+      var db=card.querySelectorAll('button')[0];
       (function(pid,pv){
-        eb.onclick=function(e){e.stopPropagation();editPO(pid);};
         db.onclick=function(e){e.stopPropagation();softDeletePO(pid);};
-        card.onclick=function(e){if(e.target.tagName==='BUTTON')return;openDetail('pos',pid);};
+        card.onclick=function(e){if(e.target.tagName==='BUTTON'||(e.target.closest&&e.target.closest('button')))return;editPO(pid);};
       })(mp.id,mp.vendor||'PO');
       mList.appendChild(card);
     }
@@ -3535,7 +3525,6 @@ data.reverse();
     html += '<td>'+statusBadge(p.status)+'</td>';
     html += '<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(p.date))+'</span></td>';
     html += '<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
-    html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editPO(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
     html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeletePO(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
     html += '</div></td></tr>';
   }
@@ -3544,7 +3533,7 @@ data.reverse();
   tb.addEventListener('click', function(e){
     var row=e.target.closest('tr[data-poid]');
     if(!row||e.target.closest('button')) return;
-    openDetail('pos',row.dataset.poid);
+    editPO(row.dataset.poid);
   });
   attachRowSwipe(tb, 'pos', 'poid');
 }
@@ -3622,14 +3611,12 @@ function renderShipping() {
         +(ms.po?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">PO: '+escH(poName(ms.po))+'</div>':'')
         +(ms.eta?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">ETA: '+escH(fmtDate(ms.eta))+'</div>':'')
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
-        +'<button class="btn btn-ghost btn-sm">Edit</button>'
         +'<button class="btn btn-danger btn-sm">Delete</button>'
         +'</div>';
-      var eb=card.querySelectorAll('button')[0], db=card.querySelectorAll('button')[1];
+      var db=card.querySelectorAll('button')[0];
       (function(sid){
-        eb.onclick=function(e){e.stopPropagation();editShipment(sid);};
         db.onclick=function(e){e.stopPropagation();softDeleteShipment(sid);};
-        card.onclick=function(e){if(e.target.tagName==='BUTTON')return;openDetail('shipping',sid);};
+        card.onclick=function(e){if(e.target.tagName==='BUTTON'||(e.target.closest&&e.target.closest('button')))return;editShipment(sid);};
       })(ms.id);
       mList.appendChild(card);
     }
@@ -3652,7 +3639,6 @@ data.reverse();
     html+=statusBadge(s.status)+'</td>';
     html+='<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(s.eta))+'</span></td>';
     html+='<td><div style="display:flex;gap:6px" onclick="event.stopPropagation()">';
-    html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" title="Edit" onclick="editShipment(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
     html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeleteShipment(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
     html+='</div></td></tr>';
   }
@@ -3661,7 +3647,7 @@ data.reverse();
   tb.addEventListener('click',function(e){
     var row=e.target.closest('tr[data-shid]');
     if(!row||e.target.closest('button')) return;
-    openDetail('shipping',row.dataset.shid);
+    editShipment(row.dataset.shid);
   });
   attachRowSwipe(tb, 'shipping', 'shid');
 }
