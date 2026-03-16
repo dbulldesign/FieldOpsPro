@@ -1849,6 +1849,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="view" id="view-projects">
     <div class="tabs">
       <div class="tab active" onclick="filterProjects('all',this)">All</div>
+        <div class="tab" onclick="filterProjects('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterProjects('active',this)">Active</div>
       <div class="tab" onclick="filterProjects('planning',this)">Planning</div>
       <div class="tab" onclick="filterProjects('completed',this)">Completed</div>
@@ -1923,6 +1924,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="view" id="view-pos">
     <div class="tabs">
       <div class="tab active" onclick="filterPOs('all',this)">All</div>
+        <div class="tab" onclick="filterPOs('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterPOs('draft',this)">Draft</div>
       <div class="tab" onclick="filterPOs('submitted',this)">Submitted</div>
       <div class="tab" onclick="filterPOs('approved',this)">Approved</div>
@@ -1950,6 +1952,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   <div class="view" id="view-shipping">
     <div class="tabs">
       <div class="tab active" onclick="filterShipping('all',this)">All</div>
+        <div class="tab" onclick="filterShipping('archived',this)">📦 Archived</div>
       <div class="tab" onclick="filterShipping('pending',this)">Pending</div>
       <div class="tab" onclick="filterShipping('transit',this)">In Transit</div>
       <div class="tab" onclick="filterShipping('delivered',this)">Delivered</div>
@@ -2525,6 +2528,13 @@ window.confirmDeleteTask = confirmDeleteTask;
 window.bulkDeleteAllArchived = bulkDeleteAllArchived;
 window.setTaskView = setTaskView;
 window.archiveTask = archiveTask;
+window.archiveProject = archiveProject;
+window.unarchiveProject = unarchiveProject;
+window.archivePO = archivePO;
+window.unarchivePO = unarchivePO;
+window.archiveShipment = archiveShipment;
+window.unarchiveShipment = unarchiveShipment;
+window.getTrackingUrl = getTrackingUrl;
 window.unarchiveTask = unarchiveTask;
 window.filterProjects = filterProjects;
 window.softDeleteTask = softDeleteTask;
@@ -3063,8 +3073,14 @@ function filterProjects(f, el) {
 }
 
 function renderProjects() {
-  var data=state.projects;
-  if(projectFilter!=='all') data=data.filter(function(p){return p.status===projectFilter;});
+  var data=state.projects.slice();
+  if(projectFilter==='archived') {
+    data=data.filter(function(p){return p.archived;});
+  } else if(projectFilter==='all') {
+    data=data.filter(function(p){return !p.archived;});
+  } else {
+    data=data.filter(function(p){return p.status===projectFilter && !p.archived;});
+  }
   var el=document.getElementById('projects-list');
   if(!data.length){el.innerHTML=buildEmptyState('X','rgba(79,142,247,0.12)','No projects yet','Tap + Add to create your first project.');return;}
   var sC={active:'#10b981',planning:'#3b82f6','on-hold':'#fbbf24',completed:'#64748b'};
@@ -3079,16 +3095,32 @@ function renderProjects() {
       +'<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b"><span>'+escH(fmtDate(p.start)||'—')+'</span><span>'+escH(fmtDate(p.end)||'—')+'</span></div>'
       +'<div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b"><span>Tasks: '+done+'/'+tasks.length+'</span><span>'+pct+'%</span></div>'
       +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
-      +'<div style="display:flex;gap:8px;margin-top:12px">'      +'<button class="btn btn-danger btn-sm" style="font-size:11px">Delete</button>'      +'</div>';
-    (function(pid,pn){
+      +(p.archived
+      ? ('<div style="display:flex;gap:8px;margin-top:12px">'
+         +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#10b981;border-color:rgba(16,185,129,0.4)" data-restore="1">Restore</button>'
+         +'<button class="btn btn-danger btn-sm" style="font-size:11px" data-delete="1">Delete</button>'
+         +'</div>')
+      : ('<div style="display:flex;gap:8px;margin-top:12px">'
+         +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>'
+         +'</div>'));
+    (function(pid,pn,isArch){
       card.onclick = function(e) {
         var t=e.target;
         while(t && t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}
-        editProject(pid);
+        if(!isArch) editProject(pid);
       };
-      var b=card.querySelectorAll('button');
-      b[0].onclick = function(e) { e.stopPropagation(); softDelete('projects',pid,pn); renderProjects(); };
-    })(p.id,p.name||'Project');
+      var btns=card.querySelectorAll('button');
+      for(var bi=0;bi<btns.length;bi++){
+        (function(btn){
+          btn.onclick=function(e){
+            e.stopPropagation();
+            if(btn.dataset.archive) archiveProject(pid);
+            else if(btn.dataset.restore) unarchiveProject(pid);
+            else if(btn.dataset.delete) { confirmInline('Delete permanently?', function(){ deleteItem('projects',pid); renderProjects(); }); }
+          };
+        })(btns[bi]);
+      }
+    })(p.id,p.name||'Project',!!p.archived);
     wrap.appendChild(card);
   });
   el.appendChild(wrap);
@@ -3488,7 +3520,13 @@ function confirmDeleteShipment(id) {
 
 function renderPOs() {
   var data = state.pos.slice();
-  if(poFilter!=='all') data=data.filter(function(p){return p.status===poFilter;});
+  if(poFilter==='archived') {
+    data=data.filter(function(p){return p.archived;});
+  } else if(poFilter==='all') {
+    data=data.filter(function(p){return !p.archived;});
+  } else {
+    data=data.filter(function(p){return p.status===poFilter && !p.archived;});
+  }
   var tb = document.getElementById('pos-tbody');
   if(!data.length){tb.innerHTML='<tr><td colspan="8">'+buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Create a PO to track vendor orders and approvals.')+'</td></tr>';return;}
   
@@ -3512,13 +3550,22 @@ function renderPOs() {
         +(mitems?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">'+mitems+' line item'+(mitems!==1?'s':'')+'</div>':'')
         +(mp.date?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">Date: '+escH(fmtDate(mp.date))+'</div>':'')
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
-        +'<button class="btn btn-danger btn-sm">Delete</button>'
+        +(mp.archived
+          ? ('<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#10b981;border-color:rgba(16,185,129,0.4)" data-restore="1">Restore</button>'
+             +'<button class="btn btn-danger btn-sm" style="font-size:11px" data-delete="1">Delete</button>')
+          : '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>')
         +'</div>';
-      var db=card.querySelectorAll('button')[0];
-      (function(pid,pv){
-        db.onclick=function(e){e.stopPropagation();softDeletePO(pid);};
-        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}editPO(pid);};
-      })(mp.id,mp.vendor||'PO');
+      (function(pid,isArch){
+        var btns=card.querySelectorAll('button');
+        for(var bi=0;bi<btns.length;bi++){(function(b2){
+          b2.onclick=function(e){e.stopPropagation();
+            if(b2.dataset.archive)archivePO(pid);
+            else if(b2.dataset.restore)unarchivePO(pid);
+            else if(b2.dataset.delete)confirmInline('Delete permanently?',function(){deleteItem('pos',pid);renderPOs();});
+          };
+        })(btns[bi]);}
+        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}if(!isArch)editPO(pid);};
+      })(mp.id,!!mp.archived);
       mList.appendChild(card);
     }
     var tWrap=document.querySelector('#view-pos .table-wrap');
@@ -3541,7 +3588,12 @@ data.reverse();
     html += '<td>'+statusBadge(p.status)+'</td>';
     html += '<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(p.date))+'</span></td>';
     html += '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
-    html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeletePO(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
+    if(p.archived) {
+      html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchivePO(this.dataset.uid)">Restore</button>';
+      html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'pos\',' + JSON.stringify(p.id) + ');renderPOs();})">Delete</button>';
+    } else {
+      html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archivePO(this.dataset.uid)">Archive</button>';
+    }
     html += '</div></td></tr>';
   }
   tb.innerHTML = html;
@@ -3605,8 +3657,15 @@ function filterShipping(f,el){
 
 function renderShipping() {
   var data=state.shipping.slice();
-  if(shipFilter==='transit') data=data.filter(function(s){return s.status==='transit'||s.status==='out';});
-  else if(shipFilter!=='all') data=data.filter(function(s){return s.status===shipFilter;});
+  if(shipFilter==='archived') {
+    data=data.filter(function(s){return s.archived;});
+  } else if(shipFilter==='transit') {
+    data=data.filter(function(s){return (s.status==='transit'||s.status==='out') && !s.archived;});
+  } else if(shipFilter==='all') {
+    data=data.filter(function(s){return !s.archived;});
+  } else {
+    data=data.filter(function(s){return s.status===shipFilter && !s.archived;});
+  }
   var tb=document.getElementById('shipping-tbody');
   if(!data.length){tb.innerHTML='<tr><td colspan="7">'+buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Add a shipment to track deliveries — tracking number is optional.')+'</td></tr>';return;}
   
@@ -3630,13 +3689,25 @@ function renderShipping() {
         +(ms.po?'<div style="font-size:12px;color:#8da0c0;margin-bottom:4px">PO: '+escH(poName(ms.po))+'</div>':'')
         +(ms.eta?'<div style="font-size:12px;color:#4a5e7a;margin-bottom:10px">ETA: '+escH(fmtDate(ms.eta))+'</div>':'')
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
-        +'<button class="btn btn-danger btn-sm">Delete</button>'
+        +(ms.archived
+          ? ('<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#10b981;border-color:rgba(16,185,129,0.4)" data-restore="1">Restore</button>'
+             +'<button class="btn btn-danger btn-sm" style="font-size:11px" data-delete="1">Delete</button>')
+          : '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>')
+        +(ms.tracking && ms.carrier && getTrackingUrl(ms.carrier,ms.tracking)
+          ? '<a href="'+getTrackingUrl(ms.carrier,ms.tracking)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3);text-decoration:none;margin-left:auto">Track &#x2197;</a>'
+          : '')
         +'</div>';
-      var db=card.querySelectorAll('button')[0];
-      (function(sid){
-        db.onclick=function(e){e.stopPropagation();softDeleteShipment(sid);};
-        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}editShipment(sid);};
-      })(ms.id);
+      (function(sid,isArch){
+        var btns=card.querySelectorAll('button');
+        for(var bi=0;bi<btns.length;bi++){(function(b2){
+          b2.onclick=function(e){e.stopPropagation();
+            if(b2.dataset.archive)archiveShipment(sid);
+            else if(b2.dataset.restore)unarchiveShipment(sid);
+            else if(b2.dataset.delete)confirmInline('Delete permanently?',function(){deleteItem('shipping',sid);renderShipping();});
+          };
+        })(btns[bi]);}
+        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON'||t.tagName==='A')return;t=t.parentNode;}if(!isArch)editShipment(sid);};
+      })(ms.id,!!ms.archived);
       mList.appendChild(card);
     }
     var tWrap=document.querySelector('#view-shipping .table-wrap');
@@ -3658,7 +3729,16 @@ data.reverse();
     html+=statusBadge(s.status)+'</td>';
     html+='<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(s.eta))+'</span></td>';
     html+='<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
-    html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" title="Delete" onclick="softDeleteShipment(this.dataset.uid)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
+    if(s.archived) {
+      html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchiveShipment(this.dataset.uid)">Restore</button>';
+      html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'shipping\',' + JSON.stringify(s.id) + ');renderShipping();})">Delete</button>';
+    } else {
+      html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archiveShipment(this.dataset.uid)">Archive</button>';
+    }
+    if(s.tracking && s.carrier) {
+      var turl=getTrackingUrl(s.carrier,s.tracking);
+      if(turl) html+='<a href="'+turl+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(79,142,247,0.1);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3);text-decoration:none;cursor:pointer">Track &#x2197;</a>';
+    }
     html+='</div></td></tr>';
   }
   tb.innerHTML=html;
@@ -4931,6 +5011,20 @@ function scheduleNextRecur(task) {
 
 
 // ─── AUTO-DETECT SHIPPING CARRIER ────────────────────────────────────────────
+
+function getTrackingUrl(carrier, tracking) {
+  if(!tracking) return '';
+  var t = encodeURIComponent(tracking.trim());
+  var urls = {
+    'UPS':   'https://www.ups.com/track?tracknum=' + t,
+    'FedEx': 'https://www.fedex.com/apps/fedextrack/?tracknumbers=' + t,
+    'USPS':  'https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=' + t,
+    'DHL':   'https://www.dhl.com/en/express/tracking.html?AWB=' + t,
+    'OnTrac':'https://www.ontrac.com/trackres.asp?tracking_number=' + t,
+    'Other': ''
+  };
+  return urls[carrier] || '';
+}
 function detectCarrier(tracking) {
   if (!tracking) return '';
   var t = tracking.trim().toUpperCase().replace(/[\s\-]/g,'');
@@ -5169,6 +5263,50 @@ function attachRowSwipe(tbody, col, idAttr) {
 }
 
 
+
+// ── ARCHIVE HELPERS ────────────────────────────────────────────────────────
+function archiveProject(id) {
+  var p = state.projects.find(function(x){return x.id===id;});
+  if(!p) return;
+  updateItem('projects', id, _merge({}, p, {archived: true}));
+  renderProjects();
+  toast('Project archived');
+}
+function unarchiveProject(id) {
+  var p = state.projects.find(function(x){return x.id===id;});
+  if(!p) return;
+  updateItem('projects', id, _merge({}, p, {archived: false}));
+  renderProjects();
+  toast('Project restored');
+}
+function archivePO(id) {
+  var p = state.pos.find(function(x){return x.id===id;});
+  if(!p) return;
+  updateItem('pos', id, _merge({}, p, {archived: true}));
+  renderPOs();
+  toast('PO archived');
+}
+function unarchivePO(id) {
+  var p = state.pos.find(function(x){return x.id===id;});
+  if(!p) return;
+  updateItem('pos', id, _merge({}, p, {archived: false}));
+  renderPOs();
+  toast('PO restored');
+}
+function archiveShipment(id) {
+  var s = state.shipping.find(function(x){return x.id===id;});
+  if(!s) return;
+  updateItem('shipping', id, _merge({}, s, {archived: true}));
+  renderShipping();
+  toast('Shipment archived');
+}
+function unarchiveShipment(id) {
+  var s = state.shipping.find(function(x){return x.id===id;});
+  if(!s) return;
+  updateItem('shipping', id, _merge({}, s, {archived: false}));
+  renderShipping();
+  toast('Shipment restored');
+}
 function softDeletePO(id) {
   var p = state.pos.find(function(x){return x.id===id;});
   if(!p) return;
