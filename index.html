@@ -1773,6 +1773,23 @@ body.light-mode #mob-tab-bar { background: rgba(248,250,252,0.97); border-top-co
     bottom: calc(72px + env(safe-area-inset-bottom,0px)) !important;
   }
 }
+/* Desktop smart-add dropdown */
+#desk-add-menu {
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:#0e1525;border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:6px;min-width:228px;
+  z-index:3000;box-shadow:0 20px 60px rgba(0,0,0,0.65);
+  animation:deskAddIn .15s ease;transform-origin:top right;
+}
+@keyframes deskAddIn{from{opacity:0;transform:scale(.95) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.desk-add-hdr{font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;padding:4px 8px 6px}
+.desk-add-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s}
+.desk-add-opt:hover{background:rgba(255,255,255,0.07)}
+.desk-add-opt.kbd-focus{background:rgba(79,142,247,0.15);outline:none}
+.desk-add-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.desk-add-label{flex:1;font-size:13px;font-weight:500;color:#c8d6f0}
+.desk-add-key{font-size:11px;font-weight:700;color:#4a5e7a;background:rgba(255,255,255,0.07);border-radius:5px;padding:2px 7px;font-family:monospace;transition:background .12s,color .12s}
+.desk-add-opt:hover .desk-add-key,.desk-add-opt.kbd-focus .desk-add-key{color:#f0f4ff;background:rgba(79,142,247,0.25)}
 
 /* -- Offline / Sync Queue -- */
 #sync-queue-bar {
@@ -1918,7 +1935,37 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);color:#4a5e7a;font-size:11px">Click for full list</div>
         </div>
       </div>
-      <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ Add</button>
+      <div style="position:relative" id="add-btn-wrap">
+        <button class="btn btn-primary" id="addBtn" onclick="toggleAddMenu(event)">+ New</button>
+        <div id="desk-add-menu" style="display:none">
+          <div class="desk-add-hdr">New item — press a number</div>
+          <div class="desk-add-opt" data-key="1" onclick="closeAddMenu();switchView('projects');setTimeout(openAddModal,50)">
+            <span class="desk-add-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24">🏗</span>
+            <span class="desk-add-label">Project</span>
+            <span class="desk-add-key">1</span>
+          </div>
+          <div class="desk-add-opt" data-key="2" onclick="closeAddMenu();switchView('tasks');setTimeout(openAddModal,50)">
+            <span class="desk-add-icon" style="background:rgba(16,185,129,0.15);color:#34d399">✓</span>
+            <span class="desk-add-label">Task</span>
+            <span class="desk-add-key">2</span>
+          </div>
+          <div class="desk-add-opt" data-key="3" onclick="closeAddMenu();switchView('pos');setTimeout(openAddModal,50)">
+            <span class="desk-add-icon" style="background:rgba(139,92,246,0.15);color:#a78bfa">📄</span>
+            <span class="desk-add-label">Purchase Order</span>
+            <span class="desk-add-key">3</span>
+          </div>
+          <div class="desk-add-opt" data-key="4" onclick="closeAddMenu();switchView('shipping');setTimeout(openAddModal,50)">
+            <span class="desk-add-icon" style="background:rgba(6,182,212,0.15);color:#22d3ee">📦</span>
+            <span class="desk-add-label">Shipment</span>
+            <span class="desk-add-key">4</span>
+          </div>
+          <div class="desk-add-opt" data-key="5" onclick="closeAddMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
+            <span class="desk-add-icon" style="background:rgba(239,68,68,0.15);color:#f87171">⚡</span>
+            <span class="desk-add-label">Troubleshoot</span>
+            <span class="desk-add-key">5</span>
+          </div>
+        </div>
+      </div>
       <!-- Notification Panel -->
       <div id="notif-panel">
         <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between">
@@ -2897,6 +2944,9 @@ window.mobTabSwitch = mobTabSwitch;
 window.closeMobMore = closeMobMore;
 window.toggleFabMenu = toggleFabMenu;
 window.closeFabMenu = closeFabMenu;
+window.toggleAddMenu = toggleAddMenu;
+window.openAddMenu = openAddMenu;
+window.closeAddMenu = closeAddMenu;
 window.requestPushPermission = requestPushPermission;
 window.toggleDashWidget = toggleDashWidget;
 window.renderWidgetToggles = renderWidgetToggles;
@@ -3137,6 +3187,33 @@ function closeFabMenu() {
   if (overlay) overlay.classList.remove('open');
   if (fabSpan) fabSpan.textContent = '+';
 }
+
+// Desktop smart-add dropdown
+var _addMenuOpen = false;
+function toggleAddMenu(e) {
+  if (e) e.stopPropagation();
+  _addMenuOpen ? closeAddMenu() : openAddMenu();
+}
+function openAddMenu() {
+  _addMenuOpen = true;
+  var m = document.getElementById('desk-add-menu');
+  if (m) m.style.display = 'block';
+  var btn = document.getElementById('addBtn');
+  if (btn) btn.textContent = '✕ Cancel';
+}
+function closeAddMenu() {
+  _addMenuOpen = false;
+  var m = document.getElementById('desk-add-menu');
+  if (m) m.style.display = 'none';
+  var btn = document.getElementById('addBtn');
+  if (btn) btn.textContent = '+ New';
+}
+// Close when clicking outside the wrapper
+document.addEventListener('click', function(e) {
+  if (_addMenuOpen && !document.getElementById('add-btn-wrap').contains(e.target)) {
+    closeAddMenu();
+  }
+});
 
 // ── DASHBOARD WIDGETS (desktop) ─────────────────────────────────────
 var _widgets = JSON.parse(localStorage.getItem('fop_dash_v2') || JSON.stringify({
@@ -5183,9 +5260,25 @@ window.addEventListener('load', function(){
     var inInput = tag === 'input' || tag === 'textarea' || tag === 'select';
     var modalOpen = document.querySelector('.modal-overlay.open');
 
-    // Escape: close any open modal
+    // Escape: close smart-add menu or any open modal
     if (e.key === 'Escape') {
+      if (_addMenuOpen) { closeAddMenu(); return; }
       document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); });
+      return;
+    }
+
+    // When smart-add menu is open: 1-5 pick an option, any other key closes it
+    if (_addMenuOpen && !inInput) {
+      var _addMap = {'1':['projects',false],'2':['tasks',true],'3':['pos',false],'4':['shipping',false],'5':['troubleshoot',false]};
+      if (_addMap[e.key]) {
+        e.preventDefault();
+        closeAddMenu();
+        var _v = _addMap[e.key][0];
+        switchView(_v);
+        setTimeout(openAddModal, 50);
+        return;
+      }
+      closeAddMenu();
       return;
     }
 
@@ -5215,7 +5308,7 @@ window.addEventListener('load', function(){
     }
 
     switch(e.key.toLowerCase()) {
-      case 'n': openAddModal(); break;              // N = New item
+      case 'n': openAddMenu(); break;               // N = open smart-add menu
       case '1': switchView('dashboard'); break;
       case '2': switchView('projects'); break;
       case '3': switchView('tasks'); break;
