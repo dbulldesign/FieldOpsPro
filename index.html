@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,7 +9,6 @@
   <title>FieldOps Pro</title>
 
   <!-- Theme loader — must run before body renders to avoid flash -->
-
   <script>
   (function(){
     var t = localStorage.getItem('fop_theme') || 'dark';
@@ -22,7 +20,6 @@
     });
   })();
   </script>
-
   <style>
 @charset "UTF-8";
 /* FieldOps Pro - All Styles */
@@ -1099,7 +1096,7 @@ transform: translateY(-1px);
 /* SLIDE-IN DETAIL */@media(min-width:769px){#modal-detail{align-items:flex-start!important;justify-content:flex-end!important;padding:0!important;}#modal-detail .modal{border-radius:20px 0 0 20px!important;height:100dvh;max-height:100dvh!important;margin:0;-webkit-animation:panelIn .25s cubic-bezier(.32,.72,0,1);}}@keyframes panelIn{from{transform:translateX(100%);opacity:.5}to{transform:translateX(0);opacity:1}}
 /* DOTS */.dash-priority-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}.dash-priority-dot.high{background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,.7);}.dash-priority-dot.medium{background:#fbbf24;box-shadow:0 0 5px rgba(251,191,36,.7);}.dash-priority-dot.low{background:#10b981;box-shadow:0 0 5px rgba(16,185,129,.7);}
 /* N HINT */[data-theme="light"] #addBtn::after{background:rgba(0,0,0,.1);}
-/* TOAST */#toast button{vertical-align:middle;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
+/* TOAST */#toast button{vertical-align:middle;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;}
 
 /* ========================================================
 THINGS 3 STYLE NAVIGATION (mobile only)
@@ -1827,7 +1824,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 }
 
   </style>
-
 </head>
 <body>
 
@@ -1945,7 +1941,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
     </div>
 
 <!-- OFFLINE BAR -->
-
 <div id="offlineBar" style="display:none;align-items:center;justify-content:center;gap:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:600;padding:8px 16px;flex-shrink:0;letter-spacing:0.3px">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
   Offline — changes saved locally and will sync when reconnected
@@ -1960,7 +1955,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       oninput="globalSearch(this.value);document.getElementById('searchBar').value=this.value"
       onfocus="this.value?globalSearch(this.value):showSearchHistory()"
       onkeydown="searchKeyNav(event)"
-      style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:9px 12px 9px 36px;font-size:16px;color:#f0f4ff;outline:none;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif">
+      style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:9px 12px 9px 36px;font-size:16px;color:#f0f4ff;outline:none;font-family:Helvetica Neue,Helvetica,Arial,sans-serif">
   </div>
   <button id="mob-notif-btn" onclick="toggleNotifPanel()" style="position:relative;flex-shrink:0;width:40px;height:40px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:#8da0c0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1975,7 +1970,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 <div id="content">
 
   <!-- ═══ DASHBOARD ═══ -->
-
   <div class="view active" id="view-dashboard">
     <!-- Desktop widget bar -->
     <div id="dash-widget-bar" style="display:flex;gap:6px;align-items:center;margin-bottom:18px;flex-wrap:wrap;display:none">
@@ -2036,35 +2030,31 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
     </div><!-- /dash-stat-grid -->
 
-```
-<div class="grid-2" id="dash-recent-grid">
-  <div class="card" id="dash-task-card">
-    <div class="section-header">
-      <div>
-        <div class="section-title">Recent Tasks</div>
-        <div class="section-sub">Latest open items</div>
+    <div class="grid-2" id="dash-recent-grid">
+      <div class="card" id="dash-task-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Recent Tasks</div>
+            <div class="section-sub">Latest open items</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
+        </div>
+        <div id="dash-tasks"></div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
-    </div>
-    <div id="dash-tasks"></div>
-  </div>
-  <div class="card" id="dash-ship-card">
-    <div class="section-header">
-      <div>
-        <div class="section-title">Shipment Status</div>
-        <div class="section-sub">Active tracking</div>
+      <div class="card" id="dash-ship-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Shipment Status</div>
+            <div class="section-sub">Active tracking</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
+        </div>
+        <div id="dash-shipping"></div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
     </div>
-    <div id="dash-shipping"></div>
-  </div>
-</div>
-```
-
   </div>
 
   <!-- ═══ PROJECTS ═══ -->
-
   <div class="view" id="view-projects">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <div class="tabs" style="margin-bottom:0;flex:1">
@@ -2079,7 +2069,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   </div>
 
   <!-- ═══ TASKS ═══ -->
-
   <div class="view" id="view-tasks">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
@@ -2143,7 +2132,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   </div>
 
   <!-- ═══ PURCHASE ORDERS ═══ -->
-
   <div class="view" id="view-pos">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <div class="tabs" style="margin-bottom:0;flex:1">
@@ -2175,7 +2163,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   </div>
 
   <!-- ═══ SHIPPING ═══ -->
-
   <div class="view" id="view-shipping">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <div class="tabs" style="margin-bottom:0;flex:1">
@@ -2206,7 +2193,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   </div>
 
   <!-- ═══ TROUBLESHOOT ═══ -->
-
   <div class="view" id="view-troubleshoot">
     <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap">
       <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
@@ -2218,168 +2204,158 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         <option value="network">Network/DALI</option>
       </select>
       <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:200px" oninput="renderTroubleshoot()">
-
-```
-  <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
-</div>
-<div id="troubleshoot-list"></div>
-```
-
+    
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
+    </div>
+    <div id="troubleshoot-list"></div>
   </div>
 
   <!-- ═══ SETTINGS ═══ -->
-
   <div class="view" id="view-settings">
     <div style="max-width:580px">
 
-```
-<!-- Theme Toggle Card -->
-<div class="card" style="margin-bottom:20px">
-  <div style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
-  <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
-    <span class="theme-icons" id="theme-icon">🌙</span>
-    <div class="theme-toggle-label">
-      <strong id="theme-label">Dark Mode</strong>
-      <span id="theme-sub">Currently using dark theme</span>
+    <!-- Theme Toggle Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
+      <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
+        <span class="theme-icons" id="theme-icon">🌙</span>
+        <div class="theme-toggle-label">
+          <strong id="theme-label">Dark Mode</strong>
+          <span id="theme-sub">Currently using dark theme</span>
+        </div>
+        <div class="toggle-pill on" id="toggle-pill" onclick="toggleTheme()" style="cursor:pointer"></div>
+      </div>
     </div>
-    <div class="toggle-pill on" id="toggle-pill" onclick="toggleTheme()" style="cursor:pointer"></div>
-  </div>
+
+    <!-- Firebase Card -->
+    <div class="card" style="margin-bottom:20px">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <span style="font-size:24px">🔥</span>
+        <div>
+          <div class="section-title">Firebase Sync</div>
+          <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
+        </div>
+      </div>
+
+      <div class="setup-banner" style="margin:18px 0">
+        <span class="icon">📋</span>
+        <div style="font-size:13px;color:#8da0c0;line-height:1.8">
+          <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
+          1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
+          2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
+          3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Paste your Firebase config block here</span>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="pasteFromClipboard()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            Paste from clipboard
+          </button>
+        </label>
+        <div style="margin-bottom:14px">
+          <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Connect FieldOps Pro to Firebase
+          </button>
+          <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+          <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+        </div>
+        <textarea id="cfg-paste" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works: const firebaseConfig = { apiKey: 'AIzaSy...', authDomain: 'myapp.firebaseapp.com', projectId: 'myapp-12345', appId: '1:123456:web:abc' };"></textarea>
 </div>
 
-<!-- Firebase Card -->
-<div class="card" style="margin-bottom:20px">
-
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-    <span style="font-size:24px">🔥</span>
-    <div>
-      <div class="section-title">Firebase Sync</div>
-      <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
-    </div>
-  </div>
-
-  <div class="setup-banner" style="margin:18px 0">
-    <span class="icon">📋</span>
-    <div style="font-size:13px;color:#8da0c0;line-height:1.8">
-      <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
-      1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
-      2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
-      3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label style="display:flex;align-items:center;justify-content:space-between">
-      <span>Paste your Firebase config block here</span>
-      <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="pasteFromClipboard()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-        Paste from clipboard
-      </button>
-    </label>
-    <div style="margin-bottom:14px">
-      <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        Connect FieldOps Pro to Firebase
-      </button>
-      <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
-      <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
-      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
-    </div>
-    <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works: const firebaseConfig = { apiKey: "AIzaSy…", authDomain: "myapp.firebaseapp.com", projectId: "myapp-12345", appId: "1:123456:web:abc" };"></textarea>
-```
-
-</div>
-
-```
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-    <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
-      🔥 Connect &amp; Sync
-    </button>
-    <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
-  </div>
-  <div id="cfg-current-wrap" style="display:none;margin-top:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div>
-        <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">&#x2705; Firebase Connected</div>
-        <div id="cfg-current" style="font-size:12px;color:#4a5e7a"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
+          🔥 Connect &amp; Sync
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="downloadWithConfig()" style="background:#10b981;flex-shrink:0">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Save config to HTML file
-      </button>
-    </div>
-    <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:#8da0c0;line-height:1.6">
-      Download a new copy of this app with your Firebase config permanently saved inside it. 
-      Open that file in Safari to connect instantly — no pasting required.
-    </div>
-  </div>
-
-  <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
-
-
-
-</div><!-- /firebase card -->
-
-<!-- Danger Zone Card -->
-<div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <span style="font-size:20px">⚠️</span>
-    <div>
-      <div class="section-title" style="color:#f87171">Danger Zone</div>
-      <div class="section-sub">Permanently delete all data — cannot be undone</div>
-    </div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
+      <div id="cfg-current-wrap" style="display:none;margin-top:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">&#x2705; Firebase Connected</div>
+            <div id="cfg-current" style="font-size:12px;color:#4a5e7a"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="downloadWithConfig()" style="background:#10b981;flex-shrink:0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Save config to HTML file
+          </button>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:#8da0c0;line-height:1.6">
+          Download a new copy of this app with your Firebase config permanently saved inside it. 
+          Open that file in Safari to connect instantly — no pasting required.
+        </div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
-      <div>
-        <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
-      </div>
-      <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
-    </div>
-  </div>
-</div>
 
-</div><!-- /settings max-width -->
-```
+      <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
 
+
+
+    </div><!-- /firebase card -->
+
+    <!-- Danger Zone Card -->
+    <div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:20px">⚠️</span>
+        <div>
+          <div class="section-title" style="color:#f87171">Danger Zone</div>
+          <div class="section-sub">Permanently delete all data — cannot be undone</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /settings max-width -->
   </div>
 
 </div><!-- /content -->
@@ -2491,7 +2467,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
     </div>
-
+    
   </div>
 </div>
 
@@ -2551,7 +2527,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
     </div>
-
+    
   </div>
 </div>
 
@@ -2608,7 +2584,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="form-group"><label>Notes</label><textarea id="po-notes" placeholder="Special instructions, shipping address, contact…"></textarea></div>
     </div>
-
+    
   </div>
 </div>
 
@@ -2675,7 +2651,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Delivery instructions, contact…"></textarea></div>
     </div>v>
-
+    
   </div>
 </div>
 
@@ -2710,7 +2686,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         <textarea id="issue-steps" style="min-height:150px" placeholder="Check the neutral wire connection.&#10;Verify load wattage is within dimmer rating.&#10;Try a compatible LED driver."></textarea>
       </div>
     </div>
-
+    
   </div>
 </div>
 
@@ -2729,6 +2705,14 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 </div>
 
 <!-- Firebase Compat SDK (no modules, no scope issues) -->
+
+
+
+
+
+
+
+
 
 <div class="modal-overlay" id="modal-templates" style="display:none">
   <div class="modal" style="max-width:520px">
@@ -2816,8 +2800,10 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   <button class="btn btn-ghost" onclick="closeBarcodeScanner()">Cancel</button>
 </div>
 
-<!-- ── iOS TAB BAR ── -->
 
+
+
+<!-- ── iOS TAB BAR ── -->
 <div id="mob-tab-bar">
   <div class="mob-tab-item active" onclick="mobTabSwitch('dashboard')" id="tab-dashboard">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -2845,7 +2831,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 </div>
 
 <!-- ── SMART FAB RADIAL MENU ── -->
-
 <div id="fab-overlay" onclick="closeFabMenu()"></div>
 <div id="fab-menu">
   <div class="fab-option" onclick="closeFabMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
@@ -2871,14 +2856,12 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 </div>
 
 <!-- ── OFFLINE SYNC QUEUE BAR ── -->
-
 <div id="sync-queue-bar">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="sync-spin-icon"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
   <span id="sync-queue-text">Offline — 0 changes pending</span>
 </div>
 
 <!-- ── MORE SHEET (mobile) ── -->
-
 <div class="modal-overlay" id="mob-more-sheet" style="display:none">
   <div class="modal" style="max-width:100%">
     <div class="modal-drag-handle"></div>
@@ -2904,7 +2887,6 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 </div>
 
   <!-- Firebase SDK -->
-
   <script>
 window._embeddedFirebaseConfig = {
   apiKey: "AIzaSyCgRSws8fOvssYsqED4QSkzIw2mwxk2XVs",
@@ -2916,13 +2898,10 @@ window._embeddedFirebaseConfig = {
 };
 try { localStorage.setItem('fop_firebase_cfg', JSON.stringify(window._embeddedFirebaseConfig)); } catch(e) {}
   </script>
-
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- App JavaScript (inline for reliability) -->
-
   <script>
 
 // Explicit global assignments for iOS WKWebView compatibility
@@ -5175,7 +5154,7 @@ window.addEventListener('load', function(){
 
   // Show shortcut hint in topbar on desktop
   var hint = document.createElement('span');
-  hint.style.cssText = 'font-size:11px;color:#4a5e7a;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;white-space:nowrap';
+  hint.style.cssText = 'font-size:11px;color:#4a5e7a;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:nowrap';
   hint.innerHTML = '&#x2318; N&nbsp;&nbsp;/&nbsp;&nbsp;1-6&nbsp;&nbsp;/&nbsp;&nbsp;/ = search';
   var topbar = document.getElementById('topbar');
   if (topbar && window.innerWidth > 768) topbar.appendChild(hint);
@@ -6752,6 +6731,5 @@ function closeBarcodeScanner() {
 
 
   </script>
-
 </body>
 </html>
