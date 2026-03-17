@@ -1,30 +1,6 @@
 // FieldOps Pro — Features
 // Search, notifications, location, quick-add, tab bar, smart FAB, swipe
 
-// ── Feature state variables ─────────────────────────────────────────
-var searchSelectedIdx = -1;
-var _srchHist = JSON.parse(localStorage.getItem('fop_srch')||'[]');
-var recentlyViewed = JSON.parse(localStorage.getItem('fop_rv') || '[]');
-var notifications = JSON.parse(localStorage.getItem('fop_notifs') || '[]');
-var dashWidgets = JSON.parse(localStorage.getItem('fop_dash_widgets') || JSON.stringify({
-  stats: true, recentTasks: true, recentShipments: true, alerts: true
-}));
-var _widgets = JSON.parse(localStorage.getItem('fop_dash_v2') || JSON.stringify({
-  overview: true, tasks: true, shipping: true, alerts: true, activity: true
-}));
-var compactMode = localStorage.getItem('fop_compact') === '1';
-var quickAddOpen = false;
-var _fabOpen = false;
-var _locTimer = null;
-var _locResults = [];
-var _locHighlight = -1;
-var _undoStack = [];
-var _undoTimer = null;
-var barcodeStream = null;
-var swipeTouchX = 0, swipeTouchY = 0, swipeEl = null, swipeActive = false;
-var touchDragEl = null, touchClone = null, touchTaskId = null;
-var _rowSwipeTX = 0, _rowSwipeTY = 0, _rowSwipeEl = null, _rowSwipeActive = false;
-
 
 // Element.closest polyfill for older WebKit
 if (!Element.prototype.closest) {
@@ -48,7 +24,6 @@ if (typeof NodeList !== 'undefined' && NodeList.prototype && !NodeList.prototype
 if (typeof HTMLCollection !== 'undefined' && HTMLCollection.prototype && !HTMLCollection.prototype.forEach) {
   HTMLCollection.prototype.forEach = Array.prototype.forEach;
 }
-
 
 
 window.onerror = function(msg, src, line, col, err) {
@@ -131,8 +106,6 @@ function initDragHandles() {
   });
 }
 
-// ── SMART FAB ───────────────────────────────────────────────────────
-var _fabOpen = false;
 
 function toggleFabMenu() {
   _fabOpen = !_fabOpen;
@@ -156,10 +129,6 @@ function closeFabMenu() {
   if (fabSpan) fabSpan.textContent = '+';
 }
 
-// ── DASHBOARD WIDGETS (desktop) ─────────────────────────────────────
-var _widgets = JSON.parse(localStorage.getItem('fop_dash_v2') || JSON.stringify({
-  overview: true, tasks: true, shipping: true, alerts: true, activity: true
-}));
 
 function requestPushPermission() {
   if (!('Notification' in window)) { toast('Notifications not supported'); return; }
@@ -676,9 +645,8 @@ function checkShipmentETA() {
 }
 
 
-
 // ─── GENERIC ROW SWIPE (POs, Shipping) ────────────────────────────────────────
-var _rowSwipeTX = 0, _rowSwipeTY = 0, _rowSwipeEl = null, _rowSwipeActive = false;
+
 
 function addSearchHistory(q){if(!q||q.length<2)return;_srchHist=_srchHist.filter(function(s){return s!==q;});_srchHist.unshift(q);if(_srchHist.length>8)_srchHist=_srchHist.slice(0,8);localStorage.setItem('fop_srch',JSON.stringify(_srchHist));}
 
@@ -765,7 +733,7 @@ function saveQuickTask() {
 // ═══════════════════════════════════════════════
 //  FILTER TASKS BY PROJECT
 // ═══════════════════════════════════════════════
-var taskProjectFilter = '';
+
 
 function applyProjectFilter(pid) {
   taskProjectFilter = pid;
@@ -775,16 +743,7 @@ function applyProjectFilter(pid) {
 // ═══════════════════════════════════════════════
 //  BULK TASK ACTIONS
 // ═══════════════════════════════════════════════
-var bulkSelected = {
-  _d: {},
-  add: function(v){ this._d[String(v)]=1; },
-  remove: function(v){ delete this._d[String(v)]; },
-  has: function(v){ return this._d[String(v)]===1; },
-  clear: function(){ this._d={}; },
-  count: function(){ var n=0; for(var k in this._d){ if(this._d[k]) n++; } return n; },
-  forEach: function(fn){ for(var k in this._d){ if(this._d[k]) fn(k); } }
-};
-bulkSelected.delete = bulkSelected.remove;
+
 
 // ── iOS PULL-TO-REFRESH ─────────────────────────────
 (function(){
