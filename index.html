@@ -2967,11 +2967,18 @@ window.filterProjects = filterProjects;
 window.softDeleteTask = softDeleteTask;
 window.setDetailFooter = setDetailFooter;
 window.autoDetectCarrier = autoDetectCarrier;
+window.openTemplateModal = openTemplateModal;
+window.applyTemplateFromBtn = applyTemplateFromBtn;
+window.populateTemplatePicker = populateTemplatePicker;
 
 
 // ── OFFLINE SYNC QUEUE ──────────────────────────────────────────────
 var _syncQueue = JSON.parse(localStorage.getItem('fop_sync_queue') || '[]');
 var _isOnline = navigator.onLine;
+
+// Task templates & drag state
+var taskTemplates = JSON.parse(localStorage.getItem('fop_templates') || '[]');
+var dragTaskId = null;
 
 function saveSyncQueue() {
   localStorage.setItem('fop_sync_queue', JSON.stringify(_syncQueue));
@@ -3909,6 +3916,80 @@ function unarchiveTask(id, e) {
   updateItem('tasks', id, _merge({}, task, {archived: false}));
   renderTasks();
   toast('Task restored');
+}
+
+function renderKanban(data) {
+  var kv = document.getElementById('tasks-kanban-view');
+  var lv = document.getElementById('tasks-list-view');
+  if (!kv) return;
+  kv.style.display = '';
+  if (lv) lv.style.display = 'none';
+
+  var cols = [
+    { status:'todo',       label:'To Do',      color:'rgba(79,142,247,0.15)',  border:'rgba(79,142,247,0.3)'  },
+    { status:'inprogress', label:'In Progress', color:'rgba(245,158,11,0.12)', border:'rgba(245,158,11,0.3)'  },
+    { status:'done',       label:'Done',        color:'rgba(16,185,129,0.10)', border:'rgba(16,185,129,0.25)' }
+  ];
+
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  kv.innerHTML = '';
+  var board = document.createElement('div');
+  board.style.cssText = 'display:flex;gap:16px;height:100%;overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch';
+
+  cols.forEach(function(col) {
+    var colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    colEl.dataset.status = col.status;
+    colEl.dataset.border = col.border;
+    colEl.dataset.bg = col.color;
+    colEl.style.cssText = 'flex:0 0 280px;background:'+col.color+';border:1px solid '+col.border+';border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px';
+    colEl.setAttribute('ondragover', 'onColDragOver(event, this)');
+    colEl.setAttribute('ondragleave', 'onColDragLeave(event, this)');
+    colEl.setAttribute('ondrop', 'onColDrop(event, "'+col.status+'")');
+
+    var header = document.createElement('div');
+    header.style.cssText = 'font-size:12px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#8da0c0;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between';
+    var colTasks = data.filter(function(t){ return t.status === col.status; });
+    header.innerHTML = '<span>'+col.label+'</span><span style="background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:99px;font-size:11px;color:#64748b">'+colTasks.length+'</span>';
+    colEl.appendChild(header);
+
+    colTasks.forEach(function(t) {
+      var card = document.createElement('div');
+      card.className = 'kanban-task-card';
+      card.draggable = true;
+      card.dataset.taskid = t.id;
+      var isOverdue = !!(t.due && t.status !== 'done' && new Date(t.due) < today);
+      card.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid '+(isOverdue?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.08)')+';border-radius:12px;padding:12px;cursor:pointer;user-select:none;-webkit-user-select:none';
+      card.setAttribute('ondragstart', 'onTaskDragStart(event, "'+t.id+'")');
+      card.setAttribute('ondragend', 'onTaskDragEnd(event)');
+
+      card.innerHTML = '<div style="font-size:13px;font-weight:600;color:#f0f4ff;margin-bottom:6px;line-height:1.4">'+escH(t.title)+'</div>'
+        +(t.category?'<div style="font-size:10px;color:#4a5e7a;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">'+escH(t.category)+'</div>':'')
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+        +priorityBadge(t.priority)
+        +(t.project?'<span style="font-size:10px;color:#8da0c0;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:99px">'+escH(projectName(t.project))+'</span>':'')
+        +(t.due?'<span style="font-size:10px;color:'+(isOverdue?'#ef4444':'#64748b')+';margin-left:auto">'+escH(fmtDate(t.due))+'</span>':'')
+        +'</div>';
+
+      (function(tid) {
+        card.onclick = function(e) {
+          var tgt = e.target;
+          while(tgt && tgt !== card) { if(tgt.tagName==='BUTTON') return; tgt=tgt.parentNode; }
+          editTask(tid);
+        };
+        card.addEventListener('touchstart', function(e){ onTaskTouchStart(e, tid); }, {passive:true});
+        card.addEventListener('touchmove', function(e){ onTaskTouchMove(e); }, {passive:false});
+        card.addEventListener('touchend', function(e){ onTaskTouchEnd(e); });
+      })(t.id);
+
+      colEl.appendChild(card);
+    });
+
+    board.appendChild(colEl);
+  });
+
+  kv.appendChild(board);
 }
 
 function renderTasks() {
@@ -6534,7 +6615,11 @@ _merge(window, {
   bulkSelectAll: bulkSelectAll,
   bulkAction: bulkAction,
   startBarcodeScan: startBarcodeScan,
-  closeBarcodeScanner: closeBarcodeScanner
+  closeBarcodeScanner: closeBarcodeScanner,
+  renderKanban: renderKanban,
+  openTemplateModal: openTemplateModal,
+  applyTemplateFromBtn: applyTemplateFromBtn,
+  populateTemplatePicker: populateTemplatePicker
 });
 
 // ═══════════════════════════════════════════════
