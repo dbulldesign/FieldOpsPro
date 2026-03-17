@@ -3329,6 +3329,15 @@ function updateItem(col, id, data) {
       toast('Done! Next recurrence scheduled.');
     }
   }
+  // Optimistic in-memory update so renders immediately reflect the change
+  if (state[col]) {
+    for (var _i = 0; _i < state[col].length; _i++) {
+      if (state[col][_i].id === id) {
+        state[col][_i] = _merge({}, state[col][_i], data);
+        break;
+      }
+    }
+  }
   if (db) {
     db.collection(col).doc(id).set(data, {merge: true}).catch(function(e) {
       console.warn('Firebase updateItem error:', e);
