@@ -3044,7 +3044,7 @@ function flushSyncQueue() {
   saveSyncQueue();
 
   // Show push notification prompt on desktop after 3rd visit
-  if (window.innerWidth > 768 && Notification && Notification.permission === 'default') {
+  if (window.innerWidth > 768 && typeof Notification !== 'undefined' && Notification.permission === 'default') {
     var visits = parseInt(localStorage.getItem('fop_visits')||'0') + 1;
     localStorage.setItem('fop_visits', visits);
     if (visits >= 3) {
@@ -3211,31 +3211,33 @@ function applyWidgetVisibility() {
 
 // ── PUSH NOTIFICATIONS ──────────────────────────────────────────────
 function requestPushPermission() {
-  if (!('Notification' in window)) { toast('Notifications not supported'); return; }
+  if (typeof Notification === 'undefined' || !('Notification' in window)) { toast('Notifications not supported on this browser'); return; }
   if (Notification.permission === 'granted') { toast('Notifications already enabled ✓'); return; }
   // Support both callback (old Safari) and Promise (modern) APIs
   var handlePermission = function(result) {
     if (result === 'granted') {
       toast('Notifications enabled!');
-      try { new Notification('FieldOps Pro', { body: 'You will now receive overdue task alerts.' }); } catch(e) {}
+      try { if(typeof Notification !== 'undefined') new Notification('FieldOps Pro', { body: 'You will now receive overdue task alerts.' }); } catch(e) {}
     } else {
       toast('Notification permission denied');
     }
   };
   try {
-    var permResult = Notification.requestPermission(handlePermission);
-    if (permResult && permResult.then) permResult.then(handlePermission);
+    if (typeof Notification !== 'undefined') {
+      var permResult = Notification.requestPermission(handlePermission);
+      if (permResult && permResult.then) permResult.then(handlePermission);
+    }
   } catch(e) { toast('Notifications not available'); }
 }
 
 function sendPushNotif(title, body) {
-  if (Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return; // Only push when tab hidden
-  new Notification(title, { body: body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%232563ff"/></svg>' });
+  try { new Notification(title, { body: body }); } catch(e) {}
 }
 
 function checkAndPushNotifs() {
-  if (Notification.permission !== 'granted') return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   var today = new Date(); today.setHours(0,0,0,0);
   var overdue = state.tasks.filter(function(t){ return !t.archived && t.status!=='done' && t.due && new Date(t.due)<today; });
   if (overdue.length > 0) {
