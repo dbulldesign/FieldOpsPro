@@ -129,17 +129,6 @@ function flushSyncQueue() {
   toast('Synced ' + queue.length + ' pending change' + (queue.length!==1?'s':''));
 }
 
-window.addEventListener('online', function() {
-  _isOnline = true;
-  updateSyncBar();
-  setTimeout(flushSyncQueue, 500);
-  toast('Back online — syncing…');
-});
-window.addEventListener('offline', function() {
-  _isOnline = false;
-  updateSyncBar();
-  toast('You are offline — changes saved locally');
-});
 
 // ── SKELETON LOADING ────────────────────────────────────────────────
 function showSkeleton(containerId, count) {
