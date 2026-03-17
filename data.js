@@ -1,28 +1,8 @@
 // FieldOps Pro — Data Layer
 // Firebase sync, localStorage fallback, CRUD operations
 
-// ── State & Storage ────────────────────────────────────────────────────
-var db = null;
-var unsubscribers = [];
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
-var _syncQueue = JSON.parse(localStorage.getItem('fop_sync_queue') || '[]');
-var _isOnline = navigator.onLine;
 
 // Local storage fallback
-var LOCAL = {
-  get: function(col) { try { return JSON.parse(localStorage.getItem('fop_'+col)||'[]'); } catch(e) { return []; } },
-  set: function(col, data) { localStorage.setItem('fop_'+col, JSON.stringify(data)); },
-  add: function(col, item) { var d = LOCAL.get(col); d.push(item); LOCAL.set(col,d); },
-  update: function(col, id, item) {
-    var d = LOCAL.get(col);
-    var i = -1;
-    for(var _j=0;_j<d.length;_j++){ if(d[_j].id===id){i=_j;break;} }
-    if(i>=0) { var merged = {}; var k; for(k in d[i]) { merged[k] = d[i][k]; } for(k in item) { merged[k] = item[k]; } d[i] = merged; }
-    LOCAL.set(col,d);
-  },
-  delete: function(col, id) { LOCAL.set(col, LOCAL.get(col).filter(function(x){ return x.id!==id; })); }
-};
 
 
 function saveSyncQueue() {
@@ -322,11 +302,6 @@ function loadSavedConfig() {
 // ═══════════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════════
-var currentView = 'dashboard';
-var viewTitles = {
-  dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks',
-  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
-};
 
 
 function deleteAllData(scope) {
@@ -352,7 +327,6 @@ function deleteAllData(scope) {
 // ═══════════════════════════════════════════════
 //  SMART COMBOBOX — searchable + add-new selects
 // ═══════════════════════════════════════════════
-var comboCustomOptions = JSON.parse(localStorage.getItem('fop_combo_opts')||'{}');
 
 
 function pasteFromClipboard() {
@@ -393,7 +367,6 @@ function downloadWithConfig() {
   setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
   toast('Downloaded FieldOps-Pro.html with Firebase config saved');
 }
-
 
 
 function useBuiltInConfig() {
@@ -522,5 +495,3 @@ _merge(window, {
 // ═══════════════════════════════════════════════
 //  QUICK ADD
 // ═══════════════════════════════════════════════
-var quickAddOpen = false;
-
