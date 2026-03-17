@@ -529,20 +529,7 @@ padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 
 /* -- iOS Tab Bar -- */
 #mobileNav {
-display: block !important;
-position: fixed !important;
-bottom: 0; left: 0; right: 0;
-z-index: 500;
-background: rgba(14,21,37,0.94) !important;
-backdrop-filter: blur(24px) saturate(180%) !important;
--webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-border-top: 1px solid rgba(255,255,255,0.1) !important;
-padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-padding-top: 0 !important;
-}
-[data-theme="light"] #mobileNav {
-background: rgba(249,249,251,0.94) !important;
-border-top-color: rgba(0,0,0,0.12) !important;
+display: none !important;
 }
 .mobile-nav-items {
 display: flex !important;
@@ -1693,7 +1680,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.08);
-  z-index: 400;
+  z-index: 600;
   flex-direction: row;
   align-items: stretch;
   justify-content: space-around;
