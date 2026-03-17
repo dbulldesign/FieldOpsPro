@@ -3963,7 +3963,7 @@ function renderTasks() {
     if(mOld) mOld.remove();
     var mList=document.createElement('div');
     mList.id='mob-tasks-cards';
-    mList.style.cssText='padding:0 0 80px 0';
+    mList.style.cssText='padding:0 0 80px 0;display:block !important;';
     var today3=new Date(); today3.setHours(0,0,0,0);
     for(var mi=0;mi<data.length;mi++){
       var mt=data[mi];
@@ -4273,16 +4273,26 @@ function renderPOs() {
     data=data.filter(function(p){return p.status===poFilter && !p.archived;});
   }
   var tb = document.getElementById('pos-tbody');
-  if(!data.length){tb.innerHTML='<tr><td colspan="8">'+buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Create a PO to track vendor orders and approvals.')+'</td></tr>';return;}
-  
   if(isMobile()){
+    if(!data.length){
+      var mWrapE=document.getElementById('view-pos');
+      var mOldE=document.getElementById('mob-pos-cards');
+      if(mOldE) mOldE.remove();
+      var mEmptyDiv=document.createElement('div');
+      mEmptyDiv.id='mob-pos-cards';
+      mEmptyDiv.innerHTML=buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Tap + to create your first PO.');
+      var tWrapE=document.querySelector('#view-pos .table-wrap');
+      if(tWrapE) tWrapE.style.display='none';
+      if(mWrapE) mWrapE.appendChild(mEmptyDiv);
+      return;
+    }
     var mWrap=document.getElementById('view-pos');
     var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
     var mOld=document.getElementById('mob-pos-cards');
     if(mOld) mOld.remove();
     var mList=document.createElement('div');
     mList.id='mob-pos-cards';
-    mList.style.cssText='padding:0 0 80px 0';
+    mList.style.cssText='padding:0 0 80px 0;display:block !important;';
     for(var mi=0;mi<data.length;mi++){
       var mp=data[mi];
       var mitems=(mp.items||'').split('\n').filter(Boolean).length;
@@ -4412,16 +4422,26 @@ function renderShipping() {
     data=data.filter(function(s){return s.status===shipFilter && !s.archived;});
   }
   var tb=document.getElementById('shipping-tbody');
-  if(!data.length){tb.innerHTML='<tr><td colspan="7">'+buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Add a shipment to track deliveries — tracking number is optional.')+'</td></tr>';return;}
-  
   if(isMobile()){
+    if(!data.length){
+      var mWrapE=document.getElementById('view-shipping');
+      var mOldE=document.getElementById('mob-shipping-cards');
+      if(mOldE) mOldE.remove();
+      var mEmptyDiv=document.createElement('div');
+      mEmptyDiv.id='mob-shipping-cards';
+      mEmptyDiv.innerHTML=buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Tap + to add a shipment.');
+      var tWrapE=document.querySelector('#view-shipping .table-wrap');
+      if(tWrapE) tWrapE.style.display='none';
+      if(mWrapE) mWrapE.appendChild(mEmptyDiv);
+      return;
+    }
     var mWrap=document.getElementById('view-shipping');
     var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
     var mOld=document.getElementById('mob-shipping-cards');
     if(mOld) mOld.remove();
     var mList=document.createElement('div');
     mList.id='mob-shipping-cards';
-    mList.style.cssText='padding:0 0 80px 0';
+    mList.style.cssText='padding:0 0 80px 0;display:block !important;';
     for(var mi=0;mi<data.length;mi++){
       var ms=data[mi];
       var card=document.createElement('div');
