@@ -3427,6 +3427,10 @@ function updateItem(col, id, data) {
 }
 
 function deleteItem(col, id) {
+  // Optimistic in-memory remove so renders immediately reflect the change
+  if (state[col]) {
+    state[col] = state[col].filter(function(x){ return x.id !== id; });
+  }
   if (db) {
     db.collection(col).doc(id).delete().catch(function(e) {
       console.warn('Firebase deleteItem error:', e);
