@@ -4,32 +4,15 @@
 function isMobile(){ return window.innerWidth<=768; }
 
 
-
 // ═══════════════════════════════════════════════
 //  DATA LAYER — Local + Firebase sync
 // ═══════════════════════════════════════════════
-var db = null;
-var unsubscribers = [];
 
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
 
 // Local storage fallback
-var LOCAL = {
-  get: function(col) { try { return JSON.parse(localStorage.getItem('fop_'+col)||'[]'); } catch(e) { return []; } },
-  set: function(col, data) { localStorage.setItem('fop_'+col, JSON.stringify(data)); },
-  add: function(col, item) { var d = LOCAL.get(col); d.push(item); LOCAL.set(col,d); },
-  update: function(col, id, item) {
-    var d = LOCAL.get(col);
-    var i = -1;
-    for(var _j=0;_j<d.length;_j++){ if(d[_j].id===id){i=_j;break;} }
-    if(i>=0) { var merged = {}; var k; for(k in d[i]) { merged[k] = d[i][k]; } for(k in item) { merged[k] = item[k]; } d[i] = merged; }
-    LOCAL.set(col,d);
-  },
-  delete: function(col, id) { LOCAL.set(col, LOCAL.get(col).filter(function(x){ return x.id!==id; })); }
-};
+
 
 // In-memory state
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
 
 
 function _merge() {
@@ -40,7 +23,6 @@ function _merge() {
   }
   return r;
 }
-
 
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -171,9 +153,6 @@ function loadTheme() {
 // ═══════════════════════════════════════════════
 //  LOCATION AUTOCOMPLETE — OpenStreetMap Nominatim
 // ═══════════════════════════════════════════════
-var _locTimer = null;
-var _locResults = [];
-var _locHighlight = -1;
 
 
 function timeAgo(ts) {
@@ -198,8 +177,6 @@ function haptic(style) {
 // ═══════════════════════════════════════════════════════════════════
 //  UNDO LAST DELETE
 // ═══════════════════════════════════════════════════════════════════
-var _undoStack = [];
-var _undoTimer = null;
 
 
 function softDelete(col, id, label) {
@@ -243,9 +220,6 @@ function undoLastDelete() {
 // ═══════════════════════════════════════════════════════════════════
 //  DASHBOARD WIDGETS — user can toggle sections
 // ═══════════════════════════════════════════════════════════════════
-var dashWidgets = JSON.parse(localStorage.getItem('fop_dash_widgets') || JSON.stringify({
-  stats: true, recentTasks: true, recentShipments: true, alerts: true
-}));
 
 
 function fmtDateSmart(d){if(!d)return'\u2014';var date=new Date(d+'T00:00:00'),today=new Date();today.setHours(0,0,0,0);var diff=Math.round((date-today)/86400000);if(diff===0)return'<span style="color:#10b981;font-weight:600">Today</span>';if(diff===1)return'<span style="color:#fbbf24;font-weight:600">Tomorrow</span>';if(diff===-1)return'<span style="color:#ef4444;font-weight:600">Yesterday</span>';if(diff<0)return'<span style="color:#ef4444">'+Math.abs(diff)+'d overdue</span>';if(diff<=7)return'<span style="color:#fbbf24">'+diff+' days</span>';return date.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
@@ -262,5 +236,3 @@ function confirmInline(msg,cb){var el=document.getElementById('toast');if(!el){i
 function inlineConfirmYes(){var cb=window._icb;clearTimeout(window._ict);var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}if(cb)cb();window._icb=null;}
 
 function inlineConfirmNo(){clearTimeout(window._ict);window._icb=null;var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}}
-var _srchHist=JSON.parse(localStorage.getItem('fop_srch')||'[]');
-
