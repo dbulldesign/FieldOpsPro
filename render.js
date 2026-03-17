@@ -228,7 +228,8 @@ function archiveTask(id, e) {
   if(e) e.stopPropagation();
   var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
-  updateItem('tasks', id, _merge({}, task, {archived: true}));
+  task.archived = true;
+  updateItem('tasks', id, _merge({}, task));
   haptic('medium');
   renderTasks();
   toast('Task archived');
@@ -238,7 +239,8 @@ function unarchiveTask(id, e) {
   if(e) e.stopPropagation();
   var task = state.tasks.find(function(t){return t.id===id;});
   if(!task) return;
-  updateItem('tasks', id, _merge({}, task, {archived: false}));
+  task.archived = false;
+  updateItem('tasks', id, _merge({}, task));
   renderTasks();
   toast('Task restored');
 }
