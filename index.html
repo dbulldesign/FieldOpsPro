@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#080d1a">
+  <title>FieldOps Pro</title>
+  <link rel="stylesheet" href="css/app.css">
+
+  <!-- Theme loader — must run before body renders to avoid flash -->
+  <script>
+  (function(){
+    var t = localStorage.getItem('fop_theme') || 'dark';
+    var isLight = (t === 'light');
+    document.documentElement.setAttribute('data-theme', t);
+    document.addEventListener('DOMContentLoaded', function(){
+      if(isLight){ document.body.classList.add('light-mode'); }
+      else { document.body.classList.add('dark-mode'); }
+    });
+  })();
+  </script>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <h1>FieldOps<span> Pro</span></h1>
+      <p>⚡ Lighting Control Suite</p>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Workspace</div>
+        <div class="nav-item active" onclick="switchView('dashboard')">
+          <span class="icon">🏠</span> Dashboard
+        </div>
+        <div class="nav-item" onclick="switchView('projects')">
+          <span class="icon">📋</span> Projects
+          <span class="nav-badge" id="badge-projects">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('tasks')">
+          <span class="icon">✅</span> Tasks
+          <span class="nav-badge" id="badge-tasks">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Operations</div>
+        <div class="nav-item" onclick="switchView('pos')">
+          <span class="icon">🧾</span> Purchase Orders
+          <span class="nav-badge" id="badge-pos">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('shipping')">
+          <span class="icon">📦</span> Shipping
+          <span class="nav-badge" id="badge-shipping">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Knowledge</div>
+        <div class="nav-item" onclick="switchView('troubleshoot')">
+          <span class="icon">🔧</span> Troubleshoot DB
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Settings</div>
+        <div class="nav-item" onclick="switchView('settings')">
+          <span class="icon">⚙️</span> Sync Setup
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">Local only</span>
+      </div>
+    </div>
+  </aside>
+
+  <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+
+  <div id="main">
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <button class="btn btn-ghost btn-icon" id="menuBtn" onclick="toggleSidebar()">&#9776;</button>
+      <button id="mob-back-btn" onclick="switchView('dashboard')" style="display:none;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:10px;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="15 18 9 12 15 6"/></svg>
+        <span style="font-size:16px;font-weight:600;color:#4f8ef7;white-space:nowrap">Home</span>
+      </button>
+      <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
+      <button id="compact-toggle-btn" onclick="toggleCompact()" title="Compact view" style="background:none;border:none;cursor:pointer;padding:6px;color:#4a5e7a;display:none;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
+      <div id="mob-sync-status" style="display:none;align-items:center;gap:4px;margin-left:auto;flex-shrink:0">
+        <div id="mobSyncDot" style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
+        <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
+      </div>
+      <div class="search-wrap" style="position:relative">
+        <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
+          oninput="globalSearch(this.value)"
+          onfocus="if(this.value) globalSearch(this.value)"
+          onkeydown="searchKeyNav(event)"
+          autocomplete="off" autocorrect="off" spellcheck="false">
+        <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;max-height:480px;overflow-y:auto"></div>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="notif-btn" onclick="toggleNotifPanel()" title="Notifications" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span id="notif-badge" class="notif-badge" style="display:none">0</span>
+      </button>
+      <div style="position:relative" id="shortcut-btn-wrap">
+        <button class="btn btn-ghost btn-icon" onclick="openModal('modal-shortcuts')" onmouseenter="document.getElementById('shortcut-tip').style.display='block'" onmouseleave="document.getElementById('shortcut-tip').style.display='none'" title="Keyboard shortcuts">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+        <div id="shortcut-tip" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;min-width:200px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,0.5);font-size:12px;white-space:nowrap">
+          <div style="font-weight:700;color:#f0f4ff;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase">Quick Shortcuts</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Search</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">/</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Add item</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">N</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Kanban toggle</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">K</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Close / Cancel</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">Esc</span></div>
+            <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Nav 1–7</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">1–7</span></div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);color:#4a5e7a;font-size:11px">Click for full list</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ Add</button>
+      <!-- Notification Panel -->
+      <div id="notif-panel">
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:700;font-size:14px;color:#f0f4ff">Notifications</span>
+          <button onclick="markAllRead()" style="background:none;border:none;font-size:11px;color:#4f8ef7;cursor:pointer">Mark all read</button>
+        </div>
+        <div id="notif-list"></div>
+      </div>
+    </div>
+
+<!-- OFFLINE BAR -->
+<div id="offlineBar" style="display:none;align-items:center;justify-content:center;gap:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:600;padding:8px 16px;flex-shrink:0;letter-spacing:0.3px">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+  Offline — changes saved locally and will sync when reconnected
+</div>
+<!-- CONTENT -->
+<!-- MOBILE ONLY: full-width search + notif bar -->
+<div id="mob-search-bar">
+  <div id="mob-search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#4a5e7a"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="mob-search-input" placeholder="Search…"
+      autocomplete="off" autocorrect="off" spellcheck="false"
+      oninput="globalSearch(this.value);document.getElementById('searchBar').value=this.value"
+      onfocus="this.value?globalSearch(this.value):showSearchHistory()"
+      onkeydown="searchKeyNav(event)"
+      style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:9px 12px 9px 36px;font-size:16px;color:#f0f4ff;outline:none;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif">
+  </div>
+  <button id="mob-notif-btn" onclick="toggleNotifPanel()" style="position:relative;flex-shrink:0;width:40px;height:40px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:#8da0c0"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="mob-notif-badge" style="display:none;position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:99px;min-width:14px;text-align:center;line-height:1.6"></span>
+  </button>
+</div>
+<!-- Mobile search dropdown (positioned by JS) -->
+<div id="mob-search-dropdown" style="display:none;position:fixed;top:108px;left:14px;right:14px;z-index:2001;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:60vh;overflow-y:auto"></div>
+<div id="mob-large-title-wrap">
+  <div id="mob-large-title">FieldOps Pro</div>
+</div>
+<div id="content">
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="view active" id="view-dashboard">
+    <!-- Desktop widget bar -->
+    <div id="dash-widget-bar" style="display:flex;gap:6px;align-items:center;margin-bottom:18px;flex-wrap:wrap;display:none">
+      <span style="font-size:11px;color:#4a5e7a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-right:4px">Widgets</span>
+    </div>
+    <!-- Push notification prompt (desktop) -->
+    <div id="push-prompt" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:12px;margin-bottom:14px;font-size:13px">
+      <span>🔔</span><span style="color:#8da0c0;flex:1">Enable push notifications for overdue task alerts</span>
+      <button class="btn btn-primary btn-sm" onclick="requestPushPermission();this.closest('#push-prompt').style.display='none'">Enable</button>
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('#push-prompt').style.display='none'">Later</button>
+    </div>
+    <!-- Things-style home cards (mobile only) -->
+    <div id="things-home-wrap">
+      <div id="things-home-cards"></div>
+    </div>
+    <div id="dash-due-alerts" style="display:none;margin-bottom:16px"></div>
+    <!-- Recently Viewed -->
+    <div id="dash-recently-viewed" style="margin-bottom:20px;display:none">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px">Recently Viewed</div>
+      <div id="rv-chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+    <div id="firebaseNotice" class="setup-banner" style="display:none">
+      <span class="icon">🔥</span>
+      <p><strong>Firebase not configured.</strong> Data is stored locally in this browser. To sync across devices, go to <strong>⚙️ Sync Setup</strong> and enter your free Firebase credentials. <a href="#" onclick="switchView('settings')">Set it up →</a></p>
+    </div>
+    <!-- Widget Toolbar -->
+    <div class="widget-toolbar">
+      <span style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-right:4px">Widgets</span>
+      <button class="widget-btn" id="widget-btn-stats" onclick="toggleWidget('stats')">Stats</button>
+      <button class="widget-btn" id="widget-btn-recentTasks" onclick="toggleWidget('recentTasks')">Recent Tasks</button>
+      <button class="widget-btn" id="widget-btn-recentShipments" onclick="toggleWidget('recentShipments')">Shipments</button>
+      <button class="widget-btn" id="compact-btn" onclick="toggleCompact()" title="Toggle compact view" style="margin-left:auto">Compact</button>
+    </div>
+    <div id="dash-stat-grid" class="grid-4" style="margin-bottom:20px">
+      <div class="stat-card" style="--accent-line:#3b82f6">
+        <div class="stat-icon" style="background:rgba(79,142,247,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+        <div class="stat-label">Active Projects</div>
+        <div class="stat-value" id="stat-projects">0</div>
+        <div class="stat-sub">total projects</div>
+      </div>
+      <div class="stat-card" style="--accent-line:#fbbf24">
+        <div class="stat-icon" style="background:rgba(251,191,36,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="stat-label">Open Tasks</div>
+        <div class="stat-value" id="stat-tasks">0</div>
+        <div class="stat-sub" id="stat-tasks-sub">0 high priority</div>
+      </div>
+      <div class="stat-card" style="--accent-line:#f59e0b">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <div class="stat-label">Purchase Orders</div>
+        <div class="stat-value" id="stat-pos">0</div>
+        <div class="stat-sub" id="stat-pos-sub">0 purchase orders</div>
+      </div>
+      <div class="stat-card" style="--accent-line:#10b981">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div class="stat-label">Shipments</div>
+        <div class="stat-value" id="stat-shipping">0</div>
+        <div class="stat-sub" id="stat-ship-sub">0 in transit</div>
+      </div>
+    </div><!-- /dash-stat-grid -->
+
+    <div class="grid-2" id="dash-recent-grid">
+      <div class="card" id="dash-task-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Recent Tasks</div>
+            <div class="section-sub">Latest open items</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
+        </div>
+        <div id="dash-tasks"></div>
+      </div>
+      <div class="card" id="dash-ship-card">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Shipment Status</div>
+            <div class="section-sub">Active tracking</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
+        </div>
+        <div id="dash-shipping"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PROJECTS ═══ -->
+  <div class="view" id="view-projects">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
+        <div class="tab active" onclick="filterProjects('all',this)">All</div>
+        <div class="tab" onclick="filterProjects('archived',this)">📦 Archived</div>
+      <div class="tab" onclick="filterProjects('active',this)">Active</div>
+      <div class="tab" onclick="filterProjects('planning',this)">Planning</div>
+      <div class="tab" onclick="filterProjects('completed',this)">Completed</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add</button>
+    </div>
+    <div id="projects-list"></div>
+  </div>
+
+  <!-- ═══ TASKS ═══ -->
+  <div class="view" id="view-tasks">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
+        <div class="tab" onclick="filterTasks('all',this)">All</div>
+        <div class="tab active" onclick="filterTasks('active',this)">To Do / In Progress</div>
+        <div class="tab" onclick="filterTasks('done',this)">Done</div>
+        <div class="tab" onclick="filterTasks('archived',this)">📦 Archived</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button id="task-view-list" class="btn btn-primary btn-sm" onclick="setTaskView('list')" title="List view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List
+        </button>
+        <button id="task-view-kanban" class="btn btn-ghost btn-sm" onclick="setTaskView('kanban')" title="Kanban view">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+          Kanban
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="openTemplateModal()" title="Apply task template" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          Templates
+        </button>
+      </div>
+    </div>
+    <!-- BULK ACTION BAR -->
+    <div id="bulk-action-bar" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(37,99,255,0.1);border:1px solid rgba(37,99,255,0.25);border-radius:12px;margin-bottom:12px;flex-wrap:wrap">
+      <span id="bulk-count" style="font-size:13px;font-weight:600;color:#7ab3fa">0 selected</span>
+      <div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="bulkAction('done')">✓ Mark Done</button>
+        <button class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="bulkAction('archive')">📦 Archive</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkAction('delete')">🗑 Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll(false);updateBulkBar()">Cancel</button>
+      </div>
+    </div>
+    <!-- PROJECT FILTER -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="task-project-filter" onchange="applyProjectFilter(this.value)"
+        style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
+        <option value="">All Projects</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Task</button>
+    </div>
+    <div id="tasks-list-view">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px"><input type="checkbox" onchange="bulkSelectAll(this.checked)" style="width:16px;height:16px;cursor:pointer"></th>
+              <th>Task</th>
+              <th>Project</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Due</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="tasks-kanban-view" style="display:none"></div>
+  </div>
+
+  <!-- ═══ PURCHASE ORDERS ═══ -->
+  <div class="view" id="view-pos">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
+      <div class="tab active" onclick="filterPOs('all',this)">All</div>
+        <div class="tab" onclick="filterPOs('archived',this)">📦 Archived</div>
+      <div class="tab" onclick="filterPOs('draft',this)">Draft</div>
+      <div class="tab" onclick="filterPOs('submitted',this)">Submitted</div>
+      <div class="tab" onclick="filterPOs('approved',this)">Approved</div>
+      <div class="tab" onclick="filterPOs('received',this)">Received</div>
+    </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add PO</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>PO #</th>
+            <th>Vendor</th>
+            <th>Project</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ SHIPPING ═══ -->
+  <div class="view" id="view-shipping">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="tabs" style="margin-bottom:0;flex:1">
+      <div class="tab active" onclick="filterShipping('all',this)">All</div>
+        <div class="tab" onclick="filterShipping('archived',this)">📦 Archived</div>
+      <div class="tab" onclick="filterShipping('pending',this)">Pending</div>
+      <div class="tab" onclick="filterShipping('transit',this)">In Transit</div>
+      <div class="tab" onclick="filterShipping('delivered',this)">Delivered</div>
+    </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Shipment</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking #</th>
+            <th>Description</th>
+            <th>Carrier</th>
+            <th>Project/PO</th>
+            <th>Status</th>
+            <th>ETA</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="shipping-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ TROUBLESHOOT ═══ -->
+  <div class="view" id="view-troubleshoot">
+    <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap">
+      <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
+        <option value="all">All Categories</option>
+        <option value="electrical">Electrical</option>
+        <option value="dimming">Dimming</option>
+        <option value="commissioning">Commissioning</option>
+        <option value="hardware">Hardware</option>
+        <option value="network">Network/DALI</option>
+      </select>
+      <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:200px" oninput="renderTroubleshoot()">
+    
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
+    </div>
+    <div id="troubleshoot-list"></div>
+  </div>
+
+  <!-- ═══ SETTINGS ═══ -->
+  <div class="view" id="view-settings">
+    <div style="max-width:580px">
+
+    <!-- Theme Toggle Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:16px">🎨 Appearance</div>
+      <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle-row">
+        <span class="theme-icons" id="theme-icon">🌙</span>
+        <div class="theme-toggle-label">
+          <strong id="theme-label">Dark Mode</strong>
+          <span id="theme-sub">Currently using dark theme</span>
+        </div>
+        <div class="toggle-pill on" id="toggle-pill" onclick="toggleTheme()" style="cursor:pointer"></div>
+      </div>
+    </div>
+
+    <!-- Firebase Card -->
+    <div class="card" style="margin-bottom:20px">
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <span style="font-size:24px">🔥</span>
+        <div>
+          <div class="section-title">Firebase Sync</div>
+          <div class="section-sub">Real-time sync across iPhone, iPad &amp; Desktop — free forever</div>
+        </div>
+      </div>
+
+      <div class="setup-banner" style="margin:18px 0">
+        <span class="icon">📋</span>
+        <div style="font-size:13px;color:#8da0c0;line-height:1.8">
+          <strong style="color:#f59e0b">3 steps — takes 5 minutes:</strong><br>
+          1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6">console.firebase.google.com</a> → Add project (any name)<br>
+          2. <strong>Build → Firestore Database → Create</strong> → choose <em>Test mode</em><br>
+          3. <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web → Register</strong> → copy the config block shown
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Paste your Firebase config block here</span>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="pasteFromClipboard()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            Paste from clipboard
+          </button>
+        </label>
+        <div style="margin-bottom:14px">
+          <button onclick="useBuiltInConfig()" style="width:100%;padding:14px 20px;background:linear-gradient(135deg,#2563ff,#1d4ed8);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;box-shadow:0 4px 20px rgba(37,99,255,0.35)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Connect FieldOps Pro to Firebase
+          </button>
+          <p style="font-size:11px;color:#4a5e7a;text-align:center;margin-top:8px">Tap to instantly sync with the FieldOps Pro database</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+          <span style="font-size:11px;color:#3a4a6a;font-weight:600;letter-spacing:1px">OR PASTE CUSTOM CONFIG</span>
+          <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+        </div>
+        <textarea id="cfg-paste" style="font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:12px;min-height:180px;line-height:1.7" placeholder="Paste the whole thing — any format works: const firebaseConfig = { apiKey: "AIzaSy…", authDomain: "myapp.firebaseapp.com", projectId: "myapp-12345", appId: "1:123456:web:abc" };"></textarea>
+</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="padding:12px 28px;font-size:15px">
+          🔥 Connect &amp; Sync
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">Disconnect</button>
+      </div>
+      <div id="cfg-current-wrap" style="display:none;margin-top:16px;padding:14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#34d399;margin-bottom:4px">&#x2705; Firebase Connected</div>
+            <div id="cfg-current" style="font-size:12px;color:#4a5e7a"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="downloadWithConfig()" style="background:#10b981;flex-shrink:0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Save config to HTML file
+          </button>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;font-size:12px;color:#8da0c0;line-height:1.6">
+          Download a new copy of this app with your Firebase config permanently saved inside it. 
+          Open that file in Safari to connect instantly — no pasting required.
+        </div>
+      </div>
+
+      <div id="firebase-status" style="margin-top:14px;font-size:13px"></div>
+
+
+
+    </div><!-- /firebase card -->
+
+    <!-- Danger Zone Card -->
+    <div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:20px">⚠️</span>
+        <div>
+          <div class="section-title" style="color:#f87171">Danger Zone</div>
+          <div class="section-sub">Permanently delete all data — cannot be undone</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Tasks</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every task including archived</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('tasks')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Projects</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every project and its data</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('projects')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Purchase Orders</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every PO and line item</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('pos')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Shipments</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every shipment record</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('shipping')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#f0f4ff">Delete All Troubleshoot Items</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Remove every issue in the database</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteAllData('issues')">Delete All</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:12px;margin-top:4px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#f87171">Delete Everything</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">Wipe all projects, tasks, POs, shipments and issues</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteAllData('all')">Wipe All Data</button>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /settings max-width -->
+  </div>
+
+</div><!-- /content -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MOBILE NAV -->
+
+<nav id="mobileNav">
+  <div class="mobile-nav-items">
+    <div class="mobile-nav-item active" onclick="switchView('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('projects')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span class="nav-label">Projects</span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('tasks')" style="position:relative">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="nav-label">Tasks</span>
+      <span id="mob-overdue-badge" style="display:none;position:absolute;top:4px;right:12px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:15px;text-align:center;line-height:1.6"></span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('shipping')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="nav-label">Shipping</span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('settings')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="nav-label">Settings</span>
+    </div>
+  </div>
+</nav>
+
+<!-- TOAST -->
+
+<div id="toast"></div>
+
+<!-- MODALS -->
+
+<!-- Project Modal -->
+
+<div class="modal-overlay" id="modal-project" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="project-modal-title">New Project</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveProject()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-project')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="project-id">
+      <div class="form-group"><label>Project Name *</label><input type="text" id="project-name" placeholder="e.g. Office HQ Retrofit"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Client</label><input type="text" id="project-client" placeholder="Client name"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="project-status">
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="on-hold">On Hold</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Date</label><input type="date" id="project-start"></div>
+        <div class="form-group"><label>End Date</label><input type="date" id="project-end"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Location</label>
+          <div style="position:relative">
+            <input type="text" id="project-location" placeholder="Start typing an address…" autocomplete="off"
+              oninput="locationSearch(this.value)" onkeydown="locationKeydown(event)">
+            <div id="location-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#64748b">⏳</div>
+            <div id="location-dropdown" style="
+              display:none;
+              position:absolute;
+              top:calc(100% + 4px);
+              left:0;right:0;
+              background:#111a2e;
+              border:1px solid #2a3a5c;
+              border-radius:8px;
+              z-index:9999;
+              max-height:220px;
+              overflow-y:auto;
+              box-shadow:0 8px 32px rgba(0,0,0,0.4);
+            "></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>Control System</label>
+        <select id="project-system">
+          <option value="">Select system…</option>
+          <option value="Lutron Quantum">Lutron Quantum</option>
+          <option value="Lutron RadioRA3">Lutron RadioRA3</option>
+          <option value="Lutron Caseta">Lutron Caseta</option>
+          <option value="Lutron HomeWorks">Lutron HomeWorks QS</option>
+          <option value="Leviton">Leviton</option>
+          <option value="Crestron">Crestron</option>
+          <option value="DALI">DALI/KNX</option>
+          <option value="Savant">Savant</option>
+          <option value="Control4">Control4</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Task Modal -->
+
+<div class="modal-overlay" id="modal-task" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="task-modal-title">New Task</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveTask()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-task')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="task-id">
+      <div class="form-group"><label>Task Title *</label><input type="text" id="task-title" placeholder="e.g. Program zone scenes"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="task-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Category</label>
+          <div class="combo-wrap" id="combo-task-category"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Priority</label>
+          <select id="task-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="task-status">
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Due Date</label><input type="date" id="task-due"></div>
+        <div class="form-group"><label>Repeat</label>
+          <select id="task-recur">
+            <option value="">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every 2 Weeks</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Linked Shipment</label>
+        <select id="task-shipment"><option value="">— None —</option></select>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- PO Modal -->
+
+<div class="modal-overlay" id="modal-po" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="po-modal-title">New Purchase Order</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="savePO()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-po')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="po-id">
+      <div class="form-row">
+        <div class="form-group"><label>PO Number *</label><input type="text" id="po-number" placeholder="PO-2025-001"></div>
+        <div class="form-group"><label>Vendor *</label><input type="text" id="po-vendor" placeholder="Vendor name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="po-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="po-status">
+            <option value="draft">Draft</option>
+            <option value="submitted">Submitted</option>
+            <option value="approved">Approved</option>
+            <option value="ordered">Ordered</option>
+            <option value="received">Received</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Order Date</label><input type="date" id="po-date"></div>
+        <div class="form-group"><label>Expected Delivery</label><input type="date" id="po-delivery"></div>
+      </div>
+      <div class="form-group"><label>Line Items (one per line: Qty × Description — Price)</label>
+        <textarea id="po-items" placeholder="2 × Lutron GRAFIK-T dimmer — $89.99&#10;1 × Keypad GRAFIK-QS — $245.00" style="min-height:100px"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Shipping Method</label>
+          <select id="po-shipmethod">
+            <option value="">Standard</option>
+            <option value="ground">Ground</option>
+            <option value="2day">2-Day</option>
+            <option value="overnight">Overnight</option>
+            <option value="freight">Freight</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="po-notes" placeholder="Special instructions, shipping address, contact…"></textarea></div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Shipping Modal -->
+
+<div class="modal-overlay" id="modal-shipping" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="ship-modal-title">Track Shipment</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveShipment()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-shipping')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ship-id">
+      <div class="form-group"><label>Tracking Number</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="ship-tracking" placeholder="Pending…" style="flex:1" oninput="autoDetectCarrier(this.value)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="startBarcodeScan()" title="Scan barcode" style="flex-shrink:0;padding:10px 12px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="7" y2="12.01"/><line x1="12" y1="12" x2="12" y2="12.01"/><line x1="17" y1="12" x2="17" y2="12.01"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Carrier</label>
+          <select id="ship-carrier">
+            <option value="">— Unknown —</option>
+            <option value="UPS">UPS</option>
+            <option value="FedEx">FedEx</option>
+            <option value="USPS">USPS</option>
+            <option value="DHL">DHL</option>
+            <option value="OnTrac">OnTrac</option>
+            <option value="XPO">XPO Logistics</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="ship-status">
+            <option value="pending">Pending</option>
+            <option value="transit">In Transit</option>
+            <option value="out">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="exception">Exception</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="ship-desc" placeholder="e.g. Lutron dimmers + keypads for Office HQ"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="ship-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Linked PO</label>
+          <select id="ship-po"><option value="">— None —</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Ship Date</label><input type="date" id="ship-date"></div>
+        <div class="form-group"><label>Est. Delivery</label><input type="date" id="ship-eta"></div>
+      </div>
+      <div class="form-group"><label>Linked Task</label>
+        <select id="ship-task"><option value="">— None —</option></select>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="ship-notes" placeholder="Delivery instructions, contact…"></textarea></div>
+    </div>v>
+    
+  </div>
+</div>
+
+<!-- Issue Modal -->
+
+<div class="modal-overlay" id="modal-issue" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="issue-modal-title">New Troubleshoot Issue</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveIssue()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-issue')">&#x2715;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Issue / Question *</label><input type="text" id="issue-q" placeholder="e.g. Dimmer buzzes after installation"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Category</label>
+          <select id="issue-cat">
+            <option value="electrical">Electrical</option>
+            <option value="dimming">Dimming</option>
+            <option value="commissioning">Commissioning</option>
+            <option value="hardware">Hardware</option>
+            <option value="network">Network / DALI</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Tags (space-separated)</label><input type="text" id="issue-tags" placeholder="buzz hum noise dimmer"></div>
+      </div>
+      <div class="form-group"><label>Summary / Cause</label><textarea id="issue-a" placeholder="Brief description of the cause or context..."></textarea></div>
+      <div class="form-group"><label>Troubleshooting Steps (one per line)</label>
+        <textarea id="issue-steps" style="min-height:150px" placeholder="Check the neutral wire connection.&#10;Verify load wattage is within dimmer rating.&#10;Try a compatible LED driver."></textarea>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Detail Modal -->
+
+<div class="modal-overlay" id="modal-detail" style="display:none">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="detail-title">Details</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div id="detail-footer" style="padding:12px 20px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.07)"></div>
+  </div>
+</div>
+
+<!-- Firebase Compat SDK (no modules, no scope issues) -->
+
+
+
+
+
+
+
+
+
+<div class="modal-overlay" id="modal-templates" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3>Task Templates</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-templates')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#8da0c0;margin-bottom:16px">Apply a template to quickly add standard tasks to a project.</p>
+      <div id="template-list"></div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07)">
+        <div style="font-size:12px;font-weight:700;color:#4a5e7a;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Save Current Tasks as Template</div>
+        <input type="text" id="new-template-name" placeholder="Template name..." style="margin-bottom:10px">
+        <div style="max-height:160px;overflow-y:auto;margin-bottom:10px" id="template-task-pick"></div>
+        <button class="btn btn-ghost btn-sm" onclick="populateTemplatePicker()">Load current tasks</button>
+        <button class="btn btn-primary btn-sm" onclick="saveAsTemplate()" style="margin-left:8px">Save Template</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHORTCUTS MODAL -->
+
+<div class="modal-overlay" id="modal-shortcuts" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3>Keyboard Shortcuts</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-shortcuts')">x</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a">Navigation</div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Dashboard</span><span class="shortcut-key">1</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Projects</span><span class="shortcut-key">2</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Tasks</span><span class="shortcut-key">3</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Purchase Orders</span><span class="shortcut-key">4</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Shipping</span><span class="shortcut-key">5</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Troubleshoot</span><span class="shortcut-key">6</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Settings</span><span class="shortcut-key">7</span></div>
+      <div style="margin:14px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a">Actions</div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Search</span><span style="display:flex;gap:4px;align-items:center"><span class="shortcut-key">/</span><span style="color:#4a5e7a;font-size:11px">or</span><span class="shortcut-key">Ctrl+F</span></span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Add new item</span><span class="shortcut-key">N</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">This help</span><span class="shortcut-key">?</span></div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Close modal</span><span class="shortcut-key">Esc</span></div>
+      <div style="margin:14px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a">Tasks</div>
+      <div class="shortcut-row"><span style="font-size:13px;color:#8da0c0">Toggle list/kanban</span><span class="shortcut-key">K</span></div>
+      <div style="margin-top:16px;padding:12px;background:rgba(79,142,247,0.08);border-radius:10px;font-size:12px;color:#6b7fa8;line-height:1.6">
+        In dropdowns, type to search or add new entries. Press Enter to save a new option for future use.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK ADD FAB -->
+
+<button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"><span style="font-size:30px;font-weight:300;line-height:1;color:#fff;pointer-events:none">+</span></button>
+
+<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:360px;margin:0 auto;box-sizing:border-box">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add Task</span>
+    <button onclick="toggleQuickAdd()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:20px;line-height:1">x</button>
+  </div>
+  <input type="text" id="qa-title" placeholder="Task title..." style="margin-bottom:10px;width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')saveQuickTask()">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <select id="qa-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select>
+    <select id="qa-project"><option value="">No project</option></select>
+  </div>
+  <button class="btn btn-primary" style="width:100%" onclick="saveQuickTask()">Add Task</button>
+</div>
+
+<!-- BARCODE SCANNER OVERLAY -->
+
+<div id="barcode-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9000;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="position:relative;width:min(90vw,360px);border-radius:16px;overflow:hidden;background:#000">
+    <video id="barcode-video" style="width:100%;display:block" playsinline></video>
+    <div style="position:absolute;inset:0;border:2px solid rgba(79,142,247,0.6);border-radius:16px;pointer-events:none"></div>
+  </div>
+  <div id="barcode-manual" style="display:none;width:min(90vw,360px)">
+    <p style="color:#94a3b8;font-size:13px;text-align:center;margin-bottom:10px">Or enter manually:</p>
+    <input type="text" id="barcode-manual-input" placeholder="Tracking number..." style="margin-bottom:10px">
+    <button class="btn btn-primary" style="width:100%" onclick="var v=document.getElementById('barcode-manual-input').value.trim();if(v){document.getElementById('ship-tracking').value=v;closeBarcodeScanner();toast('Entered: '+v)}">Use This Number</button>
+  </div>
+  <p style="color:#64748b;font-size:12px;text-align:center">Point camera at barcode or QR code</p>
+  <button class="btn btn-ghost" onclick="closeBarcodeScanner()">Cancel</button>
+</div>
+
+
+
+
+<!-- ── iOS TAB BAR ── -->
+<div id="mob-tab-bar">
+  <div class="mob-tab-item active" onclick="mobTabSwitch('dashboard')" id="tab-dashboard">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Home</span>
+  </div>
+  <div class="mob-tab-item" onclick="mobTabSwitch('tasks')" id="tab-tasks">
+    <div style="position:relative;display:inline-flex">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="mob-tab-badge" id="tab-badge-tasks"></span>
+    </div>
+    <span>Tasks</span>
+  </div>
+  <div class="mob-tab-item" onclick="mobTabSwitch('pos')" id="tab-pos">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span>POs</span>
+  </div>
+  <div class="mob-tab-item" onclick="mobTabSwitch('shipping')" id="tab-shipping">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+    <span>Ship</span>
+  </div>
+  <div class="mob-tab-item" onclick="mobTabSwitch('more')" id="tab-more">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+    <span>More</span>
+  </div>
+</div>
+
+<!-- ── SMART FAB RADIAL MENU ── -->
+<div id="fab-overlay" onclick="closeFabMenu()"></div>
+<div id="fab-menu">
+  <div class="fab-option" onclick="closeFabMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
+    <span class="fab-option-label">Troubleshoot Issue</span>
+    <div class="fab-option-icon" style="background:rgba(239,68,68,0.2);color:#f87171">⚡</div>
+  </div>
+  <div class="fab-option" onclick="closeFabMenu();switchView('shipping');setTimeout(openAddModal,50)">
+    <span class="fab-option-label">Shipment</span>
+    <div class="fab-option-icon" style="background:rgba(6,182,212,0.2);color:#22d3ee">📦</div>
+  </div>
+  <div class="fab-option" onclick="closeFabMenu();switchView('pos');setTimeout(openAddModal,50)">
+    <span class="fab-option-label">Purchase Order</span>
+    <div class="fab-option-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa">📄</div>
+  </div>
+  <div class="fab-option" onclick="closeFabMenu();switchView('projects');setTimeout(openAddModal,50)">
+    <span class="fab-option-label">Project</span>
+    <div class="fab-option-icon" style="background:rgba(245,158,11,0.2);color:#fbbf24">🏗</div>
+  </div>
+  <div class="fab-option" onclick="closeFabMenu();switchView('tasks');setTimeout(function(){toggleQuickAdd();},50)">
+    <span class="fab-option-label">Task</span>
+    <div class="fab-option-icon" style="background:rgba(16,185,129,0.2);color:#34d399">✓</div>
+  </div>
+</div>
+
+<!-- ── OFFLINE SYNC QUEUE BAR ── -->
+<div id="sync-queue-bar">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" id="sync-spin-icon"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+  <span id="sync-queue-text">Offline — 0 changes pending</span>
+</div>
+
+<!-- ── MORE SHEET (mobile) ── -->
+<div class="modal-overlay" id="mob-more-sheet" style="display:none">
+  <div class="modal" style="max-width:100%">
+    <div class="modal-drag-handle"></div>
+    <div class="modal-header"><h3>More</h3><button class="btn btn-ghost btn-icon" onclick="closeModal('mob-more-sheet')">✕</button></div>
+    <div class="modal-body" style="padding:0 0 20px">
+      <div onclick="closeMobMore('projects')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;font-size:18px">🏗</div>
+        <span style="font-size:15px;font-weight:600;color:#f0f4ff">Projects</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div onclick="closeMobMore('troubleshoot')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;font-size:18px">⚡</div>
+        <span style="font-size:15px;font-weight:600;color:#f0f4ff">Troubleshoot</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div onclick="closeMobMore('settings')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(148,163,184,0.12);display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>
+        <span style="font-size:15px;font-weight:600;color:#f0f4ff">Settings</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Firebase SDK (compat — no modules required) -->
+  <script src="js/config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- App scripts — load order matters -->
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/modals.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/globals.js"></script>
+</body>
+</html>
