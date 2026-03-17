@@ -893,6 +893,29 @@ tr[data-id] { transition: transform 0.25s ease; }
 /* TASK DUE OVERDUE */
 .task-overdue td:first-of-type { border-left: 3px solid #ef4444; }
 .task-due-soon td:first-of-type { border-left: 3px solid #fbbf24; }
+/* DRAG-TO-REORDER */
+.drag-handle { cursor: grab; color: #3a4a6a; font-size: 15px; user-select: none; display: inline-block; padding: 2px 4px; line-height: 1; }
+.drag-handle:hover { color: #6b7fa8; }
+.drag-handle:active { cursor: grabbing; }
+tr.drag-over-row > td { background: rgba(79,142,247,0.06) !important; outline: none; }
+tr.drag-over-row { outline: 2px solid rgba(79,142,247,0.5); outline-offset: -2px; }
+/* COLLAPSIBLE SIDEBAR */
+.nav-label { cursor: pointer; display: flex !important; align-items: center; justify-content: space-between; padding-right: 10px; }
+.nav-label::after { content: '▾'; font-size: 9px; opacity: 0.4; transition: transform 0.2s; flex-shrink: 0; }
+.nav-section.collapsed .nav-label::after { transform: rotate(-90deg); }
+.nav-section.collapsed .nav-item { display: none !important; }
+/* BLOCKED TASK */
+.task-blocked-badge { font-size: 10px; color: #f87171; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 4px; padding: 1px 5px; margin-left: 5px; vertical-align: middle; white-space: nowrap; }
+/* ACTIVITY LOG */
+.activity-log { max-height: 180px; overflow-y: auto; }
+.activity-entry { padding: 7px 10px; border-left: 2px solid rgba(79,142,247,0.35); margin-bottom: 6px; background: rgba(255,255,255,0.02); border-radius: 0 8px 8px 0; }
+.activity-entry-ts { font-size: 10px; color: #4a5e7a; margin-bottom: 2px; }
+.activity-entry-text { font-size: 13px; color: #c8d6f0; word-break: break-word; }
+[data-theme="light"] .activity-entry { background: rgba(0,0,0,0.02); border-left-color: rgba(79,142,247,0.4); }
+[data-theme="light"] .activity-entry-text { color: #334155; }
+/* INLINE EDIT */
+.task-title-inline-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(79,142,247,0.5); border-radius: 6px; color: #f0f4ff; font-size: 14px; font-weight: 600; padding: 2px 7px; width: 100%; outline: none; }
+[data-theme="light"] .task-title-inline-input { background: rgba(0,0,0,0.04); color: #0f172a; }
 /* BULK CHECKBOX */
 .task-bulk-cb { accent-color: #2563ff; }
 /* PROJECT FILTER SELECT */
@@ -1773,6 +1796,11 @@ body.light-mode #mob-tab-bar { background: rgba(248,250,252,0.97); border-top-co
     bottom: calc(72px + env(safe-area-inset-bottom,0px)) !important;
   }
 }
+/* Density: compact mode */
+body.density-compact td, body.density-compact th { padding-top:5px !important; padding-bottom:5px !important; }
+body.density-compact tr { min-height:0 !important; }
+body.density-compact .card { padding:12px 14px !important; }
+body.density-compact .trouble-card { padding:10px 14px !important; }
 /* Desktop smart-add dropdown */
 #desk-add-menu {
   position:absolute;top:calc(100% + 8px);right:0;
@@ -1842,7 +1870,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
     </div>
     <nav>
       <div class="nav-section">
-        <div class="nav-label">Workspace</div>
+        <div class="nav-label" onclick="toggleSidebarSection(this)">Workspace</div>
         <div class="nav-item active" onclick="switchView('dashboard')">
           <span class="icon">🏠</span> Dashboard
         </div>
@@ -1856,7 +1884,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         </div>
       </div>
       <div class="nav-section">
-        <div class="nav-label">Operations</div>
+        <div class="nav-label" onclick="toggleSidebarSection(this)">Operations</div>
         <div class="nav-item" onclick="switchView('pos')">
           <span class="icon">🧾</span> Purchase Orders
           <span class="nav-badge" id="badge-pos">0</span>
@@ -1867,13 +1895,13 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         </div>
       </div>
       <div class="nav-section">
-        <div class="nav-label">Knowledge</div>
+        <div class="nav-label" onclick="toggleSidebarSection(this)">Knowledge</div>
         <div class="nav-item" onclick="switchView('troubleshoot')">
           <span class="icon">🔧</span> Troubleshoot DB
         </div>
       </div>
       <div class="nav-section">
-        <div class="nav-label">Settings</div>
+        <div class="nav-label" onclick="toggleSidebarSection(this)">Settings</div>
         <div class="nav-item" onclick="switchView('settings')">
           <span class="icon">⚙️</span> Sync Setup
         </div>
@@ -2127,6 +2155,10 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
           Templates
         </button>
+        <button class="btn btn-ghost btn-sm" onclick="exportTasksCSV()" title="Export to CSV" style="color:#10b981;border-color:rgba(16,185,129,0.3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
+        </button>
       </div>
     </div>
     <!-- BULK ACTION BAR -->
@@ -2152,6 +2184,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         <table>
           <thead>
             <tr>
+              <th style="width:20px"></th>
               <th style="width:36px"><input type="checkbox" onchange="bulkSelectAll(this.checked)" style="width:16px;height:16px;cursor:pointer"></th>
               <th>Task</th>
               <th>Project</th>
@@ -2180,6 +2213,10 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       <div class="tab" onclick="filterPOs('received',this)">Received</div>
     </div>
       <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add PO</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportPOsCSV()" title="Export to CSV" style="color:#10b981;border-color:rgba(16,185,129,0.3);flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        CSV
+      </button>
     </div>
     <div class="table-wrap">
       <table>
@@ -2261,6 +2298,14 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <span id="theme-sub">Currently using dark theme</span>
         </div>
         <div class="toggle-pill on" id="toggle-pill" onclick="toggleTheme()" style="cursor:pointer"></div>
+      </div>
+      <div class="theme-toggle" onclick="toggleDensity()" id="density-toggle-row" style="margin-top:12px">
+        <span class="theme-icons">⬛</span>
+        <div class="theme-toggle-label">
+          <strong id="density-label">Comfortable</strong>
+          <span id="density-sub">Standard row spacing</span>
+        </div>
+        <div class="toggle-pill" id="density-pill" style="cursor:pointer"></div>
       </div>
     </div>
 
@@ -2389,6 +2434,17 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
     </div>
 
+    <!-- Issue Categories Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">⚡ Troubleshoot Categories</div>
+      <div style="font-size:13px;color:#4a5e7a;margin-bottom:14px">Customize the category list used in troubleshooting entries.</div>
+      <div id="issue-cats-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-issue-cat-input" placeholder="New category name…" style="flex:1" onkeydown="if(event.key==='Enter')addIssueCategory()">
+        <button class="btn btn-primary btn-sm" onclick="addIssueCategory()">Add</button>
+      </div>
+    </div>
+
     </div><!-- /settings max-width -->
   </div>
 
@@ -2499,9 +2555,14 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <option value="Other">Other</option>
         </select>
       </div>
-      <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
+        <div class="form-group" style="max-width:80px"><label>Label Color</label>
+          <input type="color" id="project-color" value="#3b82f6" style="width:100%;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;padding:2px">
+        </div>
+      </div>
     </div>
-    
+
   </div>
 </div>
 
@@ -2545,23 +2606,38 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Due Date</label><input type="date" id="task-due"></div>
+        <div class="form-group"><label>Due Date</label><input type="date" id="task-due" onchange="updateRecurPreview()"></div>
         <div class="form-group"><label>Repeat</label>
-          <select id="task-recur">
+          <select id="task-recur" onchange="updateRecurPreview()">
             <option value="">None</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="biweekly">Every 2 Weeks</option>
             <option value="monthly">Monthly</option>
           </select>
+          <div id="recur-preview" style="font-size:11px;color:#4f8ef7;margin-top:4px;min-height:16px"></div>
         </div>
       </div>
-      <div class="form-group"><label>Linked Shipment</label>
-        <select id="task-shipment"><option value="">— None —</option></select>
+      <div class="form-row">
+        <div class="form-group"><label>Linked Shipment</label>
+          <select id="task-shipment"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Blocked By</label>
+          <select id="task-blocked-by"><option value="">— None —</option></select>
+        </div>
       </div>
       <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
+      <!-- Activity log — shown only when editing -->
+      <div id="task-notes-section" style="display:none">
+        <div style="font-size:12px;font-weight:700;color:#6b7fa8;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Activity Log</div>
+        <div class="activity-log" id="task-notes-log"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="task-note-input" placeholder="Add a note…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addTaskNote();}">
+          <button class="btn btn-ghost btn-sm" onclick="addTaskNote()">Add</button>
+        </div>
+      </div>
     </div>
-    
+
   </div>
 </div>
 
@@ -3458,6 +3534,9 @@ function initFirebase(config) {
 
     var app = firebase.initializeApp(config, 'fieldops');
     db = firebase.firestore(app);
+    db.enablePersistence({synchronizeTabs: true}).catch(function(err) {
+      console.warn('Firestore offline persistence unavailable:', err.code);
+    });
 
     COLLECTIONS.forEach(function(col) {
       var unsub = db.collection(col)
@@ -3465,7 +3544,7 @@ function initFirebase(config) {
         .onSnapshot(function(snap) {
           try {
             state[col] = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
-            renderAll();
+            renderAllDebounced();
           } catch(renderErr) {
             console.error('renderAll error in onSnapshot:', renderErr);
             if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
@@ -3685,6 +3764,10 @@ function openAddModal() {
   var m = modals[currentView] || 'modal-task';
   clearForm(m);
   if(m !== 'modal-issue') populateProjectSelects();
+  // Hide notes section for new tasks
+  var ns = document.getElementById('task-notes-section');
+  if (ns) ns.style.display = 'none';
+  document.getElementById('task-modal-title').textContent = 'New Task';
   openModal(m);
 }
 // openModal defined below with combo init
@@ -3760,6 +3843,10 @@ function poName(id) {
 function projectName(id) {
   var p = state.projects.find(function(x){return x.id===id;});
   return p ? p.name : '—';
+}
+function projectColor(id) {
+  var p = state.projects.find(function(x){return x.id===id;});
+  return (p && p.color) ? p.color : null;
 }
 function fmtDate(d) {
   if(!d) return '—';
@@ -3879,7 +3966,7 @@ function renderProjects() {
     data=data.filter(function(p){return p.status===projectFilter && !p.archived;});
   }
   var el=document.getElementById('projects-list');
-  if(!data.length){el.innerHTML=buildEmptyState('X','rgba(79,142,247,0.12)','No projects yet','Tap + Add to create your first project.');return;}
+  if(!data.length){el.innerHTML=buildEmptyState('X','rgba(79,142,247,0.12)','No projects yet','Create your first project to get started.','+ New Project','openAddModal()');return;}
   var sC={active:'#10b981',planning:'#3b82f6','on-hold':'#fbbf24',completed:'#64748b'};
   el.innerHTML='';var wrap=document.createElement('div');wrap.className='grid-2';
   data.forEach(function(p){
@@ -3934,6 +4021,7 @@ function saveProject() {
     location: document.getElementById('project-location').value.trim(),
     system: document.getElementById('project-system').value,
     notes: document.getElementById('project-notes').value.trim(),
+    color: document.getElementById('project-color').value || '#3b82f6',
   };
   if(editingId) { updateItem('projects', editingId, item); toast('Project updated'); }
   else { addItem('projects', item); toast('Project created'); }
@@ -3953,6 +4041,7 @@ function editProject(id) {
   document.getElementById('project-location').value = p.location||'';
   document.getElementById('project-system').value = p.system||'';
   document.getElementById('project-notes').value = p.notes||'';
+  document.getElementById('project-color').value = p.color||'#3b82f6';
   openModal('modal-project');
 }
 
@@ -4159,7 +4248,7 @@ data.reverse();
 
   var tb = document.getElementById('tasks-tbody');
   if(!data.length) {
-    tb.innerHTML = '<tr><td colspan="6">'+buildEmptyState(taskFilter==='archived'?'📦':'✓',taskFilter==='archived'?'rgba(245,158,11,0.12)':'rgba(16,185,129,0.12)',taskFilter==='archived'?'No archived tasks':'No tasks here',taskFilter==='archived'?'Archived tasks will appear here.':'Add a task using + Add or quick-add FAB.')+'</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6">'+buildEmptyState(taskFilter==='archived'?'📦':'✓',taskFilter==='archived'?'rgba(245,158,11,0.12)':'rgba(16,185,129,0.12)',taskFilter==='archived'?'No archived tasks':'No tasks here',taskFilter==='archived'?'Archived tasks will appear here.':'Nothing here yet.',taskFilter==='archived'?'':'+ New Task','openAddModal()')+'</td></tr>';
     return;
   }
 
@@ -4171,13 +4260,23 @@ data.reverse();
     var d2 = t.due ? new Date(t.due) : null;
     var isDueSoon = !!(d2 && !t.archived && !isOverdue && d2 >= today2 && d2 <= new Date(today2.getTime()+3*86400000));
     var rowAttrs = ' data-taskid="'+t.id+'" data-archived="'+(t.archived?1:0)+'"';
-    if(t.archived) rowAttrs += ' style="opacity:0.55"';
-    if(isOverdue) rowAttrs += ' class="task-overdue"';
-    else if(isDueSoon) rowAttrs += ' class="task-due-soon"';
+    var _pc = projectColor(t.project);
+    var _pcStyle = _pc ? 'border-left:3px solid '+_pc+';' : '';
+    if(t.archived) rowAttrs += ' style="opacity:0.55;'+_pcStyle+'"';
+    else if(_pcStyle) rowAttrs += ' style="'+_pcStyle+'"';
+    if(isOverdue) rowAttrs += (rowAttrs.indexOf('class=')>=0?'':' ')+'class="task-overdue"';
+    else if(isDueSoon) rowAttrs += (rowAttrs.indexOf('class=')>=0?'':' ')+'class="task-due-soon"';
     html += '<tr'+rowAttrs+'>';
+    html += '<td style="width:20px;text-align:center;padding:0 2px" onclick="event.stopPropagation()"><span class="drag-handle" title="Drag to reorder" data-dragid="'+t.id+'">⠿</span></td>';
     html += '<td style="width:36px" onclick="event.stopPropagation()"><input type="checkbox" class="task-bulk-cb" data-id="'+t.id+'" style="width:16px;height:16px;cursor:pointer" onchange="toggleBulkSelect(this.dataset.id,this.checked)"></td>';
-    html += '<td><div style="font-weight:600;color:#f0f4ff">'+escH(t.title)+'</div>'+(t.category?'<div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+escH(t.category)+'</div>':'')+'</td>';
-    html += '<td>'+(t.project?'<span style="font-size:12px;color:#8da0c0">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
+    var _blockedHtml = '';
+    if (t.blockedBy) {
+      var _blocker = state.tasks.find(function(x){ return x.id === t.blockedBy; });
+      if (_blocker && _blocker.status !== 'done') _blockedHtml = '<span class="task-blocked-badge">🚫 blocked</span>';
+    }
+    html += '<td><div style="font-weight:600;color:#f0f4ff">'+escH(t.title)+_blockedHtml+'</div>'+(t.category?'<div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+escH(t.category)+'</div>':'')+'</td>';
+    var _pColor = _pc ? 'color:'+_pc : 'color:#8da0c0';
+    html += '<td>'+(t.project?'<span style="font-size:12px;'+_pColor+'">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
     html += '<td>'+priorityBadge(t.priority)+'</td>';
     html += '<td onclick="event.stopPropagation()">';
     if(t.archived) html += '<span class="badge badge-gray" style="opacity:0.7">archived</span>';
@@ -4212,6 +4311,22 @@ data.reverse();
     }
     editTask(row.dataset.taskid);
   });
+  // Double-click title cell for inline editing
+  tb.addEventListener('dblclick', function(e) {
+    var el = e.target, row = null, titleTd = null;
+    while(el && el !== tb) {
+      if(el.tagName === 'TD' && el.querySelector && el.querySelector('.task-title-inline-input') === null) {
+        var d = el.querySelector('div[style*="font-weight:600"]');
+        if (d) titleTd = el;
+      }
+      if(el.tagName === 'TR' && el.dataset && el.dataset.taskid) { row = el; break; }
+      el = el.parentNode;
+    }
+    if (row && titleTd) {
+      e.stopPropagation();
+      startInlineTitleEdit(titleTd, row.dataset.taskid);
+    }
+  });
 
   var trows = tb.querySelectorAll('tr[data-taskid]');
   trows.forEach(function(row) {
@@ -4219,20 +4334,80 @@ data.reverse();
     row.addEventListener('touchmove', function(e){ swipeMove(e, row); }, {passive:false});
     row.addEventListener('touchend', function(e){ swipeEnd(e, row, row.dataset.taskid, row.dataset.archived==='1'?'archived':'active'); });
   });
+
+  // Drag-to-reorder (desktop list view)
+  var _dragId = null;
+  tb.querySelectorAll('.drag-handle').forEach(function(handle) {
+    handle.addEventListener('mousedown', function() {
+      var row = handle.closest('tr');
+      if (row) row.draggable = true;
+    });
+    handle.addEventListener('dragstart', function(e) {
+      _dragId = handle.dataset.dragid;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', _dragId);
+      var row = handle.closest('tr');
+      if (row) setTimeout(function(){ row.style.opacity = '0.4'; }, 0);
+    });
+    handle.addEventListener('dragend', function() {
+      _dragId = null;
+      tb.querySelectorAll('tr.drag-over-row').forEach(function(r){ r.classList.remove('drag-over-row'); });
+      tb.querySelectorAll('tr').forEach(function(r){ r.draggable = false; r.style.opacity = ''; });
+    });
+  });
+  tb.addEventListener('dragover', function(e) {
+    if (!_dragId) return;
+    e.preventDefault();
+    var target = e.target;
+    while (target && target !== tb) {
+      if (target.tagName === 'TR' && target.dataset && target.dataset.taskid) break;
+      target = target.parentNode;
+    }
+    if (!target || !target.dataset || !target.dataset.taskid) return;
+    tb.querySelectorAll('tr.drag-over-row').forEach(function(r){ r.classList.remove('drag-over-row'); });
+    if (target.dataset.taskid !== _dragId) target.classList.add('drag-over-row');
+  });
+  tb.addEventListener('drop', function(e) {
+    e.preventDefault();
+    var targetEl = e.target;
+    while (targetEl && targetEl !== tb) {
+      if (targetEl.tagName === 'TR' && targetEl.dataset && targetEl.dataset.taskid) break;
+      targetEl = targetEl.parentNode;
+    }
+    if (!targetEl || !targetEl.dataset || !targetEl.dataset.taskid) return;
+    var toId = targetEl.dataset.taskid;
+    if (!_dragId || _dragId === toId) return;
+    var fromIdx = -1, toIdx = -1;
+    for (var di = 0; di < state.tasks.length; di++) {
+      if (state.tasks[di].id === _dragId) fromIdx = di;
+      if (state.tasks[di].id === toId) toIdx = di;
+    }
+    if (fromIdx < 0 || toIdx < 0) return;
+    var moved = state.tasks.splice(fromIdx, 1)[0];
+    state.tasks.splice(toIdx, 0, moved);
+    _dragId = null;
+    renderTasks();
+  });
+  tb.addEventListener('dragleave', function(e) {
+    if (!e.relatedTarget || !tb.contains(e.relatedTarget)) {
+      tb.querySelectorAll('tr.drag-over-row').forEach(function(r){ r.classList.remove('drag-over-row'); });
+    }
+  });
 }
 
 function escH(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
-function buildEmptyState(icon, bgColor, title, sub) {
+function buildEmptyState(icon, bgColor, title, sub, btnLabel, btnAction) {
   return '<div class="empty-state-fancy">'
     + '<div class="es-icon" style="background:'+bgColor+'">'+icon+'</div>'
     + '<div class="es-title">'+escH(title)+'</div>'
     + '<div class="es-sub">'+escH(sub)+'</div>'
+    + (btnLabel && btnAction ? '<button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="'+btnAction+'">'+escH(btnLabel)+'</button>' : '')
     + '</div>';
 }
 
 function confirmDeleteTask(id) {
-  if(confirm('Delete permanently?')) { deleteItem('tasks',id); renderTasks(); toast('Deleted'); }
+  undoDelete('tasks', id, function(){ renderTasks(); });
 }
 
 function bulkDeleteAllArchived() {
@@ -4355,6 +4530,7 @@ function saveTask() {
     desc:document.getElementById('task-desc').value.trim(),
     recur: recur || null,
     shipment: document.getElementById('task-shipment').value || null,
+    blockedBy: document.getElementById('task-blocked-by').value || null,
   };
   if(editingId){
     updateItem('tasks',editingId,item);
@@ -4382,6 +4558,25 @@ function editTask(id) {
   document.getElementById('task-recur').value=t.recur||'';
   document.getElementById('task-shipment').value=t.shipment||'';
   document.getElementById('task-desc').value=t.desc||'';
+  // Populate blocked-by select
+  var bbSel = document.getElementById('task-blocked-by');
+  if (bbSel) {
+    bbSel.innerHTML = '<option value="">— None —</option>' +
+      state.tasks.filter(function(x){ return x.id !== id && !x.archived; })
+        .map(function(x){ return '<option value="'+x.id+'"'+(x.id===t.blockedBy?' selected':'')+'>'+escH(x.title)+'</option>'; }).join('');
+  }
+  // Show activity log
+  var noteSec = document.getElementById('task-notes-section');
+  var noteLog = document.getElementById('task-notes-log');
+  if (noteSec) noteSec.style.display = '';
+  if (noteLog) {
+    var notes = t.notes || [];
+    noteLog.innerHTML = notes.length ? notes.map(function(n){
+      return '<div class="activity-entry"><div class="activity-entry-ts">'+escH(new Date(n.ts).toLocaleString())+'</div><div class="activity-entry-text">'+escH(n.text)+'</div></div>';
+    }).join('') : '<div style="font-size:12px;color:#4a5e7a;padding:6px 0">No notes yet.</div>';
+    setTimeout(function(){ noteLog.scrollTop = noteLog.scrollHeight; }, 50);
+  }
+  setTimeout(updateRecurPreview, 50);
   openModal('modal-task');
 }
 
@@ -4396,10 +4591,10 @@ function filterPOs(f,el){
 }
 
 function confirmDeletePO(id) {
-  if(confirm('Delete this PO?')) { deleteItem('pos',id); renderPOs(); toast('PO deleted'); }
+  undoDelete('pos', id, function(){ renderPOs(); });
 }
 function confirmDeleteShipment(id) {
-  if(confirm('Delete this shipment?')) { deleteItem('shipping',id); renderShipping(); toast('Deleted'); }
+  undoDelete('shipping', id, function(){ renderShipping(); });
 }
 
 function renderPOs() {
@@ -4419,7 +4614,7 @@ function renderPOs() {
       if(mOldE) mOldE.remove();
       var mEmptyDiv=document.createElement('div');
       mEmptyDiv.id='mob-pos-cards';
-      mEmptyDiv.innerHTML=buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Tap + to create your first PO.');
+      mEmptyDiv.innerHTML=buildEmptyState('📄','rgba(245,158,11,0.12)','No purchase orders','Create your first purchase order.','+ New PO','openAddModal()');
       var tWrapE=document.querySelector('#view-pos .table-wrap');
       if(tWrapE) tWrapE.style.display='none';
       if(mWrapE) mWrapE.appendChild(mEmptyDiv);
@@ -4568,7 +4763,7 @@ function renderShipping() {
       if(mOldE) mOldE.remove();
       var mEmptyDiv=document.createElement('div');
       mEmptyDiv.id='mob-shipping-cards';
-      mEmptyDiv.innerHTML=buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Tap + to add a shipment.');
+      mEmptyDiv.innerHTML=buildEmptyState('📦','rgba(16,185,129,0.12)','No shipments','Track your first shipment.','+ New Shipment','openAddModal()');
       var tWrapE=document.querySelector('#view-shipping .table-wrap');
       if(tWrapE) tWrapE.style.display='none';
       if(mWrapE) mWrapE.appendChild(mEmptyDiv);
@@ -4882,10 +5077,7 @@ function saveIssue() {
 }
 
 function deleteIssue(id) {
-  if (!confirm('Delete this issue?')) return;
-  deleteItem('issues', id);
-  renderTroubleshoot();
-  toast('Issue deleted');
+  undoDelete('issues', id, function(){ renderTroubleshoot(); });
 }
 
 
@@ -4959,9 +5151,10 @@ function smartSearch(raw) {
     if (s > 0) results.push({
       type: 'task', icon: '✓', score: s, id: t.id,
       title: t.title,
-      sub: [t.status, t.priority, projectName(t.project)].filter(Boolean).join(' · '),
+      sub: [t.category, projectName(t.project), t.due ? 'Due '+fmtDate(t.due) : ''].filter(Boolean).join(' · '),
       view: 'tasks',
-      badge: t.status, badgeType: {todo:'badge-gray',inprogress:'badge-yellow',done:'badge-green'}[t.status]||'badge-gray'
+      badge: t.status, badgeType: {todo:'badge-gray',inprogress:'badge-yellow',done:'badge-green'}[t.status]||'badge-gray',
+      projectColor: projectColor(t.project)
     });
   });
 
@@ -5056,7 +5249,7 @@ function renderSearchDropdown(results, q) {
         + ' onclick="selectSearchResult(this.dataset.view,this.dataset.id,this.dataset.type)"'
         + ' onmouseenter="setSearchIdx('+ridx+')"'
         + ' style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s">'
-        + '<div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(255,255,255,0.05)">'+r.icon+'</div>'
+        + '<div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:'+(r.projectColor||'rgba(255,255,255,0.05)')+(r.projectColor?'22':'')+';'+(r.projectColor?'border-left:3px solid '+r.projectColor:'')+'">'+r.icon+'</div>'
         + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+highlightMatch(r.title, q)+'</div>'
         + '<div style="font-size:11px;color:#4a5e7a;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+highlightMatch(r.sub||'', q)+'</div>'
@@ -5136,11 +5329,49 @@ function closeSearchDropdown() {
 // ═══════════════════════════════════════════════
 function renderAll() {
   renderDashboard();
-  renderProjects();
-  renderTasks();
-  renderPOs();
-  renderShipping();
-  window._dirtyViews = {projects:false, tasks:false, pos:false, shipping:false, troubleshoot:false};
+  // Lazy-render: only repaint the currently visible section; mark others dirty
+  var cv = typeof currentView !== 'undefined' ? currentView : 'dashboard';
+  if (cv === 'projects') renderProjects(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.projects = true; }
+  if (cv === 'tasks')    renderTasks();    else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.tasks    = true; }
+  if (cv === 'pos')      renderPOs();      else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.pos      = true; }
+  if (cv === 'shipping') renderShipping(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.shipping = true; }
+  if (cv === 'troubleshoot') renderTroubleshoot(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.troubleshoot = true; }
+}
+
+// Undo-delete: removes item then offers 5-second undo via toast
+var _undoStack = null;
+function undoDelete(col, id, onRender) {
+  var item = state[col] ? state[col].find(function(x){ return x.id===id; }) : null;
+  if (!item) return;
+  var snapshot = _merge({}, item);
+  deleteItem(col, id);
+  if (onRender) onRender();
+  if (_undoStack && _undoStack.timer) clearTimeout(_undoStack.timer);
+  _undoStack = { col: col, item: snapshot, onRender: onRender };
+  var el = document.getElementById('toast');
+  if (!el) { _undoStack = null; return; }
+  el.innerHTML = 'Deleted &nbsp;<button onclick="undoLastDelete()" style="background:rgba(79,142,247,0.3);border:1px solid rgba(79,142,247,0.5);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;font-weight:700;margin-left:4px">Undo</button>';
+  el.classList.add('show');
+  _undoStack.timer = setTimeout(function(){
+    el.classList.remove('show');
+    setTimeout(function(){ if(el.innerHTML.indexOf('Undo')>=0) el.innerHTML=''; }, 400);
+    _undoStack = null;
+  }, 5000);
+}
+function undoLastDelete() {
+  if (!_undoStack) return;
+  clearTimeout(_undoStack.timer);
+  var s = _undoStack; _undoStack = null;
+  addItem(s.col, s.item);
+  if (s.onRender) s.onRender();
+  toast('Restored');
+}
+
+// Debounced renderAll: batches rapid Firestore snapshot events into one repaint
+var _renderAllTimer = null;
+function renderAllDebounced() {
+  if (_renderAllTimer) clearTimeout(_renderAllTimer);
+  _renderAllTimer = setTimeout(function() { _renderAllTimer = null; renderAll(); }, 40);
 }
 
 
@@ -5197,6 +5428,7 @@ function swipeEnd(e, el, taskId, taskState) {
 // ═══════════════════════════════════════════════
 window.addEventListener('load', function(){
   loadTheme();
+  applyDensity(localStorage.getItem('fop_density') === '1');
   loadSavedConfig();
 
   // Close modals on overlay click
@@ -5267,8 +5499,18 @@ window.addEventListener('load', function(){
     // Escape: close smart-add menu or any open modal
     if (e.key === 'Escape') {
       if (_addMenuOpen) { closeAddMenu(); return; }
-      document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); });
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); m.style.display='none'; });
       return;
+    }
+
+    // Enter in a modal (not textarea): submit the form
+    if (e.key === 'Enter' && modalOpen && tag !== 'textarea') {
+      var mid = modalOpen.id;
+      if (mid === 'modal-task')     { e.preventDefault(); saveTask();     return; }
+      if (mid === 'modal-project')  { e.preventDefault(); saveProject();  return; }
+      if (mid === 'modal-po')       { e.preventDefault(); savePO();       return; }
+      if (mid === 'modal-shipping') { e.preventDefault(); saveShipment(); return; }
+      if (mid === 'modal-issue')    { e.preventDefault(); saveIssue();    return; }
     }
 
     // When smart-add menu is open: 1-5 pick an option, any other key closes it
@@ -5390,10 +5632,33 @@ function toggleTheme() {
   localStorage.setItem('fop_theme', next);
   applyTheme(next);
 }
+function applyDensity(compact) {
+  document.body.classList.toggle('density-compact', !!compact);
+  var pill = document.getElementById('density-pill');
+  var lbl  = document.getElementById('density-label');
+  var sub  = document.getElementById('density-sub');
+  if (pill) pill.classList.toggle('on', !!compact);
+  if (lbl)  lbl.textContent  = compact ? 'Compact' : 'Comfortable';
+  if (sub)  sub.textContent  = compact ? 'Reduced row spacing' : 'Standard row spacing';
+}
+function toggleDensity() {
+  var next = !document.body.classList.contains('density-compact');
+  localStorage.setItem('fop_density', next ? '1' : '0');
+  applyDensity(next);
+}
 
 function loadTheme() {
-  var saved = localStorage.getItem('fop_theme') || 'dark';
-  applyTheme(saved);
+  var saved = localStorage.getItem('fop_theme');
+  if (!saved && window.matchMedia) {
+    saved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  applyTheme(saved || 'dark');
+  // Follow system changes unless user has manually chosen
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function(e) {
+      if (!localStorage.getItem('fop_theme')) applyTheme(e.matches ? 'light' : 'dark');
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -5940,10 +6205,190 @@ function scheduleNextRecur(task) {
   addNotif('Recurring task created: ' + task.title, 'info', 'tasks', next.id);
 }
 
+// ─── ISSUE CATEGORIES ────────────────────────────────────────────────────────
+var _defaultIssueCats = ['electrical','dimming','commissioning','hardware','network'];
+function getIssueCats() {
+  try { var s = localStorage.getItem('fop_issue_cats'); if(s) return JSON.parse(s); } catch(e){}
+  return _defaultIssueCats.slice();
+}
+function saveIssueCats(cats) { localStorage.setItem('fop_issue_cats', JSON.stringify(cats)); }
+function refreshIssueCatSelects() {
+  var cats = getIssueCats();
+  ['troubleCategory','issue-cat'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var cur = el.value;
+    if (id === 'troubleCategory') {
+      el.innerHTML = '<option value="all">All Categories</option>' + cats.map(function(c){ return '<option value="'+escH(c)+'"'+(c===cur?' selected':'')+'>'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</option>'; }).join('');
+    } else {
+      el.innerHTML = cats.map(function(c){ return '<option value="'+escH(c)+'"'+(c===cur?' selected':'')+'>'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</option>'; }).join('');
+    }
+  });
+  renderIssueCatSettings();
+}
+function renderIssueCatSettings() {
+  var el = document.getElementById('issue-cats-list');
+  if (!el) return;
+  var cats = getIssueCats();
+  el.innerHTML = cats.map(function(c) {
+    return '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:99px;padding:4px 12px;font-size:12px;color:#c8d6f0">'
+      + escH(c) + '<button onclick="removeIssueCategory(\''+escH(c)+'\')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;line-height:1;padding:0 2px">&times;</button></span>';
+  }).join('');
+}
+function addIssueCategory() {
+  var inp = document.getElementById('new-issue-cat-input');
+  if (!inp) return;
+  var val = inp.value.trim().toLowerCase();
+  if (!val) return;
+  var cats = getIssueCats();
+  if (cats.indexOf(val) >= 0) { toast('Category already exists'); return; }
+  cats.push(val);
+  saveIssueCats(cats);
+  inp.value = '';
+  refreshIssueCatSelects();
+  toast('Category added');
+}
+function removeIssueCategory(cat) {
+  var cats = getIssueCats().filter(function(c){ return c !== cat; });
+  saveIssueCats(cats);
+  refreshIssueCatSelects();
+}
+
+function updateRecurPreview() {
+  var recur = document.getElementById('task-recur');
+  var due   = document.getElementById('task-due');
+  var prev  = document.getElementById('recur-preview');
+  if (!prev) return;
+  if (!recur || !recur.value) { prev.textContent = ''; return; }
+  if (!due || !due.value) { prev.textContent = 'Set a due date to preview next date'; return; }
+  var offsets = { daily:1, weekly:7, biweekly:14, monthly:30 };
+  var d = new Date(due.value + 'T00:00:00');
+  d.setDate(d.getDate() + (offsets[recur.value] || 7));
+  prev.textContent = '↻ Next: ' + d.toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'});
+}
+
 // Patch updateItem to spawn next recurrence when task is marked done
 
 
 
+
+// ═══════════════════════════════════════════════
+//  COLLAPSIBLE SIDEBAR SECTIONS
+// ═══════════════════════════════════════════════
+function toggleSidebarSection(labelEl) {
+  var section = labelEl.parentNode;
+  var key = 'fop_sidebar_' + (labelEl.textContent||'').trim().toLowerCase().replace(/\s+/g,'_');
+  var collapsed = section.classList.toggle('collapsed');
+  try { localStorage.setItem(key, collapsed ? '1' : '0'); } catch(e){}
+}
+(function initSidebarCollapse() {
+  document.querySelectorAll('.nav-label').forEach(function(label) {
+    var section = label.parentNode;
+    var key = 'fop_sidebar_' + (label.textContent||'').trim().toLowerCase().replace(/\s+/g,'_');
+    try { if (localStorage.getItem(key) === '1') section.classList.add('collapsed'); } catch(e){}
+  });
+})();
+
+// ═══════════════════════════════════════════════
+//  CSV EXPORT
+// ═══════════════════════════════════════════════
+function _downloadCSV(filename, rows) {
+  var csv = rows.map(function(row) {
+    return row.map(function(cell) {
+      var s = String(cell == null ? '' : cell).replace(/"/g, '""');
+      return (s.search(/("|,|\n)/) >= 0) ? '"' + s + '"' : s;
+    }).join(',');
+  }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+}
+function exportTasksCSV() {
+  var rows = [['Title','Project','Priority','Status','Due','Category','Description','Recurring','Blocked By']];
+  var today = new Date(); today.setHours(0,0,0,0);
+  state.tasks.filter(function(t){ return !t.archived; }).forEach(function(t) {
+    var blocker = t.blockedBy ? state.tasks.find(function(x){ return x.id===t.blockedBy; }) : null;
+    rows.push([
+      t.title, projectName(t.project), t.priority, t.status, t.due||'',
+      t.category||'', t.desc||'', t.recur||'',
+      blocker ? blocker.title : ''
+    ]);
+  });
+  _downloadCSV('tasks-' + new Date().toISOString().slice(0,10) + '.csv', rows);
+  toast('Tasks exported');
+}
+function exportPOsCSV() {
+  var rows = [['PO #','Vendor','Project','Status','Order Date','Expected Delivery','Amount','Notes']];
+  state.pos.filter(function(p){ return !p.archived; }).forEach(function(p) {
+    rows.push([
+      p.number||'', p.vendor||'', projectName(p.project), p.status||'',
+      p.date||'', p.delivery||'', p.amount||'', p.notes||''
+    ]);
+  });
+  _downloadCSV('purchase-orders-' + new Date().toISOString().slice(0,10) + '.csv', rows);
+  toast('Purchase orders exported');
+}
+
+// ═══════════════════════════════════════════════
+//  ACTIVITY LOG / TASK NOTES
+// ═══════════════════════════════════════════════
+function addTaskNote() {
+  if (!editingId) return;
+  var inp = document.getElementById('task-note-input');
+  if (!inp) return;
+  var text = inp.value.trim();
+  if (!text) return;
+  var t = state.tasks.find(function(x){ return x.id === editingId; });
+  if (!t) return;
+  var notes = (t.notes || []).slice();
+  notes.push({ ts: Date.now(), text: text });
+  t.notes = notes;
+  updateItem('tasks', editingId, { notes: notes });
+  inp.value = '';
+  var noteLog = document.getElementById('task-notes-log');
+  if (noteLog) {
+    noteLog.innerHTML = notes.map(function(n){
+      return '<div class="activity-entry"><div class="activity-entry-ts">'+escH(new Date(n.ts).toLocaleString())+'</div><div class="activity-entry-text">'+escH(n.text)+'</div></div>';
+    }).join('');
+    noteLog.scrollTop = noteLog.scrollHeight;
+  }
+  haptic('light');
+}
+
+// ═══════════════════════════════════════════════
+//  INLINE TASK TITLE EDITING
+// ═══════════════════════════════════════════════
+function startInlineTitleEdit(td, taskId) {
+  var t = state.tasks.find(function(x){ return x.id === taskId; });
+  if (!t || t.archived) return;
+  var origTitle = t.title;
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = origTitle;
+  inp.className = 'task-title-inline-input';
+  var titleDiv = td.querySelector('div');
+  if (titleDiv) titleDiv.style.display = 'none';
+  td.insertBefore(inp, td.firstChild);
+  inp.focus(); inp.select();
+  function commit() {
+    var val = inp.value.trim();
+    inp.remove();
+    if (titleDiv) titleDiv.style.display = '';
+    if (!val || val === origTitle) return;
+    t.title = val;
+    updateItem('tasks', taskId, { title: val });
+    if (titleDiv) titleDiv.childNodes[0].textContent = val;
+    haptic('light');
+  }
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { inp.value = origTitle; inp.blur(); }
+  });
+}
 
 // ─── AUTO-DETECT SHIPPING CARRIER ────────────────────────────────────────────
 
@@ -6726,7 +7171,12 @@ _merge(window, {
   renderKanban: renderKanban,
   openTemplateModal: openTemplateModal,
   applyTemplateFromBtn: applyTemplateFromBtn,
-  populateTemplatePicker: populateTemplatePicker
+  populateTemplatePicker: populateTemplatePicker,
+  toggleSidebarSection: toggleSidebarSection,
+  exportTasksCSV: exportTasksCSV,
+  exportPOsCSV: exportPOsCSV,
+  addTaskNote: addTaskNote,
+  startInlineTitleEdit: startInlineTitleEdit
 });
 
 // ═══════════════════════════════════════════════
