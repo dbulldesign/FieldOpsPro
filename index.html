@@ -4597,9 +4597,17 @@ function toggleTrouble(i) {
 function renderAll() {
   renderDashboard();
   renderProjects();
-  renderTasks();
-  renderPOs();
-  renderShipping();
+  var _fns = [['renderTasks',renderTasks],['renderPOs',renderPOs],['renderShipping',renderShipping]];
+  for(var _fi=0;_fi<_fns.length;_fi++){
+    try{ _fns[_fi][1](); }
+    catch(e){
+      var _de=document.createElement('div');
+      _de.style.cssText='position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all';
+      _de.textContent='ERR in '+_fns[_fi][0]+': '+(e.message||e)+' @ '+(e.stack?e.stack.split('\n')[1]:'?');
+      document.body&&document.body.appendChild(_de);
+      setTimeout(function(_d){return function(){_d.parentNode&&_d.parentNode.removeChild(_d);};}(_de),20000);
+    }
+  }
   window._dirtyViews = {projects:false, tasks:false, pos:false, shipping:false, troubleshoot:false};
 }
 
