@@ -3406,6 +3406,7 @@ function switchView(v) {
     else if (v==='tasks') renderTasks();
     else if (v==='pos') renderPOs();
     else if (v==='shipping') renderShipping();
+    else if (v==='troubleshoot') renderTroubleshoot();
   }
   haptic('light');
   document.title = (viewTitles[v]||'FieldOps Pro') + ' · FieldOps Pro';
@@ -3620,6 +3621,7 @@ function filterProjects(f, el) {
 }
 
 function renderProjects() {
+  var _dprel=document.getElementById('iosdebug'); if(_dprel) _dprel.textContent='renderProjects: '+state.projects.length+' items, el='+!!document.getElementById('projects-list');
   var data=state.projects.slice();
   if(projectFilter==='archived') {
     data=data.filter(function(p){return p.archived;});
@@ -3774,7 +3776,6 @@ function renderTasks() {
     var mWrap=document.getElementById('tasks-list-view');
     var mOld=document.getElementById('mob-tasks-cards');
     if(mOld) mOld.remove();
-    else showSkeleton('tasks-list-view', 4);
     var mList=document.createElement('div');
     mList.id='mob-tasks-cards';
     mList.style.cssText='padding:0 0 80px 0';
@@ -4790,17 +4791,14 @@ function closeSearchDropdown() {
 //  RENDER ALL
 // ═══════════════════════════════════════════════
 function renderAll() {
-  // Always update dashboard counts
+  var _d=document.getElementById('iosdebug');
+  if(_d) _d.textContent='renderAll: p='+state.projects.length+' t='+state.tasks.length+' po='+state.pos.length+' s='+state.shipping.length;
   renderDashboard();
-  // Lazy: only render the active view's data
-  if (currentView === 'projects') renderProjects();
-  else if (currentView === 'tasks') renderTasks();
-  else if (currentView === 'pos') renderPOs();
-  else if (currentView === 'shipping') renderShipping();
-  else if (currentView === 'troubleshoot') renderTroubleshoot();
-  // Mark other views dirty so they render when switched to
-  window._dirtyViews = {projects:true, tasks:true, pos:true, shipping:true, troubleshoot:true};
-  window._dirtyViews[currentView] = false;
+  renderProjects();
+  renderTasks();
+  renderPOs();
+  renderShipping();
+  window._dirtyViews = {projects:false, tasks:false, pos:false, shipping:false, troubleshoot:false};
 }
 
 
