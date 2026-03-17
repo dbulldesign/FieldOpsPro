@@ -79,9 +79,6 @@ window.autoDetectCarrier = autoDetectCarrier;
 
 
 // ── OFFLINE SYNC QUEUE ──────────────────────────────────────────────
-var _syncQueue = JSON.parse(localStorage.getItem('fop_sync_queue') || '[]');
-var _isOnline = navigator.onLine;
-
 function saveSyncQueue() {
   localStorage.setItem('fop_sync_queue', JSON.stringify(_syncQueue));
 }
@@ -160,8 +157,6 @@ function showSkeleton(containerId, count) {
 }
 
 // ── iOS TAB BAR ─────────────────────────────────────────────────────
-var _mobMoreOpen = false;
-
 function mobTabSwitch(v) {
   if (v === 'more') {
     openModal('mob-more-sheet');
@@ -217,8 +212,6 @@ function initDragHandles() {
 }
 
 // ── SMART FAB ───────────────────────────────────────────────────────
-var _fabOpen = false;
-
 function toggleFabMenu() {
   _fabOpen = !_fabOpen;
   var menu = document.getElementById('fab-menu');
@@ -242,10 +235,6 @@ function closeFabMenu() {
 }
 
 // ── DASHBOARD WIDGETS (desktop) ─────────────────────────────────────
-var _widgets = JSON.parse(localStorage.getItem('fop_dash_v2') || JSON.stringify({
-  overview: true, tasks: true, shipping: true, alerts: true, activity: true
-}));
-
 function saveWidgets() { localStorage.setItem('fop_dash_v2', JSON.stringify(_widgets)); }
 
 function renderWidgetToggles() {
