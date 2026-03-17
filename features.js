@@ -41,15 +41,6 @@ window.onerror = function(msg, src, line, col, err) {
   return true;
 };
 
-window.addEventListener('unhandledrejection', function(e) {
-  // Suppress cross-origin Firebase promise rejections
-  e.preventDefault();
-  if (e.reason && e.reason.message) {
-    var msg = e.reason.message;
-    if (msg.indexOf('Script error') !== -1) return;
-  }
-  console.warn('Unhandled rejection:', e.reason);
-});
 
 function mobTabSwitch(v) {
   if (v === 'more') {
