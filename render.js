@@ -1,31 +1,6 @@
 // FieldOps Pro — Render Functions
 // All view rendering, filters, kanban, dashboard
 
-// ── Render state variables ──────────────────────────────────────────
-var currentView = 'dashboard';
-var viewTitles = {
-  dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks',
-  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
-};
-var editingId = null;
-var taskFilter = 'active';
-var taskViewMode = 'list';
-var taskProjectFilter = '';
-var projectFilter = 'all';
-var poFilter = 'all';
-var shipFilter = 'all';
-var dragTaskId = null;
-var bulkSelected = {
-  _d: {},
-  add: function(v){ this._d[String(v)]=1; },
-  remove: function(v){ delete this._d[String(v)]; },
-  has: function(v){ return this._d[String(v)]===1; },
-  clear: function(){ this._d={}; },
-  count: function(){ var n=0; for(var k in this._d){ if(this._d[k]) n++; } return n; },
-  forEach: function(fn){ for(var k in this._d){ if(this._d[k]) fn(k); } }
-};
-bulkSelected.delete = bulkSelected.remove;
-
 
 function showSkeleton(containerId, count) {
   var el = document.getElementById(containerId);
@@ -42,8 +17,6 @@ function showSkeleton(containerId, count) {
 }
 
 // ── iOS TAB BAR ─────────────────────────────────────────────────────
-var _mobMoreOpen = false;
-
 function saveWidgets() { localStorage.setItem('fop_dash_v2', JSON.stringify(_widgets)); }
 
 function renderWidgetToggles() {
@@ -160,7 +133,7 @@ function renderDashboard() {
 // ═══════════════════════════════════════════════
 //  PROJECTS
 // ═══════════════════════════════════════════════
-var projectFilter = 'all';
+
 
 function filterProjects(f, el) {
   projectFilter = f;
@@ -230,7 +203,6 @@ function filterTasks(f, el) {
   renderTasks();
 }
 
-var taskViewMode = 'list';
 
 function setTaskView(mode) {
   if(isMobile() && mode === 'kanban') mode = 'list';
@@ -473,8 +445,6 @@ function onColDrop(e, status) {
   dragTaskId = null;
 }
 
-// ── TOUCH DRAG (mobile) ─────────────────────────────────────
-var touchDragEl = null, touchClone = null, touchTaskId = null;
 
 function onTaskTouchStart(e, taskId) {
   touchTaskId = taskId;
@@ -900,7 +870,7 @@ function renderAll() {
 // ═══════════════════════════════════════════════
 //  SWIPE ACTIONS ON TASK ROWS
 // ═══════════════════════════════════════════════
-var swipeTouchX = 0, swipeTouchY = 0, swipeEl = null, swipeActive = false;
+
 
 function swipeStart(e, el) {
   swipeTouchX = e.touches[0].clientX;
@@ -1091,7 +1061,6 @@ window.addEventListener('load', function(){
 });
 
 
-
 // ═══════════════════════════════════════════════
 //  THEME — dark / light
 // ═══════════════════════════════════════════════
@@ -1137,7 +1106,7 @@ function renderRecentlyViewed() {
 // ═══════════════════════════════════════════════
 //  IN-APP NOTIFICATIONS
 // ═══════════════════════════════════════════════
-var notifications = JSON.parse(localStorage.getItem('fop_notifs') || '[]');
+
 
 function renderNotifBadge() {
   var badge = document.getElementById('notif-badge');
@@ -1245,7 +1214,7 @@ function applyDashWidgets() {
 // ═══════════════════════════════════════════════════════════════════
 //  COMPACT MOBILE LIST MODE
 // ═══════════════════════════════════════════════════════════════════
-var compactMode = localStorage.getItem('fop_compact') === '1';
+
 
 function toggleCompact() {
   compactMode = !compactMode;
@@ -1299,7 +1268,6 @@ function attachRowSwipe(tbody, col, idAttr) {
     });
   });
 }
-
 
 
 // ── ARCHIVE HELPERS ────────────────────────────────────────────────────────
