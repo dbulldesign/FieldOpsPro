@@ -3621,7 +3621,6 @@ function filterProjects(f, el) {
 }
 
 function renderProjects() {
-  var _dprel=document.getElementById('iosdebug'); if(_dprel) _dprel.textContent='renderProjects: '+state.projects.length+' items, el='+!!document.getElementById('projects-list');
   var data=state.projects.slice();
   if(projectFilter==='archived') {
     data=data.filter(function(p){return p.archived;});
@@ -3812,7 +3811,7 @@ function renderTasks() {
     }
     var tWrap=document.querySelector('#tasks-list-view .table-wrap');
     if(tWrap) tWrap.style.display='none';
-    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    if(mWrap) mWrap.appendChild(mList);
     return;
   }
   var mOldT=document.getElementById('mob-tasks-cards');
@@ -4130,7 +4129,7 @@ function renderPOs() {
     }
     var tWrap=document.querySelector('#view-pos .table-wrap');
     if(tWrap) tWrap.style.display='none';
-    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    if(mWrap) mWrap.appendChild(mList);
     return;
   }
   var mOldP=document.getElementById('mob-pos-cards');
@@ -4272,7 +4271,7 @@ function renderShipping() {
     }
     var tWrap=document.querySelector('#view-shipping .table-wrap');
     if(tWrap) tWrap.style.display='none';
-    if(mWrap) mWrap.insertBefore(mList, mWrap.querySelector('.tabs') ? mWrap.querySelector('.tabs').nextSibling : mWrap.firstChild);
+    if(mWrap) mWrap.appendChild(mList);
     return;
   }
   var mOldS=document.getElementById('mob-shipping-cards');
@@ -4791,8 +4790,6 @@ function closeSearchDropdown() {
 //  RENDER ALL
 // ═══════════════════════════════════════════════
 function renderAll() {
-  var _d=document.getElementById('iosdebug');
-  if(_d) _d.textContent='renderAll: p='+state.projects.length+' t='+state.tasks.length+' po='+state.pos.length+' s='+state.shipping.length;
   renderDashboard();
   renderProjects();
   renderTasks();
