@@ -1,19 +1,6 @@
 // FieldOps Pro — Modals & Forms
 // All modal open/close, save/edit handlers, combo boxes
 
-// ── Modal & form state ──────────────────────────────────────────────
-var comboCustomOptions = JSON.parse(localStorage.getItem('fop_combo_opts')||'{}');
-var taskTemplates = JSON.parse(localStorage.getItem('fop_templates') || '[]');
-var COMBO_DEFAULTS = {
-  'task-category': ['General','Installation','Programming','Commissioning','Testing','Punch List','Admin'],
-  'project-system': ['Lutron RadioRA3','Lutron Homeworks QSX','Lutron Caseta','Crestron','Control4','Savant','Leviton','Custom'],
-  'project-status': ['Planning','Active','On Hold','Completed'],
-  'po-status': ['Draft','Submitted','Approved','Received'],
-  'po-shipmethod': ['Standard','Expedited','Overnight','Will Call','Freight'],
-  'ship-carrier': ['UPS','FedEx','USPS','DHL','OnTrac','XPO','Other'],
-  'ship-status': ['Pending','In Transit','Out for Delivery','Delivered','Exception'],
-};
-
 
 function switchView(v) {
   if (v === 'tasks') {
@@ -73,7 +60,7 @@ function closeSidebar() {
 // ═══════════════════════════════════════════════
 //  MODAL
 // ═══════════════════════════════════════════════
-var editingId = null;
+
 
 function openAddModal() {
   editingId = null;
@@ -168,7 +155,7 @@ function editProject(id) {
 // ═══════════════════════════════════════════════
 //  TASKS
 // ═══════════════════════════════════════════════
-var taskFilter = 'active';
+
 
 function saveTask() {
   var title = document.getElementById('task-title').value.trim();
@@ -216,7 +203,7 @@ function editTask(id) {
 // ═══════════════════════════════════════════════
 //  PURCHASE ORDERS
 // ═══════════════════════════════════════════════
-var poFilter = 'all';
+
 
 function savePO() {
   var number = document.getElementById('po-number').value.trim();
@@ -257,7 +244,6 @@ function editPO(id) {
 // ═══════════════════════════════════════════════
 //  SHIPPING
 // ═══════════════════════════════════════════════
-var shipFilter='all';
 
 function saveShipment() {
   var desc=document.getElementById('ship-desc').value.trim();
@@ -340,28 +326,18 @@ function deleteIssue(id) {
 }
 
 
-
 // ═══════════════════════════════════════════════
 //  GLOBAL SEARCH
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 //  SMART GLOBAL SEARCH
 // ═══════════════════════════════════════════════
-var searchSelectedIdx = -1;
+
 
 function saveComboOpts() {
   localStorage.setItem('fop_combo_opts', JSON.stringify(comboCustomOptions));
 }
 
-var COMBO_DEFAULTS = {
-  'task-category': ['General','Installation','Programming','Commissioning','Testing','Punch List','Admin'],
-  'project-system': ['Lutron RadioRA3','Lutron Homeworks QSX','Lutron Caseta','Crestron','Control4','Savant','Leviton','Custom'],
-  'project-status': ['Planning','Active','On Hold','Completed'],
-  'po-status': ['Draft','Submitted','Approved','Received'],
-  'po-shipmethod': ['Standard','Expedited','Overnight','Will Call','Freight'],
-  'ship-carrier': ['UPS','FedEx','USPS','DHL','OnTrac','XPO','Other'],
-  'ship-status': ['Pending','In Transit','Out for Delivery','Delivered','Exception'],
-};
 
 function comboOptions(id) {
   var defaults = COMBO_DEFAULTS[id] || [];
@@ -539,7 +515,7 @@ function replaceSelectWithCombo(id) {
 // ═══════════════════════════════════════════════
 //  RECENTLY VIEWED
 // ═══════════════════════════════════════════════
-var recentlyViewed = JSON.parse(localStorage.getItem('fop_rv') || '[]');
+
 
 function scheduleNextRecur(task) {
   if (!task.recur || !task.due) return;
@@ -560,8 +536,6 @@ function scheduleNextRecur(task) {
 }
 
 // Patch updateItem to spawn next recurrence when task is marked done
-
-
 
 
 // ─── AUTO-DETECT SHIPPING CARRIER ────────────────────────────────────────────
@@ -817,7 +791,7 @@ function bulkAction(action) {
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
 // ═══════════════════════════════════════════════
-var barcodeStream = null;
+
 
 function startBarcodeScan() {
   var overlay = document.getElementById('barcode-overlay');
