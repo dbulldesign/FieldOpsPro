@@ -1,4 +1,5 @@
-/* FieldOps Pro — All Styles */
+@charset "UTF-8";
+/* FieldOps Pro - All Styles */
 html {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -204,7 +205,7 @@ box-shadow: 0 12px 40px rgba(0,0,0,0.4);
 .stat-card::before {
 content: ""; position: absolute; top: 0; left: 0; right: 0;
 height: 2px; background: #2563ff;
-background: var(–accent-line, #2563ff);
+background: var(--accent-line, #2563ff);
 }
 .stat-card::after {
 content: ""; position: absolute; top: -40px; right: -20px;
@@ -424,13 +425,13 @@ display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px;
 
 /* RESPONSIVE */
 
-/* ══════════════════════════════════════════════════════
-iOS NATIVE MOBILE — @media max-width 768px
+/* ======================================================
+iOS NATIVE MOBILE - @media max-width 768px
 Desktop is completely unchanged
-══════════════════════════════════════════════════════ */
+====================================================== */
 @media (max-width: 768px) {
 
-/* ── Safe area + base layout ── */
+/* -- Safe area + base layout -- */
 html, body {
 height: 100%; height: 100dvh;
 overflow: hidden;
@@ -442,7 +443,7 @@ display: flex; flex-direction: column;
 overflow: hidden;
 }
 
-/* ── Sidebar: hidden on mobile, slide-in only ── */
+/* -- Sidebar: hidden on mobile, slide-in only -- */
 #sidebar {
 position: fixed; top: 0; left: 0; bottom: 0;
 transform: translateX(-100%); z-index: 600;
@@ -462,7 +463,7 @@ z-index: -1;
 }
 #menuBtn { display: flex !important; }
 
-/* ── iOS Topbar ── */
+/* -- iOS Topbar -- */
 #topbar {
 padding: 0 12px;
 padding-top: env(safe-area-inset-top, 0px);
@@ -478,7 +479,7 @@ letter-spacing: -0.3px;
 /* Hide notification bell and shortcuts btn to save topbar space */
 #shortcut-btn-wrap { display: none !important; }
 
-/* ── Search bar ── */
+/* -- Search bar -- */
 #searchBar {
 width: 120px !important;
 font-size: 14px;
@@ -487,7 +488,7 @@ border-radius: 12px !important;
 }
 .search-wrap::before { top: 50%; transform: translateY(-50%); }
 
-/* ── Main scrollable content area ── */
+/* -- Main scrollable content area -- */
 #main {
 flex: 1;
 overflow: hidden;
@@ -503,7 +504,7 @@ padding: 14px 14px 0 14px;
 padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
-/* ── iOS Tab Bar ── */
+/* -- iOS Tab Bar -- */
 #mobileNav {
 display: block !important;
 position: fixed !important;
@@ -567,7 +568,7 @@ line-height: 1;
 }
 .mobile-nav-item.active .nav-label { font-weight: 700 !important; }
 
-/* ── Cards: full-width, better padding ── */
+/* -- Cards: full-width, better padding -- */
 .grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
 .grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
 .grid-2 { grid-template-columns: 1fr !important; }
@@ -576,7 +577,7 @@ line-height: 1;
 .stat-value { font-size: 28px !important; }
 .stat-label { font-size: 11px !important; }
 
-/* ── Tables: hide on mobile, show as cards ── */
+/* -- Tables: hide on mobile, show as cards -- */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
 table { min-width: 600px; }
 /* Hide less important columns on very small screens */
@@ -584,7 +585,7 @@ table { min-width: 600px; }
 .hide-xs { display: none !important; }
 }
 
-/* ── Forms: full-width stacked ── */
+/* -- Forms: full-width stacked -- */
 /* form-row mobile handled below */
 input[type="text"], input[type="date"], input[type="email"],
 select, textarea {
@@ -595,7 +596,7 @@ border-radius: 12px !important;
 .combo-input { font-size: 16px !important; padding: 13px 36px 13px 14px !important; }
 label { font-size: 13px !important; margin-bottom: 6px !important; }
 
-/* ── Modals: full iOS bottom sheet ── */
+/* -- Modals: full iOS bottom sheet -- */
 .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
 .modal {
 width: 100% !important;
@@ -628,7 +629,7 @@ flex-shrink: 0;
 }
 html[data-theme="light"] .modal-drag-handle { background: rgba(0,0,0,0.15); }
 
-/* ── Tabs: scroll horizontally ── */
+/* -- Tabs: scroll horizontally -- */
 .tabs {
 overflow-x: auto !important;
 -webkit-overflow-scrolling: touch !important;
@@ -645,13 +646,13 @@ border-radius: 99px !important;
 flex-shrink: 0;
 }
 
-/* ── Buttons: larger touch targets ── */
+/* -- Buttons: larger touch targets -- */
 .btn { min-height: 44px; padding: 10px 18px !important; font-size: 15px !important; }
 .btn-sm { min-height: 36px; font-size: 13px !important; padding: 7px 14px !important; }
 .btn-icon { min-width: 44px; min-height: 44px; }
 .btn-primary { border-radius: 14px !important; font-weight: 700 !important; }
 
-/* ── FAB (Quick Add): above tab bar ── */
+/* -- FAB (Quick Add): above tab bar -- */
 #quickAddFab {
 bottom: calc(72px + env(safe-area-inset-bottom, 12px)) !important;
 right: 20px !important;
@@ -666,7 +667,7 @@ width: calc(100vw - 28px) !important;
 max-width: 360px;
 }
 
-/* ── Detail modal: full panel ── */
+/* -- Detail modal: full panel -- */
 #modal-detail .modal {
 max-height: 95dvh !important;
 border-radius: 22px 22px 0 0 !important;
@@ -675,7 +676,7 @@ height: auto !important;
 -webkit-animation: sheetUp 0.32s cubic-bezier(.32,.72,0,1) !important;
 }
 
-/* ── Kanban: horizontal scroll ── */
+/* -- Kanban: horizontal scroll -- */
 #tasks-kanban-view {
 display: flex !important;
 flex-direction: row !important;
@@ -692,23 +693,23 @@ max-width: 76vw !important;
 flex-shrink: 0 !important;
 }
 
-/* ── Offline bar ── */
+/* -- Offline bar -- */
 #offlineBar { top: calc(52px + env(safe-area-inset-top, 0px)) !important; }
 
-/* ── Toast: above tab bar ── */
+/* -- Toast: above tab bar -- */
 #toast { bottom: calc(80px + env(safe-area-inset-bottom, 12px)) !important; }
 
-/* ── No hover effects on touch devices ── */
+/* -- No hover effects on touch devices -- */
 
 * { -webkit-tap-highlight-color: transparent; }
   .btn:hover, .card:hover, .nav-item:hover { background: initial; }
   .btn:active { opacity: 0.75; transform: scale(0.97); }
 
-/* ── Section headers: compact ── */
+/* -- Section headers: compact -- */
 .section-header { margin-bottom: 12px !important; }
 .section-title { font-size: 15px !important; }
 
-/* ── Widget toolbar: horizontal scroll ── */
+/* -- Widget toolbar: horizontal scroll -- */
 .widget-toolbar {
 flex-wrap: nowrap !important;
 overflow-x: auto !important;
@@ -720,13 +721,13 @@ gap: 8px !important;
 .widget-toolbar::-webkit-scrollbar { display: none; }
 .widget-btn { flex-shrink: 0 !important; }
 
-/* ── Task rows: taller for touch ── */
+/* -- Task rows: taller for touch -- */
 .tasks-table td { padding: 12px 10px !important; }
 tr[data-taskid] td:first-child { width: 44px !important; }
 
-/* ── Notification panel ── */
+/* -- Notification panel -- */
 
-/* ── Page transitions ── */
+/* -- Page transitions -- */
 .view { -webkit-animation: fadeSlideIn 0.22s ease; }
 @keyframes fadeSlideIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
 
@@ -783,11 +784,11 @@ margin-top: 5px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
 .toggle-pill.on::after { transform: translateX(18px); }
 
 /* CATEGORY ACCENT COLORS */
-.cat-electrical    { –accent-line: #f59e0b; }
-.cat-dimming       { –accent-line: #a78bfa; }
-.cat-commissioning { –accent-line: #22d3ee; }
-.cat-hardware      { –accent-line: #f87171; }
-.cat-network       { –accent-line: #34d399; }
+.cat-electrical    { --accent-line: #f59e0b; }
+.cat-dimming       { --accent-line: #a78bfa; }
+.cat-commissioning { --accent-line: #22d3ee; }
+.cat-hardware      { --accent-line: #f87171; }
+.cat-network       { --accent-line: #34d399; }
 
 /* KANBAN */
 @media (max-width: 600px) {
@@ -806,7 +807,7 @@ margin-top: 5px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
 #searchDropdown::-webkit-scrollbar { width: 3px; }
 #searchDropdown::-webkit-scrollbar-thumb { background: #2a3a5c; border-radius: 99px; }
 
-/* ── LIGHT THEME ── */
+/* -- LIGHT THEME -- */
 html[data-theme="light"] body { background: #f0f4fa !important; color: #0f172a !important; }
 html[data-theme="light"], html[data-theme="light"] body { background: #f0f4fa !important; }
 html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="light"] #content { background: #f0f4fa !important; }
@@ -962,7 +963,7 @@ white-space: nowrap;
 .shortcut-key { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #c8d6f0; font-weight: 600; }
 [data-theme="light"] .shortcut-key { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: #334155; }
 
-/* DATE INPUT — fix calendar icon in light mode */
+/* DATE INPUT - fix calendar icon in light mode */
 input[type="date"]::-webkit-calendar-picker-indicator {
 filter: invert(0.5);
 cursor: pointer;
@@ -1038,7 +1039,7 @@ opacity: 0; transition: opacity 0.15s;
 /* UNDO TOAST button */
 #toast button { vertical-align: middle; }
 
-/* KANBAN CARD — theme-aware */
+/* KANBAN CARD - theme-aware */
 .kb-card {
 background: #0c1220;
 border: 1px solid rgba(255,255,255,0.08);
@@ -1074,9 +1075,9 @@ transform: translateY(-1px);
 /* N HINT */[data-theme="light"] #addBtn::after{background:rgba(0,0,0,.1);}
 /* TOAST */#toast button{vertical-align:middle;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
 
-/* ════════════════════════════════════════════════════════
+/* ========================================================
 THINGS 3 STYLE NAVIGATION (mobile only)
-════════════════════════════════════════════════════════ */
+======================================================== */
 @media (max-width: 768px) {
 
 /* Large title header */
@@ -1240,7 +1241,7 @@ font-weight: 600 !important;
 white-space: nowrap;
 }
 }
-/* ── NOTIFICATION PANEL ── */
+/* -- NOTIFICATION PANEL -- */
 #notif-panel {
 position: fixed;
 top: 64px;
@@ -1276,7 +1277,7 @@ max-height: 70vh;
 }
 }
 
-/* ── MOBILE SEARCH + NOTIF BAR ── */
+/* -- MOBILE SEARCH + NOTIF BAR -- */
 #mob-search-bar {
 display: none; /* hidden on desktop */
 }
@@ -1331,7 +1332,7 @@ touch-action: auto;
 
 }
 
-/* ── THINGS 3 STYLE FAB (mobile only) ── */
+/* -- THINGS 3 STYLE FAB (mobile only) -- */
 @media (max-width: 768px) {
 #quickAddFab {
 position: fixed !important;
@@ -1378,7 +1379,7 @@ content: none !important; display: none !important;
 #content::before, #content::after,
 #topbar::before, #topbar::after { content: none !important; }
 
-/* ── iOS LIGHT MODE TEXT FIX ── */
+/* -- iOS LIGHT MODE TEXT FIX -- */
 html[data-theme="light"] * {
 -webkit-text-fill-color: initial;
 }
@@ -1428,7 +1429,7 @@ body, body.dark-mode {
   background: #080d1a !important;
   color: #f0f4ff !important;
 }
-/* ── LIGHT MODE ── */
+/* -- LIGHT MODE -- */
 body.light-mode{background:#f0f4fa!important;color:#0f172a!important;}
 body.light-mode #app,body.light-mode #main,body.light-mode #content{background:#f0f4fa!important;}
 body.light-mode #topbar{background:rgba(255,255,255,0.96)!important;border-bottom-color:rgba(0,0,0,0.1)!important;}
@@ -1547,7 +1548,7 @@ body.light-mode #mob-tasks-cards>div,body.light-mode #mob-pos-cards>div,body.lig
   }
 }
 
-/* ═══ COMPREHENSIVE FORM FIX ═══ */
+/* === COMPREHENSIVE FORM FIX === */
 /* All modals: no overflow, scroll inside */
 .modal-overlay {
   padding: 0 !important;
@@ -1607,7 +1608,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 .badge[class*="transit"], .badge-blue[class*="transit"] { -webkit-animation:badgePulse 2.5s infinite; }
 @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
-/* ── Skeleton loading ── */
+/* -- Skeleton loading -- */
 .skeleton { background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 75%);background-size:200% 100%;-webkit-animation:shimmer 1.4s infinite;border-radius:8px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .skeleton-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;margin-bottom:10px; }
@@ -1616,7 +1617,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 .skeleton-line.w60 { width:60%; }
 .skeleton-line.w40 { width:40%; }
 
-/* ── iOS Bottom Sheet Modals ── */
+/* -- iOS Bottom Sheet Modals -- */
 @media (max-width: 768px) {
   .modal-overlay {
     align-items: flex-end !important;
@@ -1658,7 +1659,7 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
   .form-group .combo-wrap { width:100% !important; box-sizing:border-box !important; }
 }
 
-/* ── iOS Tab Bar ── */
+/* -- iOS Tab Bar -- */
 #mob-tab-bar {
   display: none;
   position: fixed;
@@ -1704,7 +1705,7 @@ body.light-mode #mob-tab-bar { background: rgba(248,250,252,0.97); border-top-co
   #topbar { padding: 0 16px !important; }
 }
 
-/* ── Smart FAB radial menu ── */
+/* -- Smart FAB radial menu -- */
 #fab-menu {
   display: none;
   position: fixed;
@@ -1761,7 +1762,7 @@ body.light-mode #mob-tab-bar { background: rgba(248,250,252,0.97); border-top-co
   }
 }
 
-/* ── Offline / Sync Queue ── */
+/* -- Offline / Sync Queue -- */
 #sync-queue-bar {
   display: none;
   position: fixed; top: 0; left: 0; right: 0; z-index: 9000;
@@ -1775,7 +1776,7 @@ body.light-mode #mob-tab-bar { background: rgba(248,250,252,0.97); border-top-co
 .sync-dot.syncing { -webkit-animation: syncSpin 1s linear infinite; }
 @keyframes syncSpin { to { transform: rotate(360deg); } }
 
-/* ── Compact card mode ── */
+/* -- Compact card mode -- */
 body.compact .mob-task-card,
 body.compact [id^='mob-'][id$='-cards'] > div {
   padding: 8px 12px !important;
