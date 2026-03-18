@@ -1464,6 +1464,13 @@ border-right: 1px solid rgba(0,0,0,0.08) !important;
 }
 html[data-theme="light"] .sidebar-logo h1 { color: #0f172a !important; }
 html[data-theme="light"] .sidebar-logo p { color: #64748b !important; }
+/* Override dark-mode inline colors globally */
+html[data-theme="light"] [style*="color:#f0f4ff"]{color:#0f172a!important;}
+html[data-theme="light"] [style*="color:#c8d6f0"]{color:#334155!important;}
+html[data-theme="light"] [style*="color:#8da0c0"]{color:#475569!important;}
+html[data-theme="light"] [style*="color:#4a5e7a"]{color:#475569!important;}
+html[data-theme="light"] [style*="color:#3a4a6a"]{color:#475569!important;}
+html[data-theme="light"] [style*="color:#6b7fa8"]{color:#475569!important;}
 /* Fix search icon overlap on mobile */
 @media (max-width: 768px) {
 #mob-search-input { padding-left: 36px !important; }
@@ -1494,6 +1501,14 @@ body.light-mode .nav-item.active{color:#2563ff!important;background:rgba(37,99,2
 body.light-mode #mob-search-input{background:rgba(0,0,0,0.06)!important;color:#0f172a!important;}
 body.light-mode *{-webkit-text-fill-color:unset!important;}
 body.light-mode #mob-tasks-cards>div,body.light-mode #mob-pos-cards>div,body.light-mode #mob-shipping-cards>div{background:#fff!important;border-color:rgba(0,0,0,0.07)!important;color:#0f172a!important;}
+
+/* Override dark-mode inline colors that are baked into rendered HTML */
+body.light-mode [style*="color:#f0f4ff"]{color:#0f172a!important;}
+body.light-mode [style*="color:#c8d6f0"]{color:#334155!important;}
+body.light-mode [style*="color:#8da0c0"]{color:#475569!important;}
+body.light-mode [style*="color:#4a5e7a"]{color:#475569!important;}
+body.light-mode [style*="color:#3a4a6a"]{color:#475569!important;}
+body.light-mode [style*="color:#6b7fa8"]{color:#475569!important;}
 
 @media (max-width: 768px) {
   #quickAddPanel {
