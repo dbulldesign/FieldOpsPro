@@ -3828,7 +3828,7 @@ function isMobile(){ return window.innerWidth<=768; }
 var db = null;
 var unsubscribers = [];
 
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
+var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events'];
 
 // Local storage fallback
 var LOCAL = {
@@ -3846,7 +3846,7 @@ var LOCAL = {
 };
 
 // In-memory state
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[] };
 
 function _merge() {
   var r = {};
@@ -6001,6 +6001,7 @@ function renderAll() {
   if (cv === 'pos')      renderPOs();      else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.pos      = true; }
   if (cv === 'shipping') renderShipping(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.shipping = true; }
   if (cv === 'troubleshoot') renderTroubleshoot(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.troubleshoot = true; }
+  if (cv === 'calendar') renderCalendar();
 }
 
 // undoDelete is an alias for softDelete — kept for backwards compat with confirmDeletePO/confirmDeleteShipment
