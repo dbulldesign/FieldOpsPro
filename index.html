@@ -2713,6 +2713,19 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 
 <!-- MODALS -->
 
+<!-- Confirm Modal -->
+<div id="modal-confirm" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:28px 24px 20px;max-width:300px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="font-size:32px;margin-bottom:12px">🗑</div>
+    <div id="modal-confirm-msg" style="color:#f0f4ff;font-size:16px;font-weight:600;margin-bottom:6px">Delete permanently?</div>
+    <div style="color:#4a5e7a;font-size:13px;margin-bottom:24px">This action cannot be undone.</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="inlineConfirmNo()" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#c8d6f0;font-size:14px;font-weight:600;cursor:pointer">Cancel</button>
+      <button onclick="inlineConfirmYes()" style="flex:1;padding:11px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-size:15px;font-weight:700;cursor:pointer">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- Project Modal -->
 
 <div class="modal-overlay" id="modal-project" style="display:none">
@@ -7563,9 +7576,9 @@ function animateCount(elId,target){var el=document.getElementById(elId);if(!el)r
 function updateOverdueBadge(){var today=new Date();today.setHours(0,0,0,0);var n=state.tasks.filter(function(t){return !t.archived&&t.status!=='done'&&t.due&&new Date(t.due)<today;}).length;var mob=document.getElementById('mob-overdue-badge');if(mob){mob.textContent=n;mob.style.display=n>0?'inline-block':'none';}var badge=document.getElementById('overdue-nav-badge');if(!badge){var items=document.querySelectorAll('.nav-item');for(var i=0;i<items.length;i++){if(items[i].textContent.indexOf('Tasks')>-1){badge=document.createElement('span');badge.id='overdue-nav-badge';badge.style.cssText='margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:18px;text-align:center;display:none';items[i].appendChild(badge);break;}}}if(badge){badge.textContent=n;badge.style.display=n>0?'inline-block':'none';}
   var mb=document.getElementById('mob-notif-badge');if(mb){mb.textContent=n;mb.style.display=n>0?'inline-block':'none';}}
 function projectHealth(p){var today=new Date();today.setHours(0,0,0,0);var tasks=state.tasks.filter(function(t){return t.project===p.id&&!t.archived;});var overdue=tasks.filter(function(t){return t.status!=='done'&&t.due&&new Date(t.due)<today;});if(overdue.length)return{color:'#ef4444',label:overdue.length+' overdue'};if(p.end){var end=new Date(p.end+'T00:00:00'),days=Math.round((end-today)/86400000);if(days<0&&p.status!=='completed')return{color:'#ef4444',label:'Past deadline'};if(days<=7&&p.status!=='completed')return{color:'#fbbf24',label:days+'d left'};}if(tasks.length&&tasks.every(function(t){return t.status==='done';}))return{color:'#10b981',label:'All done'};return{color:'#3b82f6',label:'On track'};}
-function confirmInline(msg,cb){var el=document.getElementById('toast');if(!el){if(confirm(msg))cb();return;}if(window._toastTimer){clearTimeout(window._toastTimer);window._toastTimer=null;}if(window._undoTimer){clearTimeout(window._undoTimer);window._undoTimer=null;}if(window._ict){clearTimeout(window._ict);}el.style.opacity='';el.innerHTML=escH(msg)+' <button onclick="inlineConfirmYes()" style="background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;font-weight:700;margin-left:6px">Yes</button> <button onclick="inlineConfirmNo()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;margin-left:4px">No</button>';el.classList.add('show');window._icb=cb;window._ict=setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);},7000);}
-function inlineConfirmYes(){var cb=window._icb;clearTimeout(window._ict);var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}if(cb)cb();window._icb=null;}
-function inlineConfirmNo(){clearTimeout(window._ict);window._icb=null;var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}}
+function confirmInline(msg,cb){var m=document.getElementById('modal-confirm');if(!m){if(confirm(msg))cb();return;}var lbl=document.getElementById('modal-confirm-msg');if(lbl)lbl.textContent=msg;m.style.display='flex';window._icb=cb;}
+function inlineConfirmYes(){var cb=window._icb;window._icb=null;var m=document.getElementById('modal-confirm');if(m)m.style.display='none';if(cb)cb();}
+function inlineConfirmNo(){window._icb=null;var m=document.getElementById('modal-confirm');if(m)m.style.display='none';}
 var _srchHist=JSON.parse(localStorage.getItem('fop_srch')||'[]');
 function addSearchHistory(q){if(!q||q.length<2)return;_srchHist=_srchHist.filter(function(s){return s!==q;});_srchHist.unshift(q);if(_srchHist.length>8)_srchHist=_srchHist.slice(0,8);localStorage.setItem('fop_srch',JSON.stringify(_srchHist));}
 function showSearchHistory(){var dd=document.getElementById('searchDropdown');if(!dd)return;if(!_srchHist.length){dd.style.display='none';return;}dd.style.display='block';dd.innerHTML='<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3a4a6a">Recent</div>'+_srchHist.map(function(s){return'<div class="search-result-item" style="display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer" onmousedown="event.preventDefault();document.getElementById(\'searchBar\').value=\''+escH(s)+'\';globalSearch(\''+escH(s)+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="flex:1;font-size:13px;color:#8da0c0">'+escH(s)+'</span><span onmousedown="event.stopPropagation();removeSearchHistory(\''+escH(s)+'\')" style="color:#3a4a6a;cursor:pointer;font-size:16px;padding:0 4px">&times;</span></div>';}).join('');

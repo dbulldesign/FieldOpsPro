@@ -1039,6 +1039,11 @@ opacity: 0; transition: opacity 0.15s;
 /* UNDO TOAST button */
 #toast button { vertical-align: middle; }
 
+/* CONFIRM MODAL */
+body.light-mode #modal-confirm > div { background: #ffffff !important; border-color: rgba(0,0,0,0.12) !important; }
+body.light-mode #modal-confirm-msg { color: #0f172a !important; }
+body.light-mode #modal-confirm > div > div:nth-child(3) { color: #64748b !important; }
+
 /* PROJECT CHIP — task cards & table */
 .proj-chip {
   font-size: 11px;
