@@ -1957,6 +1957,102 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   .cal-event { font-size:9px; padding:1px 3px; }
 }
 
+/* ── CAL VIEW SWITCHER ───────────────────────────────────── */
+.cal-view-row { display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap; }
+.cal-view-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#8da0c0; font-size:12px; font-weight:600; padding:5px 13px; cursor:pointer; transition:all 0.15s; }
+.cal-view-btn.active { background:rgba(79,142,247,0.22); border-color:rgba(79,142,247,0.5); color:#4f8ef7; }
+[data-theme="light"] .cal-view-btn { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.1); color:#64748b; }
+[data-theme="light"] .cal-view-btn.active { background:rgba(37,99,255,0.1); border-color:rgba(37,99,255,0.35); color:#2563ff; }
+
+/* ── CAL PREVIEW PANEL ───────────────────────────────────── */
+#cal-preview-panel { position:fixed; right:0; top:0; bottom:0; width:320px; background:#0e1828; border-left:1px solid rgba(255,255,255,0.1); z-index:2000; transform:translateX(100%); transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow:-8px 0 32px rgba(0,0,0,0.5); overflow-y:auto; display:flex; flex-direction:column; }
+#cal-preview-panel.open { transform:translateX(0); }
+[data-theme="light"] #cal-preview-panel { background:#fff; border-left-color:rgba(0,0,0,0.1); box-shadow:-8px 0 32px rgba(0,0,0,0.15); }
+.cal-preview-hdr { padding:18px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.08); }
+[data-theme="light"] .cal-preview-hdr { border-bottom-color:rgba(0,0,0,0.08); }
+.cal-preview-type-tag { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.cal-preview-title { font-size:17px; font-weight:700; color:#f0f4ff; line-height:1.3; margin-bottom:4px; }
+[data-theme="light"] .cal-preview-title { color:#0f172a; }
+.cal-preview-body { padding:16px; flex:1; overflow-y:auto; }
+.cal-pv-section { margin-bottom:16px; }
+.cal-pv-section-hdr { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid rgba(255,255,255,0.06); }
+[data-theme="light"] .cal-pv-section-hdr { border-bottom-color:rgba(0,0,0,0.07); }
+.cal-pv-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; }
+.cal-pv-lbl { font-size:11px; font-weight:700; color:#4a5e7a; min-width:78px; flex-shrink:0; padding-top:2px; }
+.cal-pv-val { font-size:13px; color:#c8d6f0; line-height:1.4; }
+[data-theme="light"] .cal-pv-val { color:#1e293b; }
+.cal-pv-desc { font-size:13px; color:#8da0c0; line-height:1.65; white-space:pre-wrap; background:rgba(255,255,255,0.03); border-radius:8px; padding:10px 12px; margin-top:4px; }
+[data-theme="light"] .cal-pv-desc { color:#475569; background:rgba(0,0,0,0.03); }
+.cal-preview-footer { padding:14px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; flex-shrink:0; }
+[data-theme="light"] .cal-preview-footer { border-top-color:rgba(0,0,0,0.08); }
+#cal-preview-backdrop { display:none; position:fixed; inset:0; z-index:1999; }
+#cal-preview-panel.open ~ #cal-preview-backdrop { display:block; }
+@media(max-width:768px) {
+  #cal-preview-panel { width:100%; top:auto; right:0; left:0; bottom:0; border-left:none; border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; max-height:72vh; transform:translateY(100%); }
+  #cal-preview-panel.open { transform:translateY(0); }
+}
+
+/* ── CAL WEEK VIEW ───────────────────────────────────────── */
+.cal-week-grid { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; }
+.cal-week-col { border-right:1px solid rgba(255,255,255,0.06); }
+.cal-week-col:last-child { border-right:none; }
+.cal-week-col-hdr { padding:8px 6px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.03); }
+.cal-week-col-hdr .wk-day-name { font-size:10px; font-weight:700; color:#4a5e7a; text-transform:uppercase; letter-spacing:0.7px; }
+.cal-week-col-hdr .wk-day-num { font-size:20px; font-weight:700; color:#8da0c0; line-height:1.1; margin-top:2px; }
+.cal-week-col-hdr.wk-today .wk-day-num { color:#4f8ef7; background:rgba(79,142,247,0.18); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; margin:2px auto 0; }
+.cal-week-col-hdr.wk-today { background:rgba(79,142,247,0.06); }
+.cal-week-col-body { padding:6px 4px; min-height:130px; }
+[data-theme="light"] .cal-week-grid { border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .cal-week-col { border-right-color:rgba(0,0,0,0.06); }
+[data-theme="light"] .cal-week-col-hdr { background:rgba(0,0,0,0.02); border-bottom-color:rgba(0,0,0,0.07); }
+[data-theme="light"] .cal-week-col-hdr.wk-today { background:rgba(37,99,255,0.05); }
+[data-theme="light"] .cal-week-col-hdr.wk-today .wk-day-num { color:#2563ff; background:rgba(37,99,255,0.15); }
+
+/* ── CAL LIST VIEW ───────────────────────────────────────── */
+.cal-list-date-hdr { font-size:12px; font-weight:700; color:#4a5e7a; letter-spacing:0.7px; text-transform:uppercase; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.07); margin-bottom:8px; }
+[data-theme="light"] .cal-list-date-hdr { border-bottom-color:rgba(0,0,0,0.08); color:#94a3b8; }
+.cal-list-group { margin-bottom:20px; }
+.cal-list-item { display:flex; align-items:center; gap:10px; padding:9px 13px; border-radius:10px; margin-bottom:5px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); cursor:pointer; transition:background 0.1s; }
+.cal-list-item:hover { background:rgba(255,255,255,0.08); }
+.cal-list-icon { font-size:14px; flex-shrink:0; }
+.cal-list-title { flex:1; font-size:13px; font-weight:600; color:#f0f4ff; }
+.cal-list-meta { font-size:11px; color:#4a5e7a; flex-shrink:0; }
+[data-theme="light"] .cal-list-item { background:rgba(0,0,0,0.02); border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .cal-list-item:hover { background:rgba(0,0,0,0.05); }
+[data-theme="light"] .cal-list-title { color:#0f172a; }
+
+/* ── CAL YEAR VIEW ───────────────────────────────────────── */
+.cal-year-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
+.cal-mini-month { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px; }
+.cal-mini-month-hdr { font-size:12px; font-weight:700; color:#8da0c0; text-align:center; margin-bottom:6px; }
+.cal-mini-days { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+.cal-mini-day { font-size:9px; text-align:center; padding:2px 1px; color:#4a5e7a; border-radius:3px; }
+.cal-mini-day.has-ev { color:#4f8ef7; font-weight:700; background:rgba(79,142,247,0.12); border-radius:3px; }
+.cal-mini-day.is-today { background:rgba(79,142,247,0.35); color:#f0f4ff; border-radius:50%; font-weight:700; }
+[data-theme="light"] .cal-mini-month { background:#fff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .cal-mini-month-hdr { color:#64748b; }
+[data-theme="light"] .cal-mini-day.has-ev { color:#2563ff; background:rgba(37,99,255,0.1); }
+
+/* ── CAL COMBO VIEW ──────────────────────────────────────── */
+.cal-combo-wrap { display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:start; }
+.cal-combo-cal { flex-shrink:0; }
+.cal-combo-list { overflow-y:auto; max-height:600px; }
+@media(max-width:900px) { .cal-combo-wrap { grid-template-columns:1fr; } }
+
+/* ── BETTER DETAIL EXPAND ─────────────────────────────────── */
+.de-section { margin-bottom:14px; }
+.de-section-hdr { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.06); }
+[data-theme="light"] .de-section-hdr { border-bottom-color:rgba(0,0,0,0.07); color:#94a3b8; }
+.de-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+.de-field { display:flex; flex-direction:column; gap:2px; }
+.de-field-lbl { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:0.8px; text-transform:uppercase; }
+[data-theme="light"] .de-field-lbl { color:#94a3b8; }
+.de-field-val { font-size:13px; color:#c8d6f0; }
+[data-theme="light"] .de-field-val { color:#1e293b; }
+.de-notes { margin-top:10px; font-size:13px; color:#8da0c0; line-height:1.65; white-space:pre-wrap; background:rgba(255,255,255,0.03); border-radius:8px; padding:10px 12px; }
+[data-theme="light"] .de-notes { color:#475569; background:rgba(0,0,0,0.03); }
+.de-actions { margin-top:12px; display:flex; gap:8px; }
+
 /* ── COMMISSIONING CALENDAR ─────────────────────────────── */
 .comm-filter-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#8da0c0; font-size:11px; font-weight:600; padding:4px 12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
 .comm-filter-btn.active { background:rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.4); color:#f59e0b; }
@@ -2248,91 +2344,69 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
     </div>
   </div>
 
-  <!-- ═══ CALENDAR + COMMISSIONING (combined) ═══ -->
+  <!-- ═══ CALENDAR + EVENTS (combined, no tabs) ═══ -->
   <div class="view" id="view-calendar">
-    <!-- Tab switcher -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div class="tabs" style="margin-bottom:0">
-        <div class="tab active" id="cal-tab-calendar" onclick="calTab('calendar',this)">📅 Calendar</div>
-        <div class="tab" id="cal-tab-events" onclick="calTab('events',this)">🔧 Events <span class="nav-badge" id="badge-events" style="display:none;margin-left:4px">0</span></div>
-      </div>
-      <button class="btn btn-primary btn-sm" id="cal-add-btn" onclick="calAddBtn()" style="white-space:nowrap">+ Add Event</button>
-    </div>
-
-    <!-- ── CALENDAR SECTION ── -->
-    <div id="cal-calendar-section">
-      <div class="cal-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="cal-nav-btn" onclick="calNav(-1)" title="Previous month">&#8249;</button>
-          <div class="cal-month-label" id="cal-month-label"></div>
-          <button class="cal-nav-btn" onclick="calNav(1)" title="Next month">&#8250;</button>
-        </div>
+    <!-- Header: nav + add -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="cal-nav-btn" onclick="calNav(-1)" title="Previous">&#8249;</button>
+        <div class="cal-month-label" id="cal-month-label"></div>
+        <button class="cal-nav-btn" onclick="calNav(1)" title="Next">&#8250;</button>
         <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
       </div>
-      <div class="cal-filter-row">
-        <button class="cal-filter-btn active" onclick="calSetFilter('all',this)">All</button>
-        <button class="cal-filter-btn" onclick="calSetFilter('tasks',this)">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4f8ef7;margin-right:4px;vertical-align:middle"></span>Tasks
-        </button>
-        <button class="cal-filter-btn" onclick="calSetFilter('ship',this)">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee;margin-right:4px;vertical-align:middle"></span>Shipments
-        </button>
-        <button class="cal-filter-btn" onclick="calSetFilter('po',this)">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>POs
-        </button>
-        <button class="cal-filter-btn" onclick="calSetFilter('event',this)">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Events
-        </button>
-      </div>
-      <div class="cal-grid-wrap">
-        <div class="cal-day-headers">
-          <div class="cal-day-header">Sun</div>
-          <div class="cal-day-header">Mon</div>
-          <div class="cal-day-header">Tue</div>
-          <div class="cal-day-header">Wed</div>
-          <div class="cal-day-header">Thu</div>
-          <div class="cal-day-header">Fri</div>
-          <div class="cal-day-header">Sat</div>
+      <div style="position:relative">
+        <button class="btn btn-primary btn-sm" id="cal-add-btn" onclick="calAddBtn(event)" style="white-space:nowrap">+ Add</button>
+        <div id="cal-add-menu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:6px;min-width:170px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+          <button onclick="calAddEvent()" class="cal-menu-item">📅 Add Event</button>
+          <button onclick="calAddTask()" class="cal-menu-item">✅ Add Task</button>
         </div>
-        <div class="cal-body" id="cal-body"></div>
       </div>
     </div>
 
-    <!-- ── EVENTS LIST SECTION ── -->
-    <div id="cal-events-section" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <select id="comm-project-filter" onchange="filterCommByProject(this.value)"
-          style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
-          <option value="">All Projects</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="comm-filter-btn active" data-type="all" onclick="filterCommissioning('all')">All</button>
-        <button class="comm-filter-btn" data-type="commissioning" onclick="filterCommissioning('commissioning')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Commissioning
-        </button>
-        <button class="comm-filter-btn" data-type="inspection" onclick="filterCommissioning('inspection')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#06b6d4;margin-right:4px;vertical-align:middle"></span>Inspection
-        </button>
-        <button class="comm-filter-btn" data-type="startup" onclick="filterCommissioning('startup')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:4px;vertical-align:middle"></span>Startup
-        </button>
-        <button class="comm-filter-btn" data-type="training" onclick="filterCommissioning('training')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b5cf6;margin-right:4px;vertical-align:middle"></span>Training
-        </button>
-        <button class="comm-filter-btn" data-type="walkthrough" onclick="filterCommissioning('walkthrough')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f472b6;margin-right:4px;vertical-align:middle"></span>Walkthrough
-        </button>
-        <button class="comm-filter-btn" data-type="punchlist" onclick="filterCommissioning('punchlist')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle"></span>Punch List
-        </button>
-        <button class="comm-filter-btn" data-type="handoff" onclick="filterCommissioning('handoff')">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b;margin-right:4px;vertical-align:middle"></span>Handoff
-        </button>
-      </div>
-      <div id="comm-list"></div>
+    <!-- View switcher -->
+    <div class="cal-view-row">
+      <button class="cal-view-btn active" id="cvb-month"  onclick="calSetView('month',this)">Month</button>
+      <button class="cal-view-btn"        id="cvb-week"   onclick="calSetView('week',this)">Week</button>
+      <button class="cal-view-btn"        id="cvb-day"    onclick="calSetView('day',this)">Day</button>
+      <button class="cal-view-btn"        id="cvb-year"   onclick="calSetView('year',this)">Year</button>
+      <button class="cal-view-btn"        id="cvb-list"   onclick="calSetView('list',this)">List</button>
+      <button class="cal-view-btn"        id="cvb-combo"  onclick="calSetView('combo',this)">Split</button>
+    </div>
+
+    <!-- Filter row (shown for month/week/combo views) -->
+    <div class="cal-filter-row" id="cal-filter-row">
+      <button class="cal-filter-btn active" onclick="calSetFilter('all',this)">All</button>
+      <button class="cal-filter-btn" onclick="calSetFilter('tasks',this)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4f8ef7;margin-right:4px;vertical-align:middle"></span>Tasks
+      </button>
+      <button class="cal-filter-btn" onclick="calSetFilter('ship',this)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee;margin-right:4px;vertical-align:middle"></span>Shipments
+      </button>
+      <button class="cal-filter-btn" onclick="calSetFilter('po',this)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>POs
+      </button>
+      <button class="cal-filter-btn" onclick="calSetFilter('event',this)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Events
+      </button>
+    </div>
+
+    <!-- Dynamic view area -->
+    <div id="cal-view-area"></div>
+  </div>
+
+  <!-- Cal preview panel (fixed, slide-in) -->
+  <div id="cal-preview-panel">
+    <div class="cal-preview-hdr">
+      <div class="cal-preview-type-tag" id="cpv-type-tag"></div>
+      <div class="cal-preview-title" id="cpv-title"></div>
+    </div>
+    <div class="cal-preview-body" id="cpv-body"></div>
+    <div class="cal-preview-footer">
+      <button class="btn btn-primary btn-sm" id="cpv-edit-btn" onclick="calPreviewEdit()" style="flex:1">✏ Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeCalPreview()" style="flex:1">Close</button>
     </div>
   </div>
+  <div id="cal-preview-backdrop" onclick="closeCalPreview()"></div>
 
   <!-- ═══ PROJECTS ═══ -->
   <div class="view" id="view-projects">
@@ -4067,23 +4141,7 @@ function switchView(v) {
   closeSidebar();
   if(v==='troubleshoot') renderTroubleshoot();
   if(v==='calendar') {
-    // Restore active tab: if last tab was events, show events; else show calendar
-    var activeTab = window._calActiveTab || 'calendar';
-    var calSec = document.getElementById('cal-calendar-section');
-    var evSec = document.getElementById('cal-events-section');
-    var tCal = document.getElementById('cal-tab-calendar');
-    var tEv = document.getElementById('cal-tab-events');
-    if (calSec) calSec.style.display = activeTab === 'calendar' ? '' : 'none';
-    if (evSec) evSec.style.display = activeTab === 'events' ? '' : 'none';
-    if (tCal) tCal.classList.toggle('active', activeTab === 'calendar');
-    if (tEv) tEv.classList.toggle('active', activeTab === 'events');
-    if (activeTab === 'calendar') renderCalendar();
-    else {
-      var cpf = document.getElementById('comm-project-filter');
-      if (cpf) cpf.innerHTML = '<option value="">All Projects</option>' +
-        state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
-      renderCommissioning();
-    }
+    renderCalendar();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -4692,46 +4750,62 @@ function toggleExpandDetail(rowEl, col, id) {
   rowEl.parentNode.insertBefore(detailTr, rowEl.nextSibling);
 }
 function buildExpandDetailHtml(col, item) {
-  function dRow(label, val) {
-    if (!val && val !== 0) return '';
-    return '<div class="detail-expand-row-kv"><span class="detail-expand-label">'+escH(label)+'</span><span class="detail-expand-val">'+val+'</span></div>';
-  }
-  var html = '<div style="display:flex;flex-wrap:wrap;gap:20px">';
-  var main = '<div style="flex:1;min-width:220px">';
   var editFn = col==='tasks'?'editTask':col==='pos'?'editPO':'editShipment';
+  function field(lbl, val) {
+    if (!val && val !== 0) return '';
+    return '<div class="de-field"><div class="de-field-lbl">'+escH(lbl)+'</div><div class="de-field-val">'+val+'</div></div>';
+  }
+  var html = '';
   if (col === 'tasks') {
-    main += dRow('Status', statusBadge(item.status));
-    main += dRow('Priority', priorityBadge(item.priority));
-    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
-    main += dRow('Due', item.due ? fmtDateSmart(item.due) : null);
-    main += dRow('Category', item.category ? escH(item.category) : null);
-    main += dRow('Repeats', item.recur ? escH(item.recur) : null);
-    if (item.desc) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65;white-space:pre-wrap">'+escH(item.desc)+'</div>';
+    // Row 1: Status + Priority
+    html += '<div class="de-section">'
+      + '<div class="de-grid">'
+      + field('Status', statusBadge(item.status))
+      + field('Priority', priorityBadge(item.priority))
+      + field('Due', item.due ? fmtDateSmart(item.due) : null)
+      + field('Category', item.category ? escH(item.category) : null)
+      + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
+      + field('Repeats', item.recur ? escH(item.recur) : null)
+      + '</div></div>';
+    if (item.desc) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.desc)+'</div></div>';
   } else if (col === 'pos') {
-    main += dRow('Status', statusBadge(item.status));
-    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
-    main += dRow('Date', item.date ? escH(fmtDate(item.date)) : null);
-    main += dRow('Total', item.total ? '<span style="color:#f59e0b;font-weight:600">'+escH(fmtCurrency(item.total))+'</span>' : null);
-    main += dRow('Ship Method', item.shipmethod ? escH(item.shipmethod) : null);
+    html += '<div class="de-section">'
+      + '<div class="de-grid">'
+      + field('Status', statusBadge(item.status))
+      + field('Vendor', item.vendor ? escH(item.vendor) : null)
+      + field('PO #', item.number ? escH(item.number) : null)
+      + field('Date', item.date ? escH(fmtDate(item.date)) : null)
+      + field('Total', item.total ? '<span style="color:#f59e0b;font-weight:700">'+fmtCurrency(item.total)+'</span>' : null)
+      + field('Ship Method', item.shipmethod ? escH(item.shipmethod) : null)
+      + field('Delivery', item.delivery ? fmtDateSmart(item.delivery) : null)
+      + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
+      + '</div></div>';
     if (item.items) {
       var lines = item.items.split('\n').filter(Boolean);
-      if (lines.length) main += '<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:5px">Line Items</div>'
-        + lines.map(function(l){ return '<div style="font-size:12px;color:#8da0c0;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+escH(l)+'</div>'; }).join('')+'</div>';
+      if (lines.length) {
+        html += '<div class="de-section"><div class="de-section-hdr">Line Items</div>'
+          + lines.map(function(l){ return '<div style="font-size:12px;color:#8da0c0;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+escH(l)+'</div>'; }).join('')
+          + '</div>';
+      }
     }
-    if (item.notes) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65">'+escH(item.notes)+'</div>';
+    if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
   } else if (col === 'shipping') {
-    main += dRow('Status', statusBadge(item.status));
-    main += dRow('Tracking', item.tracking ? '<span style="color:#4f8ef7">'+escH(item.tracking)+'</span>' : null);
-    main += dRow('Carrier', item.carrier ? escH(item.carrier) : null);
-    main += dRow('Linked PO', item.po ? escH(poName(item.po)) : null);
-    main += dRow('Shipped', item.date ? escH(fmtDate(item.date)) : null);
-    main += dRow('Est. Delivery', item.eta ? fmtDateSmart(item.eta) : null);
-    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
-    if (item.notes) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65">'+escH(item.notes)+'</div>';
+    html += '<div class="de-section">'
+      + '<div class="de-grid">'
+      + field('Status', statusBadge(item.status))
+      + field('Carrier', item.carrier ? escH(item.carrier) : null)
+      + field('Tracking', item.tracking ? '<span style="color:#4f8ef7">'+escH(item.tracking)+'</span>' : null)
+      + field('Shipped', item.date ? escH(fmtDate(item.date)) : null)
+      + field('Est. Delivery', item.eta ? fmtDateSmart(item.eta) : null)
+      + field('Linked PO', item.po ? escH(poName(item.po)) : null)
+      + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
+      + '</div></div>';
+    if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
   }
-  main += '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="'+editFn+'(\''+item.id+'\')">✏ Edit</button></div>';
-  main += '</div>';
-  html += main + '</div>';
+  html += '<div class="de-actions">'
+    + '<button class="btn btn-primary btn-sm" onclick="'+editFn+'(\''+item.id+'\')">✏ Edit</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="softDelete(\''+col+'\',\''+item.id+'\',\''+escH(item.title||item.vendor||item.desc||'Item')+'\');document.querySelectorAll(\'.detail-expand-row\').forEach(function(r){r.remove();})">Delete</button>'
+    + '</div>';
   return html;
 }
 // ── End Inline Detail ──────────────────────────────────────────────────
@@ -6008,6 +6082,11 @@ window.addEventListener('load', function(){
   document.addEventListener('click', function(e) {
     var wrap = e.target.closest('.search-wrap');
     if (!wrap) closeSearchDropdown();
+    // Close cal-add-menu if clicking outside it
+    var calMenu = document.getElementById('cal-add-menu');
+    if (calMenu && !e.target.closest('#cal-add-menu') && !e.target.closest('#cal-add-btn')) {
+      calMenu.style.display = 'none';
+    }
   });
 
   // Offline/online indicator
@@ -7043,52 +7122,119 @@ function removeWebLink(idx) {
 //  CALENDAR VIEW
 // ═══════════════════════════════════════════════
 
-var calYear = null, calMonth = null, calFilter = 'all';
+var calYear = null, calMonth = null, calFilter = 'all', calCurrentView = 'month';
+var calDayDate = null; // for day view: currently selected date string
 var _calDragData = null;
+var _calPreviewData = null; // {type, id} for preview panel
 
+// ── Helper: gather all calendar items ───────────────────────────────────
+function _calGatherItems(filter) {
+  var f = filter || calFilter;
+  var items = [];
+  function add(d, ev) { if (d) items.push(_merge(ev, { date: d })); }
+  if (f === 'all' || f === 'tasks') {
+    state.tasks.filter(function(t){ return !t.archived && t.due; }).forEach(function(t) {
+      var color = t.status === 'done' ? '#10b981' : (t.priority === 'high' || t.priority === 'critical' ? '#ef4444' : '#4f8ef7');
+      add(t.due, { type:'task', id:t.id, title:t.title, color:color, status:t.status });
+    });
+  }
+  if (f === 'all' || f === 'ship') {
+    state.shipping.filter(function(s){ return !s.archived && s.eta; }).forEach(function(s) {
+      add(s.eta, { type:'ship', id:s.id, title:s.desc||s.tracking||'Shipment', color:'#22d3ee', status:s.status });
+    });
+  }
+  if (f === 'all' || f === 'po') {
+    state.pos.filter(function(p){ return p.delivery; }).forEach(function(p) {
+      add(p.delivery, { type:'po', id:p.id, title:(p.number?p.number+' – ':'')+p.vendor, color:'#a78bfa', status:p.status });
+    });
+  }
+  if (f === 'all' || f === 'event') {
+    var typeColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
+    (state.events || []).filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
+      add(e.date, { type:'event', id:e.id, title:e.title, color:typeColors[e.type]||'#f59e0b', status:e.status });
+    });
+  }
+  return items;
+}
+
+// ── Helper: build events map {dateStr: [ev,...]} ─────────────────────────
+function _calItemsByDate() {
+  var map = {};
+  _calGatherItems().forEach(function(ev) {
+    if (!map[ev.date]) map[ev.date] = [];
+    map[ev.date].push(ev);
+  });
+  return map;
+}
+
+// ── Helper: render a single cal-event chip ───────────────────────────────
+function _calEventChip(ev, dateStr, draggable) {
+  var shortTitle = ev.title.length > 22 ? ev.title.substring(0,21)+'…' : ev.title;
+  var icons = { task:'✅', ship:'🚚', po:'📦', event:'📅' };
+  var icon = icons[ev.type] || '📅';
+  var isEvent = ev.type === 'event';
+  var itemStyle = isEvent
+    ? 'background:'+ev.color+';color:#fff;border-radius:5px;border:none;font-weight:700;'
+    : 'background:'+ev.color+'20;border-left:3px solid '+ev.color+';color:'+ev.color+';';
+  return '<div class="cal-event" style="'+itemStyle+'"'
+    + (draggable !== false ? ' draggable="true" data-type="'+ev.type+'" data-id="'+ev.id+'" data-date="'+(dateStr||ev.date)+'"'
+       + ' ondragstart="calDragStart(event,this)" ondragend="calDragEnd(event,this)"' : '')
+    + ' onclick="event.stopPropagation();calEventClick(\''+ev.type+'\',\''+ev.id+'\')"'
+    + ' title="'+escH(ev.title)+'">'
+    + '<span style="margin-right:3px">'+icon+'</span>'
+    + escH(shortTitle)
+    + '</div>';
+}
+
+// ── renderCalendar: dispatcher ───────────────────────────────────────────
 function renderCalendar() {
   var today = new Date();
   if (calYear == null) calYear = today.getFullYear();
   if (calMonth == null) calMonth = today.getMonth();
+  if (!calDayDate) calDayDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
 
+  // Update header label
   var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var lbl = document.getElementById('cal-month-label');
-  if (lbl) lbl.textContent = monthNames[calMonth] + ' ' + calYear;
+  if (lbl) {
+    if (calCurrentView === 'day') {
+      var d = new Date(calDayDate + 'T00:00:00');
+      lbl.textContent = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    } else if (calCurrentView === 'week') {
+      var weekStart = _calWeekStart();
+      var weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+      lbl.textContent = weekStart.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' – ' + weekEnd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    } else if (calCurrentView === 'year') {
+      lbl.textContent = String(calYear);
+    } else {
+      lbl.textContent = monthNames[calMonth] + ' ' + calYear;
+    }
+  }
 
+  // Show/hide filter row
+  var fr = document.getElementById('cal-filter-row');
+  if (fr) fr.style.display = (calCurrentView === 'list' || calCurrentView === 'day') ? 'none' : 'flex';
+
+  if (calCurrentView === 'month') renderCalMonth();
+  else if (calCurrentView === 'week') renderCalWeek();
+  else if (calCurrentView === 'day') renderCalDay();
+  else if (calCurrentView === 'year') renderCalYear();
+  else if (calCurrentView === 'list') renderCalList();
+  else if (calCurrentView === 'combo') renderCalCombo();
+}
+
+// ── Month view ───────────────────────────────────────────────────────────
+function renderCalMonth() {
+  var today = new Date();
   var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
   var firstDay = new Date(calYear, calMonth, 1).getDay();
   var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-
-  // Gather events by date
-  var events = {};
-  function addEv(d, ev) { if (!d) return; if (!events[d]) events[d] = []; events[d].push(ev); }
-
-  if (calFilter === 'all' || calFilter === 'tasks') {
-    state.tasks.filter(function(t){ return !t.archived && t.due; }).forEach(function(t) {
-      var color = t.status === 'done' ? '#10b981' : (t.priority === 'high' || t.priority === 'critical' ? '#ef4444' : '#4f8ef7');
-      addEv(t.due, { type:'task', id:t.id, title:t.title, color:color, status:t.status });
-    });
-  }
-  if (calFilter === 'all' || calFilter === 'ship') {
-    state.shipping.filter(function(s){ return !s.archived && s.eta; }).forEach(function(s) {
-      addEv(s.eta, { type:'ship', id:s.id, title:s.desc||s.tracking||'Shipment', color:'#22d3ee', status:s.status });
-    });
-  }
-  if (calFilter === 'all' || calFilter === 'po') {
-    state.pos.filter(function(p){ return p.delivery; }).forEach(function(p) {
-      addEv(p.delivery, { type:'po', id:p.id, title:(p.number?p.number+' – ':'')+p.vendor, color:'#a78bfa', status:p.status });
-    });
-  }
-  if (calFilter === 'all' || calFilter === 'event') {
-    (state.events || []).filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
-      var typeColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
-      var color = typeColors[e.type] || '#f59e0b';
-      addEv(e.date, { type:'event', id:e.id, title:e.title, color:color, status:e.status });
-    });
-  }
+  var byDate = _calItemsByDate();
 
   var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-  var html = '';
+  var html = '<div class="cal-grid-wrap"><div class="cal-day-headers">'
+    + ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){ return '<div class="cal-day-header">'+d+'</div>'; }).join('')
+    + '</div><div class="cal-body" id="cal-body">';
   for (var i = 0; i < totalCells; i++) {
     var dayNum = i - firstDay + 1;
     var inMonth = dayNum >= 1 && dayNum <= daysInMonth;
@@ -7101,63 +7247,276 @@ function renderCalendar() {
       + '>';
     if (inMonth) {
       html += '<div class="cal-day-num">'+dayNum+'</div>';
-      var evs = events[dateStr] || [];
+      var evs = byDate[dateStr] || [];
       var max = window.innerWidth <= 768 ? 2 : 3;
-      evs.slice(0, max).forEach(function(ev) {
-        var shortTitle = ev.title.length > 20 ? ev.title.substring(0,19)+'…' : ev.title;
-        html += '<div class="cal-event" style="background:'+ev.color+'20;border-left:3px solid '+ev.color+';color:'+ev.color+'"'
-          + ' draggable="true" data-type="'+ev.type+'" data-id="'+ev.id+'" data-date="'+dateStr+'"'
-          + ' ondragstart="calDragStart(event,this)" ondragend="calDragEnd(event,this)"'
-          + ' onclick="event.stopPropagation();calEventClick(\''+ev.type+'\',\''+ev.id+'\')"'
-          + ' title="'+escH(ev.title)+'">'
-          + escH(shortTitle)
-          + '</div>';
-      });
+      evs.slice(0, max).forEach(function(ev) { html += _calEventChip(ev, dateStr); });
       if (evs.length > max) html += '<div class="cal-more">+'+(evs.length-max)+' more</div>';
     }
     html += '</div>';
   }
-
-  var body = document.getElementById('cal-body');
-  if (body) body.innerHTML = html;
+  html += '</div></div>';
+  html += _calEventsSectionHtml();
+  var area = document.getElementById('cal-view-area');
+  if (area) { area.innerHTML = html; _populateCommProjectFilter(); renderCommissioning(); }
 }
 
-function calTab(tab, el) {
-  window._calActiveTab = tab;
-  document.querySelectorAll('#view-calendar > div:first-child .tab').forEach(function(t){ t.classList.remove('active'); });
-  if (el) el.classList.add('active');
-  var calSec = document.getElementById('cal-calendar-section');
-  var evSec = document.getElementById('cal-events-section');
-  if (calSec) calSec.style.display = tab === 'calendar' ? '' : 'none';
-  if (evSec) evSec.style.display = tab === 'events' ? '' : 'none';
-  var addBtn = document.getElementById('cal-add-btn');
-  if (addBtn) addBtn.textContent = tab === 'events' ? '+ Add Event' : '+ Add Task';
-  if (tab === 'calendar') {
-    renderCalendar();
-  } else {
-    var cpf = document.getElementById('comm-project-filter');
-    if (cpf) cpf.innerHTML = '<option value="">All Projects</option>' +
-      state.projects.map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
-    renderCommissioning();
+// ── Events section HTML (used by month + combo views) ────────────────────
+function _calEventsSectionHtml() {
+  var projOpts = state.projects.map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
+  return '<div style="margin-top:28px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+    + '<div style="font-size:12px;font-weight:700;color:#4a5e7a;letter-spacing:1.2px;text-transform:uppercase">🔧 Events</div>'
+    + '<select id="comm-project-filter" onchange="filterCommByProject(this.value)" style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">'
+    + '<option value="">All Projects</option>'+projOpts+'</select></div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'
+    + ['all:All','commissioning:Commissioning','inspection:Inspection','startup:Startup','training:Training','walkthrough:Walkthrough','punchlist:Punch List','handoff:Handoff'].map(function(s){
+        var parts = s.split(':'), val = parts[0], lbl = parts[1];
+        var dotColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b'};
+        var dot = dotColors[val] ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+dotColors[val]+';margin-right:4px;vertical-align:middle"></span>' : '';
+        var isActive = (window._commFilter||'all') === val;
+        return '<button class="comm-filter-btn'+(isActive?' active':'')+'" data-type="'+val+'" onclick="filterCommissioning(\''+val+'\')">'+dot+escH(lbl)+'</button>';
+      }).join('')
+    + '</div><div id="comm-list"></div></div>';
+}
+function _populateCommProjectFilter() {
+  var sel = document.getElementById('comm-project-filter');
+  if (!sel) return;
+  sel.value = window._commProjectFilter || '';
+}
+
+// ── Week view ────────────────────────────────────────────────────────────
+function _calWeekStart() {
+  var d = new Date(calYear, calMonth, 1);
+  // Use the Monday of the week containing calDayDate if in week view
+  var base = calDayDate ? new Date(calDayDate + 'T00:00:00') : new Date(calYear, calMonth, 1);
+  var dow = base.getDay();
+  var start = new Date(base);
+  start.setDate(base.getDate() - dow);
+  return start;
+}
+function renderCalWeek() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var weekStart = _calWeekStart();
+  var byDate = _calItemsByDate();
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var html = '<div class="cal-week-grid">';
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+    var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var isTod = ds === todayStr;
+    html += '<div class="cal-week-col">'
+      + '<div class="cal-week-col-hdr'+(isTod?' wk-today':'')+'"><div class="wk-day-name">'+days[d.getDay()]+'</div><div class="wk-day-num">'+d.getDate()+'</div></div>'
+      + '<div class="cal-week-col-body">';
+    (byDate[ds] || []).forEach(function(ev) { html += _calEventChip(ev, ds); });
+    html += '</div></div>';
   }
+  html += '</div>';
+  var area = document.getElementById('cal-view-area');
+  if (area) area.innerHTML = html;
 }
 
-function calAddBtn() {
+// ── Day view ─────────────────────────────────────────────────────────────
+function renderCalDay() {
+  var byDate = _calItemsByDate('all');
+  var evs = byDate[calDayDate] || [];
+  var html = '';
+  if (!evs.length) {
+    html = buildEmptyState('📅','rgba(79,142,247,0.12)','Nothing scheduled','No tasks, events, or deadlines on this day');
+  } else {
+    html = '<div style="display:flex;flex-direction:column;gap:8px">';
+    evs.forEach(function(ev) {
+      var icons = { task:'✅', ship:'🚚', po:'📦', event:'📅' };
+      var icon = icons[ev.type] || '📅';
+      var isEvent = ev.type === 'event';
+      var borderStyle = isEvent
+        ? 'border-left:4px solid '+ev.color+';background:'+ev.color+'15;'
+        : 'border-left:4px solid '+ev.color+';background:rgba(255,255,255,0.04);';
+      html += '<div class="cal-list-item" style="'+borderStyle+'" onclick="calEventClick(\''+ev.type+'\',\''+ev.id+'\')">'
+        + '<span class="cal-list-icon">'+icon+'</span>'
+        + '<div style="flex:1">'
+        + '<div class="cal-list-title">'+escH(ev.title)+'</div>'
+        + '<div class="cal-list-meta" style="margin-top:2px">'+ev.type.charAt(0).toUpperCase()+ev.type.slice(1)+'</div>'
+        + '</div>'
+        + statusBadge(ev.status)
+        + '</div>';
+    });
+    html += '</div>';
+  }
+  var area = document.getElementById('cal-view-area');
+  if (area) area.innerHTML = html;
+}
+
+// ── Year view ────────────────────────────────────────────────────────────
+function renderCalYear() {
+  var today = new Date();
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var byDate = _calItemsByDate();
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var html = '<div class="cal-year-grid">';
+  for (var m = 0; m < 12; m++) {
+    var fd = new Date(calYear, m, 1).getDay();
+    var dim = new Date(calYear, m + 1, 0).getDate();
+    html += '<div class="cal-mini-month"><div class="cal-mini-month-hdr">'+monthNames[m]+' '+calYear+'</div>'
+      + '<div class="cal-mini-days">';
+    // Day header row
+    ['S','M','T','W','T','F','S'].forEach(function(d){ html += '<div class="cal-mini-day" style="color:#4a5e7a;font-weight:700">'+d+'</div>'; });
+    for (var blank = 0; blank < fd; blank++) html += '<div class="cal-mini-day"></div>';
+    for (var day = 1; day <= dim; day++) {
+      var ds = calYear + '-' + String(m+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      var hasEv = (byDate[ds] || []).length > 0;
+      var isTod = ds === todayStr;
+      var cls = 'cal-mini-day' + (isTod?' is-today':(hasEv?' has-ev':''));
+      html += '<div class="'+cls+'" title="'+(hasEv?(byDate[ds].length+' item'+(byDate[ds].length>1?'s':'')):'')+'">'+day+'</div>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  var area = document.getElementById('cal-view-area');
+  if (area) area.innerHTML = html;
+}
+
+// ── List view ────────────────────────────────────────────────────────────
+function renderCalList() {
+  var all = _calGatherItems('all').slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  if (!all.length) {
+    var area2 = document.getElementById('cal-view-area');
+    if (area2) area2.innerHTML = buildEmptyState('📋','rgba(79,142,247,0.12)','Nothing scheduled','Add tasks, events, POs or shipments with dates');
+    return;
+  }
+  // Group by date
+  var groups = {};
+  var order = [];
+  all.forEach(function(ev) {
+    if (!groups[ev.date]) { groups[ev.date] = []; order.push(ev.date); }
+    groups[ev.date].push(ev);
+  });
+  var icons = { task:'✅', ship:'🚚', po:'📦', event:'📅' };
+  var past = [], future = [];
+  order.forEach(function(ds) { (ds < todayStr ? past : future).push(ds); });
+  function renderGroup(dates) {
+    return dates.map(function(ds) {
+      var d = new Date(ds + 'T00:00:00');
+      var isToday = ds === todayStr;
+      var dLabel = isToday ? 'Today — ' + d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}) : d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+      return '<div class="cal-list-group"><div class="cal-list-date-hdr"'+(isToday?' style="color:#4f8ef7"':'')+'>'+dLabel+'</div>'
+        + groups[ds].map(function(ev) {
+            return '<div class="cal-list-item" onclick="calEventClick(\''+ev.type+'\',\''+ev.id+'\')">'
+              + '<span class="cal-list-icon">'+icons[ev.type]+'</span>'
+              + '<div style="flex:1"><div class="cal-list-title">'+escH(ev.title)+'</div>'
+              + '<div class="cal-list-meta" style="margin-top:1px;color:'+ev.color+'">'+ev.type.charAt(0).toUpperCase()+ev.type.slice(1)+'</div></div>'
+              + statusBadge(ev.status)
+              + '</div>';
+          }).join('')
+        + '</div>';
+    }).join('');
+  }
+  var html = '';
+  if (future.length) html += renderGroup(future);
+  if (past.length) html += '<div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">Past</div>' + renderGroup(past);
+  var area = document.getElementById('cal-view-area');
+  if (area) area.innerHTML = html;
+}
+
+// ── Combo (split) view ───────────────────────────────────────────────────
+function renderCalCombo() {
+  var area = document.getElementById('cal-view-area');
+  if (!area) return;
+  // Build mini month cal + events list side by side
+  var today = new Date();
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var firstDay = new Date(calYear, calMonth, 1).getDay();
+  var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  var byDate = _calItemsByDate();
+
+  // Month grid (compact)
+  var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  var calHtml = '<div class="cal-grid-wrap" style="min-width:280px;max-width:400px"><div class="cal-day-headers">'
+    + ['S','M','T','W','T','F','S'].map(function(d){ return '<div class="cal-day-header">'+d+'</div>'; }).join('')
+    + '</div><div class="cal-body" id="cal-body">';
+  for (var i = 0; i < totalCells; i++) {
+    var dayNum = i - firstDay + 1;
+    var inMonth = dayNum >= 1 && dayNum <= daysInMonth;
+    var dateStr = inMonth ? calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(dayNum).padStart(2,'0') : '';
+    var isToday = dateStr === todayStr;
+    var isPast = inMonth && dateStr && dateStr < todayStr;
+    var cls = 'cal-day' + (!inMonth?' cal-day-other':'') + (isToday?' cal-day-today':'') + (isPast&&!isToday?' cal-day-past':'');
+    calHtml += '<div class="'+cls+'" style="min-height:70px" data-date="'+dateStr+'"'
+      + (inMonth?' ondragover="calDragOver(event,this)" ondragleave="calDragLeave(this)" ondrop="calDrop(event,this)"':'')
+      + '>';
+    if (inMonth) {
+      calHtml += '<div class="cal-day-num">'+dayNum+'</div>';
+      var evs = byDate[dateStr] || [];
+      evs.slice(0, 2).forEach(function(ev) { calHtml += _calEventChip(ev, dateStr); });
+      if (evs.length > 2) calHtml += '<div class="cal-more">+'+(evs.length-2)+' more</div>';
+    }
+    calHtml += '</div>';
+  }
+  calHtml += '</div></div>';
+
+  // Right side: commissioning events section
+  var rightHtml = _calEventsSectionHtml();
+
+  area.innerHTML = '<div class="cal-combo-wrap">'
+    + '<div class="cal-combo-cal">'+calHtml+'</div>'
+    + '<div class="cal-combo-list">'+rightHtml+'</div>'
+    + '</div>';
+  _populateCommProjectFilter();
+  renderCommissioning();
+}
+
+function calAddBtn(e) {
+  if (e) e.stopPropagation();
+  var menu = document.getElementById('cal-add-menu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function calAddEvent() {
+  var menu = document.getElementById('cal-add-menu');
+  if (menu) menu.style.display = 'none';
   editingId = null;
-  if (window._calActiveTab === 'events') {
-    clearForm('modal-event');
-    populateProjectSelects();
-    document.getElementById('event-modal-title').textContent = 'New Event';
-    openModal('modal-event');
-  } else {
-    openAddModal();
-  }
+  clearForm('modal-event');
+  populateProjectSelects();
+  document.getElementById('event-modal-title').textContent = 'New Event';
+  openModal('modal-event');
+}
+function calAddTask() {
+  var menu = document.getElementById('cal-add-menu');
+  if (menu) menu.style.display = 'none';
+  editingId = null;
+  clearForm('modal-task');
+  populateProjectSelects();
+  document.getElementById('task-modal-title').textContent = 'New Task';
+  openModal('modal-task');
+}
+
+function calSetView(view, btn) {
+  calCurrentView = view;
+  document.querySelectorAll('.cal-view-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  else { var b2 = document.getElementById('cvb-'+view); if(b2) b2.classList.add('active'); }
+  renderCalendar();
 }
 
 function calNav(dir) {
-  calMonth += dir;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calCurrentView === 'year') {
+    calYear += dir;
+  } else if (calCurrentView === 'week') {
+    var ws = _calWeekStart();
+    ws.setDate(ws.getDate() + dir * 7);
+    calYear = ws.getFullYear(); calMonth = ws.getMonth();
+    calDayDate = ws.getFullYear() + '-' + String(ws.getMonth()+1).padStart(2,'0') + '-' + String(ws.getDate()).padStart(2,'0');
+  } else if (calCurrentView === 'day') {
+    var d = new Date(calDayDate + 'T00:00:00');
+    d.setDate(d.getDate() + dir);
+    calDayDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    calYear = d.getFullYear(); calMonth = d.getMonth();
+  } else {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+  }
   renderCalendar();
 }
 
@@ -7165,6 +7524,7 @@ function calGoToday() {
   var t = new Date();
   calYear = t.getFullYear();
   calMonth = t.getMonth();
+  calDayDate = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
   renderCalendar();
 }
 
@@ -7222,12 +7582,107 @@ function calDrop(e, cell) {
   toast('Date updated');
 }
 
+// ── Preview panel ─────────────────────────────────────────────────────────
 function calEventClick(type, id) {
+  showCalPreview(type, id);
+}
+
+function showCalPreview(type, id) {
+  _calPreviewData = { type: type, id: id };
+  var icons = { task:'✅', ship:'🚚', po:'📦', event:'📅' };
+  var typeLabels = { task:'Task', ship:'Shipment', po:'Purchase Order', event:'Event' };
+  var typeColors = { task:'#4f8ef7', ship:'#22d3ee', po:'#a78bfa', event:'#f59e0b' };
+  var color = typeColors[type] || '#4f8ef7';
+  var tagEl = document.getElementById('cpv-type-tag');
+  var titleEl = document.getElementById('cpv-title');
+  var bodyEl = document.getElementById('cpv-body');
+  if (!tagEl || !titleEl || !bodyEl) return;
+
+  tagEl.innerHTML = '<span style="color:'+color+'">'+(icons[type]||'📅')+'</span>'
+    + '<span style="color:'+color+';font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase">'+(typeLabels[type]||type)+'</span>';
+
+  var html = '';
+  function pvRow(lbl, val) {
+    if (!val && val !== 0) return '';
+    return '<div class="cal-pv-row"><span class="cal-pv-lbl">'+escH(lbl)+'</span><span class="cal-pv-val">'+val+'</span></div>';
+  }
+
+  if (type === 'task') {
+    var t = state.tasks.find(function(x){ return x.id === id; });
+    if (!t) return;
+    titleEl.textContent = t.title || '—';
+    html += '<div class="cal-pv-section">';
+    html += pvRow('Status', statusBadge(t.status));
+    html += pvRow('Priority', priorityBadge(t.priority));
+    html += pvRow('Due', t.due ? fmtDateSmart(t.due) : null);
+    html += pvRow('Project', t.project ? '<span class="proj-chip">'+escH(projectName(t.project))+'</span>' : null);
+    html += pvRow('Category', t.category ? escH(t.category) : null);
+    html += pvRow('Repeats', t.recur ? escH(t.recur) : null);
+    html += '</div>';
+    if (t.desc) html += '<div class="cal-pv-desc">'+escH(t.desc)+'</div>';
+  } else if (type === 'ship') {
+    var s = state.shipping.find(function(x){ return x.id === id; });
+    if (!s) return;
+    titleEl.textContent = s.desc || s.tracking || 'Shipment';
+    html += '<div class="cal-pv-section">';
+    html += pvRow('Status', statusBadge(s.status));
+    html += pvRow('Tracking', s.tracking ? '<span style="color:#4f8ef7">'+escH(s.tracking)+'</span>' : null);
+    html += pvRow('Carrier', s.carrier ? escH(s.carrier) : null);
+    html += pvRow('Est. Delivery', s.eta ? fmtDateSmart(s.eta) : null);
+    html += pvRow('Project', s.project ? '<span class="proj-chip">'+escH(projectName(s.project))+'</span>' : null);
+    html += pvRow('Linked PO', s.po ? escH(poName(s.po)) : null);
+    html += '</div>';
+    if (s.notes) html += '<div class="cal-pv-desc">'+escH(s.notes)+'</div>';
+  } else if (type === 'po') {
+    var po = state.pos.find(function(x){ return x.id === id; });
+    if (!po) return;
+    titleEl.textContent = (po.number ? po.number + ' – ' : '') + (po.vendor || 'PO');
+    html += '<div class="cal-pv-section">';
+    html += pvRow('Status', statusBadge(po.status));
+    html += pvRow('Vendor', po.vendor ? escH(po.vendor) : null);
+    html += pvRow('Total', po.total ? '<span style="color:#f59e0b;font-weight:600">'+fmtCurrency(po.total)+'</span>' : null);
+    html += pvRow('Delivery', po.delivery ? fmtDateSmart(po.delivery) : null);
+    html += pvRow('Project', po.project ? '<span class="proj-chip">'+escH(projectName(po.project))+'</span>' : null);
+    html += '</div>';
+    if (po.notes) html += '<div class="cal-pv-desc">'+escH(po.notes)+'</div>';
+  } else if (type === 'event') {
+    var ev2 = (state.events||[]).find(function(x){ return x.id === id; });
+    if (!ev2) return;
+    titleEl.textContent = ev2.title || '—';
+    var evColor = ({commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'})[ev2.type] || '#f59e0b';
+    tagEl.innerHTML = '<span>📅</span><span style="color:'+evColor+';font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase">'+(ev2.type||'Event')+'</span>';
+    html += '<div class="cal-pv-section">';
+    html += pvRow('Status', statusBadge(ev2.status || 'scheduled'));
+    html += pvRow('Date', ev2.date ? fmtDateSmart(ev2.date) : null);
+    html += pvRow('End Date', ev2.endDate ? fmtDate(ev2.endDate) : null);
+    html += pvRow('Project', ev2.project ? '<span class="proj-chip">'+escH(projectName(ev2.project))+'</span>' : null);
+    html += '</div>';
+    if (ev2.notes) html += '<div class="cal-pv-desc">'+escH(ev2.notes)+'</div>';
+  }
+
+  bodyEl.innerHTML = html;
+  document.getElementById('cal-preview-panel').classList.add('open');
+  document.getElementById('cal-preview-backdrop').style.display = 'block';
+}
+
+function closeCalPreview() {
+  document.getElementById('cal-preview-panel').classList.remove('open');
+  document.getElementById('cal-preview-backdrop').style.display = 'none';
+  _calPreviewData = null;
+}
+
+function calPreviewEdit() {
+  if (!_calPreviewData) return;
+  closeCalPreview();
+  var type = _calPreviewData.type, id = _calPreviewData.id;
   if (type === 'task') editTask(id);
   else if (type === 'ship') editShipment(id);
   else if (type === 'po') editPO(id);
   else if (type === 'event') editEvent(id);
 }
+window.calSetView = calSetView;
+window.calPreviewEdit = calPreviewEdit;
+window.closeCalPreview = closeCalPreview;
 
 // ─── AUTO-DETECT SHIPPING CARRIER ────────────────────────────────────────────
 

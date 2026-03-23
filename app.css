@@ -1062,6 +1062,18 @@ body.light-mode .proj-chip,
   border-color: rgba(29,78,216,0.2) !important;
 }
 
+/* CAL ADD DROPDOWN MENU */
+.cal-menu-item {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 14px; border: none; border-radius: 8px;
+  background: none; color: #f0f4ff; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.cal-menu-item:hover { background: rgba(255,255,255,0.08); }
+body.light-mode #cal-add-menu { background: #ffffff !important; border-color: rgba(0,0,0,0.1) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important; }
+body.light-mode .cal-menu-item { color: #0f172a !important; }
+body.light-mode .cal-menu-item:hover { background: rgba(0,0,0,0.05) !important; }
+
 /* INLINE DETAIL EXPAND (trouble-card style) */
 .detail-expand-row td { padding: 0 !important; border: none !important; }
 .detail-expand-content {
