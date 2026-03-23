@@ -35,7 +35,8 @@ function statusBadge(s) {
     draft:'badge-gray', submitted:'badge-cyan', approved:'badge-green',
     ordered:'badge-purple', received:'badge-green', cancelled:'badge-red',
     pending:'badge-gray', transit:'badge-blue transit', out:'badge-yellow', delivered:'badge-green', exception:'badge-red',
-    freight:'badge-gold', ground:'badge-gray', '2day':'badge-blue', overnight:'badge-purple'
+    freight:'badge-gold', ground:'badge-gray', '2day':'badge-blue', overnight:'badge-purple',
+    scheduled:'badge-blue', 'in-progress':'badge-yellow', handoff:'badge-gray'
   };
   var cls = map[s] || 'badge-gray';
   var label = {
@@ -43,7 +44,8 @@ function statusBadge(s) {
     transit:'In Transit', out:'Out for Delivery', delivered:'Delivered ✓',
     active:'Active', planning:'Planning', 'on-hold':'On Hold', completed:'Completed',
     draft:'Draft', submitted:'Submitted', approved:'Approved', ordered:'Ordered',
-    received:'Received', cancelled:'Cancelled', pending:'Pending', exception:'Exception ⚠'
+    received:'Received', cancelled:'Cancelled', pending:'Pending', exception:'Exception ⚠',
+    scheduled:'Scheduled', 'in-progress':'In Progress', handoff:'Handoff'
   }[s] || s;
   return '<span class="badge '+cls+'" style="text-transform:none;letter-spacing:0">'+escH(label||'—')+'</span>';
 }

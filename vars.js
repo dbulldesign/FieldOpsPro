@@ -5,8 +5,8 @@
 // ── Firebase & Data ─────────────────────────────────────────────────
 var db = null;
 var unsubscribers = [];
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues'];
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[] };
+var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events'];
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[] };
 var _syncQueue = JSON.parse(localStorage.getItem('fop_sync_queue') || '[]');
 var _isOnline = navigator.onLine;
 

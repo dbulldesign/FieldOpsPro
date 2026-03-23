@@ -66,7 +66,8 @@ function openAddModal() {
   editingId = null;
   var modals = {
     dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
-    pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue'
+    pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue',
+    commissioning: 'modal-event'
   };
   var m = modals[currentView] || 'modal-task';
   clearForm(m);
@@ -91,7 +92,7 @@ function clearForm(modalId) {
 
 function populateProjectSelects() {
   var projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
-  ['task-project','po-project','ship-project'].forEach(function(id){
+  ['task-project','po-project','ship-project','event-project'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.innerHTML = projOpts;
   });
@@ -113,6 +114,67 @@ function populateProjectSelects() {
     taskEl.innerHTML = '<option value="">— None —</option>' +
       state.tasks.filter(function(t){return !t.archived;}).map(function(t){return '<option value="'+t.id+'">'+escH(t.title)+'</option>';}).join('');
   }
+  // Populate event task + shipment selects
+  var evTaskEl = document.getElementById('event-task');
+  if(evTaskEl) {
+    evTaskEl.innerHTML = '<option value="">— None —</option>' +
+      state.tasks.filter(function(t){return !t.archived;}).map(function(t){return '<option value="'+t.id+'">'+escH(t.title)+'</option>';}).join('');
+  }
+  var evShipEl = document.getElementById('event-shipment');
+  if(evShipEl) {
+    evShipEl.innerHTML = '<option value="">— None —</option>' +
+      state.shipping.map(function(s){return '<option value="'+s.id+'">'+escH(s.desc||s.tracking||'Shipment')+'</option>';}).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  COMMISSIONING EVENTS
+// ═══════════════════════════════════════════════
+
+function saveEvent() {
+  var title = document.getElementById('event-title').value.trim();
+  if (!title) { toast('Enter an event title'); return; }
+  var item = {
+    title: title,
+    type: document.getElementById('event-type').value || 'other',
+    date: document.getElementById('event-date').value,
+    endDate: document.getElementById('event-end-date').value,
+    status: document.getElementById('event-status').value || 'scheduled',
+    project: document.getElementById('event-project').value,
+    task: document.getElementById('event-task').value,
+    shipment: document.getElementById('event-shipment').value,
+    notes: document.getElementById('event-notes').value.trim()
+  };
+  if (editingId) { updateItem('events', editingId, item); toast('Event updated'); }
+  else { addItem('events', item); toast('Event added'); }
+  closeModal('modal-event');
+  renderCommissioning();
+  if (currentView === 'calendar') renderCalendar();
+}
+
+function editEvent(id) {
+  var ev = state.events.find(function(x){ return x.id === id; });
+  if (!ev) return;
+  editingId = id;
+  populateProjectSelects();
+  document.getElementById('event-modal-title').textContent = 'Edit Event';
+  document.getElementById('event-title').value = ev.title || '';
+  document.getElementById('event-type').value = ev.type || 'other';
+  document.getElementById('event-date').value = ev.date || '';
+  document.getElementById('event-end-date').value = ev.endDate || '';
+  document.getElementById('event-status').value = ev.status || 'scheduled';
+  document.getElementById('event-project').value = ev.project || '';
+  document.getElementById('event-task').value = ev.task || '';
+  document.getElementById('event-shipment').value = ev.shipment || '';
+  document.getElementById('event-notes').value = ev.notes || '';
+  openModal('modal-event');
+}
+
+function confirmDeleteEvent(id) {
+  var ev = state.events.find(function(x){ return x.id === id; });
+  softDelete('events', id, ev ? ev.title : 'Event');
+  renderCommissioning();
+  if (currentView === 'calendar') renderCalendar();
 }
 
 // ═══════════════════════════════════════════════
@@ -293,6 +355,7 @@ function editIssue(id) {
   document.getElementById('issue-modal-title').textContent = 'Edit Issue';
   document.getElementById('issue-q').value = t.q || '';
   document.getElementById('issue-cat').value = t.cat || 'electrical';
+  var isysEl = document.getElementById('issue-system'); if(isysEl) isysEl.value = t.system || '';
   document.getElementById('issue-tags').value = t.tags || '';
   document.getElementById('issue-a').value = t.a || '';
   document.getElementById('issue-steps').value = Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps||'');
@@ -307,6 +370,7 @@ function saveIssue() {
   var item = {
     q: q,
     cat: document.getElementById('issue-cat').value,
+    system: document.getElementById('issue-system') ? document.getElementById('issue-system').value : '',
     tags: document.getElementById('issue-tags').value.trim(),
     a: document.getElementById('issue-a').value.trim(),
     steps: steps,

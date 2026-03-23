@@ -143,16 +143,10 @@ function deleteItem(col, id) {
 }
 
 
-function initFirebase(config) {
+function _doInitFirebase(config) {
   try {
-    // Tear down existing listeners first
-    unsubscribers.forEach(function(u){ u(); });
-    unsubscribers = [];
-    db = null;
-
-    // Delete any existing app with this name — must await so it finishes before re-init
-    var existingApp = firebase.apps.find(function(a){ return a.name === 'fieldops'; });
-    if (existingApp) { try { existingApp.delete(); } catch(e) {} }
+    // Clear any local-only (stock/demo) data before syncing from Firebase
+    clearLocalOnFirebaseConnect();
 
     var app = firebase.initializeApp(config, 'fieldops');
     db = firebase.firestore(app);
@@ -163,6 +157,8 @@ function initFirebase(config) {
         .onSnapshot(function(snap) {
           try {
             state[col] = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
+            // Keep localStorage in sync with Firebase as source of truth
+            LOCAL.set(col, state[col]);
             renderAll();
           } catch(renderErr) {
             console.error('renderAll error in onSnapshot:', renderErr);
@@ -180,8 +176,6 @@ function initFirebase(config) {
     var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
     var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
     var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
-    var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
-    var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
     var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
     toast('🔥 Firebase connected — syncing!');
   } catch(e) {
@@ -189,6 +183,27 @@ function initFirebase(config) {
     toast('Firebase error: ' + e.message);
   }
 }
+
+function initFirebase(config) {
+  try {
+    // Tear down existing listeners first
+    unsubscribers.forEach(function(u){ u(); });
+    unsubscribers = [];
+    db = null;
+
+    // Delete any existing app with this name (async, chain to _doInitFirebase)
+    var existingApp = firebase.apps ? firebase.apps.find(function(a){ return a.name === 'fieldops'; }) : null;
+    if (existingApp) {
+      existingApp.delete().then(function(){ _doInitFirebase(config); }).catch(function(){ _doInitFirebase(config); });
+    } else {
+      _doInitFirebase(config);
+    }
+  } catch(e) {
+    var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
+    toast('Firebase error: ' + e.message);
+  }
+}
+
 
 
 function loadLocalData() {
@@ -320,12 +335,12 @@ function loadSavedConfig() {
 function deleteAllData(scope) {
   var labels = {
     tasks:'all tasks', projects:'all projects', pos:'all purchase orders',
-    shipping:'all shipments', issues:'all troubleshoot items', all:'ALL data'
+    shipping:'all shipments', issues:'all troubleshoot items', events:'all events', all:'ALL data'
   };
   var label = labels[scope] || scope;
   if(!confirm('Permanently delete ' + label + '? This cannot be undone.')) return;
   if(scope === 'all') {
-    ['tasks','projects','pos','shipping','issues'].forEach(function(key) {
+    ['tasks','projects','pos','shipping','issues','events'].forEach(function(key) {
       state[key].slice().forEach(function(item){ deleteItem(key, item.id); });
     });
     toast('All data deleted');
@@ -334,6 +349,14 @@ function deleteAllData(scope) {
     toast('Deleted ' + label);
   }
   renderAll();
+}
+
+// Clear all local (offline) data — used when connecting to Firebase so stock demo data is removed
+function clearLocalOnFirebaseConnect() {
+  COLLECTIONS.forEach(function(col) {
+    localStorage.removeItem('fop_' + col);
+    state[col] = [];
+  });
 }
 
 
@@ -502,7 +525,15 @@ _merge(window, {
   bulkSelectAll: bulkSelectAll,
   bulkAction: bulkAction,
   startBarcodeScan: startBarcodeScan,
-  closeBarcodeScanner: closeBarcodeScanner
+  closeBarcodeScanner: closeBarcodeScanner,
+  saveEvent: saveEvent,
+  editEvent: editEvent,
+  confirmDeleteEvent: confirmDeleteEvent,
+  renderCommissioning: renderCommissioning,
+  filterCommissioning: filterCommissioning,
+  filterCommByProject: filterCommByProject,
+  clearLocalOnFirebaseConnect: clearLocalOnFirebaseConnect,
+  deleteAllData: deleteAllData
 });
 
 // ═══════════════════════════════════════════════

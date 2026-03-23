@@ -526,12 +526,25 @@ overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 overscroll-behavior-y: contain;
 padding: 14px 14px 0 14px;
-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 }
 
 /* -- iOS Tab Bar -- */
 #mobileNav {
-display: none !important;
+display: block !important;
+position: fixed !important;
+bottom: 0; left: 0; right: 0;
+z-index: 500;
+background: rgba(14,21,37,0.96) !important;
+backdrop-filter: blur(24px) saturate(180%) !important;
+-webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+border-top: 1px solid rgba(255,255,255,0.1) !important;
+padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+padding-top: 0 !important;
+}
+[data-theme="light"] #mobileNav {
+background: rgba(249,249,251,0.96) !important;
+border-top-color: rgba(0,0,0,0.12) !important;
 }
 .mobile-nav-items {
 display: flex !important;
@@ -652,10 +665,13 @@ gap: 6px !important;
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
 white-space: nowrap;
-padding: 7px 16px !important;
-font-size: 13px !important;
+padding: 9px 18px !important;
+font-size: 14px !important;
 border-radius: 99px !important;
 flex-shrink: 0;
+min-height: 40px !important;
+display: flex !important;
+align-items: center !important;
 }
 
 /* -- Buttons: larger touch targets -- */
@@ -666,14 +682,14 @@ flex-shrink: 0;
 
 /* -- FAB (Quick Add): above tab bar -- */
 #quickAddFab {
-bottom: calc(72px + env(safe-area-inset-bottom, 12px)) !important;
+bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
 right: 20px !important;
-width: 56px !important; height: 56px !important;
-font-size: 26px !important;
+width: 52px !important; height: 52px !important;
+font-size: 24px !important;
 box-shadow: 0 6px 24px rgba(37,99,255,0.45) !important;
 }
 #quickAddPanel {
-bottom: calc(140px + env(safe-area-inset-bottom, 12px)) !important;
+bottom: calc(130px + env(safe-area-inset-bottom, 0px)) !important;
 right: 14px !important;
 width: calc(100vw - 28px) !important;
 max-width: 360px;
@@ -709,7 +725,7 @@ flex-shrink: 0 !important;
 #offlineBar { top: calc(52px + env(safe-area-inset-top, 0px)) !important; }
 
 /* -- Toast: above tab bar -- */
-#toast { bottom: calc(80px + env(safe-area-inset-bottom, 12px)) !important; }
+#toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; }
 
 /* -- No hover effects on touch devices -- */
 
@@ -736,6 +752,9 @@ gap: 8px !important;
 /* -- Task rows: taller for touch -- */
 .tasks-table td { padding: 12px 10px !important; }
 tr[data-taskid] td:first-child { width: 44px !important; }
+
+/* -- Hide inline add buttons on mobile (FAB handles it) -- */
+.mob-hide-add { display: none !important; }
 
 /* -- Notification panel -- */
 
@@ -1938,6 +1957,14 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   .cal-event { font-size:9px; padding:1px 3px; }
 }
 
+/* ── COMMISSIONING CALENDAR ─────────────────────────────── */
+.comm-filter-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#8da0c0; font-size:11px; font-weight:600; padding:4px 12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.comm-filter-btn.active { background:rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.4); color:#f59e0b; }
+[data-theme="light"] .comm-filter-btn { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.1); color:#64748b; }
+[data-theme="light"] .comm-filter-btn.active { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.35); color:#d97706; }
+/* Status badge for events */
+.badge-amber { background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+
   </style>
 </head>
 <body>
@@ -1969,6 +1996,10 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="nav-section">
         <div class="nav-label" onclick="toggleSidebarSection(this)">Operations</div>
+        <div class="nav-item" onclick="switchView('commissioning')">
+          <span class="icon">🔧</span> Commissioning
+          <span class="nav-badge" id="badge-events">0</span>
+        </div>
         <div class="nav-item" onclick="switchView('pos')">
           <span class="icon">🧾</span> Purchase Orders
           <span class="nav-badge" id="badge-pos">0</span>
@@ -2241,6 +2272,9 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       <button class="cal-filter-btn" onclick="calSetFilter('po',this)">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>POs
       </button>
+      <button class="cal-filter-btn" onclick="calSetFilter('event',this)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Events
+      </button>
     </div>
     <div class="cal-grid-wrap">
       <div class="cal-day-headers">
@@ -2254,6 +2288,44 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       </div>
       <div class="cal-body" id="cal-body"></div>
     </div>
+  </div>
+
+  <!-- ═══ COMMISSIONING CALENDAR ═══ -->
+  <div class="view" id="view-commissioning">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+        <button class="comm-filter-btn active" data-type="all" onclick="filterCommissioning('all')">All</button>
+        <button class="comm-filter-btn" data-type="commissioning" onclick="filterCommissioning('commissioning')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Commissioning
+        </button>
+        <button class="comm-filter-btn" data-type="inspection" onclick="filterCommissioning('inspection')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#06b6d4;margin-right:4px;vertical-align:middle"></span>Inspection
+        </button>
+        <button class="comm-filter-btn" data-type="startup" onclick="filterCommissioning('startup')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10b981;margin-right:4px;vertical-align:middle"></span>Startup
+        </button>
+        <button class="comm-filter-btn" data-type="training" onclick="filterCommissioning('training')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b5cf6;margin-right:4px;vertical-align:middle"></span>Training
+        </button>
+        <button class="comm-filter-btn" data-type="walkthrough" onclick="filterCommissioning('walkthrough')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f472b6;margin-right:4px;vertical-align:middle"></span>Walkthrough
+        </button>
+        <button class="comm-filter-btn" data-type="punchlist" onclick="filterCommissioning('punchlist')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle"></span>Punch List
+        </button>
+        <button class="comm-filter-btn" data-type="handoff" onclick="filterCommissioning('handoff')">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b;margin-right:4px;vertical-align:middle"></span>Handoff
+        </button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Event</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <select id="comm-project-filter" onchange="filterCommByProject(this.value)"
+        style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
+        <option value="">All Projects</option>
+      </select>
+    </div>
+    <div id="comm-list"></div>
   </div>
 
   <!-- ═══ PROJECTS ═══ -->
@@ -2315,7 +2387,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
         <option value="">All Projects</option>
       </select>
-      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Task</button>
+      <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Task</button>
     </div>
     <div id="tasks-list-view">
       <div class="table-wrap">
@@ -2406,7 +2478,18 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 
   <!-- ═══ TROUBLESHOOT ═══ -->
   <div class="view" id="view-troubleshoot">
-    <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap">
+    <div style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+      <select id="troubleSystem" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
+        <option value="all">All Systems</option>
+        <option value="Lutron RadioRA3">Lutron RadioRA3</option>
+        <option value="Lutron Homeworks QSX">Lutron Homeworks QSX</option>
+        <option value="Lutron Caseta">Lutron Caseta</option>
+        <option value="Crestron">Crestron</option>
+        <option value="Control4">Control4</option>
+        <option value="Savant">Savant</option>
+        <option value="Leviton">Leviton</option>
+        <option value="Custom">Custom / Other</option>
+      </select>
       <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
         <option value="all">All Categories</option>
         <option value="electrical">Electrical</option>
@@ -2415,9 +2498,8 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
         <option value="hardware">Hardware</option>
         <option value="network">Network/DALI</option>
       </select>
-      <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:200px" oninput="renderTroubleshoot()">
-    
-      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
+      <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:160px" oninput="renderTroubleshoot()">
+      <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
     </div>
     <div id="troubleshoot-list"></div>
   </div>
@@ -2927,14 +3009,85 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
             <option value="network">Network / DALI</option>
           </select>
         </div>
-        <div class="form-group"><label>Tags (space-separated)</label><input type="text" id="issue-tags" placeholder="buzz hum noise dimmer"></div>
+        <div class="form-group"><label>Control System</label>
+          <select id="issue-system">
+            <option value="">All Systems</option>
+            <option value="Lutron RadioRA3">Lutron RadioRA3</option>
+            <option value="Lutron Homeworks QSX">Lutron Homeworks QSX</option>
+            <option value="Lutron Caseta">Lutron Caseta</option>
+            <option value="Crestron">Crestron</option>
+            <option value="Control4">Control4</option>
+            <option value="Savant">Savant</option>
+            <option value="Leviton">Leviton</option>
+            <option value="Custom">Custom / Other</option>
+          </select>
+        </div>
       </div>
+      <div class="form-group"><label>Tags (space-separated)</label><input type="text" id="issue-tags" placeholder="buzz hum noise dimmer"></div>
+
       <div class="form-group"><label>Summary / Cause</label><textarea id="issue-a" placeholder="Brief description of the cause or context..."></textarea></div>
       <div class="form-group"><label>Troubleshooting Steps (one per line)</label>
         <textarea id="issue-steps" style="min-height:150px" placeholder="Check the neutral wire connection.&#10;Verify load wattage is within dimmer rating.&#10;Try a compatible LED driver."></textarea>
       </div>
     </div>
     
+  </div>
+</div>
+
+<!-- Event Modal -->
+
+<div class="modal-overlay" id="modal-event" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="event-modal-title">New Event</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveEvent()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-event')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="event-id">
+      <div class="form-group"><label>Title *</label><input type="text" id="event-title" placeholder="e.g. Lutron RadioRA3 Commissioning — Office HQ"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label>
+          <select id="event-type">
+            <option value="commissioning">Commissioning</option>
+            <option value="inspection">Inspection</option>
+            <option value="startup">Startup</option>
+            <option value="training">Training</option>
+            <option value="walkthrough">Walkthrough</option>
+            <option value="punchlist">Punch List</option>
+            <option value="handoff">Handoff</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="event-status">
+            <option value="scheduled">Scheduled</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="event-date"></div>
+        <div class="form-group"><label>End Date (optional)</label><input type="date" id="event-end-date"></div>
+      </div>
+      <div class="form-group"><label>Project</label>
+        <select id="event-project"><option value="">— None —</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Linked Task</label>
+          <select id="event-task"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Linked Shipment</label>
+          <select id="event-shipment"><option value="">— None —</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="event-notes" placeholder="Location, attendees, requirements…"></textarea></div>
+    </div>
   </div>
 </div>
 
@@ -3841,6 +3994,7 @@ function loadSavedConfig() {
 var currentView = 'dashboard';
 var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar',
+  commissioning: 'Commissioning Calendar',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
 };
 
@@ -3876,6 +4030,14 @@ function switchView(v) {
   closeSidebar();
   if(v==='troubleshoot') renderTroubleshoot();
   if(v==='calendar') renderCalendar();
+  if(v==='commissioning') {
+    var cpf = document.getElementById('comm-project-filter');
+    if (cpf) {
+      cpf.innerHTML = '<option value="">All Projects</option>' +
+        state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
+    }
+    renderCommissioning();
+  }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
     window._dirtyViews[v] = false;
@@ -6645,6 +6807,13 @@ function renderCalendar() {
       addEv(p.delivery, { type:'po', id:p.id, title:(p.number?p.number+' – ':'')+p.vendor, color:'#a78bfa', status:p.status });
     });
   }
+  if (calFilter === 'all' || calFilter === 'event') {
+    state.events.filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
+      var typeColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
+      var color = typeColors[e.type] || '#f59e0b';
+      addEv(e.date, { type:'event', id:e.id, title:e.title, color:color, status:e.status });
+    });
+  }
 
   var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
   var html = '';
@@ -6740,6 +6909,9 @@ function calDrop(e, cell) {
   } else if (type === 'po') {
     var p = state.pos.find(function(x){ return x.id === id; });
     if (p) { p.delivery = newDate; updateItem('pos', id, { delivery: newDate }); }
+  } else if (type === 'event') {
+    var ev = state.events.find(function(x){ return x.id === id; });
+    if (ev) { ev.date = newDate; updateItem('events', id, { date: newDate }); }
   }
   haptic('light');
   renderCalendar();
@@ -6750,6 +6922,7 @@ function calEventClick(type, id) {
   if (type === 'task') editTask(id);
   else if (type === 'ship') editShipment(id);
   else if (type === 'po') editPO(id);
+  else if (type === 'event') editEvent(id);
 }
 
 // ─── AUTO-DETECT SHIPPING CARRIER ────────────────────────────────────────────
@@ -7283,6 +7456,7 @@ function updateThingsNav(v) {
   var lt = document.getElementById('mob-large-title');
   if (lt) {
     var titles = {dashboard:'FieldOps Pro', projects:'Projects', tasks:'Tasks',
+      commissioning:'Commissioning', calendar:'Calendar',
       pos:'Purchase Orders', shipping:'Shipping', troubleshoot:'Troubleshoot', settings:'Settings'};
     lt.textContent = titles[v] || v;
   }
@@ -7393,6 +7567,57 @@ function renderThingsHome() {
     })(s.view);
     el.appendChild(div);
   });
+
+  // ── Upcoming Tasks Section ───────────────────────────────────────────
+  var upcoming = state.tasks.filter(function(t){
+    if(t.archived || t.status==='done' || !t.due) return false;
+    var d = new Date(t.due+'T00:00:00');
+    return d <= new Date(today.getTime() + 7*86400000);
+  }).sort(function(a,b){ return (a.due||'').localeCompare(b.due||''); }).slice(0,5);
+
+  if (upcoming.length) {
+    var taskSec = document.createElement('div');
+    taskSec.style.cssText = 'margin-top:22px';
+    taskSec.innerHTML = '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding:0 2px">Upcoming Tasks</div>';
+    upcoming.forEach(function(t) {
+      var isOverdue = new Date(t.due+'T00:00:00') < today;
+      var row = document.createElement('div');
+      row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px';
+      row.innerHTML = '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(t.title)+'</div>'
+        + '<div style="font-size:11px;margin-top:3px;color:'+(isOverdue?'#ef4444':'#f59e0b')+'">'+fmtDateSmart(t.due)+'</div>'
+        + '</div>'
+        + statusBadge(t.status);
+      (function(tid){ row.onclick = function(){ switchView('tasks'); setTimeout(function(){ openDetail('tasks',tid); }, 80); }; })(t.id);
+      taskSec.appendChild(row);
+    });
+    var moreLink = document.createElement('div');
+    moreLink.style.cssText = 'text-align:center;padding:8px;font-size:12px;color:#4f8ef7;font-weight:600;cursor:pointer';
+    moreLink.textContent = 'View All Tasks →';
+    moreLink.onclick = function(){ switchView('tasks'); };
+    taskSec.appendChild(moreLink);
+    el.appendChild(taskSec);
+  }
+
+  // ── In-Transit Shipments ─────────────────────────────────────────────
+  var transit = state.shipping.filter(function(s){return (s.status==='transit'||s.status==='out')&&!s.archived;}).slice(0,3);
+  if (transit.length) {
+    var shipSec = document.createElement('div');
+    shipSec.style.cssText = 'margin-top:22px';
+    shipSec.innerHTML = '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding:0 2px">In Transit</div>';
+    transit.forEach(function(s) {
+      var row = document.createElement('div');
+      row.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px';
+      row.innerHTML = '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(s.desc||s.tracking||'Shipment')+'</div>'
+        + '<div style="font-size:11px;margin-top:3px;color:#22d3ee">'+(s.carrier?escH(s.carrier)+' · ':'')+(s.eta?'ETA '+fmtDate(s.eta):'')+'</div>'
+        + '</div>'
+        + statusBadge(s.status);
+      (function(sid){ row.onclick = function(){ switchView('shipping'); setTimeout(function(){ openDetail('shipping',sid); }, 80); }; })(s.id);
+      shipSec.appendChild(row);
+    });
+    el.appendChild(shipSec);
+  }
 }
 
 function thingsIcon(view, color) {

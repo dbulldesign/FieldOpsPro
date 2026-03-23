@@ -81,6 +81,13 @@ function renderDashboard() {
   document.getElementById('badge-tasks').textContent = openTasks.length;
   document.getElementById('badge-pos').textContent = state.pos.filter(function(p){return p.status!=='received'&&p.status!=='cancelled';}).length;
   document.getElementById('badge-shipping').textContent = inTransit;
+  var evBadge = document.getElementById('badge-events');
+  if (evBadge) {
+    var today2 = new Date(); today2.setHours(0,0,0,0);
+    var upcomingEvents = state.events.filter(function(e){ return !e.archived && e.status !== 'completed' && e.status !== 'cancelled' && e.date && new Date(e.date+'T00:00:00') >= today2; }).length;
+    evBadge.textContent = upcomingEvents;
+    evBadge.style.display = upcomingEvents > 0 ? 'inline-flex' : 'none';
+  }
 
   // Due date alerts
   var today = new Date(); today.setHours(0,0,0,0);
@@ -177,7 +184,7 @@ function renderProjects() {
       card.onclick = function(e) {
         var t=e.target;
         while(t && t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}
-        if(!isArch) editProject(pid);
+        if(!isArch) openDetail('projects', pid);
       };
       var btns=card.querySelectorAll('button');
       for(var bi=0;bi<btns.length;bi++){
@@ -292,7 +299,7 @@ function renderTasks() {
             else if(btn.dataset.delete)confirmInline('Delete permanently?',function(){deleteItem('tasks',tid);renderTasks();});
           };
         })(btns[bi]);}
-        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}if(!isArch)editTask(tid);};
+        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}if(!isArch)openDetail('tasks',tid);};
       })(mt.id,mt.title||'Task',!!mt.archived);
       mList.appendChild(card);
     }
@@ -372,7 +379,7 @@ data.reverse();
       if(t.tagName === 'BUTTON' || t.tagName === 'INPUT') return;
       t = t.parentNode;
     }
-    editTask(row.dataset.taskid);
+    openDetail('tasks', row.dataset.taskid);
   });
 
   var trows = tb.querySelectorAll('tr[data-taskid]');
@@ -666,7 +673,7 @@ function renderShipping() {
             else if(b2.dataset.delete)confirmInline('Delete permanently?',function(){deleteItem('shipping',sid);renderShipping();});
           };
         })(btns[bi]);}
-        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON'||t.tagName==='A')return;t=t.parentNode;}if(!isArch)editShipment(sid);};
+        card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON'||t.tagName==='A')return;t=t.parentNode;}if(!isArch)openDetail('shipping',sid);};
       })(ms.id,!!ms.archived);
       mList.appendChild(card);
     }
@@ -709,7 +716,7 @@ data.reverse();
     if(!row) return;
     var t=e.target;
     while(t&&t!==row){if(t.tagName==='BUTTON')return;t=t.parentNode;}
-    editShipment(row.dataset.shid);
+    openDetail('shipping', row.dataset.shid);
   });
   attachRowSwipe(tb, 'shipping', 'shid');
 }
@@ -747,7 +754,25 @@ function openDetail(col, id) {
     var ptasks = state.tasks.filter(function(x){ return x.project===id; });
     var pdone = ptasks.filter(function(x){ return x.status==='done'; }).length;
     var ppct = ptasks.length ? Math.round(pdone/ptasks.length*100) : 0;
+    var pships = state.shipping.filter(function(x){ return x.project===id; });
     t.textContent = item.name;
+    var tasksHtml = ptasks.length
+      ? '<div style="margin-top:4px">' + ptasks.map(function(tk) {
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'tasks\',\''+tk.id+'\')},80)">'
+            + '<span style="flex:1;font-size:13px;color:#f0f4ff">'+escH(tk.title)+'</span>'
+            + statusBadge(tk.status)
+            + (tk.due?'<span style="font-size:11px;color:#4a5e7a">'+fmtDate(tk.due)+'</span>':'')
+            + '</div>';
+        }).join('') + '</div>'
+      : '<span style="color:#4a5e7a">None</span>';
+    var shipsHtml = pships.length
+      ? '<div style="margin-top:4px">' + pships.map(function(sh) {
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'shipping\',\''+sh.id+'\')},80)">'
+            + '<span style="flex:1;font-size:13px;color:#f0f4ff">'+escH(sh.desc||sh.tracking||'Shipment')+'</span>'
+            + statusBadge(sh.status)
+            + '</div>';
+        }).join('') + '</div>'
+      : '<span style="color:#4a5e7a">None</span>';
     b.innerHTML = row('Client', escH(item.client||'—'))
       + row('Status', statusBadge(item.status))
       + row('Control System', item.system?'<span class="badge badge-cyan">'+escH(item.system)+'</span>':'—')
@@ -755,17 +780,21 @@ function openDetail(col, id) {
       + row('Start', escH(fmtDate(item.start)))
       + row('End', escH(fmtDate(item.end)))
       + row('Progress', '<div style="display:flex;align-items:center;gap:10px"><span>'+pdone+'/'+ptasks.length+' tasks</span><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>')
+      + row('Tasks', tasksHtml)
+      + row('Shipments', shipsHtml)
       + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
     setDetailFooter(f, 'editProject', id);
   }
   else if(col==='tasks') {
+    var tShip = item.shipment ? state.shipping.find(function(s){ return s.id===item.shipment; }) : null;
     t.textContent = item.title;
     b.innerHTML = row('Status', statusBadge(item.status))
       + row('Priority', priorityBadge(item.priority))
       + row('Category', escH(item.category||'General'))
       + row('Due', fmtDateSmart(item.due))
       + (item.recur?row('Repeats', escH(item.recur)):'')
-      + (item.project?row('Project', escH(projectName(item.project))):'')
+      + (item.project?row('Project','<span style="cursor:pointer;color:#4f8ef7" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'projects\',\''+item.project+'\')},80)">'+escH(projectName(item.project))+'</span>'):'')
+      + (tShip?row('Shipment','<span style="cursor:pointer;color:#22d3ee" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'shipping\',\''+tShip.id+'\')},80)">'+escH(tShip.desc||tShip.tracking||'Shipment')+' &rarr; '+statusBadge(tShip.status)+'</span>'):'')
       + (item.desc?row('Notes','<span style="white-space:pre-wrap">'+escH(item.desc)+'</span>'):'');
     setDetailFooter(f, 'editTask', id);
   }
@@ -807,9 +836,12 @@ function openDetail(col, id) {
 
 function renderTroubleshoot() {
   var cat = document.getElementById('troubleCategory').value;
+  var sysEl = document.getElementById('troubleSystem');
+  var sysFilter = sysEl ? sysEl.value : 'all';
   var search = document.getElementById('troubleSearch').value.toLowerCase();
   var data = state.issues.slice();
   if (cat !== 'all') data = data.filter(function(t){ return t.cat === cat; });
+  if (sysFilter !== 'all') data = data.filter(function(t){ return (t.system||'') === sysFilter; });
   if (search) data = data.filter(function(t){
     return (t.q||'').toLowerCase().indexOf(search)>=0 ||
            (t.tags||'').toLowerCase().indexOf(search)>=0 ||
@@ -830,8 +862,9 @@ function renderTroubleshoot() {
       '<div style="display:flex;align-items:flex-start;gap:12px" onclick="toggleTrouble(' + i + ')">' +
         '<div style="flex:1">' +
           '<div class="trouble-q">' + escHtml(t.q||'') + '</div>' +
-          '<div class="trouble-tag" style="margin-top:4px">' +
+          '<div class="trouble-tag" style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">' +
             '<span class="badge" style="border-color:' + color + '30;color:' + color + ';background:' + color + '18">' + (t.cat||'general') + '</span>' +
+            (t.system ? '<span class="badge badge-cyan" style="font-size:10px">⚡ ' + escHtml(t.system) + '</span>' : '') +
           '</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;align-items:center" onclick="event.stopPropagation()">' +
@@ -859,12 +892,97 @@ function toggleTrouble(i) {
   arrow.textContent = el.classList.contains('expanded') ? '∨' : '›';
 }
 
+// ── EVENT TYPE COLORS ─────────────────────────────────────────────────────────
+var EVENT_TYPE_COLORS = {
+  commissioning:'#f59e0b', inspection:'#06b6d4', startup:'#10b981',
+  training:'#8b5cf6', walkthrough:'#f472b6', punchlist:'#ef4444',
+  handoff:'#64748b', other:'#6366f1'
+};
+
+function renderCommissioning() {
+  var el = document.getElementById('comm-list');
+  if (!el) return;
+
+  var commFilter = (window._commFilter || 'all');
+  var commProjectFilter = (window._commProjectFilter || '');
+
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var evs = state.events.filter(function(e) { return !e.archived; });
+
+  if (commFilter !== 'all') evs = evs.filter(function(e) { return e.type === commFilter; });
+  if (commProjectFilter) evs = evs.filter(function(e) { return e.project === commProjectFilter; });
+
+  evs = evs.slice().sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+  if (!evs.length) {
+    el.innerHTML = buildEmptyState('📅', 'rgba(245,158,11,0.15)', 'No Events Yet', 'Add commissioning events, inspections, startups, and milestones');
+    return;
+  }
+
+  function renderRow(ev) {
+    var proj = ev.project ? state.projects.find(function(p) { return p.id === ev.project; }) : null;
+    var task = ev.task ? state.tasks.find(function(t) { return t.id === ev.task; }) : null;
+    var ship = ev.shipment ? state.shipping.find(function(s) { return s.id === ev.shipment; }) : null;
+    var color = EVENT_TYPE_COLORS[ev.type] || '#6366f1';
+    var evDate = ev.date ? new Date(ev.date + 'T00:00:00') : null;
+    var isToday = evDate && evDate.getTime() === today.getTime();
+    var isPast = evDate && evDate < today;
+    return '<div class="card" style="margin-bottom:10px;cursor:pointer;opacity:' + (ev.status === 'cancelled' ? '0.5' : '1') + '" onclick="editEvent(\'' + ev.id + '\')">'
+      + '<div style="display:flex;align-items:flex-start;gap:12px">'
+      + '<div style="width:4px;min-height:48px;border-radius:4px;background:' + color + ';flex-shrink:0"></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+      + '<span style="font-weight:600;font-size:14px">' + escH(ev.title) + '</span>'
+      + '<span style="font-size:10px;font-weight:700;color:' + color + ';background:' + color + '20;border:1px solid ' + color + '40;border-radius:99px;padding:1px 8px;white-space:nowrap;text-transform:capitalize">' + escH(ev.type || 'other') + '</span>'
+      + statusBadge(ev.status || 'scheduled')
+      + '</div>'
+      + '<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#64748b">'
+      + (ev.date ? '<span>' + (isToday ? '<span style="color:#10b981;font-weight:600">Today</span>' : (isPast ? '<span style="color:#ef4444">' + fmtDate(ev.date) + '</span>' : fmtDateSmart(ev.date))) + '</span>' : '')
+      + (proj ? '<span>📋 ' + escH(proj.name) + '</span>' : '')
+      + (task ? '<span>✅ ' + escH(task.title) + '</span>' : '')
+      + (ship ? '<span>📦 ' + escH(ship.desc || ship.tracking || 'Shipment') + '</span>' : '')
+      + '</div>'
+      + (ev.notes ? '<div style="font-size:12px;color:#64748b;margin-top:4px">' + escH(ev.notes) + '</div>' : '')
+      + '</div>'
+      + '<button class="btn btn-ghost btn-icon" onclick="event.stopPropagation();confirmDeleteEvent(\'' + ev.id + '\')" style="flex-shrink:0;color:#64748b">✕</button>'
+      + '</div>'
+      + '</div>';
+  }
+
+  var upcoming = evs.filter(function(e) { return !e.date || new Date(e.date + 'T00:00:00') >= today; });
+  var past = evs.filter(function(e) { return e.date && new Date(e.date + 'T00:00:00') < today; });
+  var html = '';
+  if (upcoming.length) {
+    html += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Upcoming · ' + upcoming.length + '</div>';
+    html += upcoming.map(renderRow).join('');
+  }
+  if (past.length) {
+    html += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;margin-top:20px">Past · ' + past.length + '</div>';
+    html += past.map(renderRow).join('');
+  }
+  el.innerHTML = html;
+}
+
+function filterCommissioning(type) {
+  window._commFilter = type;
+  document.querySelectorAll('.comm-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('.comm-filter-btn[data-type="' + type + '"]');
+  if (btn) btn.classList.add('active');
+  renderCommissioning();
+}
+
+function filterCommByProject(val) {
+  window._commProjectFilter = val;
+  renderCommissioning();
+}
+
 function renderAll() {
   renderDashboard();
   renderProjects();
   renderTasks();
   renderPOs();
   renderShipping();
+  renderCommissioning();
   window._dirtyViews = {projects:false, tasks:false, pos:false, shipping:false, troubleshoot:false};
 }
 
