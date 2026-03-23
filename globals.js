@@ -402,5 +402,11 @@ _merge(window, {
   bulkSelectAll: bulkSelectAll,
   bulkAction: bulkAction,
   startBarcodeScan: startBarcodeScan,
-  closeBarcodeScanner: closeBarcodeScanner
+  closeBarcodeScanner: closeBarcodeScanner,
+  renderCommissioning: renderCommissioning,
+  filterCommissioning: filterCommissioning,
+  filterCommByProject: filterCommByProject,
+  saveEvent: saveEvent,
+  editEvent: editEvent,
+  confirmDeleteEvent: confirmDeleteEvent
 });

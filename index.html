@@ -6808,7 +6808,7 @@ function renderCalendar() {
     });
   }
   if (calFilter === 'all' || calFilter === 'event') {
-    state.events.filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
+    (state.events || []).filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
       var typeColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
       var color = typeColors[e.type] || '#f59e0b';
       addEv(e.date, { type:'event', id:e.id, title:e.title, color:color, status:e.status });
