@@ -82,10 +82,11 @@ function toast(msg) {
     el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#f0f4ff;padding:10px 20px;border-radius:99px;font-size:14px;font-weight:600;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
     document.body.appendChild(el);
   }
+  if(window._toastTimer) clearTimeout(window._toastTimer);
   el.textContent = msg;
   el.style.opacity = '1';
   el.classList.add('show');
-  setTimeout(function(){ el.style.opacity = '0'; el.classList.remove('show'); }, 2500);
+  window._toastTimer = setTimeout(function(){ el.style.opacity = '0'; el.classList.remove('show'); }, 2500);
 }
 
 // ═══════════════════════════════════════════════
@@ -233,7 +234,7 @@ function updateOverdueBadge(){var today=new Date();today.setHours(0,0,0,0);var n
 
 function projectHealth(p){var today=new Date();today.setHours(0,0,0,0);var tasks=state.tasks.filter(function(t){return t.project===p.id&&!t.archived;});var overdue=tasks.filter(function(t){return t.status!=='done'&&t.due&&new Date(t.due)<today;});if(overdue.length)return{color:'#ef4444',label:overdue.length+' overdue'};if(p.end){var end=new Date(p.end+'T00:00:00'),days=Math.round((end-today)/86400000);if(days<0&&p.status!=='completed')return{color:'#ef4444',label:'Past deadline'};if(days<=7&&p.status!=='completed')return{color:'#fbbf24',label:days+'d left'};}if(tasks.length&&tasks.every(function(t){return t.status==='done';}))return{color:'#10b981',label:'All done'};return{color:'#3b82f6',label:'On track'};}
 
-function confirmInline(msg,cb){var el=document.getElementById('toast');if(!el){if(confirm(msg))cb();return;}el.innerHTML=escH(msg)+' <button onclick="inlineConfirmYes()" style="background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;font-weight:700;margin-left:6px">Yes</button> <button onclick="inlineConfirmNo()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;margin-left:4px">No</button>';el.classList.add('show');window._icb=cb;window._ict=setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);},7000);}
+function confirmInline(msg,cb){var el=document.getElementById('toast');if(!el){if(confirm(msg))cb();return;}if(window._toastTimer){clearTimeout(window._toastTimer);window._toastTimer=null;}if(window._undoTimer){clearTimeout(window._undoTimer);window._undoTimer=null;}if(window._ict){clearTimeout(window._ict);}el.style.opacity='';el.innerHTML=escH(msg)+' <button onclick="inlineConfirmYes()" style="background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;font-weight:700;margin-left:6px">Yes</button> <button onclick="inlineConfirmNo()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:12px;padding:2px 10px;cursor:pointer;margin-left:4px">No</button>';el.classList.add('show');window._icb=cb;window._ict=setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);},7000);}
 
 function inlineConfirmYes(){var cb=window._icb;clearTimeout(window._ict);var el=document.getElementById('toast');if(el){el.classList.remove('show');setTimeout(function(){el.innerHTML='';},400);}if(cb)cb();window._icb=null;}
 
