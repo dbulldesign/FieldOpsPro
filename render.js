@@ -281,7 +281,7 @@ function renderTasks() {
       card.innerHTML='<div style="font-size:15px;font-weight:700;color:#f0f4ff;margin-bottom:6px">'+escH(mt.title)+'</div>'
         +(mt.category?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px">'+escH(mt.category)+'</div>':'')
         +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+priorityBadge(mt.priority)+statusBadge(mt.status)
-        +(mt.project?'<span style="font-size:11px;color:#8da0c0;background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(projectName(mt.project))+'</span>':'')
+        +(mt.project?'<span class="proj-chip">'+escH(projectName(mt.project))+'</span>':'')
         +(mt.due?'<span style="font-size:11px;color:'+(mOver?'#ef4444':'#8da0c0')+';background:rgba(255,255,255,0.07);padding:2px 8px;border-radius:99px">'+escH(fmtDate(mt.due))+'</span>':'')
         +'</div>'
         +'<div style="display:flex;gap:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">'
@@ -346,7 +346,7 @@ data.reverse();
     html += '<tr'+rowAttrs+'>';
     html += '<td style="width:36px" onclick="event.stopPropagation()"><input type="checkbox" class="task-bulk-cb" data-id="'+t.id+'" style="width:16px;height:16px;cursor:pointer" onchange="toggleBulkSelect(this.dataset.id,this.checked)"></td>';
     html += '<td><div style="font-weight:600;color:#f0f4ff">'+escH(t.title)+'</div>'+(t.category?'<div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+escH(t.category)+'</div>':'')+'</td>';
-    html += '<td>'+(t.project?'<span style="font-size:12px;color:#8da0c0">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
+    html += '<td>'+(t.project?'<span class="proj-chip">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
     html += '<td>'+priorityBadge(t.priority)+'</td>';
     html += '<td onclick="event.stopPropagation()">';
     if(t.archived) html += '<span class="badge badge-gray" style="opacity:0.7">archived</span>';
@@ -907,7 +907,7 @@ function renderCommissioning() {
   var commProjectFilter = (window._commProjectFilter || '');
 
   var today = new Date(); today.setHours(0, 0, 0, 0);
-  var evs = state.events.filter(function(e) { return !e.archived; });
+  var evs = (state.events || []).filter(function(e) { return !e.archived; });
 
   if (commFilter !== 'all') evs = evs.filter(function(e) { return e.type === commFilter; });
   if (commProjectFilter) evs = evs.filter(function(e) { return e.project === commProjectFilter; });

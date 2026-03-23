@@ -4474,7 +4474,7 @@ function renderKanban(data) {
         +(t.category?'<div style="font-size:10px;color:#4a5e7a;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px">'+escH(t.category)+'</div>':'')
         +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
         +priorityBadge(t.priority)
-        +(t.project?'<span style="font-size:10px;color:#8da0c0;background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:99px">'+escH(projectName(t.project))+'</span>':'')
+        +(t.project?'<span class="proj-chip" style="font-size:10px">'+escH(projectName(t.project))+'</span>':'')
         +(t.due?'<span style="font-size:10px;color:'+(isOverdue?'#ef4444':'#64748b')+';margin-left:auto">'+escH(fmtDate(t.due))+'</span>':'')
         +'</div>';
 
@@ -4497,6 +4497,78 @@ function renderKanban(data) {
 
   kv.appendChild(board);
 }
+
+// ── Commissioning Calendar ─────────────────────────────────────────────
+// Defined inline so it works even before render.js updates are deployed.
+var _EVENT_COLORS = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
+function renderCommissioning() {
+  var el = document.getElementById('comm-list');
+  if (!el) return;
+  var cf = window._commFilter || 'all';
+  var cpf = window._commProjectFilter || '';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var evs = (state.events || []).filter(function(e){ return !e.archived; });
+  if (cf !== 'all') evs = evs.filter(function(e){ return e.type === cf; });
+  if (cpf) evs = evs.filter(function(e){ return e.project === cpf; });
+  evs = evs.slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  if (!evs.length) {
+    el.innerHTML = buildEmptyState('📅','rgba(245,158,11,0.15)','No Events Yet','Add commissioning events, inspections, startups, and milestones');
+    return;
+  }
+  function rRow(ev) {
+    var proj = ev.project ? state.projects.find(function(p){ return p.id===ev.project; }) : null;
+    var task = ev.task ? state.tasks.find(function(t){ return t.id===ev.task; }) : null;
+    var ship = ev.shipment ? state.shipping.find(function(s){ return s.id===ev.shipment; }) : null;
+    var color = _EVENT_COLORS[ev.type] || '#6366f1';
+    var evDate = ev.date ? new Date(ev.date+'T00:00:00') : null;
+    var isToday = evDate && evDate.getTime()===today.getTime();
+    var isPast = evDate && evDate < today;
+    return '<div class="card" style="margin-bottom:10px;cursor:pointer;opacity:'+(ev.status==='cancelled'?'0.5':'1')+'" onclick="editEvent(\''+ev.id+'\')">'
+      +'<div style="display:flex;align-items:flex-start;gap:12px">'
+      +'<div style="width:4px;min-height:48px;border-radius:4px;background:'+color+';flex-shrink:0"></div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+      +'<span style="font-weight:600;font-size:14px">'+escH(ev.title)+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'20;border:1px solid '+color+'40;border-radius:99px;padding:1px 8px;text-transform:capitalize">'+escH(ev.type||'other')+'</span>'
+      +statusBadge(ev.status||'scheduled')
+      +'</div>'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#7a94ae">'
+      +(ev.date?'<span>'+(isToday?'<span style="color:#10b981;font-weight:600">Today</span>':(isPast?'<span style="color:#ef4444">'+fmtDate(ev.date)+'</span>':fmtDateSmart(ev.date)))+'</span>':'')
+      +(proj?'<span>📋 '+escH(proj.name)+'</span>':'')
+      +(task?'<span>✅ '+escH(task.title)+'</span>':'')
+      +(ship?'<span>📦 '+escH(ship.desc||ship.tracking||'Shipment')+'</span>':'')
+      +'</div>'
+      +(ev.notes?'<div style="font-size:12px;color:#7a94ae;margin-top:4px">'+escH(ev.notes)+'</div>':'')
+      +'</div>'
+      +'<button class="btn btn-ghost btn-icon" onclick="event.stopPropagation();confirmDeleteEvent(\''+ev.id+'\')" style="flex-shrink:0;color:#7a94ae">✕</button>'
+      +'</div>'
+      +'</div>';
+  }
+  var upcoming = evs.filter(function(e){ return !e.date || new Date(e.date+'T00:00:00')>=today; });
+  var past = evs.filter(function(e){ return e.date && new Date(e.date+'T00:00:00')<today; });
+  var html = '';
+  if (upcoming.length) {
+    html += '<div style="font-size:11px;font-weight:700;color:#7a94ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Upcoming · '+upcoming.length+'</div>';
+    html += upcoming.map(rRow).join('');
+  }
+  if (past.length) {
+    html += '<div style="font-size:11px;font-weight:700;color:#7a94ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;margin-top:20px">Past · '+past.length+'</div>';
+    html += past.map(rRow).join('');
+  }
+  el.innerHTML = html;
+}
+function filterCommissioning(type) {
+  window._commFilter = type;
+  document.querySelectorAll('.comm-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btn = document.querySelector('.comm-filter-btn[data-type="'+type+'"]');
+  if (btn) btn.classList.add('active');
+  renderCommissioning();
+}
+function filterCommByProject(val) {
+  window._commProjectFilter = val;
+  renderCommissioning();
+}
+// ── End Commissioning ──────────────────────────────────────────────────
 
 function renderTasks() {
   var data = state.tasks.slice();

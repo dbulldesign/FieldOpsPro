@@ -20,7 +20,7 @@ background: #080d1a;
 }
 body {
 background: #080d1a;
-color: #f0f4ff;
+color: #dce8f8;
 font-size: 14px;
 -webkit-font-smoothing: antialiased;
 }
@@ -748,13 +748,13 @@ tr[data-taskid] td:first-child { width: 44px !important; }
 /* DETAIL */
 .detail-row { display: flex; align-items: flex-start; gap: 16px; padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .detail-row:last-child { border-bottom: none; }
-.detail-label { font-size: 10px; color: #4a5e7a !important; text-transform: uppercase; letter-spacing: 1px; width: 120px; flex-shrink: 0; padding-top: 1px; font-weight: 700; }
-.detail-val { font-size: 13px; color: #8da0c0 !important; flex: 1; }
+.detail-label { font-size: 10px; color: #5e7a9a !important; text-transform: uppercase; letter-spacing: 1px; width: 120px; flex-shrink: 0; padding-top: 1px; font-weight: 700; }
+.detail-val { font-size: 13px; color: #a8bdd4 !important; flex: 1; }
 
 /* NOTES */
 .note-card { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 14px; margin-bottom: 8px; border-left: 3px solid #2563ff; }
-.note-meta { font-size: 10px; color: #3a4a6a; margin-bottom: 6px; }
-.note-text { font-size: 13px; color: #8da0c0; line-height: 1.65; }
+.note-meta { font-size: 10px; color: #5e7a9a; margin-bottom: 6px; }
+.note-text { font-size: 13px; color: #a8bdd4; line-height: 1.65; }
 
 /* TOAST */
 #toast {
@@ -1038,6 +1038,23 @@ opacity: 0; transition: opacity 0.15s;
 
 /* UNDO TOAST button */
 #toast button { vertical-align: middle; }
+
+/* PROJECT CHIP — task cards & table */
+.proj-chip {
+  font-size: 11px;
+  color: #8da0c0;
+  background: rgba(79,142,247,0.1);
+  border: 1px solid rgba(79,142,247,0.18);
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+body.light-mode .proj-chip,
+[data-theme="light"] .proj-chip {
+  color: #1d4ed8 !important;
+  background: rgba(29,78,216,0.08) !important;
+  border-color: rgba(29,78,216,0.2) !important;
+}
 
 /* KANBAN CARD - theme-aware */
 .kb-card {
@@ -1799,3 +1816,42 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
   #dash-widget-bar { display: none !important; }
   #push-prompt { display: none !important; }
 }
+
+/* ═══════════════════════════════════════════════
+   DARK MODE — LOW LIGHT READABILITY
+   Softens harsh white-on-black contrast for
+   comfortable use in dark environments.
+═══════════════════════════════════════════════ */
+body:not(.light-mode) {
+  /* Secondary / muted text — bumped up from near-invisible */
+  --muted: #9ab4cc;
+}
+/* Muted inline text used throughout render.js */
+body:not(.light-mode) [style*="color:#4a5e7a"],
+body:not(.light-mode) [style*="color: #4a5e7a"] {
+  color: #607e9e !important;
+}
+body:not(.light-mode) [style*="color:#64748b"],
+body:not(.light-mode) [style*="color: #64748b"] {
+  color: #7a94ae !important;
+}
+body:not(.light-mode) [style*="color:#8da0c0"],
+body:not(.light-mode) [style*="color: #8da0c0"] {
+  color: #9ab4cc !important;
+}
+/* Headings — slightly off-white so pure-white accents still pop */
+body:not(.light-mode) [style*="color:#f0f4ff"],
+body:not(.light-mode) [style*="color: #f0f4ff"] {
+  color: #dce8f8 !important;
+}
+/* Card / row backgrounds — fractionally lighter for better contrast */
+body:not(.light-mode) .card,
+body:not(.light-mode) .stat-card,
+body:not(.light-mode) .trouble-card {
+  background: #0e1828 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+/* Table rows */
+body:not(.light-mode) tr { background: transparent; }
+body:not(.light-mode) td { color: #dce8f8; }
+body:not(.light-mode) th { color: #7a94ae !important; }
