@@ -66,7 +66,7 @@ function renderDashboard() {
   var openTasks = state.tasks.filter(function(t){return t.status!=='done';});
   var highTasks = openTasks.filter(function(t){return t.priority==='high';}).length;
   var inTransit = state.shipping.filter(function(s){return s.status==='transit'||s.status==='out';}).length;
-  var totalPO = state.pos.reduce(function(a,p){return a+parseFloat(p.total||0);},0);
+  void state.pos.reduce(function(a,p){return a+parseFloat(p.total||0);},0); // reserved for future stat
 
   animateCount('stat-projects',state.projects.length);
   animateCount('stat-tasks',openTasks.length);
@@ -167,7 +167,9 @@ function renderProjects() {
     var card=document.createElement('div');card.className='card';card.style.cssText='cursor:pointer;border-left:4px solid '+bc+' !important';
     card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div>'
       +'<div style="font-weight:700;font-size:16px;margin-bottom:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+health.color+';display:inline-block;margin-right:7px;vertical-align:middle"></span>'+escH(p.name)+'</div>'
-      +'<div style="font-size:12px;color:#64748b">'+escH(p.client||'No client')+(p.location?' &middot; '+escH(p.location):'')+' </div></div>'+statusBadge(p.status)+'</div>'
+      +'<div style="font-size:12px;color:#64748b">'+escH(p.client||'No client')+(p.location?' &middot; '+escH(p.location):'')+' </div>'
+      +(p.pm?'<div style="font-size:11px;color:#8da0c0;margin-top:3px">👤 '+escH(p.pm)+'</div>':'')
+      +'</div>'+statusBadge(p.status)+'</div>'
       +(p.system?'<div style="margin-bottom:10px"><span class="badge badge-cyan">&#x26A1; '+escH(p.system)+'</span></div>':'')
       +'<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b"><span>'+escH(fmtDate(p.start)||'—')+'</span><span>'+escH(fmtDate(p.end)||'—')+'</span></div>'
       +'<div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b"><span>Tasks: '+done+'/'+tasks.length+'</span><span>'+pct+'%</span></div>'
@@ -180,7 +182,7 @@ function renderProjects() {
       : ('<div style="display:flex;gap:8px;margin-top:12px">'
          +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>'
          +'</div>'));
-    (function(pid,pn,isArch){
+    (function(pid,isArch){
       card.onclick = function(e) {
         var t=e.target;
         while(t && t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}
@@ -197,7 +199,7 @@ function renderProjects() {
           };
         })(btns[bi]);
       }
-    })(p.id,p.name||'Project',!!p.archived);
+    })(p.id,!!p.archived);
     wrap.appendChild(card);
   });
   el.appendChild(wrap);
@@ -290,7 +292,7 @@ function renderTasks() {
              +'<button class="btn btn-danger btn-sm" style="font-size:11px" data-delete="1">Delete</button>')
           : '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#f59e0b;border-color:rgba(245,158,11,0.4)" data-archive="1">Archive</button>')
         +'</div>';
-      (function(tid,ttitle,isArch){
+      (function(tid,isArch){
         var btns=card.querySelectorAll('button');
         for(var bi=0;bi<btns.length;bi++){(function(btn){
           btn.onclick=function(e){e.stopPropagation();
@@ -300,7 +302,7 @@ function renderTasks() {
           };
         })(btns[bi]);}
         card.onclick=function(e){var t=e.target;while(t&&t!==card){if(t.tagName==='BUTTON')return;t=t.parentNode;}if(!isArch)openDetail('tasks',tid);};
-      })(mt.id,mt.title||'Task',!!mt.archived);
+      })(mt.id,!!mt.archived);
       mList.appendChild(card);
     }
     var tWrap=document.querySelector('#tasks-list-view .table-wrap');
@@ -539,7 +541,6 @@ function renderPOs() {
   
   if(isMobile()){
     var mWrap=document.getElementById('view-pos');
-    var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
     var mOld=document.getElementById('mob-pos-cards');
     if(mOld) mOld.remove();
     var mList=document.createElement('div');
@@ -597,7 +598,7 @@ data.reverse();
     html += '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
     if(p.archived) {
       html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchivePO(this.dataset.uid)">Restore</button>';
-      html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'pos\',' + JSON.stringify(p.id) + ');renderPOs();})">Delete</button>';
+      html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'pos\',\''+p.id+'\');renderPOs();})">Delete</button>';
     } else {
       html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archivePO(this.dataset.uid)">Archive</button>';
     }
@@ -638,7 +639,6 @@ function renderShipping() {
   
   if(isMobile()){
     var mWrap=document.getElementById('view-shipping');
-    var mTableWrap=mWrap ? mWrap.querySelector('.table-wrap') : null;
     var mOld=document.getElementById('mob-shipping-cards');
     if(mOld) mOld.remove();
     var mList=document.createElement('div');
@@ -698,7 +698,7 @@ data.reverse();
     html+='<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
     if(s.archived) {
       html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchiveShipment(this.dataset.uid)">Restore</button>';
-      html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'shipping\',' + JSON.stringify(s.id) + ');renderShipping();})">Delete</button>';
+      html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'shipping\',\''+s.id+'\');renderShipping();})">Delete</button>';
     } else {
       html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archiveShipment(this.dataset.uid)">Archive</button>';
     }
@@ -774,6 +774,7 @@ function openDetail(col, id) {
         }).join('') + '</div>'
       : '<span style="color:#4a5e7a">None</span>';
     b.innerHTML = row('Client', escH(item.client||'—'))
+      + (item.pm ? row('Project Manager', '<span style="display:inline-flex;align-items:center;gap:5px">👤 '+escH(item.pm)+'</span>') : '')
       + row('Status', statusBadge(item.status))
       + row('Control System', item.system?'<span class="badge badge-cyan">'+escH(item.system)+'</span>':'—')
       + row('Location', escH(item.location||'—'))
@@ -782,6 +783,12 @@ function openDetail(col, id) {
       + row('Progress', '<div style="display:flex;align-items:center;gap:10px"><span>'+pdone+'/'+ptasks.length+' tasks</span><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>')
       + row('Tasks', tasksHtml)
       + row('Shipments', shipsHtml)
+      + ((item.budgetFlight||item.budgetHotel||item.budgetFood) ? row('Travel Budget',
+          '<div style="display:flex;gap:14px;flex-wrap:wrap">'
+          + (item.budgetFlight ? '<span>✈ <strong>'+fmtCurrency(item.budgetFlight)+'</strong> flight</span>' : '')
+          + (item.budgetHotel  ? '<span>🏨 <strong>'+fmtCurrency(item.budgetHotel)+'</strong>/night</span>' : '')
+          + (item.budgetFood   ? '<span>🍽 <strong>'+fmtCurrency(item.budgetFood)+'</strong>/day</span>' : '')
+          + '</div>') : '')
       + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
     setDetailFooter(f, 'editProject', id);
   }
@@ -1451,7 +1458,7 @@ function renderThingsHome() {
   });
 }
 
-function thingsIcon(view, color) {
+function thingsIcon(view) {
   var icons = {
     dashboard: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
     projects:  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',

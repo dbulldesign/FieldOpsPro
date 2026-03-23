@@ -1991,15 +1991,12 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <span class="nav-badge" id="badge-tasks">0</span>
         </div>
         <div class="nav-item" onclick="switchView('calendar')">
-          <span class="icon">📅</span> Calendar
+          <span class="icon">📅</span> Calendar &amp; Events
+          <span class="nav-badge" id="badge-events" style="display:none">0</span>
         </div>
       </div>
       <div class="nav-section">
         <div class="nav-label" onclick="toggleSidebarSection(this)">Operations</div>
-        <div class="nav-item" onclick="switchView('commissioning')">
-          <span class="icon">🔧</span> Commissioning
-          <span class="nav-badge" id="badge-events">0</span>
-        </div>
         <div class="nav-item" onclick="switchView('pos')">
           <span class="icon">🧾</span> Purchase Orders
           <span class="nav-badge" id="badge-pos">0</span>
@@ -2251,49 +2248,65 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
     </div>
   </div>
 
-  <!-- ═══ CALENDAR ═══ -->
+  <!-- ═══ CALENDAR + COMMISSIONING (combined) ═══ -->
   <div class="view" id="view-calendar">
-    <div class="cal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <button class="cal-nav-btn" onclick="calNav(-1)" title="Previous month">&#8249;</button>
-        <div class="cal-month-label" id="cal-month-label"></div>
-        <button class="cal-nav-btn" onclick="calNav(1)" title="Next month">&#8250;</button>
+    <!-- Tab switcher -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="tabs" style="margin-bottom:0">
+        <div class="tab active" id="cal-tab-calendar" onclick="calTab('calendar',this)">📅 Calendar</div>
+        <div class="tab" id="cal-tab-events" onclick="calTab('events',this)">🔧 Events <span class="nav-badge" id="badge-events" style="display:none;margin-left:4px">0</span></div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
+      <button class="btn btn-primary btn-sm" id="cal-add-btn" onclick="calAddBtn()" style="white-space:nowrap">+ Add Event</button>
     </div>
-    <div class="cal-filter-row">
-      <button class="cal-filter-btn active" onclick="calSetFilter('all',this)">All</button>
-      <button class="cal-filter-btn" onclick="calSetFilter('tasks',this)">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4f8ef7;margin-right:4px;vertical-align:middle"></span>Tasks
-      </button>
-      <button class="cal-filter-btn" onclick="calSetFilter('ship',this)">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee;margin-right:4px;vertical-align:middle"></span>Shipments
-      </button>
-      <button class="cal-filter-btn" onclick="calSetFilter('po',this)">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>POs
-      </button>
-      <button class="cal-filter-btn" onclick="calSetFilter('event',this)">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Events
-      </button>
-    </div>
-    <div class="cal-grid-wrap">
-      <div class="cal-day-headers">
-        <div class="cal-day-header">Sun</div>
-        <div class="cal-day-header">Mon</div>
-        <div class="cal-day-header">Tue</div>
-        <div class="cal-day-header">Wed</div>
-        <div class="cal-day-header">Thu</div>
-        <div class="cal-day-header">Fri</div>
-        <div class="cal-day-header">Sat</div>
-      </div>
-      <div class="cal-body" id="cal-body"></div>
-    </div>
-  </div>
 
-  <!-- ═══ COMMISSIONING CALENDAR ═══ -->
-  <div class="view" id="view-commissioning">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+    <!-- ── CALENDAR SECTION ── -->
+    <div id="cal-calendar-section">
+      <div class="cal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="cal-nav-btn" onclick="calNav(-1)" title="Previous month">&#8249;</button>
+          <div class="cal-month-label" id="cal-month-label"></div>
+          <button class="cal-nav-btn" onclick="calNav(1)" title="Next month">&#8250;</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
+      </div>
+      <div class="cal-filter-row">
+        <button class="cal-filter-btn active" onclick="calSetFilter('all',this)">All</button>
+        <button class="cal-filter-btn" onclick="calSetFilter('tasks',this)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4f8ef7;margin-right:4px;vertical-align:middle"></span>Tasks
+        </button>
+        <button class="cal-filter-btn" onclick="calSetFilter('ship',this)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22d3ee;margin-right:4px;vertical-align:middle"></span>Shipments
+        </button>
+        <button class="cal-filter-btn" onclick="calSetFilter('po',this)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#a78bfa;margin-right:4px;vertical-align:middle"></span>POs
+        </button>
+        <button class="cal-filter-btn" onclick="calSetFilter('event',this)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Events
+        </button>
+      </div>
+      <div class="cal-grid-wrap">
+        <div class="cal-day-headers">
+          <div class="cal-day-header">Sun</div>
+          <div class="cal-day-header">Mon</div>
+          <div class="cal-day-header">Tue</div>
+          <div class="cal-day-header">Wed</div>
+          <div class="cal-day-header">Thu</div>
+          <div class="cal-day-header">Fri</div>
+          <div class="cal-day-header">Sat</div>
+        </div>
+        <div class="cal-body" id="cal-body"></div>
+      </div>
+    </div>
+
+    <!-- ── EVENTS LIST SECTION ── -->
+    <div id="cal-events-section" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <select id="comm-project-filter" onchange="filterCommByProject(this.value)"
+          style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
+          <option value="">All Projects</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
         <button class="comm-filter-btn active" data-type="all" onclick="filterCommissioning('all')">All</button>
         <button class="comm-filter-btn" data-type="commissioning" onclick="filterCommissioning('commissioning')">
           <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Commissioning
@@ -2317,15 +2330,8 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#64748b;margin-right:4px;vertical-align:middle"></span>Handoff
         </button>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Event</button>
+      <div id="comm-list"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <select id="comm-project-filter" onchange="filterCommByProject(this.value)"
-        style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
-        <option value="">All Projects</option>
-      </select>
-    </div>
-    <div id="comm-list"></div>
   </div>
 
   <!-- ═══ PROJECTS ═══ -->
@@ -2724,6 +2730,9 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
       <div class="form-group"><label>Project Name *</label><input type="text" id="project-name" placeholder="e.g. Office HQ Retrofit"></div>
       <div class="form-row">
         <div class="form-group"><label>Client</label><input type="text" id="project-client" placeholder="Client name"></div>
+        <div class="form-group"><label>Project Manager / Lead</label><div class="combo-wrap" id="combo-project-manager"></div></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Status</label>
           <select id="project-status">
             <option value="planning">Planning</option>
@@ -2774,6 +2783,12 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
           <option value="Control4">Control4</option>
           <option value="Other">Other</option>
         </select>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px">✈ Travel Budget</div>
+      <div class="form-row">
+        <div class="form-group"><label>Flight</label><input type="number" id="project-budget-flight" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>Hotel / Night</label><input type="number" id="project-budget-hotel" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>Food / Day</label><input type="number" id="project-budget-food" placeholder="0.00" min="0" step="0.01"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Notes</label><textarea id="project-notes" placeholder="Project details, scope, special requirements…"></textarea></div>
@@ -3993,8 +4008,7 @@ function loadSavedConfig() {
 // ═══════════════════════════════════════════════
 var currentView = 'dashboard';
 var viewTitles = {
-  dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar',
-  commissioning: 'Commissioning Calendar',
+  dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
 };
 
@@ -4029,14 +4043,24 @@ function switchView(v) {
   document.getElementById('topbarTitle').textContent = viewTitles[v];
   closeSidebar();
   if(v==='troubleshoot') renderTroubleshoot();
-  if(v==='calendar') renderCalendar();
-  if(v==='commissioning') {
-    var cpf = document.getElementById('comm-project-filter');
-    if (cpf) {
-      cpf.innerHTML = '<option value="">All Projects</option>' +
+  if(v==='calendar') {
+    // Restore active tab: if last tab was events, show events; else show calendar
+    var activeTab = window._calActiveTab || 'calendar';
+    var calSec = document.getElementById('cal-calendar-section');
+    var evSec = document.getElementById('cal-events-section');
+    var tCal = document.getElementById('cal-tab-calendar');
+    var tEv = document.getElementById('cal-tab-events');
+    if (calSec) calSec.style.display = activeTab === 'calendar' ? '' : 'none';
+    if (evSec) evSec.style.display = activeTab === 'events' ? '' : 'none';
+    if (tCal) tCal.classList.toggle('active', activeTab === 'calendar');
+    if (tEv) tEv.classList.toggle('active', activeTab === 'events');
+    if (activeTab === 'calendar') renderCalendar();
+    else {
+      var cpf = document.getElementById('comm-project-filter');
+      if (cpf) cpf.innerHTML = '<option value="">All Projects</option>' +
         state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
+      renderCommissioning();
     }
-    renderCommissioning();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -4072,7 +4096,8 @@ function openAddModal() {
     dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
     pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue'
   };
-  var m = modals[currentView] || 'modal-task';
+  var m = modals[currentView] ||
+    (currentView === 'calendar' && window._calActiveTab === 'events' ? 'modal-event' : 'modal-task');
   clearForm(m);
   if(m !== 'modal-issue') populateProjectSelects();
   // Hide notes section for new tasks
@@ -4329,6 +4354,7 @@ function saveProject() {
   if(!name) { toast('Enter project name'); return; }
   var item = {
     name, client: document.getElementById('project-client').value.trim(),
+    pm: comboGet('project-manager'),
     status: document.getElementById('project-status').value,
     start: document.getElementById('project-start').value,
     end: document.getElementById('project-end').value,
@@ -4336,6 +4362,9 @@ function saveProject() {
     system: document.getElementById('project-system').value,
     notes: document.getElementById('project-notes').value.trim(),
     color: document.getElementById('project-color').value || '#3b82f6',
+    budgetFlight: parseFloat(document.getElementById('project-budget-flight').value) || 0,
+    budgetHotel: parseFloat(document.getElementById('project-budget-hotel').value) || 0,
+    budgetFood: parseFloat(document.getElementById('project-budget-food').value) || 0,
   };
   if(editingId) { updateItem('projects', editingId, item); toast('Project updated'); }
   else { addItem('projects', item); toast('Project created'); }
@@ -4349,6 +4378,7 @@ function editProject(id) {
   document.getElementById('project-modal-title').textContent = 'Edit Project';
   document.getElementById('project-name').value = p.name||'';
   document.getElementById('project-client').value = p.client||'';
+  comboSet('project-manager', p.pm||'');
   document.getElementById('project-status').value = p.status||'planning';
   document.getElementById('project-start').value = p.start||'';
   document.getElementById('project-end').value = p.end||'';
@@ -4356,6 +4386,9 @@ function editProject(id) {
   document.getElementById('project-system').value = p.system||'';
   document.getElementById('project-notes').value = p.notes||'';
   document.getElementById('project-color').value = p.color||'#3b82f6';
+  document.getElementById('project-budget-flight').value = p.budgetFlight || '';
+  document.getElementById('project-budget-hotel').value = p.budgetHotel || '';
+  document.getElementById('project-budget-food').value = p.budgetFood || '';
   openModal('modal-project');
 }
 
@@ -5082,7 +5115,7 @@ data.reverse();
     html += '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
     if(p.archived) {
       html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchivePO(this.dataset.uid)">Restore</button>';
-      html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'pos\',' + JSON.stringify(p.id) + ');renderPOs();})">Delete</button>';
+      html += '<button data-uid="'+p.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'pos\',\''+p.id+'\');renderPOs();})">Delete</button>';
     } else {
       html += '<button data-uid="'+p.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archivePO(this.dataset.uid)">Archive</button>';
     }
@@ -5233,7 +5266,7 @@ data.reverse();
     html+='<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">';
     if(s.archived) {
       html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.3)" onclick="unarchiveShipment(this.dataset.uid)">Restore</button>';
-      html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'shipping\',' + JSON.stringify(s.id) + ');renderShipping();})">Delete</button>';
+      html+='<button data-uid="'+s.id+'" class="btn btn-danger btn-sm" onclick="confirmInline(\'Delete permanently?\',function(){deleteItem(\'shipping\',\''+s.id+'\');renderShipping();})">Delete</button>';
     } else {
       html+='<button data-uid="'+s.id+'" class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="archiveShipment(this.dataset.uid)">Archive</button>';
     }
@@ -5330,14 +5363,37 @@ function openDetail(col, id) {
     var ptasks = state.tasks.filter(function(x){ return x.project===id; });
     var pdone = ptasks.filter(function(x){ return x.status==='done'; }).length;
     var ppct = ptasks.length ? Math.round(pdone/ptasks.length*100) : 0;
+    var pships = state.shipping.filter(function(x){ return x.project===id; });
     t.textContent = item.name;
+    var tasksHtml = ptasks.length
+      ? '<div style="margin-top:4px">'+ptasks.map(function(tk){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'tasks\',\''+tk.id+'\')},80)">'
+            +'<span style="flex:1;font-size:13px">'+escH(tk.title)+'</span>'+statusBadge(tk.status)
+            +(tk.due?'<span style="font-size:11px;color:#4a5e7a">'+fmtDate(tk.due)+'</span>':'')+'</div>';
+        }).join('')+'</div>'
+      : '<span style="color:#4a5e7a">None</span>';
+    var shipsHtml = pships.length
+      ? '<div style="margin-top:4px">'+pships.map(function(sh){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer" onclick="closeModal(\'modal-detail\');setTimeout(function(){openDetail(\'shipping\',\''+sh.id+'\')},80)">'
+            +'<span style="flex:1;font-size:13px">'+escH(sh.desc||sh.tracking||'Shipment')+'</span>'+statusBadge(sh.status)+'</div>';
+        }).join('')+'</div>'
+      : '<span style="color:#4a5e7a">None</span>';
     b.innerHTML = row('Client', escH(item.client||'—'))
+      + (item.pm ? row('Project Manager', '<span style="display:inline-flex;align-items:center;gap:5px">👤 '+escH(item.pm)+'</span>') : '')
       + row('Status', statusBadge(item.status))
       + row('Control System', item.system?'<span class="badge badge-cyan">'+escH(item.system)+'</span>':'—')
       + row('Location', escH(item.location||'—'))
       + row('Start', escH(fmtDate(item.start)))
       + row('End', escH(fmtDate(item.end)))
       + row('Progress', '<div style="display:flex;align-items:center;gap:10px"><span>'+pdone+'/'+ptasks.length+' tasks</span><div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>')
+      + row('Tasks', tasksHtml)
+      + row('Shipments', shipsHtml)
+      + ((item.budgetFlight||item.budgetHotel||item.budgetFood) ? row('Travel Budget',
+          '<div style="display:flex;gap:14px;flex-wrap:wrap">'
+          +(item.budgetFlight?'<span>✈ <strong>'+fmtCurrency(item.budgetFlight)+'</strong> flight</span>':'')
+          +(item.budgetHotel?'<span>🏨 <strong>'+fmtCurrency(item.budgetHotel)+'</strong>/night</span>':'')
+          +(item.budgetFood?'<span>🍽 <strong>'+fmtCurrency(item.budgetFood)+'</strong>/day</span>':'')
+          +'</div>') : '')
       + (item.notes?row('Notes','<span style="white-space:pre-wrap">'+escH(item.notes)+'</span>'):'');
     setDetailFooter(f, 'editProject', id);
   }
@@ -6222,6 +6278,7 @@ var COMBO_DEFAULTS = {
   'task-category': ['General','Installation','Programming','Commissioning','Testing','Punch List','Admin'],
   'project-system': ['Lutron RadioRA3','Lutron Homeworks QSX','Lutron Caseta','Crestron','Control4','Savant','Leviton','Custom'],
   'project-status': ['Planning','Active','On Hold','Completed'],
+  'project-manager': [],
   'po-status': ['Draft','Submitted','Approved','Received'],
   'po-shipmethod': ['Standard','Expedited','Overnight','Will Call','Freight'],
   'ship-carrier': ['UPS','FedEx','USPS','DHL','OnTrac','XPO','Other'],
@@ -6357,6 +6414,7 @@ function openModal(id) {
     if (id === 'modal-project') {
       replaceSelectWithCombo('project-system');
       replaceSelectWithCombo('project-status');
+      comboInit('project-manager', comboGet('project-manager'));
     }
     if (id === 'modal-po') {
       replaceSelectWithCombo('po-status');
@@ -6920,6 +6978,38 @@ function renderCalendar() {
 
   var body = document.getElementById('cal-body');
   if (body) body.innerHTML = html;
+}
+
+function calTab(tab, el) {
+  window._calActiveTab = tab;
+  document.querySelectorAll('#view-calendar > div:first-child .tab').forEach(function(t){ t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  var calSec = document.getElementById('cal-calendar-section');
+  var evSec = document.getElementById('cal-events-section');
+  if (calSec) calSec.style.display = tab === 'calendar' ? '' : 'none';
+  if (evSec) evSec.style.display = tab === 'events' ? '' : 'none';
+  var addBtn = document.getElementById('cal-add-btn');
+  if (addBtn) addBtn.textContent = tab === 'events' ? '+ Add Event' : '+ Add Task';
+  if (tab === 'calendar') {
+    renderCalendar();
+  } else {
+    var cpf = document.getElementById('comm-project-filter');
+    if (cpf) cpf.innerHTML = '<option value="">All Projects</option>' +
+      state.projects.map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
+    renderCommissioning();
+  }
+}
+
+function calAddBtn() {
+  editingId = null;
+  if (window._calActiveTab === 'events') {
+    clearForm('modal-event');
+    populateProjectSelects();
+    document.getElementById('event-modal-title').textContent = 'New Event';
+    openModal('modal-event');
+  } else {
+    openAddModal();
+  }
 }
 
 function calNav(dir) {
@@ -7528,7 +7618,7 @@ function updateThingsNav(v) {
   var lt = document.getElementById('mob-large-title');
   if (lt) {
     var titles = {dashboard:'FieldOps Pro', projects:'Projects', tasks:'Tasks',
-      commissioning:'Commissioning', calendar:'Calendar',
+      calendar:'Calendar & Events',
       pos:'Purchase Orders', shipping:'Shipping', troubleshoot:'Troubleshoot', settings:'Settings'};
     lt.textContent = titles[v] || v;
   }
