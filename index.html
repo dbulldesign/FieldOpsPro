@@ -3851,52 +3851,57 @@ function deleteItem(col, id) {
 }
 
 function initFirebase(config) {
-  try {
-    // Tear down existing listeners first
-    unsubscribers.forEach(function(u){ u(); });
-    unsubscribers = [];
-    db = null;
+  // Tear down existing listeners first
+  unsubscribers.forEach(function(u){ u(); });
+  unsubscribers = [];
+  db = null;
 
-    // Delete any existing app with this name — must await so it finishes before re-init
-    var existingApp = firebase.apps.find(function(a){ return a.name === 'fieldops'; });
-    if (existingApp) { try { existingApp.delete(); } catch(e) {} }
+  function _doInit() {
+    try {
+      var app = firebase.initializeApp(config, 'fieldops');
+      db = firebase.firestore(app);
+      db.enablePersistence({synchronizeTabs: true}).catch(function(err) {
+        console.warn('Firestore offline persistence unavailable:', err.code);
+      });
 
-    var app = firebase.initializeApp(config, 'fieldops');
-    db = firebase.firestore(app);
-    db.enablePersistence({synchronizeTabs: true}).catch(function(err) {
-      console.warn('Firestore offline persistence unavailable:', err.code);
-    });
+      COLLECTIONS.forEach(function(col) {
+        var unsub = db.collection(col)
+          .orderBy('createdAt', 'asc')
+          .onSnapshot(function(snap) {
+            try {
+              state[col] = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
+              renderAllDebounced();
+            } catch(renderErr) {
+              console.error('renderAll error in onSnapshot:', renderErr);
+              if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
+              window._dbgDiv = document.createElement('div');
+              window._dbgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all;max-height:120px;overflow:auto';
+              window._dbgDiv.textContent = 'RENDER ERR: '+(renderErr.message||renderErr)+(renderErr.stack ? ' @ '+renderErr.stack.split('\n')[1] : '');
+              document.body && document.body.appendChild(window._dbgDiv);
+            }
+          }, function(err) { console.warn('Firestore error:', err); });
+        unsubscribers.push(unsub);
+      });
 
-    COLLECTIONS.forEach(function(col) {
-      var unsub = db.collection(col)
-        .orderBy('createdAt', 'asc')
-        .onSnapshot(function(snap) {
-          try {
-            state[col] = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
-            renderAllDebounced();
-          } catch(renderErr) {
-            console.error('renderAll error in onSnapshot:', renderErr);
-            if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
-            window._dbgDiv = document.createElement('div');
-            window._dbgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all;max-height:120px;overflow:auto';
-            window._dbgDiv.textContent = 'RENDER ERR: '+(renderErr.message||renderErr)+(renderErr.stack ? ' @ '+renderErr.stack.split('\n')[1] : '');
-            document.body && document.body.appendChild(window._dbgDiv);
-          }
-        }, function(err) { console.warn('Firestore error:', err); });
-      unsubscribers.push(unsub);
-    });
+      window._fbConfig = config;
+      var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
+      var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
+      var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
+      var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
+      var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
+      toast('🔥 Firebase connected — syncing!');
+    } catch(e) {
+      var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
+      toast('Firebase error: ' + e.message);
+    }
+  }
 
-    var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
-    var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
-    var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
-    var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
-    var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
-    var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
-    var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
-    toast('🔥 Firebase connected — syncing!');
-  } catch(e) {
-    var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
-    toast('Firebase error: ' + e.message);
+  // Must fully delete the old app before re-initializing — .delete() is async so use .then()
+  var existingApp = firebase.apps.find(function(a){ return a.name === 'fieldops'; });
+  if (existingApp) {
+    existingApp.delete().then(_doInit).catch(_doInit);
+  } else {
+    _doInit();
   }
 }
 
@@ -5908,6 +5913,16 @@ window.addEventListener('load', function(){
   }
   // Online/offline handled by sync queue handlers above
   updateOnlineStatus();
+
+  // Auto-reconnect Firebase when tab becomes visible again (desktop keeps sync fresh)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      var cfg = window._fbConfig || window._embeddedFirebaseConfig;
+      if (cfg && (!db || unsubscribers.length === 0)) {
+        initFirebase(cfg);
+      }
+    }
+  });
 
   // Init notifications + features
   renderNotifBadge();
