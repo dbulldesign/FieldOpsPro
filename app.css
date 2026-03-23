@@ -1047,12 +1047,13 @@ body.light-mode #modal-confirm > div > div:nth-child(3) { color: #64748b !import
 /* PROJECT CHIP — task cards & table */
 .proj-chip {
   font-size: 11px;
-  color: #8da0c0;
-  background: rgba(79,142,247,0.1);
-  border: 1px solid rgba(79,142,247,0.18);
+  color: #8da0c0 !important;
+  background: rgba(79,142,247,0.1) !important;
+  border: 1px solid rgba(79,142,247,0.18) !important;
   padding: 2px 8px;
   border-radius: 99px;
   white-space: nowrap;
+  display: inline-block;
 }
 body.light-mode .proj-chip,
 [data-theme="light"] .proj-chip {
@@ -1060,6 +1061,22 @@ body.light-mode .proj-chip,
   background: rgba(29,78,216,0.08) !important;
   border-color: rgba(29,78,216,0.2) !important;
 }
+
+/* INLINE DETAIL EXPAND (trouble-card style) */
+.detail-expand-row td { padding: 0 !important; border: none !important; }
+.detail-expand-content {
+  padding: 14px 20px 14px 20px;
+  background: rgba(79,142,247,0.05);
+  border-left: 3px solid rgba(79,142,247,0.35);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.detail-expand-label { font-size: 11px; font-weight: 700; color: #4a5e7a; letter-spacing: 0.8px; text-transform: uppercase; min-width: 100px; flex-shrink: 0; padding-top: 2px; }
+.detail-expand-val { font-size: 13px; color: #c8d6f0; }
+.detail-expand-row-kv { display: flex; gap: 12px; margin-bottom: 7px; align-items: flex-start; }
+tr.row-expanded > td:first-child { border-left: 3px solid rgba(79,142,247,0.5) !important; }
+body.light-mode .detail-expand-content { background: rgba(37,99,255,0.04); border-left-color: rgba(37,99,255,0.3); border-bottom-color: rgba(0,0,0,0.06); }
+body.light-mode .detail-expand-label { color: #94a3b8; }
+body.light-mode .detail-expand-val { color: #1e293b; }
 
 /* KANBAN CARD - theme-aware */
 .kb-card {

@@ -612,7 +612,7 @@ data.reverse();
     if(!row) return;
     var t=e.target;
     while(t&&t!==row){if(t.tagName==='BUTTON')return;t=t.parentNode;}
-    editPO(row.dataset.poid);
+    toggleExpandDetail(row, 'pos', row.dataset.poid);
   });
   attachRowSwipe(tb, 'pos', 'poid');
 }
@@ -716,7 +716,7 @@ data.reverse();
     if(!row) return;
     var t=e.target;
     while(t&&t!==row){if(t.tagName==='BUTTON')return;t=t.parentNode;}
-    openDetail('shipping', row.dataset.shid);
+    toggleExpandDetail(row, 'shipping', row.dataset.shid);
   });
   attachRowSwipe(tb, 'shipping', 'shid');
 }

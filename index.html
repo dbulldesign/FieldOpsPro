@@ -3414,6 +3414,11 @@ window.getTrackingUrl = getTrackingUrl;
 window.unarchiveTask = unarchiveTask;
 window.filterProjects = filterProjects;
 window.softDeleteTask = softDeleteTask;
+window.toggleExpandDetail = toggleExpandDetail;
+window.buildExpandDetailHtml = buildExpandDetailHtml;
+window.saveEvent = saveEvent;
+window.editEvent = editEvent;
+window.confirmDeleteEvent = confirmDeleteEvent;
 window.setDetailFooter = setDetailFooter;
 window.autoDetectCarrier = autoDetectCarrier;
 window.openTemplateModal = openTemplateModal;
@@ -4141,7 +4146,7 @@ function clearForm(modalId) {
 
 function populateProjectSelects() {
   var projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
-  ['task-project','po-project','ship-project'].forEach(function(id){
+  ['task-project','po-project','ship-project','event-project'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.innerHTML = projOpts;
   });
@@ -4619,7 +4624,117 @@ function filterCommByProject(val) {
   window._commProjectFilter = val;
   renderCommissioning();
 }
-// ── End Commissioning ──────────────────────────────────────────────────
+// ── saveEvent / editEvent / confirmDeleteEvent — inline so they always work ──
+function saveEvent() {
+  var title = document.getElementById('event-title').value.trim();
+  if (!title) { toast('Enter an event title'); return; }
+  var item = {
+    title: title,
+    type: document.getElementById('event-type').value,
+    date: document.getElementById('event-date').value,
+    endDate: document.getElementById('event-end-date').value,
+    status: document.getElementById('event-status').value || 'scheduled',
+    project: document.getElementById('event-project').value,
+    task: document.getElementById('event-task').value,
+    shipment: document.getElementById('event-shipment').value,
+    notes: document.getElementById('event-notes').value.trim()
+  };
+  if (editingId) { updateItem('events', editingId, item); toast('Event updated'); }
+  else { addItem('events', item); toast('Event added'); }
+  closeModal('modal-event');
+  renderCommissioning();
+  if (typeof renderCalendar === 'function') renderCalendar();
+}
+function editEvent(id) {
+  var ev = (state.events || []).find(function(x){ return x.id === id; });
+  if (!ev) return;
+  editingId = id;
+  populateProjectSelects();
+  document.getElementById('event-modal-title').textContent = 'Edit Event';
+  document.getElementById('event-title').value = ev.title || '';
+  document.getElementById('event-type').value = ev.type || 'commissioning';
+  document.getElementById('event-date').value = ev.date || '';
+  document.getElementById('event-end-date').value = ev.endDate || '';
+  document.getElementById('event-status').value = ev.status || 'scheduled';
+  document.getElementById('event-project').value = ev.project || '';
+  document.getElementById('event-task').value = ev.task || '';
+  document.getElementById('event-shipment').value = ev.shipment || '';
+  document.getElementById('event-notes').value = ev.notes || '';
+  openModal('modal-event');
+}
+function confirmDeleteEvent(id) {
+  var ev = (state.events || []).find(function(x){ return x.id === id; });
+  softDelete('events', id, ev ? ev.title : 'Event');
+  renderCommissioning();
+}
+
+// ── Inline detail expand (trouble-card style) ──
+function toggleExpandDetail(rowEl, col, id) {
+  var next = rowEl.nextElementSibling;
+  if (next && next.classList.contains('detail-expand-row')) {
+    next.remove();
+    rowEl.classList.remove('row-expanded');
+    return;
+  }
+  document.querySelectorAll('.detail-expand-row').forEach(function(r){
+    if (r.previousElementSibling) r.previousElementSibling.classList.remove('row-expanded');
+    r.remove();
+  });
+  var item = state[col] ? state[col].find(function(x){ return x.id === id; }) : null;
+  if (!item) return;
+  rowEl.classList.add('row-expanded');
+  var detailTr = document.createElement('tr');
+  detailTr.className = 'detail-expand-row';
+  var td = document.createElement('td');
+  td.colSpan = 99;
+  td.innerHTML = '<div class="detail-expand-content">'+buildExpandDetailHtml(col, item)+'</div>';
+  detailTr.appendChild(td);
+  rowEl.parentNode.insertBefore(detailTr, rowEl.nextSibling);
+}
+function buildExpandDetailHtml(col, item) {
+  function dRow(label, val) {
+    if (!val && val !== 0) return '';
+    return '<div class="detail-expand-row-kv"><span class="detail-expand-label">'+escH(label)+'</span><span class="detail-expand-val">'+val+'</span></div>';
+  }
+  var html = '<div style="display:flex;flex-wrap:wrap;gap:20px">';
+  var main = '<div style="flex:1;min-width:220px">';
+  var editFn = col==='tasks'?'editTask':col==='pos'?'editPO':'editShipment';
+  if (col === 'tasks') {
+    main += dRow('Status', statusBadge(item.status));
+    main += dRow('Priority', priorityBadge(item.priority));
+    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
+    main += dRow('Due', item.due ? fmtDateSmart(item.due) : null);
+    main += dRow('Category', item.category ? escH(item.category) : null);
+    main += dRow('Repeats', item.recur ? escH(item.recur) : null);
+    if (item.desc) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65;white-space:pre-wrap">'+escH(item.desc)+'</div>';
+  } else if (col === 'pos') {
+    main += dRow('Status', statusBadge(item.status));
+    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
+    main += dRow('Date', item.date ? escH(fmtDate(item.date)) : null);
+    main += dRow('Total', item.total ? '<span style="color:#f59e0b;font-weight:600">'+escH(fmtCurrency(item.total))+'</span>' : null);
+    main += dRow('Ship Method', item.shipmethod ? escH(item.shipmethod) : null);
+    if (item.items) {
+      var lines = item.items.split('\n').filter(Boolean);
+      if (lines.length) main += '<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:5px">Line Items</div>'
+        + lines.map(function(l){ return '<div style="font-size:12px;color:#8da0c0;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+escH(l)+'</div>'; }).join('')+'</div>';
+    }
+    if (item.notes) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65">'+escH(item.notes)+'</div>';
+  } else if (col === 'shipping') {
+    main += dRow('Status', statusBadge(item.status));
+    main += dRow('Tracking', item.tracking ? '<span style="color:#4f8ef7">'+escH(item.tracking)+'</span>' : null);
+    main += dRow('Carrier', item.carrier ? escH(item.carrier) : null);
+    main += dRow('Linked PO', item.po ? escH(poName(item.po)) : null);
+    main += dRow('Shipped', item.date ? escH(fmtDate(item.date)) : null);
+    main += dRow('Est. Delivery', item.eta ? fmtDateSmart(item.eta) : null);
+    main += dRow('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null);
+    if (item.notes) main += '<div style="margin-top:8px;font-size:13px;color:#8da0c0;line-height:1.65">'+escH(item.notes)+'</div>';
+  }
+  main += '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="'+editFn+'(\''+item.id+'\')">✏ Edit</button></div>';
+  main += '</div>';
+  html += main + '</div>';
+  return html;
+}
+// ── End Inline Detail ──────────────────────────────────────────────────
 
 function renderTasks() {
   var data = state.tasks.slice();
@@ -4724,8 +4839,7 @@ data.reverse();
       if (_blocker && _blocker.status !== 'done') _blockedHtml = '<span class="task-blocked-badge">🚫 blocked</span>';
     }
     html += '<td><div style="font-weight:600;color:#f0f4ff">'+escH(t.title)+_blockedHtml+'</div>'+(t.category?'<div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+escH(t.category)+'</div>':'')+'</td>';
-    var _pColor = _pc ? 'color:'+_pc : 'color:#8da0c0';
-    html += '<td>'+(t.project?'<span style="font-size:12px;'+_pColor+'">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
+    html += '<td>'+(t.project?'<span class="proj-chip">'+escH(projectName(t.project))+'</span>':'<span style="color:#3a4a6a">-</span>')+'</td>';
     html += '<td>'+priorityBadge(t.priority)+'</td>';
     html += '<td onclick="event.stopPropagation()">';
     if(t.archived) html += '<span class="badge badge-gray" style="opacity:0.7">archived</span>';
@@ -4758,7 +4872,7 @@ data.reverse();
       if(t.tagName === 'BUTTON' || t.tagName === 'INPUT') return;
       t = t.parentNode;
     }
-    editTask(row.dataset.taskid);
+    toggleExpandDetail(row, 'tasks', row.dataset.taskid);
   });
   // Double-click title cell for inline editing
   tb.addEventListener('dblclick', function(e) {
