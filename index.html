@@ -1936,11 +1936,11 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 .cal-grid-wrap { border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); }
 [data-theme="light"] .cal-grid-wrap { border-color:rgba(0,0,0,0.08); }
 .cal-day-headers { display:grid; grid-template-columns:repeat(7,1fr); background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.07); }
-.cal-day-header { text-align:center; font-size:11px; font-weight:700; color:#4a5e7a; letter-spacing:0.8px; text-transform:uppercase; padding:8px 0; }
+.cal-day-header { text-align:center; font-size:12px; font-weight:700; color:#64748b; letter-spacing:0.8px; text-transform:uppercase; padding:10px 0; }
 [data-theme="light"] .cal-day-headers { background:rgba(0,0,0,0.03); border-bottom-color:rgba(0,0,0,0.07); }
 [data-theme="light"] .cal-day-header { color:#94a3b8; }
 .cal-body { display:grid; grid-template-columns:repeat(7,1fr); }
-.cal-day { border-right:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 5px; min-height:90px; background:#0c1220; cursor:default; transition:background 0.1s; vertical-align:top; }
+.cal-day { border-right:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 7px; min-height:110px; background:#0c1220; cursor:default; transition:background 0.1s; vertical-align:top; }
 [data-theme="light"] .cal-day { background:#ffffff; border-right-color:rgba(0,0,0,0.06); border-bottom-color:rgba(0,0,0,0.06); }
 .cal-day:nth-child(7n) { border-right:none; }
 .cal-body > .cal-day:nth-last-child(-n+7) { border-bottom:none; }
@@ -1949,19 +1949,26 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 .cal-day-today { background:rgba(79,142,247,0.07) !important; outline:2px solid rgba(79,142,247,0.35); outline-offset:-2px; }
 [data-theme="light"] .cal-day-today { background:rgba(37,99,255,0.05) !important; outline-color:rgba(37,99,255,0.3); }
 .cal-day-past { opacity:0.7; }
-.cal-day-num { font-size:12px; font-weight:700; color:#4a5e7a; line-height:1; margin-bottom:4px; }
-.cal-day-today .cal-day-num { color:#4f8ef7; background:rgba(79,142,247,0.2); width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; }
+.cal-day-num { font-size:14px; font-weight:700; color:#8da0c0; line-height:1; margin-bottom:5px; }
+.cal-day-today .cal-day-num { color:#4f8ef7; background:rgba(79,142,247,0.22); width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; }
 [data-theme="light"] .cal-day-today .cal-day-num { color:#2563ff; background:rgba(37,99,255,0.15); }
-.cal-event { font-size:10px; border-radius:5px; padding:2px 5px; margin-bottom:3px; cursor:pointer; overflow:hidden; line-height:1.3; white-space:nowrap; text-overflow:ellipsis; transition:opacity 0.1s; user-select:none; }
+.cal-event { font-size:11px; font-weight:600; border-radius:6px; padding:3px 7px; margin-bottom:4px; cursor:pointer; overflow:hidden; line-height:1.35; white-space:nowrap; text-overflow:ellipsis; transition:opacity 0.1s; user-select:none; display:block; }
 .cal-event:hover { opacity:0.8; }
 .cal-event[draggable="true"] { cursor:grab; }
 .cal-event[draggable="true"]:active { cursor:grabbing; }
-.cal-more { font-size:10px; color:#4a5e7a; margin-top:1px; padding-left:3px; }
+.cal-more { font-size:11px; font-weight:600; color:#8da0c0; margin-top:2px; padding-left:4px; }
+.cal-dot-row { display:none; flex-wrap:wrap; gap:2px; margin-top:3px; }
+.cal-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .cal-drop-target { background:rgba(79,142,247,0.12) !important; outline:2px dashed rgba(79,142,247,0.6) !important; outline-offset:-2px; }
 @media (max-width:768px) {
-  .cal-day { min-height:60px; padding:4px 3px; }
+  .cal-day { min-height:64px !important; padding:5px 4px !important; }
+  .cal-day-num { font-size:13px !important; }
+  .cal-day-today .cal-day-num { width:22px !important; height:22px !important; font-size:12px !important; }
+  .cal-day-header { font-size:11px !important; padding:8px 0 !important; }
   .cal-month-label { font-size:17px; }
-  .cal-event { font-size:9px; padding:1px 3px; }
+  .cal-event { display:none !important; }
+  .cal-dot-row { display:flex !important; }
+  .cal-more { font-size:10px !important; color:#8da0c0 !important; padding-left:2px !important; }
 }
 
 /* ── CAL VIEW SWITCHER ───────────────────────────────────── */
@@ -2047,18 +2054,21 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 @media(max-width:900px) { .cal-combo-wrap { grid-template-columns:1fr; } }
 
 /* ── BETTER DETAIL EXPAND ─────────────────────────────────── */
-.de-section { margin-bottom:14px; }
-.de-section-hdr { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.de-badges { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px; }
+.de-section { margin-bottom:16px; }
+.de-section-hdr { font-size:11px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.07); }
 [data-theme="light"] .de-section-hdr { border-bottom-color:rgba(0,0,0,0.07); color:#94a3b8; }
-.de-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
-.de-field { display:flex; flex-direction:column; gap:2px; }
+.de-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 20px; }
+.de-field { display:flex; flex-direction:column; gap:3px; }
 .de-field-lbl { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:0.8px; text-transform:uppercase; }
 [data-theme="light"] .de-field-lbl { color:#94a3b8; }
-.de-field-val { font-size:13px; color:#c8d6f0; }
+.de-field-val { font-size:14px; color:#c8d6f0; line-height:1.4; }
 [data-theme="light"] .de-field-val { color:#1e293b; }
-.de-notes { margin-top:10px; font-size:13px; color:#8da0c0; line-height:1.65; white-space:pre-wrap; background:rgba(255,255,255,0.03); border-radius:8px; padding:10px 12px; }
+.de-notes { margin-top:10px; font-size:14px; color:#8da0c0; line-height:1.7; white-space:pre-wrap; background:rgba(255,255,255,0.03); border-radius:10px; padding:11px 14px; }
 [data-theme="light"] .de-notes { color:#475569; background:rgba(0,0,0,0.03); }
-.de-actions { margin-top:12px; display:flex; gap:8px; }
+.de-actions { margin-top:16px; display:flex; gap:8px; }
+.de-actions .btn { padding:9px 18px; font-size:14px; font-weight:600; border-radius:10px; min-height:40px; }
+@media (max-width:768px) { .de-grid { grid-template-columns:1fr; gap:12px; } .de-field-val { font-size:15px; } .de-notes { font-size:15px; } }
 
 /* ── COMMISSIONING CALENDAR ─────────────────────────────── */
 .comm-filter-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#8da0c0; font-size:11px; font-weight:600; padding:4px 12px; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
@@ -2087,10 +2097,28 @@ tr.row-expanded > td:first-child { border-left: 3px solid rgba(79,142,247,0.45) 
 [data-theme="light"] tr.row-expanded td { background: rgba(37,99,255,0.02); }
 body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); border-left-color: rgba(37,99,255,0.3); }
 
+/* ── CALENDAR QUICK ADD BUTTONS ─────────────────────────────── */
+.cal-quick-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 12px;
+  background: rgba(79,142,247,0.12); border: 1.5px solid rgba(79,142,247,0.3);
+  color: #4f8ef7; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-quick-add-btn:hover { background: rgba(79,142,247,0.2); border-color: rgba(79,142,247,0.5); }
+.cal-quick-add-btn:active { transform: scale(0.96); }
+[data-theme="light"] .cal-quick-add-btn { background: rgba(37,99,255,0.08); border-color: rgba(37,99,255,0.25); color: #2563ff; }
+[data-theme="light"] .cal-quick-add-btn:hover { background: rgba(37,99,255,0.14); }
+@media (max-width: 768px) {
+  .cal-quick-add-btn { padding: 9px 14px !important; font-size: 14px !important; border-radius: 14px !important; min-height: 44px; }
+  .cal-quick-add-btn span:last-child { display: none; }
+}
+
 /* ── THINGS 3 INLINE EXPAND ─────────────────────────────────── */
 .t3-expand-row { overflow: hidden; }
 .t3-expand-content {
-  padding: 14px 16px 18px;
+  padding: 18px 18px 20px;
   background: rgba(79,142,247,0.05);
   border-top: 1px solid rgba(79,142,247,0.12);
   border-left: 3px solid rgba(79,142,247,0.35);
@@ -2119,7 +2147,7 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 [data-theme="light"] .t3-section-label.today { color: #2563ff; }
 .t3-list { background: rgba(255,255,255,0.04); border-radius: 16px; overflow: hidden; }
 [data-theme="light"] .t3-list { background: #ffffff; box-shadow: 0 1px 6px rgba(0,0,0,0.07); }
-.t3-row { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.t3-row { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 [data-theme="light"] .t3-row { border-bottom-color: rgba(0,0,0,0.06); }
 .t3-row:last-child { border-bottom: none; }
 .t3-row:active { background: rgba(255,255,255,0.05); }
@@ -2134,7 +2162,7 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 .t3-check.done .t3-checkmark { display: block; }
 /* Content */
 .t3-content { flex: 1; min-width: 0; }
-.t3-title { font-size: 16px; font-weight: 500; color: #f0f4ff; line-height: 1.3; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t3-title { font-size: 16px; font-weight: 500; color: #f0f4ff; line-height: 1.3; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t3-title.done { text-decoration: line-through; color: rgba(240,244,255,0.3); font-weight: 400; }
 [data-theme="light"] .t3-title { color: #0f172a; }
 [data-theme="light"] .t3-title.done { color: rgba(15,23,42,0.28); }
@@ -2453,12 +2481,13 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         <button class="cal-nav-btn" onclick="calNav(1)" title="Next">&#8250;</button>
         <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
       </div>
-      <div style="position:relative">
-        <button class="btn btn-primary btn-sm" id="cal-add-btn" onclick="calAddBtn(event)" style="white-space:nowrap">+ Add</button>
-        <div id="cal-add-menu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:6px;min-width:170px;z-index:500;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
-          <button onclick="calAddEvent()" class="cal-menu-item">📅 Add Event</button>
-          <button onclick="calAddTask()" class="cal-menu-item">✅ Add Task</button>
-        </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="cal-quick-add-btn" onclick="calAddEvent()">
+          <span style="font-size:15px">📅</span><span>Event</span>
+        </button>
+        <button class="cal-quick-add-btn" onclick="calAddTask()">
+          <span style="font-size:15px">✅</span><span>Task</span>
+        </button>
       </div>
     </div>
 
@@ -3435,6 +3464,10 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 <!-- ── SMART FAB RADIAL MENU ── -->
 <div id="fab-overlay" onclick="closeFabMenu()"></div>
 <div id="fab-menu">
+  <div class="fab-option" onclick="closeFabMenu();setTimeout(function(){if(currentView==='calendar')calAddEvent();else{switchView('calendar');setTimeout(calAddEvent,150);}},50)">
+    <span class="fab-option-label">Event</span>
+    <div class="fab-option-icon" style="background:rgba(245,158,11,0.2);color:#f59e0b">📅</div>
+  </div>
   <div class="fab-option" onclick="closeFabMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
     <span class="fab-option-label">Troubleshoot Issue</span>
     <div class="fab-option-icon" style="background:rgba(239,68,68,0.2);color:#f87171">⚡</div>
@@ -4856,48 +4889,44 @@ function buildExpandDetailHtml(col, item) {
   }
   var html = '';
   if (col === 'tasks') {
-    // Row 1: Status + Priority
-    html += '<div class="de-section">'
-      + '<div class="de-grid">'
-      + field('Status', statusBadge(item.status))
-      + field('Priority', priorityBadge(item.priority))
+    // Status + Priority badges at top
+    var badgesHtml = statusBadge(item.status) + (item.priority ? priorityBadge(item.priority) : '');
+    if (badgesHtml) html += '<div class="de-badges">'+badgesHtml+'</div>';
+    html += '<div class="de-section"><div class="de-grid">'
       + field('Due', item.due ? fmtDateSmart(item.due) : null)
-      + field('Category', item.category ? escH(item.category) : null)
       + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
+      + field('Category', item.category ? escH(item.category) : null)
       + field('Repeats', item.recur ? escH(item.recur) : null)
       + '</div></div>';
     if (item.desc) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.desc)+'</div></div>';
   } else if (col === 'pos') {
-    html += '<div class="de-section">'
-      + '<div class="de-grid">'
-      + field('Status', statusBadge(item.status))
+    if (item.status) html += '<div class="de-badges">'+statusBadge(item.status)+'</div>';
+    html += '<div class="de-section"><div class="de-grid">'
       + field('Vendor', item.vendor ? escH(item.vendor) : null)
       + field('PO #', item.number ? escH(item.number) : null)
-      + field('Date', item.date ? escH(fmtDate(item.date)) : null)
       + field('Total', item.total ? '<span style="color:#f59e0b;font-weight:700">'+fmtCurrency(item.total)+'</span>' : null)
-      + field('Ship Method', item.shipmethod ? escH(item.shipmethod) : null)
       + field('Delivery', item.delivery ? fmtDateSmart(item.delivery) : null)
+      + field('Ship Method', item.shipmethod ? escH(item.shipmethod) : null)
       + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
       + '</div></div>';
     if (item.items) {
       var lines = item.items.split('\n').filter(Boolean);
       if (lines.length) {
         html += '<div class="de-section"><div class="de-section-hdr">Line Items</div>'
-          + lines.map(function(l){ return '<div style="font-size:12px;color:#8da0c0;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+escH(l)+'</div>'; }).join('')
+          + lines.map(function(l){ return '<div style="font-size:14px;color:#8da0c0;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+escH(l)+'</div>'; }).join('')
           + '</div>';
       }
     }
     if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
   } else if (col === 'shipping') {
-    html += '<div class="de-section">'
-      + '<div class="de-grid">'
-      + field('Status', statusBadge(item.status))
+    if (item.status) html += '<div class="de-badges">'+statusBadge(item.status)+'</div>';
+    html += '<div class="de-section"><div class="de-grid">'
       + field('Carrier', item.carrier ? escH(item.carrier) : null)
-      + field('Tracking', item.tracking ? '<span style="color:#4f8ef7">'+escH(item.tracking)+'</span>' : null)
-      + field('Shipped', item.date ? escH(fmtDate(item.date)) : null)
+      + field('Tracking', item.tracking ? '<span style="color:#4f8ef7;font-weight:600">'+escH(item.tracking)+'</span>' : null)
       + field('Est. Delivery', item.eta ? fmtDateSmart(item.eta) : null)
-      + field('Linked PO', item.po ? escH(poName(item.po)) : null)
       + field('Project', item.project ? '<span class="proj-chip">'+escH(projectName(item.project))+'</span>' : null)
+      + field('Shipped', item.date ? escH(fmtDate(item.date)) : null)
+      + field('Linked PO', item.po ? escH(poName(item.po)) : null)
       + '</div></div>';
     if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
   }
@@ -5480,17 +5509,19 @@ function renderPOs() {
           var subParts=[];
           if(mp2.number) subParts.push(escH(mp2.number));
           if(mitems2) subParts.push(mitems2+' item'+(mitems2!==1?'s':''));
-          if(mp2.date) subParts.push(escH(fmtDate(mp2.date)));
+          if(mp2.delivery) subParts.push('Due '+escH(fmtDateSmart(mp2.delivery)));
+          var poTotalHtml = mp2.total ? '<span style="font-size:12px;font-weight:600;color:#f59e0b">'+fmtCurrency(mp2.total)+'</span>' : '';
           row.innerHTML=
             '<div class="t3-icon" style="background:rgba(59,130,246,0.12)">📄</div>'
             +'<div class="t3-content">'
               +'<div class="t3-title">'+escH(mp2.vendor||'PO')+'</div>'
-              +(subParts.length||pn2?'<div class="t3-meta">'
+              +'<div class="t3-meta">'
                 +(pn2?'<span class="t3-proj">'+(pc2?'<span class="t3-proj-dot" style="background:'+pc2+'"></span>':'')+escH(pn2)+'</span>':'')
                 +(pn2&&subParts.length?'<span class="t3-meta-sep">·</span>':'')
                 +(subParts.length?'<span class="t3-sub" style="margin-top:0">'+subParts.join(' · ')+'</span>':'')
-              +'</div>':'')
+              +'</div>'
             +'</div>'
+            +(poTotalHtml?'<div style="flex-shrink:0;margin-right:4px">'+poTotalHtml+'</div>':'')
             +'<div class="t3-chev">›</div>';
           row.addEventListener('click',function(){ toggleT3Expand(row, 'pos', mp2.id); });
           pList.appendChild(row);
@@ -5654,17 +5685,24 @@ function renderShipping() {
           var trackUrl=ms2.tracking&&ms2.carrier?getTrackingUrl(ms2.carrier,ms2.tracking):'';
           var row=document.createElement('div');
           row.className='t3-row';
-          var subParts2=[];
-          if(ms2.carrier) subParts2.push(escH(ms2.carrier));
-          if(ms2.tracking) subParts2.push(escH(ms2.tracking));
-          if(ms2.eta) subParts2.push('ETA '+escH(fmtDate(ms2.eta)));
+          var pn3=projectName(ms2.project), pc3=projectColor(ms2.project);
+          var etaHtml='';
+          if(ms2.eta){
+            var etaD=new Date(ms2.eta+'T00:00:00'), etaNow=new Date(); etaNow.setHours(0,0,0,0);
+            var etaCls=etaD<etaNow?'overdue':(etaD<=new Date(etaNow.getTime()+3*864e5)?'soon':'normal');
+            etaHtml='<span class="t3-due '+etaCls+'">ETA '+escH(fmtDateSmart(ms2.eta))+'</span>';
+          }
           row.innerHTML=
             '<div class="t3-icon" style="background:rgba(16,185,129,0.1)">📦</div>'
             +'<div class="t3-content">'
               +'<div class="t3-title">'+escH(ms2.desc||ms2.tracking||'Shipment')+'</div>'
-              +(subParts2.length?'<div class="t3-meta"><span class="t3-sub" style="margin-top:0;color:'+sColor+'">'+subParts2.join(' · ')+'</span></div>':'')
+              +'<div class="t3-meta">'
+                +(pn3?'<span class="t3-proj">'+(pc3?'<span class="t3-proj-dot" style="background:'+pc3+'"></span>':'')+escH(pn3)+'</span>':'')
+                +(ms2.carrier?'<span class="t3-sub" style="margin-top:0">'+escH(ms2.carrier)+'</span>':'')
+                +(etaHtml?etaHtml:'')
+              +'</div>'
             +'</div>'
-            +(trackUrl?'<a href="'+trackUrl+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:18px;text-decoration:none;padding:4px;flex-shrink:0">↗</a>':'<div class="t3-chev">›</div>');
+            +(trackUrl?'<a href="'+trackUrl+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:18px;text-decoration:none;padding:4px;flex-shrink:0;color:#4f8ef7">↗</a>':'<div class="t3-chev">›</div>');
           row.addEventListener('click',function(){ toggleT3Expand(row, 'shipping', ms2.id); });
           sList.appendChild(row);
         })(sItems[si2]);
@@ -7468,9 +7506,19 @@ function renderCalMonth() {
     if (inMonth) {
       html += '<div class="cal-day-num">'+dayNum+'</div>';
       var evs = byDate[dateStr] || [];
-      var max = window.innerWidth <= 768 ? 2 : 3;
-      evs.slice(0, max).forEach(function(ev) { html += _calEventChip(ev, dateStr); });
-      if (evs.length > max) html += '<div class="cal-more">+'+(evs.length-max)+' more</div>';
+      if (window.innerWidth <= 768) {
+        // Mobile: show colored dots instead of text chips
+        var dotHtml = '<div class="cal-dot-row">';
+        var dotMax = 3;
+        evs.slice(0, dotMax).forEach(function(ev) { dotHtml += '<div class="cal-dot" style="background:'+ev.color+'"></div>'; });
+        if (evs.length > dotMax) dotHtml += '<span style="font-size:9px;color:#8da0c0;line-height:1;margin-top:1px">+' + (evs.length - dotMax) + '</span>';
+        dotHtml += '</div>';
+        html += dotHtml;
+      } else {
+        var max = 3;
+        evs.slice(0, max).forEach(function(ev) { html += _calEventChip(ev, dateStr); });
+        if (evs.length > max) html += '<div class="cal-more">+'+(evs.length-max)+' more</div>';
+      }
     }
     html += '</div>';
   }
