@@ -2068,6 +2068,27 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 /* Status badge for events */
 .badge-amber { background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
 
+/* ── THINGS 3 INLINE EXPAND ─────────────────────────────────── */
+.t3-expand-row { overflow: hidden; }
+.t3-expand-content {
+  padding: 14px 16px 18px;
+  background: rgba(79,142,247,0.05);
+  border-top: 1px solid rgba(79,142,247,0.12);
+  border-left: 3px solid rgba(79,142,247,0.35);
+  animation: t3ExpandIn 0.2s ease;
+}
+@keyframes t3ExpandIn {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.t3-row-expanded { background: rgba(79,142,247,0.06) !important; }
+[data-theme="light"] .t3-expand-content {
+  background: rgba(37,99,255,0.03);
+  border-left-color: rgba(37,99,255,0.3);
+  border-top-color: rgba(37,99,255,0.08);
+}
+[data-theme="light"] .t3-row-expanded { background: rgba(37,99,255,0.04) !important; }
+
 /* ── THINGS 3 LIST STYLE (mobile) ─────────────────────── */
 @media (max-width: 768px) {
 .t3-section { margin-bottom: 28px; }
@@ -4863,10 +4884,32 @@ function buildExpandDetailHtml(col, item) {
   }
   html += '<div class="de-actions">'
     + '<button class="btn btn-primary btn-sm" onclick="'+editFn+'(\''+item.id+'\')">✏ Edit</button>'
-    + '<button class="btn btn-ghost btn-sm" onclick="softDelete(\''+col+'\',\''+item.id+'\',\''+escH(item.title||item.vendor||item.desc||'Item')+'\');document.querySelectorAll(\'.detail-expand-row\').forEach(function(r){r.remove();})">Delete</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="softDelete(\''+col+'\',\''+item.id+'\',\''+escH(item.title||item.vendor||item.desc||'Item')+'\');document.querySelectorAll(\'.detail-expand-row,.t3-expand-row\').forEach(function(r){r.previousElementSibling&&r.previousElementSibling.classList.remove(\'row-expanded\',\'t3-row-expanded\');r.remove();})">Delete</button>'
     + '</div>';
   return html;
 }
+function toggleT3Expand(rowEl, col, id) {
+  var next = rowEl.nextElementSibling;
+  if (next && next.classList.contains('t3-expand-row')) {
+    next.remove();
+    rowEl.classList.remove('t3-row-expanded');
+    return;
+  }
+  document.querySelectorAll('.t3-expand-row,.detail-expand-row').forEach(function(r){
+    if (r.previousElementSibling) { r.previousElementSibling.classList.remove('t3-row-expanded','row-expanded'); }
+    r.remove();
+  });
+  var item = state[col] ? state[col].find(function(x){ return x.id === id; }) : null;
+  if (!item) return;
+  rowEl.classList.add('t3-row-expanded');
+  var expandDiv = document.createElement('div');
+  expandDiv.className = 't3-expand-row';
+  expandDiv.innerHTML = '<div class="t3-expand-content">'+buildExpandDetailHtml(col, item)+'</div>';
+  rowEl.parentNode.insertBefore(expandDiv, rowEl.nextSibling);
+  // Smooth scroll the expand into view
+  setTimeout(function(){ expandDiv.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 50);
+}
+window.toggleT3Expand = toggleT3Expand;
 // ── End Inline Detail ──────────────────────────────────────────────────
 
 function renderTasks() {
@@ -4953,7 +4996,7 @@ function renderTasks() {
         row.addEventListener('click',function(ev){
           if(ev.target.closest&&ev.target.closest('.t3-check')) return;
           if(ev.target.classList&&ev.target.classList.contains('t3-check')) return;
-          editTask(tid3);
+          toggleT3Expand(row, 'tasks', tid3);
         });
       })(mt3.id,mt3,isDone3);
       return row;
@@ -5430,7 +5473,7 @@ function renderPOs() {
               +'</div>':'')
             +'</div>'
             +'<div class="t3-chev">›</div>';
-          row.addEventListener('click',function(){ editPO(mp2.id); });
+          row.addEventListener('click',function(){ toggleT3Expand(row, 'pos', mp2.id); });
           pList.appendChild(row);
         })(pItems[pi2]);
       }
@@ -5603,7 +5646,7 @@ function renderShipping() {
               +(subParts2.length?'<div class="t3-meta"><span class="t3-sub" style="margin-top:0;color:'+sColor+'">'+subParts2.join(' · ')+'</span></div>':'')
             +'</div>'
             +(trackUrl?'<a href="'+trackUrl+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:18px;text-decoration:none;padding:4px;flex-shrink:0">↗</a>':'<div class="t3-chev">›</div>');
-          row.addEventListener('click',function(){ editShipment(ms2.id); });
+          row.addEventListener('click',function(){ toggleT3Expand(row, 'shipping', ms2.id); });
           sList.appendChild(row);
         })(sItems[si2]);
       }
