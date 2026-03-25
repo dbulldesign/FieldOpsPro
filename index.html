@@ -2239,10 +2239,12 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 .t3-row { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 [data-theme="light"] .t3-row { border-bottom-color: rgba(0,0,0,0.06); }
 .t3-row:last-child { border-bottom: none; }
+.t3-row:hover { background: rgba(79,142,247,0.05); }
 .t3-row:active { background: rgba(255,255,255,0.05); }
 [data-theme="light"] .t3-row:active { background: rgba(0,0,0,0.025); }
 /* Checkbox circle */
 .t3-check { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; border: 2px solid rgba(148,163,184,0.45); display: flex; align-items: center; justify-content: center; transition: all 0.22s cubic-bezier(.32,.72,0,1); background: transparent; cursor: pointer; }
+.t3-check:hover { border-color: #4f8ef7; }
 .t3-check.done { background: #10b981; border-color: #10b981; }
 .t3-check.priority-high { border-color: #ef4444; border-width: 2.5px; }
 .t3-check.priority-medium { border-color: #f59e0b; border-width: 2.5px; }
@@ -2260,6 +2262,8 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 [data-theme="light"] .t3-proj { color: #94a3b8; }
 .t3-proj-dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
 .t3-meta-sep { color: rgba(148,163,184,0.3); font-size: 11px; flex-shrink: 0; }
+.t3-cat-tag { font-size:10px; font-weight:700; background:rgba(255,255,255,0.07); border-radius:5px; padding:1px 6px; color:#8da0c0; letter-spacing:0.3px; }
+[data-theme="light"] .t3-cat-tag { background:rgba(0,0,0,0.06); color:#64748b; }
 .t3-due { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 .t3-due.overdue { color: #ef4444; font-weight: 600; }
 .t3-due.soon { color: #f59e0b; }
@@ -7165,7 +7169,7 @@ function renderTasks() {
     Object.keys(cats).forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
   }
 
-  if(isMobile()){
+  if(taskViewMode !== 'kanban'){
     var mWrap=document.getElementById('tasks-list-view');
     var mOld=document.getElementById('mob-tasks-cards');
     if(mOld) mOld.remove();
@@ -7230,7 +7234,19 @@ function renderTasks() {
               updated.status='done';
               setTimeout(function(){ updateItem('tasks',tid3,updated); renderTasks(); },450);
             },{passive:false});
-            chkEl2.addEventListener('click',function(ev){ev.stopPropagation();});
+            chkEl2.addEventListener('click',function(ev){
+              ev.stopPropagation();
+              if(!isMobile()) {
+                if(isD3) return;
+                chkEl2.classList.add('done');
+                chkEl2.innerHTML='<span class="t3-checkmark">✓</span>';
+                var titleEl2=row.querySelector('.t3-title');
+                if(titleEl2) titleEl2.classList.add('done');
+                var updated2={}; for(var k2 in tdata3) updated2[k2]=tdata3[k2];
+                updated2.status='done';
+                setTimeout(function(){ updateItem('tasks',tid3,updated2); renderTasks(); },450);
+              }
+            });
             row.addEventListener('click',function(ev){
               if(ev.target.closest&&ev.target.closest('.t3-check')) return;
               if(ev.target.classList&&ev.target.classList.contains('t3-check')) return;
@@ -7285,17 +7301,20 @@ function renderTasks() {
       }
       var projHtml3=pn3?('<span class="t3-proj">'+(pc3?'<span class="t3-proj-dot" style="background:'+pc3+'"></span>':'')+escH(pn3)+'</span>'):'';
       var metaSep=(projHtml3&&dueHtml3)?'<span class="t3-meta-sep">·</span>':'';
+      var catHtml3=mt3.category?'<span class="t3-cat-tag">'+escH(mt3.category)+'</span>':'';
+      var priColors={low:'#10b981',medium:'#4f8ef7',high:'#f59e0b',critical:'#ef4444'};
+      var priDot=(!isDone3&&mt3.priority&&mt3.priority!=='medium')?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+(priColors[mt3.priority]||'#4a5e7a')+';flex-shrink:0;margin-right:3px;vertical-align:middle"></span>':'';
       row.innerHTML=
         '<div class="'+chkCls+'">'+(isDone3?'<span class="t3-checkmark">✓</span>':'')+'</div>'
         +'<div class="t3-content">'
-          +'<div class="t3-title'+(isDone3?' done':'')+'">'+escH(mt3.title||'Task')+'</div>'
-          +((projHtml3||dueHtml3)?'<div class="t3-meta">'+projHtml3+metaSep+dueHtml3+'</div>':'')
+          +'<div class="t3-title'+(isDone3?' done':'')+'">'+priDot+escH(mt3.title||'Task')+'</div>'
+          +((projHtml3||dueHtml3||catHtml3)?'<div class="t3-meta">'+projHtml3+metaSep+dueHtml3+(catHtml3?(projHtml3||dueHtml3?'<span class="t3-meta-sep">·</span>':'')+catHtml3:'')+'</div>':'')
         +'</div>'
         +'<div class="t3-chev">›</div>';
       // Checkbox: quick-complete on tap
       var chkEl=row.querySelector('.t3-check');
       (function(tid3,tdata3,isD3){
-        chkEl.addEventListener('touchend',function(ev){
+        function completeTask(ev) {
           ev.stopPropagation(); ev.preventDefault();
           if(isD3) return;
           chkEl.classList.add('done');
@@ -7305,8 +7324,9 @@ function renderTasks() {
           var updated={}; for(var k in tdata3) updated[k]=tdata3[k];
           updated.status='done';
           setTimeout(function(){ updateItem('tasks',tid3,updated); renderTasks(); },450);
-        },{passive:false});
-        chkEl.addEventListener('click',function(ev){ev.stopPropagation();});
+        }
+        chkEl.addEventListener('touchend', completeTask, {passive:false});
+        chkEl.addEventListener('click', function(ev){ ev.stopPropagation(); if(!isMobile()) completeTask(ev); });
         row.addEventListener('click',function(ev){
           if(ev.target.closest&&ev.target.closest('.t3-check')) return;
           if(ev.target.classList&&ev.target.classList.contains('t3-check')) return;
@@ -7342,11 +7362,13 @@ function renderTasks() {
     return;
   }
   var mOldT=document.getElementById('mob-tasks-cards');
-  if(mOldT){ mOldT.remove(); var tW2=document.querySelector('#tasks-list-view .table-wrap'); if(tW2) tW2.style.display=''; }
-data.reverse();
+  if(mOldT){ mOldT.remove(); }
+  var tW2=document.querySelector('#tasks-list-view .table-wrap');
+  if(tW2) tW2.style.display='none';
+  data.reverse();
   bulkSelected.clear();
 
-  if(taskViewMode === 'kanban') { renderKanban(data); return; }
+  if(taskViewMode === 'kanban') { if(tW2) tW2.style.display=''; renderKanban(data); return; }
 
   var existingBar = document.getElementById('archive-bulk-bar');
   if(existingBar) existingBar.remove();
@@ -9872,7 +9894,7 @@ function _calGatherItems(filter) {
   if (f === 'all' || f === 'event') {
     var typeColors = {commissioning:'#f59e0b',inspection:'#06b6d4',startup:'#10b981',training:'#8b5cf6',walkthrough:'#f472b6',punchlist:'#ef4444',handoff:'#64748b',other:'#6366f1'};
     (state.events || []).filter(function(e){ return !e.archived && e.date; }).forEach(function(e) {
-      add(e.date, { type:'event', id:e.id, title:e.title, color:typeColors[e.type]||'#f59e0b', status:e.status });
+      add(e.date, { type:'event', id:e.id, title:e.title, color:typeColors[e.type]||'#f59e0b', status:e.status, endDate:e.endDate||'' });
     });
   }
   return items;
@@ -9883,7 +9905,7 @@ function _calItemsByDate() {
   var map = {};
   function addTo(ds, ev) { if (!map[ds]) map[ds] = []; map[ds].push(ev); }
   _calGatherItems().forEach(function(ev) {
-    var end = ev.endDate || (ev.type === 'event' && (state.events||[]).find(function(e){ return e.id===ev.id; }) || {}).endDate;
+    var end = ev.endDate;
     if (!end || end <= ev.date) {
       addTo(ev.date, ev);
       return;
