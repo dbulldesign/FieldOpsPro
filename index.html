@@ -552,7 +552,11 @@ justify-content: space-around;
 align-items: flex-start;
 padding: 8px 4px 4px !important;
 gap: 0;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
 }
+.mobile-nav-items::-webkit-scrollbar { display: none; }
 .mobile-nav-item {
 display: flex !important;
 flex-direction: column !important;
@@ -562,6 +566,7 @@ gap: 3px !important;
 padding: 4px 8px 6px !important;
 min-width: 56px;
 flex: 1;
+flex-shrink: 0;
 border-radius: 12px;
 color: #64748b !important;
 transition: color 0.15s !important;
@@ -2188,6 +2193,150 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 [data-theme="light"] .t3-sub { color: #94a3b8; }
 }
 
+/* ── VENDOR CARDS ────────────────────────────────────────────── */
+.vendor-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px; margin-bottom:12px; transition:all 0.2s; cursor:pointer; }
+.vendor-card:hover { background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.14); transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,0,0,0.3); }
+.vendor-card-name { font-size:17px; font-weight:700; color:#f0f4ff; margin-bottom:4px; }
+.vendor-card-cat { font-size:11px; font-weight:700; color:#4a5e7a; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
+.vendor-card-info { display:flex; gap:18px; flex-wrap:wrap; }
+.vendor-info-item { display:flex; align-items:center; gap:6px; font-size:13px; color:#8da0c0; }
+.vendor-info-item a { color:#4f8ef7; text-decoration:none; }
+[data-theme="light"] .vendor-card { background:#ffffff; border-color:rgba(0,0,0,0.08); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+[data-theme="light"] .vendor-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.1); }
+[data-theme="light"] .vendor-card-name { color:#0f172a; }
+[data-theme="light"] .vendor-card-cat { color:#94a3b8; }
+[data-theme="light"] .vendor-info-item { color:#64748b; }
+.vendor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+@media (max-width:768px) { .vendor-grid { grid-template-columns:1fr; } }
+
+/* ── PUNCH LIST ──────────────────────────────────────────────── */
+.punch-item { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:8px; cursor:pointer; transition:all 0.15s; }
+.punch-item:hover { background:rgba(255,255,255,0.07); }
+.punch-check { width:22px; height:22px; min-width:22px; border-radius:50%; border:2px solid rgba(148,163,184,0.4); display:flex; align-items:center; justify-content:center; margin-top:2px; transition:all 0.2s; flex-shrink:0; }
+.punch-check.resolved { background:#10b981; border-color:#10b981; color:#fff; font-size:12px; font-weight:700; }
+.punch-check.in-progress { border-color:#f59e0b; background:rgba(245,158,11,0.15); }
+.punch-item-content { flex:1; min-width:0; }
+.punch-item-desc { font-size:15px; font-weight:500; color:#f0f4ff; line-height:1.3; }
+.punch-item-desc.resolved { text-decoration:line-through; color:rgba(240,244,255,0.35); }
+.punch-item-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center; }
+.punch-priority-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+[data-theme="light"] .punch-item { background:#fff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .punch-item:hover { background:rgba(0,0,0,0.02); }
+[data-theme="light"] .punch-item-desc { color:#0f172a; }
+[data-theme="light"] .punch-item-desc.resolved { color:rgba(15,23,42,0.3); }
+.punch-section-hdr { font-size:11px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; padding:12px 2px 8px; display:flex; align-items:center; gap:8px; }
+
+/* ── FIELD LOG ───────────────────────────────────────────────── */
+.fieldlog-entry { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; margin-bottom:12px; overflow:hidden; transition:all 0.15s; }
+.fieldlog-entry:hover { border-color:rgba(255,255,255,0.14); }
+.fieldlog-hdr { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer; }
+.fieldlog-date-badge { background:rgba(79,142,247,0.12); border:1px solid rgba(79,142,247,0.25); border-radius:10px; padding:6px 12px; text-align:center; min-width:52px; flex-shrink:0; }
+.fieldlog-date-day { font-size:22px; font-weight:800; color:#4f8ef7; line-height:1; }
+.fieldlog-date-mon { font-size:10px; font-weight:700; color:#4a5e7a; text-transform:uppercase; letter-spacing:0.6px; margin-top:1px; }
+.fieldlog-title { font-size:15px; font-weight:600; color:#f0f4ff; }
+.fieldlog-sub { font-size:12px; color:#4a5e7a; margin-top:2px; }
+.fieldlog-body { padding:0 18px 16px; display:none; }
+.fieldlog-body.open { display:block; }
+.fieldlog-section { margin-bottom:12px; }
+.fieldlog-section-lbl { font-size:10px; font-weight:700; color:#4a5e7a; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.fieldlog-section-val { font-size:14px; color:#c8d6f0; line-height:1.6; white-space:pre-wrap; }
+[data-theme="light"] .fieldlog-entry { background:#fff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .fieldlog-title { color:#0f172a; }
+[data-theme="light"] .fieldlog-sub { color:#94a3b8; }
+[data-theme="light"] .fieldlog-section-val { color:#1e293b; }
+[data-theme="light"] .fieldlog-date-badge { background:rgba(37,99,255,0.06); border-color:rgba(37,99,255,0.15); }
+[data-theme="light"] .fieldlog-date-day { color:#2563ff; }
+
+/* ── IMPROVED ANIMATIONS & iOS POLISH ───────────────────────── */
+@keyframes slideUpFade {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(0.94); }
+  to   { opacity:1; transform:scale(1); }
+}
+.view { animation: fadeIn 0.18s ease; }
+.modal { animation: scaleIn 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.card { animation: slideUpFade 0.2s ease both; }
+.t3-list .t3-row { transition: background 0.15s, transform 0.1s; }
+.t3-list .t3-row:active { transform: scale(0.985); background: rgba(255,255,255,0.06) !important; }
+.vendor-card { animation: slideUpFade 0.2s ease both; }
+.punch-item { animation: slideUpFade 0.18s ease both; }
+.fieldlog-entry { animation: slideUpFade 0.2s ease both; }
+.cal-event { transition: opacity 0.15s, transform 0.1s; }
+.cal-event:active { transform: scale(0.93); }
+.btn { transition: background 0.15s, transform 0.1s, box-shadow 0.15s, opacity 0.15s; }
+.btn:active { transform: scale(0.96); }
+.btn-primary:active { box-shadow: 0 2px 10px rgba(79,142,247,0.4); }
+.nav-item { transition: background 0.15s, color 0.15s; }
+.mobile-nav-item { transition: color 0.15s; }
+.mobile-nav-item:active .nav-icon { transform: scale(0.88); }
+.nav-icon { transition: transform 0.15s; }
+
+/* iOS safe area improvements */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav.bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #quickAddFab { bottom: calc(70px + env(safe-area-inset-bottom, 12px)) !important; }
+}
+
+/* Smooth stagger for list items */
+.t3-list .t3-row:nth-child(1) { animation-delay:0ms; }
+.t3-list .t3-row:nth-child(2) { animation-delay:30ms; }
+.t3-list .t3-row:nth-child(3) { animation-delay:55ms; }
+.t3-list .t3-row:nth-child(4) { animation-delay:75ms; }
+.t3-list .t3-row:nth-child(5) { animation-delay:90ms; }
+.t3-row { animation: slideUpFade 0.22s ease both; }
+
+/* Desktop card hover polish */
+@media (min-width:769px) {
+  .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.35); }
+  .punch-item:hover { transform: translateX(2px); }
+}
+
+/* Improved scrollbars on webkit */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.22); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.12); }
+
+/* Better focus rings */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(79,142,247,0.6);
+  outline-offset: 2px;
+}
+
+/* Light mode for new views */
+[data-theme="light"] .vendor-card { background:#ffffff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .vendor-card-name { color:#0f172a; }
+[data-theme="light"] .punch-item { background:#ffffff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .punch-item-desc { color:#0f172a; }
+[data-theme="light"] .fieldlog-entry { background:#ffffff; border-color:rgba(0,0,0,0.08); }
+[data-theme="light"] .fieldlog-title { color:#0f172a; }
+[data-theme="light"] .fieldlog-section-val { color:#334155; }
+[data-theme="light"] #modal-search > div { background:#ffffff !important; border-color:rgba(0,0,0,0.1) !important; }
+[data-theme="light"] #global-search-input { color:#0f172a !important; }
+[data-theme="light"] #notif-panel, [data-theme="light"] #notif-center-panel { background:#ffffff !important; border-color:rgba(0,0,0,0.1) !important; }
+
+/* Mobile search modal positioning */
+@media (max-width:768px) {
+  #modal-search { padding: 60px 12px 12px !important; align-items: flex-start !important; }
+  #modal-search > div { border-radius:16px !important; }
+  #notif-panel, #notif-center-panel { width:100% !important; top:auto !important; right:0 !important; left:0 !important; bottom:0 !important; border-top:1px solid rgba(255,255,255,0.1) !important; border-left:none !important; border-radius:20px 20px 0 0 !important; max-height:80vh !important; transform:translateY(100%) !important; }
+  #notif-panel.open, #notif-center-panel.open { transform:translateY(0) !important; }
+}
+
+/* Vendor category colors in light mode */
+[data-theme="light"] .vendor-card-cat { opacity:0.85; }
+
+/* Field log expand animation */
+.fieldlog-body { animation: slideUpFade 0.18s ease; }
+.fieldlog-hdr:active { background: rgba(255,255,255,0.04); border-radius:12px; }
   </style>
 </head>
 <body>
@@ -2228,6 +2377,21 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
           <span class="icon">📦</span> Shipping
           <span class="nav-badge" id="badge-shipping">0</span>
         </div>
+        <div class="nav-item" onclick="switchView('vendors')">
+          <span class="icon">🏪</span> Vendors
+          <span class="nav-badge" id="badge-vendors">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label" onclick="toggleSidebarSection(this)">Field Work</div>
+        <div class="nav-item" onclick="switchView('punchlist')">
+          <span class="icon">📋</span> Punch Lists
+          <span class="nav-badge" id="badge-punchlists">0</span>
+        </div>
+        <div class="nav-item" onclick="switchView('fieldlog')">
+          <span class="icon">📓</span> Field Log
+          <span class="nav-badge" id="badge-fieldlogs">0</span>
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label" onclick="toggleSidebarSection(this)">Knowledge</div>
@@ -2243,6 +2407,12 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
       </div>
     </nav>
     <div class="sidebar-footer">
+      <button onclick="openGlobalSearch()" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:9px 14px;color:#8da0c0;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.09)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        <span style="font-size:15px">🔍</span> Search <span style="margin-left:auto;font-size:11px;background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 6px">⌘K</span>
+      </button>
+      <button onclick="openNotifCenter()" id="notif-bell-btn" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:9px 14px;color:#8da0c0;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:all 0.15s;position:relative" onmouseover="this.style.background='rgba(255,255,255,0.09)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        <span style="font-size:15px">🔔</span> Notifications <span id="notif-count-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px">0</span>
+      </button>
       <div class="sync-status">
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncLabel">Local only</span>
@@ -2270,6 +2440,8 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         <div id="mobSyncDot" style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0"></div>
         <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
       </div>
+      <button id="mob-global-search-btn" onclick="openGlobalSearch()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;display:none">🔍</button>
+        <button onclick="openNotifPanel ? openNotifPanel() : openNotifCenter()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative">🔔<span id="mob-notif-badge2" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;line-height:1">0</span></button>
       <div class="search-wrap" style="position:relative">
         <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
           oninput="globalSearch(this.value)"
@@ -2469,6 +2641,7 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         <div id="dash-shipping"></div>
       </div>
     </div>
+    <div id="dash-charts" style="margin-top:20px"></div>
   </div>
 
   <!-- ═══ CALENDAR + EVENTS (combined, no tabs) ═══ -->
@@ -2595,6 +2768,15 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         style="width:auto;min-width:160px;padding:7px 12px;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#8da0c0">
         <option value="">All Projects</option>
       </select>
+        <select id="task-priority-filter" onchange="renderTasks()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Priorities</option>
+          <option value="high">🔴 High</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="low">⚪ Low</option>
+        </select>
+        <select id="task-category-filter" onchange="renderTasks()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Categories</option>
+        </select>
       <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Task</button>
     </div>
     <div id="tasks-list-view">
@@ -2710,6 +2892,52 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
       <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
     </div>
     <div id="troubleshoot-list"></div>
+  </div>
+
+  <!-- ═══ VENDORS / SUPPLIER DIRECTORY ═══ -->
+  <div class="view" id="view-vendors">
+    <div class="view-header">
+      <h2 class="view-title">🏪 Vendors</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="vendor-search" placeholder="Search vendors…" oninput="renderVendors()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;width:200px">
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Vendor</button>
+      </div>
+    </div>
+    <div id="vendors-list"></div>
+  </div>
+
+  <!-- ═══ PUNCH LISTS ═══ -->
+  <div class="view" id="view-punchlist">
+    <div class="view-header">
+      <h2 class="view-title">📋 Punch Lists</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="punch-project-filter" onchange="renderPunchlist()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Projects</option>
+        </select>
+        <select id="punch-status-filter" onchange="renderPunchlist()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Status</option>
+          <option value="open">Open</option>
+          <option value="in-progress">In Progress</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Item</button>
+      </div>
+    </div>
+    <div id="punchlist-content"></div>
+  </div>
+
+  <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
+  <div class="view" id="view-fieldlog">
+    <div class="view-header">
+      <h2 class="view-title">📓 Field Log</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="fieldlog-project-filter" onchange="renderFieldLog()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Projects</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ New Log Entry</button>
+      </div>
+    </div>
+    <div id="fieldlog-content"></div>
   </div>
 
   <!-- ═══ SETTINGS ═══ -->
@@ -2902,12 +3130,38 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       <span class="nav-label">Shipping</span>
     </div>
+    <div class="mobile-nav-item" onclick="switchView('vendors')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span class="nav-label">Vendors</span>
+    </div>
     <div class="mobile-nav-item" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span class="nav-label">Settings</span>
     </div>
   </div>
 </nav>
+
+<!-- Global Search Modal -->
+<div id="modal-search" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:80px 20px 20px" onclick="if(event.target===this)closeGlobalSearch()">
+  <div style="background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:580px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
+      <span style="font-size:18px;color:#4a5e7a">🔍</span>
+      <input type="text" id="global-search-input" placeholder="Search tasks, projects, POs, vendors…" oninput="runGlobalSearch(this.value)" autofocus style="flex:1;background:none;border:none;outline:none;font-size:16px;color:#f0f4ff;font-weight:500" autocomplete="off">
+      <button onclick="closeGlobalSearch()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px">✕</button>
+    </div>
+    <div id="global-search-results" style="max-height:420px;overflow-y:auto;padding:8px"></div>
+  </div>
+</div>
+
+<!-- Notification Center Panel -->
+<div id="notif-center-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:320px;background:#0e1828;border-left:1px solid rgba(255,255,255,0.1);z-index:3000;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
+  <div style="padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:17px;font-weight:700;color:#f0f4ff">🔔 Notifications</div>
+    <button onclick="closeNotifCenter()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer">✕</button>
+  </div>
+  <div id="notif-center-list" style="padding:12px 16px"></div>
+</div>
+<div id="notif-center-backdrop" onclick="closeNotifCenter()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2999"></div>
 
 <!-- TOAST -->
 
@@ -3010,6 +3264,13 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         <div class="form-group" style="max-width:80px"><label>Label Color</label>
           <input type="color" id="project-color" value="#3b82f6" style="width:100%;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;cursor:pointer;padding:2px">
         </div>
+      </div>
+      <div class="form-group" style="margin-top:4px">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          Custom Fields
+          <button type="button" onclick="addCustomField()" style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);color:#4f8ef7;font-size:12px;font-weight:600;border-radius:8px;padding:3px 10px;cursor:pointer">+ Add</button>
+        </label>
+        <div id="custom-fields-list" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
       </div>
     </div>
 
@@ -3317,6 +3578,143 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
         </div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="event-notes" placeholder="Location, attendees, requirements…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor Modal -->
+<div class="modal-overlay" id="modal-vendor" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="vendor-modal-title">New Vendor</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveVendor()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-vendor')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Company Name *</label><input type="text" id="vendor-name" placeholder="e.g. Lutron Electronics"></div>
+        <div class="form-group"><label>Category</label>
+          <select id="vendor-category">
+            <option value="lighting">Lighting</option>
+            <option value="av">AV / Electronics</option>
+            <option value="hvac">HVAC</option>
+            <option value="electrical">Electrical</option>
+            <option value="networking">Networking</option>
+            <option value="hardware">Hardware</option>
+            <option value="tools">Tools &amp; Equipment</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact Name</label><input type="text" id="vendor-contact" placeholder="Rep name"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="vendor-phone" placeholder="(555) 000-0000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="vendor-email" placeholder="contact@vendor.com"></div>
+        <div class="form-group"><label>Website</label><input type="url" id="vendor-website" placeholder="https://"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Typical Lead Time</label>
+          <select id="vendor-leadtime">
+            <option value="">Unknown</option>
+            <option value="same-day">Same Day</option>
+            <option value="1-3days">1–3 Days</option>
+            <option value="1week">~1 Week</option>
+            <option value="2weeks">~2 Weeks</option>
+            <option value="1month">~1 Month</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Account #</label><input type="text" id="vendor-account" placeholder="Your account number"></div>
+      </div>
+      <div class="form-group"><label>Address</label><input type="text" id="vendor-address" placeholder="Street, City, State"></div>
+      <div class="form-group"><label>Notes</label><textarea id="vendor-notes" placeholder="Terms, preferred contact method, special instructions…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- Punch List Item Modal -->
+<div class="modal-overlay" id="modal-punchitem" style="display:none">
+  <div class="modal">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="punchitem-modal-title">New Punch Item</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="savePunchItem()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-punchitem')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Description *</label><input type="text" id="punchitem-desc" placeholder="e.g. Dimmer plate loose in hallway"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project</label>
+          <select id="punchitem-project"><option value="">— None —</option></select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="punchitem-status">
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Priority</label>
+          <select id="punchitem-priority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Assigned To</label><input type="text" id="punchitem-assigned" placeholder="Name or team"></div>
+      </div>
+      <div class="form-group"><label>Location / Room</label><input type="text" id="punchitem-location" placeholder="e.g. Master Bedroom, Zone 3"></div>
+      <div class="form-group"><label>Notes</label><textarea id="punchitem-notes" placeholder="Details, fix required…"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- Field Log Entry Modal -->
+<div class="modal-overlay" id="modal-fieldlog" style="display:none">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3 id="fieldlog-modal-title">New Field Log Entry</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="saveFieldLog()">Save</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-fieldlog')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Date *</label><input type="date" id="fieldlog-date"></div>
+        <div class="form-group"><label>Project</label>
+          <select id="fieldlog-project"><option value="">— None —</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Crew on Site</label><input type="text" id="fieldlog-crew" placeholder="e.g. John, Maria, 2 subcontractors"></div>
+        <div class="form-group"><label>Weather</label>
+          <select id="fieldlog-weather">
+            <option value="">—</option>
+            <option value="sunny">☀️ Sunny</option>
+            <option value="cloudy">☁️ Cloudy</option>
+            <option value="rain">🌧 Rain</option>
+            <option value="hot">🌡 Hot</option>
+            <option value="cold">❄️ Cold</option>
+            <option value="wind">💨 Windy</option>
+            <option value="indoor">🏢 Indoor</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Work Performed *</label><textarea id="fieldlog-work" rows="4" placeholder="Describe what was completed today…"></textarea></div>
+      <div class="form-group"><label>Materials Used</label><textarea id="fieldlog-materials" rows="2" placeholder="List materials consumed or installed…"></textarea></div>
+      <div class="form-group"><label>Delays / Issues</label><textarea id="fieldlog-delays" rows="2" placeholder="Any delays, blockers, or issues encountered…"></textarea></div>
+      <div class="form-group"><label>Next Steps</label><textarea id="fieldlog-nextsteps" rows="2" placeholder="What's planned for tomorrow…"></textarea></div>
     </div>
   </div>
 </div>
@@ -3960,7 +4358,7 @@ function isMobile(){ return window.innerWidth<=768; }
 var db = null;
 var unsubscribers = [];
 
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events'];
+var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events','vendors','punchlists','fieldlogs'];
 
 // Local storage fallback
 var LOCAL = {
@@ -3978,7 +4376,7 @@ var LOCAL = {
 };
 
 // In-memory state
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[] };
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[], vendors:[], punchlists:[], fieldlogs:[] };
 
 function _merge() {
   var r = {};
@@ -4305,6 +4703,9 @@ var editingId = null;
 
 function openAddModal() {
   editingId = null;
+  if (currentView === 'vendors') { clearForm('modal-vendor'); document.getElementById('vendor-modal-title').textContent = 'New Vendor'; openModal('modal-vendor'); return; }
+  else if (currentView === 'punchlist') { clearForm('modal-punchitem'); populateProjectSelects(); document.getElementById('punchitem-modal-title').textContent = 'New Punch Item'; openModal('modal-punchitem'); return; }
+  else if (currentView === 'fieldlog') { clearForm('modal-fieldlog'); populateProjectSelects(); var today = new Date(); document.getElementById('fieldlog-date').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'); document.getElementById('fieldlog-modal-title').textContent = 'New Field Log Entry'; openModal('modal-fieldlog'); return; }
   var modals = {
     dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
     pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue'
@@ -4312,6 +4713,7 @@ function openAddModal() {
   var m = modals[currentView] ||
     (currentView === 'calendar' && window._calActiveTab === 'events' ? 'modal-event' : 'modal-task');
   clearForm(m);
+  if(m === 'modal-project') populateCustomFields([]);
   if(m !== 'modal-issue') populateProjectSelects();
   // Hide notes section for new tasks
   var ns = document.getElementById('task-notes-section');
@@ -4336,7 +4738,7 @@ function clearForm(modalId) {
 
 function populateProjectSelects() {
   var projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
-  ['task-project','po-project','ship-project','event-project'].forEach(function(id){
+  ['task-project','po-project','ship-project','event-project','punchitem-project','fieldlog-project'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.innerHTML = projOpts;
   });
@@ -4495,7 +4897,102 @@ function renderDashboard() {
       ds.appendChild(d);
     });
   }
+  renderDashboardCharts();
 }
+
+function renderDashboardCharts() {
+  var el = document.getElementById('dash-charts');
+  if (!el) return;
+  // Task status breakdown
+  var tasks = (state.tasks||[]).filter(function(t){ return !t.archived; });
+  var tTodo = tasks.filter(function(t){ return t.status==='todo'||t.status==='open'||!t.status; }).length;
+  var tProg = tasks.filter(function(t){ return t.status==='in-progress'; }).length;
+  var tDone = tasks.filter(function(t){ return t.status==='done'; }).length;
+  var tTotal = tasks.length || 1;
+  // PO status
+  var pos = (state.pos||[]).filter(function(p){ return !p.archived; });
+  var pDraft = pos.filter(function(p){ return p.status==='draft'||!p.status; }).length;
+  var pSub = pos.filter(function(p){ return p.status==='submitted'; }).length;
+  var pApp = pos.filter(function(p){ return p.status==='approved'; }).length;
+  var pRec = pos.filter(function(p){ return p.status==='received'; }).length;
+  var pTotal = pos.length || 1;
+  // Punch items
+  var punch = (state.punchlists||[]).filter(function(p){ return !p.archived; });
+  var pOpen = punch.filter(function(p){ return p.status==='open'; }).length;
+  var pInProg = punch.filter(function(p){ return p.status==='in-progress'; }).length;
+  var pRes = punch.filter(function(p){ return p.status==='resolved'; }).length;
+  var punchTotal = punch.length || 1;
+  function bar(pct, color, label, count) {
+    pct = Math.max(2, Math.round(pct));
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">'
+      + '<div style="font-size:11px;color:#4a5e7a;width:72px;text-align:right;flex-shrink:0">'+label+'</div>'
+      + '<div style="flex:1;background:rgba(255,255,255,0.06);border-radius:99px;height:8px;overflow:hidden">'
+      + '<div style="width:'+pct+'%;background:'+color+';height:100%;border-radius:99px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1)"></div></div>'
+      + '<div style="font-size:12px;font-weight:700;color:#8da0c0;width:24px;text-align:right;flex-shrink:0">'+count+'</div>'
+      + '</div>';
+  }
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:8px">'
+    // Task breakdown
+    + '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px">'
+    + '<div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Tasks</div>'
+    + bar(tTodo/tTotal*100,'#4a5e7a','To Do',tTodo)
+    + bar(tProg/tTotal*100,'#f59e0b','In Progress',tProg)
+    + bar(tDone/tTotal*100,'#10b981','Done',tDone)
+    + '</div>'
+    // PO breakdown
+    + '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px">'
+    + '<div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Purchase Orders</div>'
+    + bar(pDraft/pTotal*100,'#64748b','Draft',pDraft)
+    + bar(pSub/pTotal*100,'#4f8ef7','Submitted',pSub)
+    + bar(pApp/pTotal*100,'#f59e0b','Approved',pApp)
+    + bar(pRec/pTotal*100,'#10b981','Received',pRec)
+    + '</div>'
+    // Punch list
+    + (punch.length ? '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px">'
+    + '<div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Punch List</div>'
+    + bar(pOpen/punchTotal*100,'#ef4444','Open',pOpen)
+    + bar(pInProg/punchTotal*100,'#f59e0b','In Progress',pInProg)
+    + bar(pRes/punchTotal*100,'#10b981','Resolved',pRes)
+    + '</div>' : '')
+    + '</div>';
+  el.innerHTML = html;
+}
+window.renderDashboardCharts = renderDashboardCharts;
+
+// ═══════════════════════════════════════════════════
+//  CUSTOM FIELDS
+// ═══════════════════════════════════════════════════
+function addCustomField(key, val) {
+  var list = document.getElementById('custom-fields-list');
+  if (!list) return;
+  var row = document.createElement('div');
+  row.className = 'custom-field-row';
+  row.style.cssText = 'display:flex;gap:6px;align-items:center';
+  row.innerHTML = '<input type="text" placeholder="Field name" value="'+escH(key||'')+'" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">'
+    + '<input type="text" placeholder="Value" value="'+escH(val||'')+'" style="flex:1.5;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">'
+    + '<button type="button" onclick="this.parentNode.remove()" style="background:none;border:none;color:#4a5e7a;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">×</button>';
+  list.appendChild(row);
+}
+function getCustomFields() {
+  var rows = document.querySelectorAll('#custom-fields-list .custom-field-row');
+  var fields = [];
+  rows.forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    var k = inputs[0] ? inputs[0].value.trim() : '';
+    var v = inputs[1] ? inputs[1].value.trim() : '';
+    if (k) fields.push({ key: k, val: v });
+  });
+  return fields;
+}
+function populateCustomFields(fields) {
+  var list = document.getElementById('custom-fields-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (fields || []).forEach(function(f) { addCustomField(f.key, f.val); });
+}
+window.addCustomField = addCustomField;
+window.getCustomFields = getCustomFields;
+window.populateCustomFields = populateCustomFields;
 
 // ═══════════════════════════════════════════════
 //  PROJECTS
@@ -4531,6 +5028,9 @@ function renderProjects() {
       +'<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b"><span>'+escH(fmtDate(p.start)||'—')+'</span><span>'+escH(fmtDate(p.end)||'—')+'</span></div>'
       +'<div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b"><span>Tasks: '+done+'/'+tasks.length+'</span><span>'+pct+'%</span></div>'
       +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+      +(p.customFields && p.customFields.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
+        + p.customFields.map(function(f){ return '<span style="font-size:11px;background:rgba(255,255,255,0.06);border-radius:6px;padding:2px 8px;color:#8da0c0"><span style="color:#4a5e7a">'+escH(f.key)+':</span> '+escH(f.val)+'</span>'; }).join('')
+        + '</div>' : '')
       +(p.archived
       ? ('<div style="display:flex;gap:8px;margin-top:12px">'
          +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:#10b981;border-color:rgba(16,185,129,0.4)" data-restore="1">Restore</button>'
@@ -4574,6 +5074,7 @@ function saveProject() {
     location: document.getElementById('project-location').value.trim(),
     system: document.getElementById('project-system').value,
     notes: document.getElementById('project-notes').value.trim(),
+    customFields: getCustomFields(),
     color: document.getElementById('project-color').value || '#3b82f6',
     budgetFlight: parseFloat(document.getElementById('project-budget-flight').value) || 0,
     budgetHotel: parseFloat(document.getElementById('project-budget-hotel').value) || 0,
@@ -4598,6 +5099,7 @@ function editProject(id) {
   document.getElementById('project-location').value = p.location||'';
   document.getElementById('project-system').value = p.system||'';
   document.getElementById('project-notes').value = p.notes||'';
+  populateCustomFields(p.customFields || []);
   document.getElementById('project-color').value = p.color||'#3b82f6';
   document.getElementById('project-budget-flight').value = p.budgetFlight || '';
   document.getElementById('project-budget-hotel').value = p.budgetHotel || '';
@@ -4960,6 +5462,390 @@ function toggleT3Expand(rowEl, col, id) {
 window.toggleT3Expand = toggleT3Expand;
 // ── End Inline Detail ──────────────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════
+//  VENDORS
+// ═══════════════════════════════════════════════════
+function renderVendors() {
+  var list = document.getElementById('vendors-list');
+  if (!list) return;
+  var q = (document.getElementById('vendor-search') && document.getElementById('vendor-search').value || '').toLowerCase();
+  var data = (state.vendors || []).filter(function(v){ return !v.archived; });
+  if (q) data = data.filter(function(v){ return (v.name||'').toLowerCase().indexOf(q)>=0 || (v.contact||'').toLowerCase().indexOf(q)>=0 || (v.category||'').toLowerCase().indexOf(q)>=0; });
+  if (!data.length) { list.innerHTML = buildEmptyState('🏪','rgba(79,142,247,0.1)','No vendors yet','Add vendors and supplier contacts.','+ Add Vendor','openAddModal()'); return; }
+  var catColors = {lighting:'#f59e0b',av:'#8b5cf6',hvac:'#06b6d4',electrical:'#4f8ef7',networking:'#10b981',hardware:'#ef4444',tools:'#64748b',other:'#4a5e7a'};
+  var html = '<div class="vendor-grid">';
+  data.forEach(function(v) {
+    var cc = catColors[v.category] || '#4a5e7a';
+    html += '<div class="vendor-card" onclick="editVendor(\''+v.id+'\')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      + '<div><div class="vendor-card-name">'+escH(v.name||'Vendor')+'</div>'
+      + '<div class="vendor-card-cat" style="color:'+cc+'">'+escH(v.category||'other')+'</div></div>'
+      + (v.leadtime ? '<span style="font-size:11px;background:rgba(255,255,255,0.06);border-radius:6px;padding:3px 8px;color:#8da0c0">'+escH(v.leadtime)+'</span>' : '')
+      + '</div>'
+      + '<div class="vendor-card-info">'
+      + (v.contact ? '<div class="vendor-info-item">👤 '+escH(v.contact)+'</div>' : '')
+      + (v.phone ? '<div class="vendor-info-item">📞 <a href="tel:'+escH(v.phone)+'" onclick="event.stopPropagation()">'+escH(v.phone)+'</a></div>' : '')
+      + (v.email ? '<div class="vendor-info-item">✉️ <a href="mailto:'+escH(v.email)+'" onclick="event.stopPropagation()">'+escH(v.email)+'</a></div>' : '')
+      + (v.website ? '<div class="vendor-info-item">🌐 <a href="'+escH(v.website)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website</a></div>' : '')
+      + (v.account ? '<div class="vendor-info-item">🔑 Acct: '+escH(v.account)+'</div>' : '')
+      + '</div>'
+      + (v.notes ? '<div style="font-size:12px;color:#4a5e7a;margin-top:10px;line-height:1.5">'+escH(v.notes)+'</div>' : '')
+      + '</div>';
+  });
+  html += '</div>';
+  list.innerHTML = html;
+  var b = document.getElementById('badge-vendors');
+  if (b) { b.textContent = data.length; b.style.display = data.length ? '' : 'none'; }
+}
+function saveVendor() {
+  var name = document.getElementById('vendor-name').value.trim();
+  if (!name) { toast('Enter a vendor name'); return; }
+  var item = {
+    name: name, category: document.getElementById('vendor-category').value,
+    contact: document.getElementById('vendor-contact').value.trim(),
+    phone: document.getElementById('vendor-phone').value.trim(),
+    email: document.getElementById('vendor-email').value.trim(),
+    website: document.getElementById('vendor-website').value.trim(),
+    leadtime: document.getElementById('vendor-leadtime').value,
+    account: document.getElementById('vendor-account').value.trim(),
+    address: document.getElementById('vendor-address').value.trim(),
+    notes: document.getElementById('vendor-notes').value.trim()
+  };
+  if (editingId) { updateItem('vendors', editingId, item); toast('Vendor updated'); }
+  else { addItem('vendors', item); toast('Vendor added'); }
+  closeModal('modal-vendor'); renderVendors();
+}
+function editVendor(id) {
+  var v = (state.vendors||[]).find(function(x){ return x.id===id; });
+  if (!v) return;
+  editingId = id;
+  document.getElementById('vendor-modal-title').textContent = 'Edit Vendor';
+  document.getElementById('vendor-name').value = v.name||'';
+  document.getElementById('vendor-category').value = v.category||'other';
+  document.getElementById('vendor-contact').value = v.contact||'';
+  document.getElementById('vendor-phone').value = v.phone||'';
+  document.getElementById('vendor-email').value = v.email||'';
+  document.getElementById('vendor-website').value = v.website||'';
+  document.getElementById('vendor-leadtime').value = v.leadtime||'';
+  document.getElementById('vendor-account').value = v.account||'';
+  document.getElementById('vendor-address').value = v.address||'';
+  document.getElementById('vendor-notes').value = v.notes||'';
+  openModal('modal-vendor');
+}
+window.saveVendor = saveVendor; window.editVendor = editVendor; window.renderVendors = renderVendors;
+
+// ═══════════════════════════════════════════════════
+//  PUNCH LIST
+// ═══════════════════════════════════════════════════
+function renderPunchlist() {
+  var content = document.getElementById('punchlist-content');
+  if (!content) return;
+  var projF = document.getElementById('punch-project-filter') ? document.getElementById('punch-project-filter').value : '';
+  var statF = document.getElementById('punch-status-filter') ? document.getElementById('punch-status-filter').value : '';
+  // Populate project filter
+  var pf = document.getElementById('punch-project-filter');
+  if (pf && pf.options.length <= 1) {
+    state.projects.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pf.appendChild(o); });
+  }
+  var data = (state.punchlists||[]).filter(function(i){ return !i.archived; });
+  if (projF) data = data.filter(function(i){ return i.project === projF; });
+  if (statF) data = data.filter(function(i){ return i.status === statF; });
+  if (!data.length) { content.innerHTML = buildEmptyState('📋','rgba(16,185,129,0.1)','No punch items','Add items to track field punch list work.','+ Add Item','openAddModal()'); return; }
+  // Group by status
+  var groups = { open:[], 'in-progress':[], resolved:[] };
+  data.forEach(function(i){ (groups[i.status]||groups['open']).push(i); });
+  var priorityColors = { high:'#ef4444', medium:'#f59e0b', low:'#4a5e7a' };
+  var html = '';
+  [['open','Open'],['in-progress','In Progress'],['resolved','Resolved']].forEach(function(grp) {
+    var items = groups[grp[0]]; if (!items.length) return;
+    html += '<div class="punch-section-hdr"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(grp[0]==='resolved'?'#10b981':grp[0]==='in-progress'?'#f59e0b':'#4a5e7a')+'"></span>'+grp[1]+' <span style="color:#4a5e7a;font-weight:400">('+items.length+')</span></div>';
+    items.forEach(function(item) {
+      var pn = projectName(item.project);
+      var pc = priorityColors[item.priority||'low'];
+      html += '<div class="punch-item" onclick="editPunchItem(\''+item.id+'\')">'
+        + '<div class="punch-check '+(item.status||'open')+'" onclick="event.stopPropagation();togglePunchStatus(\''+item.id+'\')">'+(item.status==='resolved'?'✓':item.status==='in-progress'?'…':'')+'</div>'
+        + '<div class="punch-item-content">'
+        + '<div class="punch-item-desc'+(item.status==='resolved'?' resolved':'')+'">'+escH(item.desc||'')+'</div>'
+        + '<div class="punch-item-meta">'
+        + '<span class="punch-priority-dot" style="background:'+pc+'"></span>'
+        + (pn ? '<span class="proj-chip">'+escH(pn)+'</span>' : '')
+        + (item.location ? '<span style="font-size:11px;color:#4a5e7a">📍 '+escH(item.location)+'</span>' : '')
+        + (item.assigned ? '<span style="font-size:11px;color:#4a5e7a">👤 '+escH(item.assigned)+'</span>' : '')
+        + '</div>'
+        + (item.notes ? '<div style="font-size:12px;color:#4a5e7a;margin-top:4px">'+escH(item.notes)+'</div>' : '')
+        + '</div></div>';
+    });
+  });
+  content.innerHTML = html;
+  var b = document.getElementById('badge-punchlists');
+  var openCount = groups['open'].length + groups['in-progress'].length;
+  if (b) { b.textContent = openCount; b.style.display = openCount ? '' : 'none'; }
+}
+function togglePunchStatus(id) {
+  var item = (state.punchlists||[]).find(function(x){ return x.id===id; });
+  if (!item) return;
+  var cycle = { open:'in-progress', 'in-progress':'resolved', resolved:'open' };
+  updateItem('punchlists', id, { status: cycle[item.status||'open'] || 'in-progress' });
+  renderPunchlist();
+}
+function savePunchItem() {
+  var desc = document.getElementById('punchitem-desc').value.trim();
+  if (!desc) { toast('Enter a description'); return; }
+  var item = {
+    desc: desc, project: document.getElementById('punchitem-project').value,
+    status: document.getElementById('punchitem-status').value,
+    priority: document.getElementById('punchitem-priority').value,
+    assigned: document.getElementById('punchitem-assigned').value.trim(),
+    location: document.getElementById('punchitem-location').value.trim(),
+    notes: document.getElementById('punchitem-notes').value.trim()
+  };
+  if (editingId) { updateItem('punchlists', editingId, item); toast('Item updated'); }
+  else { addItem('punchlists', item); toast('Punch item added'); }
+  closeModal('modal-punchitem'); renderPunchlist();
+}
+function editPunchItem(id) {
+  var item = (state.punchlists||[]).find(function(x){ return x.id===id; });
+  if (!item) return;
+  editingId = id;
+  populateProjectSelects();
+  document.getElementById('punchitem-modal-title').textContent = 'Edit Punch Item';
+  document.getElementById('punchitem-desc').value = item.desc||'';
+  document.getElementById('punchitem-project').value = item.project||'';
+  document.getElementById('punchitem-status').value = item.status||'open';
+  document.getElementById('punchitem-priority').value = item.priority||'low';
+  document.getElementById('punchitem-assigned').value = item.assigned||'';
+  document.getElementById('punchitem-location').value = item.location||'';
+  document.getElementById('punchitem-notes').value = item.notes||'';
+  openModal('modal-punchitem');
+}
+window.savePunchItem = savePunchItem; window.editPunchItem = editPunchItem;
+window.renderPunchlist = renderPunchlist; window.togglePunchStatus = togglePunchStatus;
+
+// ═══════════════════════════════════════════════════
+//  FIELD LOG
+// ═══════════════════════════════════════════════════
+var _weatherIcons = {sunny:'☀️',cloudy:'☁️',rain:'🌧',hot:'🌡',cold:'❄️',wind:'💨',indoor:'🏢'};
+function renderFieldLog() {
+  var content = document.getElementById('fieldlog-content');
+  if (!content) return;
+  var projF = document.getElementById('fieldlog-project-filter') ? document.getElementById('fieldlog-project-filter').value : '';
+  var pf = document.getElementById('fieldlog-project-filter');
+  if (pf && pf.options.length <= 1) {
+    state.projects.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pf.appendChild(o); });
+  }
+  var data = (state.fieldlogs||[]).filter(function(e){ return !e.archived; });
+  if (projF) data = data.filter(function(e){ return e.project===projF; });
+  data.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+  if (!data.length) { content.innerHTML = buildEmptyState('📓','rgba(79,142,247,0.1)','No field logs yet','Create daily reports to track site activity.','+ New Log Entry','openAddModal()'); return; }
+  var html = '';
+  data.forEach(function(entry) {
+    var d = entry.date ? new Date(entry.date+'T00:00:00') : null;
+    var dayNum = d ? d.getDate() : '--';
+    var mon = d ? d.toLocaleDateString('en-US',{month:'short',year:'numeric'}) : '';
+    var pn = projectName(entry.project);
+    var wi = _weatherIcons[entry.weather]||'';
+    var id = entry.id;
+    html += '<div class="fieldlog-entry">'
+      + '<div class="fieldlog-hdr" onclick="toggleFieldLogEntry(\'fl-body-'+id+'\')">'
+      + '<div class="fieldlog-date-badge"><div class="fieldlog-date-day">'+dayNum+'</div><div class="fieldlog-date-mon">'+mon+'</div></div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="fieldlog-title">'+(pn?escH(pn)+' — ':'')+(wi?wi+' ':'')+(entry.crew?escH(entry.crew):'Field Log')+'</div>'
+      + '<div class="fieldlog-sub">'+(entry.work ? escH(entry.work.substring(0,80))+(entry.work.length>80?'…':'') : 'No work summary')+'</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+      + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editFieldLog(\''+id+'\')">✏</button>'
+      + '</div></div>'
+      + '<div class="fieldlog-body" id="fl-body-'+id+'">'
+      + (entry.work?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Work Performed</div><div class="fieldlog-section-val">'+escH(entry.work)+'</div></div>':'')
+      + (entry.materials?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Materials Used</div><div class="fieldlog-section-val">'+escH(entry.materials)+'</div></div>':'')
+      + (entry.delays?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Delays / Issues</div><div class="fieldlog-section-val">'+escH(entry.delays)+'</div></div>':'')
+      + (entry.nextsteps?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Next Steps</div><div class="fieldlog-section-val">'+escH(entry.nextsteps)+'</div></div>':'')
+      + '</div></div>';
+  });
+  content.innerHTML = html;
+  var b = document.getElementById('badge-fieldlogs');
+  if (b) { b.textContent = data.length; b.style.display = data.length ? '' : 'none'; }
+}
+function toggleFieldLogEntry(bodyId) {
+  var el = document.getElementById(bodyId);
+  if (!el) return;
+  el.classList.toggle('open');
+}
+function saveFieldLog() {
+  var work = document.getElementById('fieldlog-work').value.trim();
+  var date = document.getElementById('fieldlog-date').value;
+  if (!work) { toast('Describe work performed'); return; }
+  if (!date) { toast('Enter a date'); return; }
+  var item = {
+    date: date, project: document.getElementById('fieldlog-project').value,
+    crew: document.getElementById('fieldlog-crew').value.trim(),
+    weather: document.getElementById('fieldlog-weather').value,
+    work: work,
+    materials: document.getElementById('fieldlog-materials').value.trim(),
+    delays: document.getElementById('fieldlog-delays').value.trim(),
+    nextsteps: document.getElementById('fieldlog-nextsteps').value.trim()
+  };
+  if (editingId) { updateItem('fieldlogs', editingId, item); toast('Log updated'); }
+  else { addItem('fieldlogs', item); toast('Field log saved'); }
+  closeModal('modal-fieldlog'); renderFieldLog();
+}
+function editFieldLog(id) {
+  var entry = (state.fieldlogs||[]).find(function(x){ return x.id===id; });
+  if (!entry) return;
+  editingId = id;
+  populateProjectSelects();
+  document.getElementById('fieldlog-modal-title').textContent = 'Edit Field Log';
+  document.getElementById('fieldlog-date').value = entry.date||'';
+  document.getElementById('fieldlog-project').value = entry.project||'';
+  document.getElementById('fieldlog-crew').value = entry.crew||'';
+  document.getElementById('fieldlog-weather').value = entry.weather||'';
+  document.getElementById('fieldlog-work').value = entry.work||'';
+  document.getElementById('fieldlog-materials').value = entry.materials||'';
+  document.getElementById('fieldlog-delays').value = entry.delays||'';
+  document.getElementById('fieldlog-nextsteps').value = entry.nextsteps||'';
+  openModal('modal-fieldlog');
+}
+window.saveFieldLog = saveFieldLog; window.editFieldLog = editFieldLog;
+window.renderFieldLog = renderFieldLog; window.toggleFieldLogEntry = toggleFieldLogEntry;
+
+// ═══════════════════════════════════════════════════
+//  GLOBAL SEARCH
+// ═══════════════════════════════════════════════════
+function openGlobalSearch() {
+  var m = document.getElementById('modal-search');
+  if (!m) return;
+  m.style.display = 'flex';
+  setTimeout(function(){ var inp=document.getElementById('global-search-input'); if(inp){inp.value='';inp.focus();} document.getElementById('global-search-results').innerHTML='<div style="color:#4a5e7a;font-size:13px;padding:20px;text-align:center">Start typing to search…</div>'; }, 30);
+}
+function closeGlobalSearch() {
+  var m = document.getElementById('modal-search');
+  if (m) m.style.display = 'none';
+}
+function runGlobalSearch(q) {
+  var out = document.getElementById('global-search-results');
+  if (!out) return;
+  q = (q||'').toLowerCase().trim();
+  if (!q) { out.innerHTML = '<div style="color:#4a5e7a;font-size:13px;padding:20px;text-align:center">Start typing to search…</div>'; return; }
+  var results = [];
+  var icons = { tasks:'✅', projects:'📋', pos:'🧾', shipping:'📦', events:'📅', vendors:'🏪', punchlists:'📋', fieldlogs:'📓', issues:'🔧' };
+  var labels = { tasks:'Task', projects:'Project', pos:'Purchase Order', shipping:'Shipment', events:'Event', vendors:'Vendor', punchlists:'Punch Item', fieldlogs:'Field Log', issues:'Issue' };
+  var views = { tasks:'tasks', projects:'projects', pos:'pos', shipping:'shipping', events:'calendar', vendors:'vendors', punchlists:'punchlist', fieldlogs:'fieldlog', issues:'troubleshoot' };
+  function titleOf(col, item) {
+    if (col==='tasks') return item.title;
+    if (col==='projects') return item.name;
+    if (col==='pos') return (item.number?item.number+' – ':'')+item.vendor;
+    if (col==='shipping') return item.desc||item.tracking;
+    if (col==='events') return item.title;
+    if (col==='vendors') return item.name;
+    if (col==='punchlists') return item.desc;
+    if (col==='fieldlogs') return (item.date||'') + (item.work ? ' — ' + item.work.substring(0,60) : '');
+    if (col==='issues') return item.issue||item.question;
+    return '';
+  }
+  function subOf(col, item) {
+    if (col==='tasks') return projectName(item.project);
+    if (col==='projects') return item.client||'';
+    if (col==='pos') return projectName(item.project);
+    if (col==='shipping') return item.carrier||'';
+    if (col==='events') return item.type||'';
+    if (col==='vendors') return item.category||'';
+    if (col==='punchlists') return (item.status||'') + (item.location?' — '+item.location:'');
+    if (col==='fieldlogs') return item.crew||'';
+    if (col==='issues') return item.category||'';
+    return '';
+  }
+  ['tasks','projects','pos','shipping','events','vendors','punchlists','fieldlogs','issues'].forEach(function(col) {
+    (state[col]||[]).filter(function(item){ return !item.archived; }).forEach(function(item) {
+      var t = titleOf(col, item)||'';
+      var s = subOf(col, item)||'';
+      var n = (item.notes||item.desc||item.work||'');
+      if (t.toLowerCase().indexOf(q)>=0 || s.toLowerCase().indexOf(q)>=0 || n.toLowerCase().indexOf(q)>=0) {
+        results.push({ col:col, item:item, title:t, sub:s });
+      }
+    });
+  });
+  if (!results.length) { out.innerHTML = '<div style="color:#4a5e7a;font-size:13px;padding:24px;text-align:center">No results for "'+escH(q)+'"</div>'; return; }
+  var html = '';
+  results.slice(0,30).forEach(function(r) {
+    html += '<div onclick="closeGlobalSearch();switchView(\''+views[r.col]+'\');toast(\'Navigated to '+labels[r.col]+'\')" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background 0.1s" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'\'"><span style="font-size:18px;flex-shrink:0">'+icons[r.col]+'</span><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:#f0f4ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(r.title||'—')+'</div>'+(r.sub?'<div style="font-size:12px;color:#4a5e7a">'+escH(r.sub)+'</div>':'')+' </div><div style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:0.7px;text-transform:uppercase;background:rgba(255,255,255,0.06);border-radius:5px;padding:2px 7px;flex-shrink:0">'+labels[r.col]+'</div></div>';
+  });
+  out.innerHTML = html;
+}
+window.openGlobalSearch = openGlobalSearch;
+window.closeGlobalSearch = closeGlobalSearch;
+window.runGlobalSearch = runGlobalSearch;
+
+// ═══════════════════════════════════════════════════
+//  NOTIFICATION CENTER
+// ═══════════════════════════════════════════════════
+function buildNotifications() {
+  var notifs = [];
+  var today = new Date(); today.setHours(0,0,0,0);
+  var todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+  var tomorrowStr = tomorrow.getFullYear()+'-'+String(tomorrow.getMonth()+1).padStart(2,'0')+'-'+String(tomorrow.getDate()).padStart(2,'0');
+  // Overdue tasks
+  (state.tasks||[]).filter(function(t){ return !t.archived && t.status!=='done' && t.due && t.due < todayStr; }).forEach(function(t){
+    notifs.push({ type:'overdue', icon:'⚠️', color:'#ef4444', title:'Overdue: '+escH(t.title||'Task'), sub:'Was due '+fmtDateSmart(t.due), action:'tasks', id:t.id });
+  });
+  // Due today
+  (state.tasks||[]).filter(function(t){ return !t.archived && t.status!=='done' && t.due === todayStr; }).forEach(function(t){
+    notifs.push({ type:'today', icon:'📌', color:'#4f8ef7', title:'Due Today: '+escH(t.title||'Task'), sub:projectName(t.project)||'Task', action:'tasks', id:t.id });
+  });
+  // Shipments arriving today/tomorrow
+  (state.shipping||[]).filter(function(s){ return !s.archived && s.status!=='delivered' && s.eta && (s.eta===todayStr||s.eta===tomorrowStr); }).forEach(function(s){
+    notifs.push({ type:'ship', icon:'📦', color:'#22d3ee', title:(s.eta===todayStr?'Arriving Today: ':'Arriving Tomorrow: ')+escH(s.desc||s.tracking||'Shipment'), sub:s.carrier||'', action:'shipping', id:s.id });
+  });
+  // Events today
+  (state.events||[]).filter(function(e){ return !e.archived && e.date===todayStr; }).forEach(function(e){
+    notifs.push({ type:'event', icon:'📅', color:'#f59e0b', title:'Today: '+escH(e.title||'Event'), sub:(e.type||'Event')+' scheduled', action:'calendar', id:e.id });
+  });
+  // Open punch items (high priority)
+  var highPunch = (state.punchlists||[]).filter(function(p){ return !p.archived && p.status!=='resolved' && p.priority==='high'; });
+  if (highPunch.length) notifs.push({ type:'punch', icon:'🔴', color:'#ef4444', title: highPunch.length+' high-priority punch item'+(highPunch.length>1?'s':''), sub:'Tap to view punch list', action:'punchlist' });
+  return notifs;
+}
+function openNotifCenter() {
+  var panel = document.getElementById('notif-center-panel');
+  var backdrop = document.getElementById('notif-center-backdrop');
+  if (!panel) return;
+  var notifs = buildNotifications();
+  var badge = document.getElementById('notif-count-badge');
+  if (badge) { badge.textContent = notifs.length; badge.style.display = notifs.length ? '' : 'none'; }
+  var list = document.getElementById('notif-center-list');
+  if (!list) return;
+  if (!notifs.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#4a5e7a"><div style="font-size:40px;margin-bottom:10px">✅</div><div style="font-size:14px;font-weight:600">All clear!</div><div style="font-size:12px;margin-top:4px">No urgent items right now.</div></div>';
+  } else {
+    list.innerHTML = notifs.map(function(n){
+      return '<div onclick="closeNotifCenter();switchView(\''+n.action+'\')" style="display:flex;align-items:flex-start;gap:12px;padding:12px 10px;border-radius:12px;cursor:pointer;margin-bottom:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);transition:all 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\'">'
+        + '<div style="width:36px;height:36px;border-radius:10px;background:'+n.color+'20;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+n.icon+'</div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;line-height:1.3">'+n.title+'</div>'+(n.sub?'<div style="font-size:12px;color:#4a5e7a;margin-top:2px">'+n.sub+'</div>':'')+'</div>'
+        + '</div>';
+    }).join('');
+  }
+  panel.style.display = 'block';
+  panel.style.transform = 'translateX(100%)';
+  setTimeout(function(){ panel.style.transform = 'translateX(0)'; }, 10);
+  if (backdrop) { backdrop.style.display = 'block'; }
+}
+function closeNotifCenter() {
+  var panel = document.getElementById('notif-center-panel');
+  var backdrop = document.getElementById('notif-center-backdrop');
+  if (panel) { panel.style.transform = 'translateX(100%)'; setTimeout(function(){ panel.style.display = 'none'; }, 250); }
+  if (backdrop) backdrop.style.display = 'none';
+}
+function updateNotifBadge() {
+  var notifs = buildNotifications();
+  var badge = document.getElementById('notif-count-badge');
+  if (badge) { badge.textContent = notifs.length; badge.style.display = notifs.length ? '' : 'none'; }
+  var mobBadge = document.getElementById('mob-notif-badge');
+  if (mobBadge) { mobBadge.textContent = notifs.length; mobBadge.style.display = notifs.length ? '' : 'none'; }
+}
+window.openNotifCenter = openNotifCenter;
+window.closeNotifCenter = closeNotifCenter;
+window.updateNotifBadge = updateNotifBadge;
+
 function renderTasks() {
   var data = state.tasks.slice();
   if(taskFilter === 'archived') {
@@ -4972,7 +5858,16 @@ function renderTasks() {
     data = data.filter(function(t){ return t.status === taskFilter && !t.archived; });
   }
   if(taskProjectFilter) data = data.filter(function(t){ return t.project === taskProjectFilter; });
-  
+  var priorityF = document.getElementById('task-priority-filter') ? document.getElementById('task-priority-filter').value : '';
+  var categoryF = document.getElementById('task-category-filter') ? document.getElementById('task-category-filter').value : '';
+  if (priorityF) data = data.filter(function(t){ return (t.priority||'') === priorityF; });
+  if (categoryF) data = data.filter(function(t){ return (t.category||'') === categoryF; });
+  var catSel = document.getElementById('task-category-filter');
+  if (catSel && catSel.options.length <= 1) {
+    var cats = {}; state.tasks.forEach(function(t){ if(t.category) cats[t.category]=1; });
+    Object.keys(cats).forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+  }
+
   if(isMobile()){
     var mWrap=document.getElementById('tasks-list-view');
     var mOld=document.getElementById('mob-tasks-cards');
@@ -6259,6 +7154,10 @@ function renderAll() {
   if (cv === 'shipping') renderShipping(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.shipping = true; }
   if (cv === 'troubleshoot') renderTroubleshoot(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.troubleshoot = true; }
   if (cv === 'calendar') renderCalendar();
+  if (cv === 'vendors') renderVendors();
+  if (cv === 'punchlist') renderPunchlist();
+  if (cv === 'fieldlog') renderFieldLog();
+  if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
 
 // undoDelete is an alias for softDelete — kept for backwards compat with confirmDeletePO/confirmDeleteShipment
@@ -6411,8 +7310,11 @@ window.addEventListener('load', function(){
     var inInput = tag === 'input' || tag === 'textarea' || tag === 'select';
     var modalOpen = document.querySelector('.modal-overlay.open');
 
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); return; }
+
     // Escape: close smart-add menu or any open modal
     if (e.key === 'Escape') {
+      closeGlobalSearch(); closeNotifCenter();
       if (_addMenuOpen) { closeAddMenu(); return; }
       document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); m.style.display='none'; });
       return;
