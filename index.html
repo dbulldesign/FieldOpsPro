@@ -2337,7 +2337,46 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Field log expand animation */
 .fieldlog-body { animation: slideUpFade 0.18s ease; }
 .fieldlog-hdr:active { background: rgba(255,255,255,0.04); border-radius:12px; }
+/* ── GANTT CHART ─────────────────────────────────────────────── */
+.gantt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gantt-table { min-width: 700px; width: 100%; border-collapse: collapse; }
+.gantt-label-col { width: 200px; min-width: 160px; }
+.gantt-header-row th { font-size: 10px; font-weight: 700; color: #4a5e7a; text-transform: uppercase; letter-spacing: 0.6px; padding: 6px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
+.gantt-header-row th:first-child { text-align: left; padding-left: 10px; }
+.gantt-row td { padding: 3px 2px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+.gantt-row td:first-child { padding-left: 10px; padding-right: 8px; }
+.gantt-row:hover td { background: rgba(255,255,255,0.03); }
+.gantt-proj-row td { background: rgba(255,255,255,0.03); padding: 8px 4px 4px; }
+.gantt-proj-row td:first-child { padding-left: 10px; }
+.gantt-proj-label { font-size: 12px; font-weight: 700; color: #8da0c0; text-transform: uppercase; letter-spacing: 0.5px; }
+.gantt-task-label { font-size: 13px; color: #c8d6f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 195px; cursor: pointer; }
+.gantt-task-label:hover { color: #4f8ef7; }
+.gantt-cell { position: relative; height: 28px; }
+.gantt-bar { position: absolute; top: 4px; height: 20px; border-radius: 5px; cursor: ew-resize; display: flex; align-items: center; padding: 0 6px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: filter 0.15s; user-select: none; min-width: 8px; }
+.gantt-bar:hover { filter: brightness(1.15); }
+.gantt-bar.done { opacity: 0.45; }
+.gantt-today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(239,68,68,0.7); pointer-events: none; z-index: 2; }
+.gantt-col-today { background: rgba(79,142,247,0.04); }
+[data-theme="light"] .gantt-header-row th { color: #94a3b8; border-bottom-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .gantt-row td { border-bottom-color: rgba(0,0,0,0.04); }
+[data-theme="light"] .gantt-proj-row td { background: rgba(0,0,0,0.02); }
+[data-theme="light"] .gantt-task-label { color: #334155; }
+[data-theme="light"] .gantt-proj-label { color: #64748b; }
+@media (max-width:768px) { .gantt-label-col { width: 120px; min-width: 100px; } .gantt-task-label { max-width: 115px; font-size: 12px; } }
+/* ── FILE ATTACHMENTS ───────────────────────────────────────── */
+.attach-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.attach-chip { display:flex; align-items:center; gap:6px; background:rgba(79,142,247,0.1); border:1px solid rgba(79,142,247,0.2); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; color:#4f8ef7; cursor:pointer; transition:all 0.15s; max-width:200px; }
+.attach-chip:hover { background:rgba(79,142,247,0.18); }
+.attach-chip-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+.attach-chip-del { color:#ef4444; font-size:14px; margin-left:2px; opacity:0.7; flex-shrink:0; }
+.attach-chip-del:hover { opacity:1; }
+.attach-dropzone { border:2px dashed rgba(255,255,255,0.15); border-radius:12px; padding:18px; text-align:center; cursor:pointer; transition:all 0.15s; }
+.attach-dropzone:hover, .attach-dropzone.drag-over { border-color:rgba(79,142,247,0.5); background:rgba(79,142,247,0.05); }
+.attach-dropzone-label { font-size:13px; color:#4a5e7a; }
+[data-theme="light"] .attach-chip { background:rgba(37,99,255,0.07); border-color:rgba(37,99,255,0.2); color:#2563ff; }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WPgY=" crossorigin=""></script>
 </head>
 <body>
 
@@ -2392,6 +2431,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <span class="icon">📓</span> Field Log
           <span class="nav-badge" id="badge-fieldlogs">0</span>
         </div>
+        <div class="nav-item" onclick="switchView('mapview')">
+          <span class="icon">🗺</span> Project Map
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label" onclick="toggleSidebarSection(this)">Knowledge</div>
@@ -2441,7 +2483,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
       </div>
       <button id="mob-global-search-btn" onclick="openGlobalSearch()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;display:none">🔍</button>
-        <button onclick="openNotifPanel ? openNotifPanel() : openNotifCenter()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative">🔔<span id="mob-notif-badge2" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;line-height:1">0</span></button>
+        <button onclick="openNotifCenter()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative">🔔<span id="mob-notif-badge2" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;line-height:1">0</span></button>
       <div class="search-wrap" style="position:relative">
         <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
           oninput="globalSearch(this.value)"
@@ -2573,7 +2615,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <button class="widget-btn" id="widget-btn-recentTasks" onclick="toggleWidget('recentTasks')">Recent Tasks</button>
       <button class="widget-btn" id="widget-btn-recentShipments" onclick="toggleWidget('recentShipments')">Shipments</button>
       <button class="widget-btn" id="compact-btn" onclick="toggleCompact()" title="Toggle compact view" style="margin-left:auto">Compact</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleDashCustomize(this)" style="margin-left:8px;font-size:12px" id="dash-customize-btn">⚙ Customize</button>
     </div>
+    <div id="dash-customize-bar" style="display:none;padding:10px 0 6px;gap:8px;flex-wrap:wrap;align-items:center"></div>
     <div id="dash-stat-grid" class="grid-4" style="margin-bottom:20px">
       <div class="stat-card" style="--accent-line:#3b82f6">
         <div class="stat-icon" style="background:rgba(79,142,247,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
@@ -2642,6 +2686,35 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div>
     <div id="dash-charts" style="margin-top:20px"></div>
+    <!-- Extra dashboard widgets (shown/hidden by layout) -->
+    <div id="dash-calendar-widget" class="card" style="margin-top:20px;display:none">
+      <div class="section-header" style="margin-bottom:12px">
+        <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Upcoming</div><div style="font-size:11px;color:#4a5e7a">Events &amp; due tasks</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('calendar')">View all</button>
+      </div>
+      <div id="dash-calendar-list"></div>
+    </div>
+    <div id="dash-punch-widget" class="card" style="margin-top:20px;display:none">
+      <div class="section-header" style="margin-bottom:12px">
+        <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Punch List</div><div style="font-size:11px;color:#4a5e7a">Open items</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('punchlist')">View all</button>
+      </div>
+      <div id="dash-punch-list"></div>
+    </div>
+    <div id="dash-vendors-widget" class="card" style="margin-top:20px;display:none">
+      <div class="section-header" style="margin-bottom:12px">
+        <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Vendors</div><div style="font-size:11px;color:#4a5e7a">Supplier directory</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('vendors')">View all</button>
+      </div>
+      <div id="dash-vendors-list"></div>
+    </div>
+    <div id="dash-fieldlog-widget" class="card" style="margin-top:20px;display:none">
+      <div class="section-header" style="margin-bottom:12px">
+        <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Field Log</div><div style="font-size:11px;color:#4a5e7a">Recent daily reports</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('fieldlog')">View all</button>
+      </div>
+      <div id="dash-fieldlog-list"></div>
+    </div>
   </div>
 
   <!-- ═══ CALENDAR + EVENTS (combined, no tabs) ═══ -->
@@ -2672,6 +2745,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <button class="cal-view-btn"        id="cvb-year"   onclick="calSetView('year',this)">Year</button>
       <button class="cal-view-btn"        id="cvb-list"   onclick="calSetView('list',this)">List</button>
       <button class="cal-view-btn"        id="cvb-combo"  onclick="calSetView('combo',this)">Split</button>
+      <button class="cal-view-btn"        id="cvb-gantt"  onclick="calSetView('gantt',this)">Gantt</button>
     </div>
 
     <!-- Filter row (shown for month/week/combo views) -->
@@ -2719,6 +2793,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div class="tab" onclick="filterProjects('planning',this)">Planning</div>
         <div class="tab" onclick="filterProjects('completed',this)">Completed</div>
       </div>
+        <button class="btn btn-ghost btn-sm" onclick="openTemplatesPanel()">📋 Templates</button>
       <button class="btn btn-primary btn-sm" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add</button>
     </div>
     <div id="projects-list"></div>
@@ -2892,6 +2967,23 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
     </div>
     <div id="troubleshoot-list"></div>
+  </div>
+
+  <!-- ═══ PROJECT MAP VIEW ═══ -->
+  <div class="view" id="view-mapview">
+    <div class="view-header">
+      <h2 class="view-title">🗺 Project Map</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="map-status-filter" onchange="renderMapView()" style="padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">
+          <option value="">All Projects</option>
+          <option value="active">Active</option>
+          <option value="planning">Planning</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div id="map-container" style="border-radius:16px;overflow:hidden;height:420px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)"></div>
+    <div id="map-project-list" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
   </div>
 
   <!-- ═══ VENDORS / SUPPLIER DIRECTORY ═══ -->
@@ -3163,6 +3255,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 </div>
 <div id="notif-center-backdrop" onclick="closeNotifCenter()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2999"></div>
 
+<!-- Templates Panel -->
+<div id="templates-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:340px;background:#0e1828;border-left:1px solid rgba(255,255,255,0.1);z-index:3500;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
+  <div style="padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div style="font-size:17px;font-weight:700;color:#f0f4ff">📋 Project Templates</div>
+    <button onclick="closeTemplatesPanel()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer;padding:4px">✕</button>
+  </div>
+  <div style="padding:14px 16px">
+    <button onclick="saveCurrentProjectAsTemplate()" class="btn btn-primary btn-sm" style="width:100%;margin-bottom:14px">💾 Save Current Project as Template</button>
+    <div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Saved Templates</div>
+    <div id="templates-list"></div>
+    <div style="margin-top:18px;font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Built-in Templates</div>
+    <div id="builtin-templates-list"></div>
+  </div>
+</div>
+<div id="templates-backdrop" onclick="closeTemplatesPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:3499"></div>
+
 <!-- TOAST -->
 
 <div id="toast"></div>
@@ -3217,9 +3325,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Location</label>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            Address / Location
+            <button type="button" onclick="geocodeProjectAddress()" style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);color:#4f8ef7;font-size:11px;font-weight:600;border-radius:7px;padding:2px 9px;cursor:pointer">🗺 Verify</button>
+          </label>
           <div style="position:relative">
-            <input type="text" id="project-location" placeholder="Start typing an address…" autocomplete="off"
+            <input type="text" id="project-location" placeholder="Street address, City, State" autocomplete="street-address"
               oninput="locationSearch(this.value)" onkeydown="locationKeydown(event)">
             <div id="location-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:#64748b">⏳</div>
             <div id="location-dropdown" style="
@@ -3236,6 +3347,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
               box-shadow:0 8px 32px rgba(0,0,0,0.4);
             "></div>
           </div>
+          <div id="proj-address-suggestions" style="display:none;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;margin-top:4px;z-index:100;position:relative"></div>
+          <div id="proj-address-status" style="font-size:11px;color:#4a5e7a;margin-top:4px;min-height:16px"></div>
         </div>
       </div>
       <div class="form-group"><label>Control System</label>
@@ -3327,6 +3440,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <option value="monthly">Monthly</option>
           </select>
           <div id="recur-preview" style="font-size:11px;color:#4f8ef7;margin-top:4px;min-height:16px"></div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:2px">
+        <label>On Completion</label>
+        <select id="task-on-complete" onchange="document.getElementById('task-next-task-row').style.display=this.value==='next-task'?'':'none'">
+          <option value="">— Nothing —</option>
+          <option value="next-task">Create next task</option>
+          <option value="proj-complete">Mark project complete</option>
+          <option value="notify">Show completion toast</option>
+        </select>
+      </div>
+      <div id="task-next-task-row" style="display:none">
+        <div class="form-group">
+          <label>Next Task Title</label>
+          <input type="text" id="task-next-title" placeholder="e.g. Client walkthrough">
         </div>
       </div>
       <div class="form-row">
@@ -3514,7 +3642,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           </select>
         </div>
       </div>
-      <div class="form-group"><label>Tags (space-separated)</label><input type="text" id="issue-tags" placeholder="buzz hum noise dimmer"></div>
+      <div class="form-group"><label>Tags</label>
+        <div style="position:relative">
+          <div id="tags-display" onclick="toggleTagsDropdown()" style="min-height:38px;padding:6px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.06);cursor:pointer;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+            <span style="font-size:12px;color:#4a5e7a" id="tags-placeholder">Click to add tags…</span>
+          </div>
+          <input type="hidden" id="issue-tags">
+          <div id="tags-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:600;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+            <input type="text" id="tags-search-input" placeholder="Search or create tag…" oninput="filterTagsDropdown(this.value)" onkeydown="tagsInputKeydown(event)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.08);color:#f0f4ff;font-size:13px;margin-bottom:6px;box-sizing:border-box">
+            <div id="tags-options"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="form-group"><label>Summary / Cause</label><textarea id="issue-a" placeholder="Brief description of the cause or context..."></textarea></div>
       <div class="form-group"><label>Troubleshooting Steps (one per line)</label>
@@ -3575,6 +3714,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
         <div class="form-group"><label>Linked Shipment</label>
           <select id="event-shipment"><option value="">— None —</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Internal Contact</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="event-contact" list="event-contact-list" placeholder="e.g. John Smith" style="flex:1">
+          <datalist id="event-contact-list"></datalist>
         </div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="event-notes" placeholder="Location, attendees, requirements…"></textarea></div>
@@ -3969,6 +4114,240 @@ window.openModal = openModal;
 window.switchView = switchView;
 window.saveTask = saveTask;
 window.saveProject = saveProject;
+function geocodeProjectAddress() {
+  var inp = document.getElementById('project-location');
+  var status = document.getElementById('proj-address-status');
+  if (!inp || !inp.value.trim()) { if(status) status.textContent='Enter an address first'; return; }
+  if(status) status.textContent = '🔍 Looking up…';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(inp.value)+'&limit=5&addressdetails=1', {headers:{'Accept-Language':'en'}})
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var sugg = document.getElementById('proj-address-suggestions');
+      if (!data || !data.length) { if(status) status.textContent='❌ Address not found'; if(sugg) sugg.style.display='none'; return; }
+      if (status) status.textContent = '';
+      if (!sugg) return;
+      sugg.innerHTML = data.slice(0,5).map(function(r,i){
+        return '<div onclick="selectProjectAddress(\''+escH(r.display_name)+'\')" style="padding:9px 12px;cursor:pointer;font-size:13px;color:#f0f4ff;border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.1s" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'\'">📍 '+escH(r.display_name)+'</div>';
+      }).join('');
+      sugg.style.display = 'block';
+    }).catch(function(){ if(status) status.textContent='⚠️ Could not look up address — check connection'; });
+}
+function selectProjectAddress(addr) {
+  var inp = document.getElementById('project-location');
+  if (inp) inp.value = addr;
+  var sugg = document.getElementById('proj-address-suggestions');
+  if (sugg) sugg.style.display = 'none';
+  var status = document.getElementById('proj-address-status');
+  if (status) status.textContent = '✅ Address confirmed';
+}
+window.geocodeProjectAddress = geocodeProjectAddress;
+window.selectProjectAddress = selectProjectAddress;
+// ═══════════════════════════════════════════════════
+//  PROJECT TEMPLATES
+// ═══════════════════════════════════════════════════
+var _builtinTemplates = [
+  { name:'Lutron RadioRA3 Residential', tasks:[
+    {title:'Site survey & load calculations',category:'Pre-Install',priority:'high'},
+    {title:'Submit Lutron design file',category:'Design',priority:'high'},
+    {title:'Order RadioRA3 components',category:'Procurement',priority:'high'},
+    {title:'Rough-in wiring & low-voltage',category:'Install',priority:'medium'},
+    {title:'Mount dimmers, keypads & shades',category:'Install',priority:'medium'},
+    {title:'Commission Lutron system',category:'Commissioning',priority:'high'},
+    {title:'Program scenes & timeclocks',category:'Programming',priority:'high'},
+    {title:'Client walkthrough & training',category:'Handoff',priority:'medium'},
+    {title:'Punch list review',category:'Handoff',priority:'low'},
+    {title:'Final sign-off & documentation',category:'Handoff',priority:'low'}
+  ]},
+  { name:'AV / Control4 Install', tasks:[
+    {title:'AV design & rack layout',category:'Design',priority:'high'},
+    {title:'Order AV equipment & cables',category:'Procurement',priority:'high'},
+    {title:'Rack build & labeling',category:'Install',priority:'medium'},
+    {title:'Cable pull & termination',category:'Install',priority:'medium'},
+    {title:'Control4 programming',category:'Programming',priority:'high'},
+    {title:'AV calibration & tuning',category:'Commissioning',priority:'high'},
+    {title:'User interface customization',category:'Programming',priority:'medium'},
+    {title:'Client demo & training',category:'Handoff',priority:'medium'}
+  ]},
+  { name:'Network / Infrastructure', tasks:[
+    {title:'Network design & IP plan',category:'Design',priority:'high'},
+    {title:'Order switches, APs, patch panels',category:'Procurement',priority:'high'},
+    {title:'Cable installation & labeling',category:'Install',priority:'high'},
+    {title:'Switch configuration & VLANs',category:'Config',priority:'high'},
+    {title:'Wireless AP placement & config',category:'Config',priority:'medium'},
+    {title:'Firewall & security setup',category:'Config',priority:'high'},
+    {title:'Speed tests & documentation',category:'Handoff',priority:'medium'}
+  ]}
+];
+function openTemplatesPanel() {
+  var panel = document.getElementById('templates-panel');
+  var backdrop = document.getElementById('templates-backdrop');
+  if (!panel) return;
+  renderTemplatesList();
+  panel.style.display = 'block';
+  panel.style.transform = 'translateX(100%)';
+  setTimeout(function(){ panel.style.transform = 'translateX(0)'; }, 10);
+  if (backdrop) backdrop.style.display = 'block';
+}
+function closeTemplatesPanel() {
+  var panel = document.getElementById('templates-panel');
+  var backdrop = document.getElementById('templates-backdrop');
+  if (panel) { panel.style.transform = 'translateX(100%)'; setTimeout(function(){ panel.style.display='none'; },250); }
+  if (backdrop) backdrop.style.display = 'none';
+}
+function renderTemplatesList() {
+  var list = document.getElementById('templates-list');
+  var saved = JSON.parse(localStorage.getItem('fop_templates')||'[]');
+  if (!list) return;
+  if (!saved.length) {
+    list.innerHTML = '<div style="font-size:12px;color:#4a5e7a;padding:8px 0">No saved templates yet. Open a project and click "Save as Template".</div>';
+  } else {
+    list.innerHTML = saved.map(function(t,i){
+      return '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+        + '<div><div style="font-size:13px;font-weight:600;color:#f0f4ff">'+escH(t.name)+'</div><div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+t.tasks.length+' tasks</div></div>'
+        + '<div style="display:flex;gap:6px"><button onclick="applyTemplate('+i+',false)" class="btn btn-primary btn-sm">Apply</button><button onclick="deleteTemplate('+i+')" class="btn btn-ghost btn-sm" style="color:#ef4444">✕</button></div>'
+        + '</div>';
+    }).join('');
+  }
+  var builtinList = document.getElementById('builtin-templates-list');
+  if (builtinList) {
+    builtinList.innerHTML = _builtinTemplates.map(function(t,i){
+      return '<div style="background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.15);border-radius:10px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">'
+        + '<div><div style="font-size:13px;font-weight:600;color:#f0f4ff">'+escH(t.name)+'</div><div style="font-size:11px;color:#4a5e7a;margin-top:2px">'+t.tasks.length+' tasks</div></div>'
+        + '<button onclick="applyBuiltinTemplate('+i+')" class="btn btn-primary btn-sm">Apply</button>'
+        + '</div>';
+    }).join('');
+  }
+}
+function saveCurrentProjectAsTemplate() {
+  var name = prompt('Template name:');
+  if (!name) return;
+  var activeProj = (state.projects||[]).find(function(p){ return !p.archived; });
+  if (!activeProj) { toast('No active project found'); return; }
+  var projTasks = (state.tasks||[]).filter(function(t){ return t.project===activeProj.id && !t.archived; });
+  var tmpl = { name: name, tasks: projTasks.map(function(t){ return { title:t.title, category:t.category||'', priority:t.priority||'medium', desc:t.desc||'' }; }) };
+  var saved = JSON.parse(localStorage.getItem('fop_templates')||'[]');
+  saved.push(tmpl);
+  localStorage.setItem('fop_templates', JSON.stringify(saved));
+  toast('Template saved: '+name);
+  renderTemplatesList();
+}
+function applyTemplate(idx, isBuiltin) {
+  var templates = isBuiltin ? _builtinTemplates : JSON.parse(localStorage.getItem('fop_templates')||'[]');
+  var tmpl = templates[idx];
+  if (!tmpl) return;
+  var projects = (state.projects||[]).filter(function(p){ return !p.archived; });
+  if (!projects.length) { toast('Create a project first'); closeTemplatesPanel(); setTimeout(function(){ openAddModal(); },300); return; }
+  // Pick the most recently created project
+  var projNames = projects.map(function(p,i){ return i+': '+p.name; }).join(', ');
+  var choice = projects.length===1 ? 0 : parseInt(prompt('Apply to which project?\n'+projNames) || '0');
+  if (isNaN(choice)||choice<0||choice>=projects.length) return;
+  var proj = projects[choice];
+  var today = new Date();
+  tmpl.tasks.forEach(function(t) {
+    addItem('tasks', { title:t.title, project:proj.id, category:t.category, priority:t.priority||'medium', status:'todo', desc:t.desc||'' });
+  });
+  toast('Applied '+tmpl.tasks.length+' tasks to '+proj.name);
+  closeTemplatesPanel();
+  setTimeout(function(){ switchView('tasks'); },300);
+}
+function applyBuiltinTemplate(idx) { applyTemplate(idx, true); }
+function deleteTemplate(idx) {
+  var saved = JSON.parse(localStorage.getItem('fop_templates')||'[]');
+  saved.splice(idx,1);
+  localStorage.setItem('fop_templates', JSON.stringify(saved));
+  renderTemplatesList();
+}
+window.openTemplatesPanel = openTemplatesPanel;
+// ═══════════════════════════════════════════════════
+//  FILE ATTACHMENTS
+// ═══════════════════════════════════════════════════
+function attachmentWidget(col, itemId) {
+  return '<div id="aw-'+col+'-'+itemId+'">'+ _attachWidgetInner(col, itemId) +'</div>';
+}
+function _attachWidgetInner(col, itemId) {
+  var item = (state[col]||[]).find(function(x){ return x.id===itemId; });
+  var attachments = (item && item.attachments) || [];
+  var html = '<div class="attach-list">';
+  attachments.forEach(function(a, idx) {
+    var icon = a.type && a.type.indexOf('image')>=0 ? '🖼' : a.type && a.type.indexOf('pdf')>=0 ? '📄' : '📎';
+    html += '<div class="attach-chip">'
+      + '<span onclick="viewAttachment(\''+col+'\',\''+itemId+'\','+idx+')" title="'+escH(a.name||'File')+'"><span style="margin-right:3px">'+icon+'</span><span class="attach-chip-name">'+escH(a.name||'File')+'</span></span>'
+      + '<span class="attach-chip-del" onclick="event.stopPropagation();deleteAttachment(\''+col+'\',\''+itemId+'\','+idx+')">×</span>'
+      + '</div>';
+  });
+  html += '</div>';
+  html += '<div class="attach-dropzone" onclick="document.getElementById(\'attach-file-input-'+col+'-'+itemId+'\').click()" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="handleAttachDrop(event,\''+col+'\',\''+itemId+'\')">'
+    + '<div class="attach-dropzone-label">📎 Tap to attach files or drag &amp; drop</div>'
+    + '</div>'
+    + '<input type="file" id="attach-file-input-'+col+'-'+itemId+'" multiple style="display:none" onchange="handleAttachFiles(this,\''+col+'\',\''+itemId+'\')">';
+  return html;
+}
+function renderAttachWidget(col, itemId) {
+  var wrap = document.getElementById('aw-'+col+'-'+itemId);
+  if (wrap) wrap.innerHTML = _attachWidgetInner(col, itemId);
+}
+function handleAttachFiles(input, col, itemId) {
+  var files = Array.from(input.files);
+  if (!files.length) return;
+  var item = (state[col]||[]).find(function(x){ return x.id===itemId; });
+  if (!item) return;
+  var attachments = (item.attachments || []).slice();
+  var pending = files.length;
+  files.forEach(function(file) {
+    if (file.size > 5*1024*1024) { toast('File too large (max 5MB): '+file.name); pending--; return; }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      attachments.push({ name:file.name, type:file.type, size:file.size, data:e.target.result, date:new Date().toISOString() });
+      pending--;
+      if (pending===0) {
+        updateItem(col, itemId, { attachments:attachments });
+        renderAttachWidget(col, itemId);
+        toast(files.length+' file'+(files.length>1?'s':'')+' attached');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+function handleAttachDrop(e, col, itemId) {
+  e.preventDefault();
+  e.target.classList.remove('drag-over');
+  var fakeInput = { files: e.dataTransfer.files };
+  handleAttachFiles(fakeInput, col, itemId);
+}
+function viewAttachment(col, itemId, idx) {
+  var item = (state[col]||[]).find(function(x){ return x.id===itemId; });
+  if (!item || !item.attachments || !item.attachments[idx]) return;
+  var a = item.attachments[idx];
+  if (a.type && a.type.indexOf('image')>=0) {
+    var w = window.open('','_blank');
+    w.document.write('<html><body style="margin:0;background:#000"><img src="'+a.data+'" style="max-width:100%;max-height:100vh;display:block;margin:auto"></body></html>');
+  } else {
+    var link = document.createElement('a');
+    link.href = a.data; link.download = a.name||'file'; link.click();
+  }
+}
+function deleteAttachment(col, itemId, idx) {
+  var item = (state[col]||[]).find(function(x){ return x.id===itemId; });
+  if (!item || !item.attachments) return;
+  var attachments = item.attachments.slice();
+  attachments.splice(idx,1);
+  updateItem(col, itemId, { attachments:attachments });
+  renderAttachWidget(col, itemId);
+  toast('Attachment removed');
+}
+window.handleAttachFiles = handleAttachFiles;
+window.handleAttachDrop = handleAttachDrop;
+window.viewAttachment = viewAttachment;
+window.deleteAttachment = deleteAttachment;
+window.attachmentWidget = attachmentWidget;
+window.renderAttachWidget = renderAttachWidget;
+window.closeTemplatesPanel = closeTemplatesPanel;
+window.saveCurrentProjectAsTemplate = saveCurrentProjectAsTemplate;
+window.applyTemplate = applyTemplate;
+window.applyBuiltinTemplate = applyBuiltinTemplate;
+window.deleteTemplate = deleteTemplate;
+window.renderTemplatesList = renderTemplatesList;
 window.savePO = savePO;
 window.saveShipment = saveShipment;
 window.filterTasks = filterTasks;
@@ -4416,6 +4795,18 @@ function updateItem(col, id, data) {
       scheduleNextRecur(data);
       toast('Done! Next recurrence scheduled.');
     }
+    // Execute on-complete workflow
+    var prevFull = state['tasks'] ? state['tasks'].find(function(x){ return x.id === id; }) : null;
+    var oc = (prevFull && prevFull.onComplete) || (data.onComplete);
+    if (oc === 'next-task') {
+      var nextTitle = (prevFull && prevFull.nextTitle) || (data.nextTitle) || 'Follow-up task';
+      if (nextTitle) { setTimeout(function(){ addItem('tasks',{ title:nextTitle, project:(prevFull&&prevFull.project)||'', status:'todo', priority:(prevFull&&prevFull.priority)||'medium' }); toast('Next task created: '+nextTitle); },200); }
+    } else if (oc === 'proj-complete') {
+      var pid = (prevFull && prevFull.project) || (data.project);
+      if (pid) { setTimeout(function(){ updateItem('projects',pid,{status:'completed'}); toast('Project marked complete'); },200); }
+    } else if (oc === 'notify') {
+      setTimeout(function(){ toast('✅ Task completed: '+(prevFull&&prevFull.title||'Task')); },100);
+    }
   }
   // Optimistic in-memory update so renders immediately reflect the change
   if (state[col]) {
@@ -4715,6 +5106,8 @@ function openAddModal() {
   clearForm(m);
   if(m === 'modal-project') populateCustomFields([]);
   if(m !== 'modal-issue') populateProjectSelects();
+  if(m === 'modal-issue') openTagsForEdit('');
+  if(m === 'modal-event') populateEventContactList();
   // Hide notes section for new tasks
   var ns = document.getElementById('task-notes-section');
   if (ns) ns.style.display = 'none';
@@ -4829,6 +5222,33 @@ function renderDashboard() {
     renderThingsHome();
   }
   try { updateTabBadges(); } catch(e) {}
+
+  // ── Apply custom layout (show/hide widgets) ──────────────────────────────
+  var layout = getDashLayout();
+  var widgetMap = {
+    stats:    ['dash-stat-grid'],
+    tasks:    ['dash-task-card'],
+    shipping: ['dash-ship-card'],
+    charts:   ['dash-charts'],
+    calendar: ['dash-calendar-widget'],
+    punch:    ['dash-punch-widget'],
+    vendors:  ['dash-vendors-widget'],
+    fieldlog: ['dash-fieldlog-widget']
+  };
+  // Show/hide individual widget elements
+  Object.keys(widgetMap).forEach(function(key) {
+    var ids = widgetMap[key];
+    var inLayout = layout.indexOf(key) >= 0;
+    ids.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = inLayout ? '' : 'none';
+    });
+  });
+  // dash-recent-grid shows if tasks OR shipping are in layout
+  var recentGrid = document.getElementById('dash-recent-grid');
+  if (recentGrid) recentGrid.style.display = (layout.indexOf('tasks')>=0 || layout.indexOf('shipping')>=0) ? '' : 'none';
+  // ─────────────────────────────────────────────────────────────────────────
+
   var openTasks = state.tasks.filter(function(t){return t.status!=='done';});
   var highTasks = openTasks.filter(function(t){return t.priority==='high';}).length;
   var inTransit = state.shipping.filter(function(s){return s.status==='transit'||s.status==='out';}).length;
@@ -4898,6 +5318,95 @@ function renderDashboard() {
     });
   }
   renderDashboardCharts();
+
+  // ── Extra widget content ──────────────────────────────────────────────────
+  // Upcoming (calendar widget)
+  if (layout.indexOf('calendar') >= 0) {
+    var calEl = document.getElementById('dash-calendar-list');
+    if (calEl) {
+      var now = new Date(); now.setHours(0,0,0,0);
+      var cutoff = new Date(now.getTime() + 7*86400000);
+      var upcoming = [];
+      (state.events||[]).forEach(function(ev) {
+        if (ev.date) { var d=new Date(ev.date); if(d>=now&&d<=cutoff) upcoming.push({type:'event',date:d,title:ev.title,id:ev.id}); }
+      });
+      (state.tasks||[]).filter(function(t){return t.status!=='done'&&!t.archived&&t.due;}).forEach(function(t){
+        var d=new Date(t.due); if(d>=now&&d<=cutoff) upcoming.push({type:'task',date:d,title:t.title,id:t.id});
+      });
+      upcoming.sort(function(a,b){return a.date-b.date;});
+      if (!upcoming.length) { calEl.innerHTML='<div class="empty-state"><p>Nothing due this week</p></div>'; }
+      else {
+        calEl.innerHTML = upcoming.slice(0,6).map(function(u) {
+          var icon = u.type==='event' ? '📅' : '✅';
+          var col = u.type==='event' ? '#818cf8' : '#34d399';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+            +'<span style="font-size:14px">'+icon+'</span>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(u.title||'')+'</div></div>'
+            +'<span style="font-size:11px;color:'+col+';font-weight:600;white-space:nowrap">'+fmtDateSmart(u.date.toISOString().slice(0,10))+'</span>'
+            +'</div>';
+        }).join('');
+      }
+    }
+  }
+
+  // Punch list widget
+  if (layout.indexOf('punch') >= 0) {
+    var punEl = document.getElementById('dash-punch-list');
+    if (punEl) {
+      var openPunch = (state.punchlists||[]).filter(function(p){return p.status!=='resolved';}).slice(0,5);
+      if (!openPunch.length) { punEl.innerHTML='<div class="empty-state"><p>No open punch items</p></div>'; }
+      else {
+        punEl.innerHTML = openPunch.map(function(p) {
+          var dot = p.status==='in-progress' ? '#fbbf24' : '#ef4444';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+            +'<span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block"></span>'
+            +'<div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(p.desc||p.description||'Punch item')+'</div>'
+            +(p.priority ? '<span style="font-size:10px;padding:2px 6px;border-radius:6px;background:rgba(239,68,68,0.15);color:#f87171">'+escH(p.priority)+'</span>' : '')
+            +'</div>';
+        }).join('');
+      }
+    }
+  }
+
+  // Vendors widget
+  if (layout.indexOf('vendors') >= 0) {
+    var venEl = document.getElementById('dash-vendors-list');
+    if (venEl) {
+      var vlist = (state.vendors||[]).slice(0,5);
+      if (!vlist.length) { venEl.innerHTML='<div class="empty-state"><p>No vendors yet</p></div>'; }
+      else {
+        venEl.innerHTML = vlist.map(function(v) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+            +'<span style="font-size:18px">🏪</span>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(v.company||v.name||'Vendor')+'</div>'
+            +(v.category?'<div style="font-size:11px;color:#4a5e7a">'+escH(v.category)+'</div>':'')
+            +'</div>'
+            +(v.phone?'<a href="tel:'+escH(v.phone)+'" style="font-size:18px;text-decoration:none">📞</a>':'')
+            +'</div>';
+        }).join('');
+      }
+    }
+  }
+
+  // Field log widget
+  if (layout.indexOf('fieldlog') >= 0) {
+    var flEl = document.getElementById('dash-fieldlog-list');
+    if (flEl) {
+      var flList = (state.fieldlogs||[]).slice(-3).reverse();
+      if (!flList.length) { flEl.innerHTML='<div class="empty-state"><p>No field logs yet</p></div>'; }
+      else {
+        flEl.innerHTML = flList.map(function(fl) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+            +'<div style="background:rgba(99,102,241,0.15);color:#818cf8;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;white-space:nowrap">'+escH(fl.date||'')+'</div>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(fl.workPerformed||fl.project||'Site report')+'</div>'
+            +(fl.weather?'<div style="font-size:11px;color:#4a5e7a">'+escH(fl.weather)+'</div>':'')
+            +'</div>'
+            +'</div>';
+        }).join('');
+      }
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 }
 
 function renderDashboardCharts() {
@@ -4960,6 +5469,102 @@ function renderDashboardCharts() {
 window.renderDashboardCharts = renderDashboardCharts;
 
 // ═══════════════════════════════════════════════════
+//  CUSTOM DASHBOARD BUILDER
+// ═══════════════════════════════════════════════════
+var _defaultDashLayout = ['stats','tasks','shipping','charts'];
+function getDashLayout() {
+  try { return JSON.parse(localStorage.getItem('fop_dash_layout')||JSON.stringify(_defaultDashLayout)); } catch(e) { return _defaultDashLayout.slice(); }
+}
+function saveDashLayout(layout) {
+  localStorage.setItem('fop_dash_layout', JSON.stringify(layout));
+}
+function toggleDashCustomize(btn) {
+  var bar = document.getElementById('dash-customize-bar');
+  if (!bar) return;
+  var isOpen = bar.style.display !== 'none' && bar.style.display !== '';
+  if (!isOpen) {
+    // Rebuild the bar dynamically so buttons reflect current state
+    var layout = getDashLayout();
+    var allWidgets = [
+      {key:'stats',label:'Stats'},
+      {key:'tasks',label:'Tasks'},
+      {key:'shipping',label:'Shipping'},
+      {key:'charts',label:'Charts'},
+      {key:'calendar',label:'Upcoming'},
+      {key:'punch',label:'Punch List'},
+      {key:'vendors',label:'Vendors'},
+      {key:'fieldlog',label:'Field Log'}
+    ];
+    var barHtml = '<span style="font-size:12px;font-weight:700;color:#4a5e7a;letter-spacing:0.5px;margin-right:4px">WIDGETS:</span>';
+    allWidgets.forEach(function(w) {
+      var active = layout.indexOf(w.key) >= 0;
+      var pos = layout.indexOf(w.key);
+      barHtml += '<span style="display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px 6px 3px 8px;border:1px solid rgba(255,255,255,'+(active?'0.15':'0.06')+')">';
+      barHtml += '<span style="font-size:12px;color:'+(active?'#a5b4fc':'#4a5e7a')+'">'+w.label+'</span>';
+      if (active) {
+        if (pos > 0) barHtml += '<button onclick="dashMoveWidget(\''+w.key+'\',-1)" title="Move left" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:11px;padding:0 2px">◀</button>';
+        if (pos < layout.length-1) barHtml += '<button onclick="dashMoveWidget(\''+w.key+'\',1)" title="Move right" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:11px;padding:0 2px">▶</button>';
+        barHtml += '<button onclick="dashRemoveWidget(\''+w.key+'\')" title="Remove" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:0 2px;line-height:1">×</button>';
+      } else {
+        barHtml += '<button onclick="dashAddWidget(\''+w.key+'\')" title="Add" style="background:none;border:none;color:#34d399;cursor:pointer;font-size:14px;padding:0 2px;line-height:1">+</button>';
+      }
+      barHtml += '</span>';
+    });
+    barHtml += '<button class="btn btn-danger btn-sm" onclick="dashResetLayout()" style="font-size:12px;margin-left:6px">Reset</button>';
+    bar.innerHTML = barHtml;
+  }
+  bar.style.display = isOpen ? 'none' : 'flex';
+  if (btn) btn.textContent = isOpen ? '⚙ Customize' : '✕ Done';
+}
+function _rebuildDashBar() {
+  var bar = document.getElementById('dash-customize-bar');
+  if (!bar || bar.style.display === 'none' || bar.style.display === '') return;
+  // Close and reopen to rebuild with current layout
+  bar.style.display = 'none';
+  var customBtn = document.getElementById('dash-customize-btn');
+  if (customBtn) customBtn.textContent = '⚙ Customize';
+  toggleDashCustomize(customBtn);
+}
+function dashAddWidget(type) {
+  var layout = getDashLayout();
+  if (layout.indexOf(type) >= 0) { toast('Widget already on dashboard'); return; }
+  layout.push(type);
+  saveDashLayout(layout);
+  renderDashboard();
+  _rebuildDashBar();
+  toast('Widget added');
+}
+function dashRemoveWidget(type) {
+  var layout = getDashLayout();
+  var idx = layout.indexOf(type);
+  if (idx>=0) { layout.splice(idx,1); saveDashLayout(layout); renderDashboard(); _rebuildDashBar(); toast('Widget removed'); }
+}
+function dashMoveWidget(type, dir) {
+  var layout = getDashLayout();
+  var idx = layout.indexOf(type);
+  if (idx<0) return;
+  var newIdx = idx + dir;
+  if (newIdx<0||newIdx>=layout.length) return;
+  var tmp = layout[idx]; layout[idx]=layout[newIdx]; layout[newIdx]=tmp;
+  saveDashLayout(layout);
+  renderDashboard();
+  _rebuildDashBar();
+}
+function dashResetLayout() {
+  localStorage.removeItem('fop_dash_layout');
+  renderDashboard();
+  var bar = document.getElementById('dash-customize-bar');
+  if (bar) { bar.style.display='none'; var b=document.getElementById('dash-customize-btn'); if(b) b.textContent='⚙ Customize'; }
+  toast('Dashboard reset to default');
+}
+window.toggleDashCustomize = toggleDashCustomize;
+window.dashAddWidget = dashAddWidget;
+window.dashRemoveWidget = dashRemoveWidget;
+window.dashMoveWidget = dashMoveWidget;
+window.dashResetLayout = dashResetLayout;
+window.getDashLayout = getDashLayout;
+
+// ═══════════════════════════════════════════════════
 //  CUSTOM FIELDS
 // ═══════════════════════════════════════════════════
 function addCustomField(key, val) {
@@ -5020,6 +5625,11 @@ function renderProjects() {
   el.innerHTML='';var wrap=document.createElement('div');wrap.className='grid-2';
   data.forEach(function(p){
     var tasks=state.tasks.filter(function(t){return t.project===p.id;}),done=tasks.filter(function(t){return t.status==='done';}).length,pct=tasks.length?Math.round(done/tasks.length*100):0,bc=sC[p.status]||'#3b82f6',health=projectHealth(p);
+    // Calculate progress from non-archived tasks
+    var projTasks = (state.tasks||[]).filter(function(t){ return t.project===p.id && !t.archived; });
+    var projDone = projTasks.filter(function(t){ return t.status==='done'; }).length;
+    var projPct = projTasks.length ? Math.round(projDone/projTasks.length*100) : 0;
+    var projProgressHtml = projTasks.length ? '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:11px;color:#4a5e7a">Progress</span><span style="font-size:11px;font-weight:700;color:'+(projPct===100?'#10b981':'#8da0c0')+'">'+projPct+'%</span></div><div style="background:rgba(255,255,255,0.06);border-radius:99px;height:5px"><div style="width:'+projPct+'%;background:'+(projPct===100?'#10b981':projPct>50?'#4f8ef7':'#f59e0b')+';height:100%;border-radius:99px;transition:width 0.5s ease"></div></div></div>' : '';
     var card=document.createElement('div');card.className='card';card.style.cssText='cursor:pointer;border-left:4px solid '+bc+' !important';
     card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div>'
       +'<div style="font-weight:700;font-size:16px;margin-bottom:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+health.color+';display:inline-block;margin-right:7px;vertical-align:middle"></span>'+escH(p.name)+'</div>'
@@ -5028,6 +5638,7 @@ function renderProjects() {
       +'<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:#64748b"><span>'+escH(fmtDate(p.start)||'—')+'</span><span>'+escH(fmtDate(p.end)||'—')+'</span></div>'
       +'<div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:12px;color:#64748b"><span>Tasks: '+done+'/'+tasks.length+'</span><span>'+pct+'%</span></div>'
       +'<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+      +projProgressHtml
       +(p.customFields && p.customFields.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
         + p.customFields.map(function(f){ return '<span style="font-size:11px;background:rgba(255,255,255,0.06);border-radius:6px;padding:2px 8px;color:#8da0c0"><span style="color:#4a5e7a">'+escH(f.key)+':</span> '+escH(f.val)+'</span>'; }).join('')
         + '</div>' : '')
@@ -5329,10 +5940,13 @@ function saveEvent() {
     project: document.getElementById('event-project').value,
     task: document.getElementById('event-task').value,
     shipment: document.getElementById('event-shipment').value,
-    notes: document.getElementById('event-notes').value.trim()
+    notes: document.getElementById('event-notes').value.trim(),
+    contact: document.getElementById('event-contact') ? document.getElementById('event-contact').value.trim() : ''
   };
   if (editingId) { updateItem('events', editingId, item); toast('Event updated'); }
   else { addItem('events', item); toast('Event added'); }
+  var _evContact = document.getElementById('event-contact') ? document.getElementById('event-contact').value.trim() : '';
+  if (_evContact) saveEventContact(_evContact);
   closeModal('modal-event');
   renderCommissioning();
   if (typeof renderCalendar === 'function') renderCalendar();
@@ -5352,6 +5966,8 @@ function editEvent(id) {
   document.getElementById('event-task').value = ev.task || '';
   document.getElementById('event-shipment').value = ev.shipment || '';
   document.getElementById('event-notes').value = ev.notes || '';
+  if (document.getElementById('event-contact')) document.getElementById('event-contact').value = ev.contact||'';
+  populateEventContactList();
   openModal('modal-event');
 }
 function confirmDeleteEvent(id) {
@@ -5359,6 +5975,20 @@ function confirmDeleteEvent(id) {
   softDelete('events', id, ev ? ev.title : 'Event');
   renderCommissioning();
 }
+function populateEventContactList() {
+  var dl = document.getElementById('event-contact-list');
+  if (!dl) return;
+  var contacts = JSON.parse(localStorage.getItem('fop_event_contacts')||'[]');
+  // Also pull from existing events
+  (state.events||[]).forEach(function(e){ if(e.contact && contacts.indexOf(e.contact)===-1) contacts.push(e.contact); });
+  dl.innerHTML = contacts.map(function(c){ return '<option value="'+escH(c)+'">'; }).join('');
+}
+function saveEventContact(name) {
+  if (!name) return;
+  var contacts = JSON.parse(localStorage.getItem('fop_event_contacts')||'[]');
+  if (contacts.indexOf(name)===-1) { contacts.push(name); localStorage.setItem('fop_event_contacts', JSON.stringify(contacts)); }
+}
+window.populateEventContactList = populateEventContactList;
 
 // ── Inline detail expand (trouble-card style) ──
 function toggleExpandDetail(rowEl, col, id) {
@@ -5432,6 +6062,7 @@ function buildExpandDetailHtml(col, item) {
       + '</div></div>';
     if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
   }
+  html += '<div class="de-section"><div class="de-section-hdr">Attachments</div>' + _attachWidgetInner(col, item.id) + '</div>';
   html += '<div class="de-actions">'
     + '<button class="btn btn-primary btn-sm" onclick="'+editFn+'(\''+item.id+'\')">✏ Edit</button>'
     + '<button class="btn btn-ghost btn-sm" onclick="softDelete(\''+col+'\',\''+item.id+'\',\''+escH(item.title||item.vendor||item.desc||'Item')+'\');document.querySelectorAll(\'.detail-expand-row,.t3-expand-row\').forEach(function(r){r.previousElementSibling&&r.previousElementSibling.classList.remove(\'row-expanded\',\'t3-row-expanded\');r.remove();})">Delete</button>'
@@ -6272,6 +6903,8 @@ function saveTask() {
     recur: recur || null,
     shipment: document.getElementById('task-shipment').value || null,
     blockedBy: document.getElementById('task-blocked-by').value || null,
+    onComplete: document.getElementById('task-on-complete') ? document.getElementById('task-on-complete').value : '',
+    nextTitle: document.getElementById('task-next-title') ? document.getElementById('task-next-title').value.trim() : ''
   };
   if(editingId){
     updateItem('tasks',editingId,item);
@@ -6318,6 +6951,10 @@ function editTask(id) {
     setTimeout(function(){ noteLog.scrollTop = noteLog.scrollHeight; }, 50);
   }
   setTimeout(updateRecurPreview, 50);
+  var ocSel = document.getElementById('task-on-complete');
+  if (ocSel) { ocSel.value = t.onComplete||''; document.getElementById('task-next-task-row').style.display = t.onComplete==='next-task'?'':'none'; }
+  var ntSel = document.getElementById('task-next-title');
+  if (ntSel) ntSel.value = t.nextTitle||'';
   openModal('modal-task');
 }
 
@@ -6527,6 +7164,39 @@ function renderShipping() {
     data=data.filter(function(s){return s.status===shipFilter && !s.archived;});
   }
   var tb=document.getElementById('shipping-tbody');
+  var carrierColors = {
+    'FedEx':'#4D148C','fedex':'#4D148C',
+    'UPS':'#351916','ups':'#351916',
+    'USPS':'#004B87','usps':'#004B87',
+    'DHL':'#FFCC00','dhl':'#FFCC00',
+    'Amazon':'#FF9900','amazon logistics':'#FF9900',
+    'OnTrac':'#FF6B00','ontrac':'#FF6B00',
+    'LSO':'#00639C','lso':'#00639C',
+    'LaserShip':'#e31837','lasership':'#e31837',
+    'Purolator':'#660000','purolator':'#660000',
+    'Canada Post':'#CC0000','canada post':'#CC0000'
+  };
+  var carrierLogos = {
+    'FedEx':'<span style="font-weight:800;font-size:11px;letter-spacing:-0.5px"><span style="color:#4D148C">Fed</span><span style="color:#FF6600">Ex</span></span>',
+    'UPS':'<span style="font-weight:900;font-size:11px;background:#351916;color:#FFB500;border-radius:4px;padding:1px 5px">UPS</span>',
+    'USPS':'<span style="font-weight:700;font-size:10px;background:#004B87;color:#fff;border-radius:3px;padding:1px 5px">USPS</span>',
+    'DHL':'<span style="font-weight:900;font-size:11px;background:#FFCC00;color:#D40511;border-radius:4px;padding:1px 5px">DHL</span>',
+    'Amazon':'<span style="font-weight:700;font-size:11px;color:#FF9900">amazon</span>',
+    'OnTrac':'<span style="font-weight:700;font-size:11px;background:#FF6B00;color:#fff;border-radius:3px;padding:1px 5px">OnTrac</span>',
+    'LSO':'<span style="font-weight:700;font-size:11px;background:#00639C;color:#fff;border-radius:3px;padding:1px 5px">LSO</span>',
+    'LaserShip':'<span style="font-weight:700;font-size:11px;background:#e31837;color:#fff;border-radius:3px;padding:1px 5px">LaserShip</span>'
+  };
+  function carrierBadge(carrier) {
+    if (!carrier) return '<span style="font-size:12px;color:#4a5e7a">—</span>';
+    var logo = carrierLogos[carrier];
+    if (logo) return logo;
+    return '<span style="font-size:12px;font-weight:600;color:#8da0c0">'+escH(carrier)+'</span>';
+  }
+  function rowAccent(carrier, status) {
+    var cc = carrierColors[carrier] || null;
+    if (!cc) return '';
+    return 'border-left:3px solid '+cc+'20;';
+  }
   if(isMobile()){
     if(!data.length){
       var mWrapE=document.getElementById('view-shipping');
@@ -6588,7 +7258,7 @@ function renderShipping() {
             etaHtml='<span class="t3-due '+etaCls+'">ETA '+escH(fmtDateSmart(ms2.eta))+'</span>';
           }
           row.innerHTML=
-            '<div class="t3-icon" style="background:rgba(16,185,129,0.1)">📦</div>'
+            '<div class="t3-icon" style="background:'+(carrierColors[ms2.carrier]||'rgba(16,185,129,0.1)')+'20">'+(ms2.carrier&&carrierLogos[ms2.carrier]?carrierLogos[ms2.carrier].replace(/font-size:\d+px/g,'font-size:14px'):'📦')+'</div>'
             +'<div class="t3-content">'
               +'<div class="t3-title">'+escH(ms2.desc||ms2.tracking||'Shipment')+'</div>'
               +'<div class="t3-meta">'
@@ -6614,10 +7284,11 @@ data.reverse();
   var html='';
   for(var i=0;i<data.length;i++){
     var s=data[i];
-    html+='<tr data-shid="'+s.id+'" data-col="shipping" class="swipe-row">';
+    var _rowAccent = rowAccent(s.carrier, s.status);
+    html+='<tr data-shid="'+s.id+'" data-col="shipping" class="swipe-row" style="'+_rowAccent+'">';
     html+='<td><span style="font-size:12px;color:#4f8ef7">'+escH(s.tracking||'-')+'</span></td>';
     html+='<td><span style="font-weight:600;color:#f0f4ff">'+escH(s.desc||'-')+'</span></td>';
-    html+='<td><span style="font-size:12px;font-weight:600;color:#8da0c0">'+escH(s.carrier||'-')+'</span></td>';
+    html+='<td>'+carrierBadge(s.carrier)+'</td>';
     html+='<td><span style="font-size:12px;color:#8da0c0">'+(s.po?escH(poName(s.po)):'-')+'</span></td>';
     html+=statusBadge(s.status)+'</td>';
     html+='<td><span style="font-size:12px;color:#4a5e7a">'+escH(fmtDate(s.eta))+'</span></td>';
@@ -6868,7 +7539,7 @@ function editIssue(id) {
   document.getElementById('issue-modal-title').textContent = 'Edit Issue';
   document.getElementById('issue-q').value = t.q || '';
   document.getElementById('issue-cat').value = t.cat || 'electrical';
-  document.getElementById('issue-tags').value = t.tags || '';
+  openTagsForEdit(t.tags || '');
   document.getElementById('issue-a').value = t.a || '';
   document.getElementById('issue-steps').value = Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps||'');
   openModal('modal-issue');
@@ -6897,7 +7568,94 @@ function deleteIssue(id) {
   undoDelete('issues', id, function(){ renderTroubleshoot(); });
 }
 
-
+// ── TAG MULTI-SELECT ─────────────────────────────────────────────
+var _savedTags = JSON.parse(localStorage.getItem('fop_saved_tags') || '[]');
+var _selectedTags = [];
+function getAllUsedTags() {
+  var tagSet = {};
+  _savedTags.forEach(function(t){ tagSet[t]=1; });
+  (state.issues||[]).forEach(function(i){
+    if (i.tags) i.tags.split(/[\s,]+/).filter(Boolean).forEach(function(t){ tagSet[t]=1; });
+  });
+  return Object.keys(tagSet).sort();
+}
+function openTagsForEdit(tagsStr) {
+  _selectedTags = tagsStr ? tagsStr.split(/[\s,]+/).filter(Boolean) : [];
+  renderTagsDisplay();
+  document.getElementById('issue-tags').value = _selectedTags.join(' ');
+}
+function toggleTagsDropdown() {
+  var dd = document.getElementById('tags-dropdown');
+  if (!dd) return;
+  var isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) { filterTagsDropdown(''); var si = document.getElementById('tags-search-input'); if(si){si.value='';si.focus();} }
+}
+function filterTagsDropdown(q) {
+  var opts = document.getElementById('tags-options');
+  if (!opts) return;
+  var all = getAllUsedTags();
+  var filtered = q ? all.filter(function(t){ return t.toLowerCase().indexOf(q.toLowerCase())>=0; }) : all;
+  var html = filtered.map(function(t){
+    var sel = _selectedTags.indexOf(t)>=0;
+    return '<div onclick="toggleTag(\''+escH(t)+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background 0.1s'+(sel?';background:rgba(79,142,247,0.15)':'')+'">'
+      + '<div style="width:16px;height:16px;border-radius:4px;border:2px solid '+(sel?'#4f8ef7':'rgba(255,255,255,0.2)')+';background:'+(sel?'#4f8ef7':'none')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(sel?'<span style="color:#fff;font-size:10px;font-weight:700">✓</span>':'')+'</div>'
+      + '<span style="font-size:13px;color:#f0f4ff">'+escH(t)+'</span>'
+      + '</div>';
+  }).join('');
+  if (q && filtered.indexOf(q)===-1) {
+    html += '<div onclick="createAndToggleTag(\''+escH(q)+'\')" style="padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:#4f8ef7;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px">+ Create "'+escH(q)+'"</div>';
+  }
+  if (!html) html = '<div style="font-size:12px;color:#4a5e7a;padding:8px">No tags yet — type to create one</div>';
+  opts.innerHTML = html;
+}
+function toggleTag(tag) {
+  var idx = _selectedTags.indexOf(tag);
+  if (idx>=0) _selectedTags.splice(idx,1); else _selectedTags.push(tag);
+  document.getElementById('issue-tags').value = _selectedTags.join(' ');
+  renderTagsDisplay();
+  filterTagsDropdown(document.getElementById('tags-search-input') ? document.getElementById('tags-search-input').value : '');
+}
+function createAndToggleTag(tag) {
+  if (!tag) return;
+  if (_savedTags.indexOf(tag)===-1) { _savedTags.push(tag); localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags)); }
+  toggleTag(tag);
+  var si = document.getElementById('tags-search-input'); if(si) si.value='';
+  filterTagsDropdown('');
+}
+function renderTagsDisplay() {
+  var disp = document.getElementById('tags-display');
+  var ph = document.getElementById('tags-placeholder');
+  if (!disp) return;
+  if (!_selectedTags.length) { if(ph) ph.style.display=''; disp.querySelectorAll('.tag-chip').forEach(function(c){c.remove();}); return; }
+  if(ph) ph.style.display='none';
+  disp.querySelectorAll('.tag-chip').forEach(function(c){c.remove();});
+  _selectedTags.forEach(function(t){
+    var chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.style.cssText = 'font-size:12px;background:rgba(79,142,247,0.18);border:1px solid rgba(79,142,247,0.3);border-radius:6px;padding:2px 8px;color:#4f8ef7;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px';
+    chip.innerHTML = escH(t)+'<span style="opacity:0.7;font-size:10px" onclick="event.stopPropagation();toggleTag(\''+escH(t)+'\')">×</span>';
+    disp.insertBefore(chip, ph);
+  });
+}
+function tagsInputKeydown(e) {
+  if (e.key==='Escape') { var dd=document.getElementById('tags-dropdown'); if(dd) dd.style.display='none'; }
+  if (e.key==='Enter') { e.preventDefault(); var v=e.target.value.trim(); if(v) createAndToggleTag(v); }
+}
+// Close tags dropdown on outside click
+document.addEventListener('click', function(e){
+  var dd = document.getElementById('tags-dropdown');
+  if (dd && dd.style.display!=='none') {
+    var disp = document.getElementById('tags-display');
+    if (!dd.contains(e.target) && !(disp&&disp.contains(e.target))) dd.style.display='none';
+  }
+});
+window.toggleTagsDropdown = toggleTagsDropdown;
+window.filterTagsDropdown = filterTagsDropdown;
+window.toggleTag = toggleTag;
+window.createAndToggleTag = createAndToggleTag;
+window.tagsInputKeydown = tagsInputKeydown;
+window.openTagsForEdit = openTagsForEdit;
 
 // ═══════════════════════════════════════════════
 //  GLOBAL SEARCH
@@ -7157,6 +7915,7 @@ function renderAll() {
   if (cv === 'vendors') renderVendors();
   if (cv === 'punchlist') renderPunchlist();
   if (cv === 'fieldlog') renderFieldLog();
+  if (cv === 'mapview') renderMapView();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
 
@@ -8373,7 +9132,7 @@ function renderCalendar() {
 
   // Show/hide filter row
   var fr = document.getElementById('cal-filter-row');
-  if (fr) fr.style.display = (calCurrentView === 'list' || calCurrentView === 'day') ? 'none' : 'flex';
+  if (fr) fr.style.display = (calCurrentView === 'list' || calCurrentView === 'day' || calCurrentView === 'gantt') ? 'none' : 'flex';
 
   if (calCurrentView === 'month') renderCalMonth();
   else if (calCurrentView === 'week') renderCalWeek();
@@ -8381,6 +9140,7 @@ function renderCalendar() {
   else if (calCurrentView === 'year') renderCalYear();
   else if (calCurrentView === 'list') renderCalList();
   else if (calCurrentView === 'combo') renderCalCombo();
+  else if (calCurrentView === 'gantt') renderCalGantt();
 }
 
 // ── Month view ───────────────────────────────────────────────────────────
@@ -8637,6 +9397,239 @@ function renderCalCombo() {
   renderCommissioning();
 }
 
+// ── Gantt view ────────────────────────────────────────────────────
+var _ganttDragData = null;
+function renderCalGantt() {
+  var area = document.getElementById('cal-view-area');
+  if (!area) return;
+
+  // Date range: show 2 months centered on today
+  var today = new Date(); today.setHours(0,0,0,0);
+  var rangeStart = new Date(today); rangeStart.setDate(1); rangeStart.setMonth(rangeStart.getMonth() - 0);
+  var rangeEnd = new Date(rangeStart); rangeEnd.setMonth(rangeEnd.getMonth() + 2); rangeEnd.setDate(0);
+  var totalDays = Math.round((rangeEnd - rangeStart) / 864e5) + 1;
+
+  // Build columns by week
+  var weeks = [];
+  var cur = new Date(rangeStart);
+  while (cur <= rangeEnd) {
+    var wk = { start: new Date(cur), days: [] };
+    for (var d = 0; d < 7 && cur <= rangeEnd; d++) {
+      wk.days.push(new Date(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    weeks.push(wk);
+  }
+
+  function dsOf(dt) { return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+  function dayIndex(ds) { var d = new Date(ds+'T00:00:00'); return Math.round((d - rangeStart)/864e5); }
+
+  // Gather tasks grouped by project
+  var tasks = (state.tasks||[]).filter(function(t){ return !t.archived && (t.due || t.start); });
+  var byProject = {};
+  var noProj = [];
+  tasks.forEach(function(t) {
+    if (t.project) { if (!byProject[t.project]) byProject[t.project] = []; byProject[t.project].push(t); }
+    else noProj.push(t);
+  });
+  // Also add events
+  var events = (state.events||[]).filter(function(e){ return !e.archived && e.date; });
+  events.forEach(function(e) {
+    if (e.project) { if (!byProject[e.project]) byProject[e.project] = []; byProject[e.project].push({ _isEvent:true, id:e.id, title:e.title, due:e.date, start:e.date, status:e.status||'scheduled', project:e.project }); }
+    else noProj.push({ _isEvent:true, id:e.id, title:e.title, due:e.date, start:e.date, status:e.status||'scheduled' });
+  });
+
+  var todayDs = dsOf(today);
+  var todayIdx = dayIndex(todayDs);
+
+  // Header: month labels
+  var monthLabels = {};
+  for (var di = 0; di < totalDays; di++) {
+    var dd = new Date(rangeStart); dd.setDate(dd.getDate() + di);
+    var mk = dd.getFullYear()+'-'+dd.getMonth();
+    if (!monthLabels[mk]) monthLabels[mk] = { label: dd.toLocaleDateString('en-US',{month:'short',year:'numeric'}), start: di };
+  }
+
+  // Build table
+  var colW = Math.max(18, Math.min(28, Math.floor((window.innerWidth > 768 ? 700 : 300) / totalDays)));
+  var html = '<div class="gantt-wrap"><div style="font-size:11px;color:#4a5e7a;margin-bottom:8px">Drag task bars to reschedule. Click task name to edit.</div><table class="gantt-table"><thead>';
+
+  // Month header row
+  html += '<tr class="gantt-header-row"><th class="gantt-label-col"></th>';
+  var renderedDays = 0;
+  Object.values(monthLabels).forEach(function(m) {
+    var span = totalDays - renderedDays; // approximate
+    html += '<th colspan="'+Math.min(span,35)+'" style="text-align:left;font-size:11px;padding-left:6px;background:rgba(255,255,255,0.02)">'+m.label+'</th>';
+    renderedDays += 35;
+  });
+  html += '</tr>';
+
+  // Day header row (show week starts only)
+  html += '<tr class="gantt-header-row"><th class="gantt-label-col">Task</th>';
+  for (var di2 = 0; di2 < totalDays; di2++) {
+    var ddh = new Date(rangeStart); ddh.setDate(ddh.getDate() + di2);
+    var isToday2 = di2 === todayIdx;
+    var isMon = ddh.getDay() === 0;
+    var cls = isToday2 ? 'gantt-col-today' : '';
+    if (isMon || di2===0) { html += '<th style="width:'+colW+'px;'+(isToday2?'color:#4f8ef7;font-weight:800':'')+'" class="'+cls+'" colspan="7">'+ddh.toLocaleDateString('en-US',{month:'numeric',day:'numeric'})+'</th>'; di2+=6; }
+  }
+  html += '</tr></thead><tbody>';
+
+  function taskRow(t) {
+    var startDs = t.start || t.due;
+    var endDs = t.due || t.start;
+    if (!startDs) return '';
+    var startIdx = Math.max(0, dayIndex(startDs));
+    var endIdx = Math.min(totalDays-1, dayIndex(endDs));
+    if (startIdx > totalDays-1) return '';
+    var barLeft = startIdx * colW;
+    var barWidth = Math.max(colW, (endIdx - startIdx + 1) * colW);
+    var colors = { task:'#4f8ef7', event:'#f59e0b', done:'#10b981' };
+    var barColor = t.status==='done' ? colors.done : t._isEvent ? colors.event : (projectColor(t.project)||colors.task);
+    var blocked = !t._isEvent && t.blockedBy && (state.tasks||[]).find(function(x){ return x.id===t.blockedBy && x.status!=='done'; });
+    var shortTitle = (t.title||'').length > 20 ? (t.title||'').substring(0,18)+'…' : (t.title||'');
+    return '<tr class="gantt-row" data-taskid="'+t.id+'">'
+      + '<td><div class="gantt-task-label" onclick="'+(t._isEvent?'editEvent(\''+t.id+'\')':'editTask(\''+t.id+'\')')+'" title="'+escH(t.title||'')+'">'+escH(shortTitle)+(blocked?'<span style="color:#ef4444;margin-left:3px;font-size:10px">⛔</span>':'')+'</div></td>'
+      + '<td colspan="'+totalDays+'" style="padding:0;position:relative;height:28px">'
+      + '<div class="gantt-cell" style="position:relative;width:'+(totalDays*colW)+'px">'
+      + (todayIdx>=0&&todayIdx<totalDays?'<div class="gantt-today-line" style="left:'+(todayIdx*colW+1)+'px"></div>':'')
+      + '<div class="gantt-bar'+(t.status==='done'?' done':'')+'" style="left:'+barLeft+'px;width:'+barWidth+'px;background:'+barColor+'" '
+      + 'draggable="true" data-id="'+t.id+'" data-type="'+(t._isEvent?'event':'task')+'" data-start="'+startDs+'" data-end="'+endDs+'" data-colw="'+colW+'" '
+      + 'ondragstart="ganttDragStart(event,this)" ondragend="ganttDragEnd(event,this)">'
+      + escH(shortTitle)+'</div></div></td></tr>';
+  }
+
+  // Render by project
+  var projs = (state.projects||[]).filter(function(p){ return !p.archived && byProject[p.id]; });
+  projs.forEach(function(p) {
+    var pc = projectColor(p.id)||'#4f8ef7';
+    html += '<tr class="gantt-proj-row"><td colspan="'+(totalDays+1)+'"><span class="gantt-proj-label" style="border-left:3px solid '+pc+';padding-left:8px">'+escH(p.name||'Project')+'</span></td></tr>';
+    (byProject[p.id]||[]).forEach(function(t){ html += taskRow(t); });
+  });
+  if (noProj.length) {
+    html += '<tr class="gantt-proj-row"><td colspan="'+(totalDays+1)+'"><span class="gantt-proj-label">Unassigned</span></td></tr>';
+    noProj.forEach(function(t){ html += taskRow(t); });
+  }
+  if (!projs.length && !noProj.length) {
+    html += '<tr><td colspan="'+(totalDays+1)+'" style="padding:40px;text-align:center;color:#4a5e7a">No tasks with dates. Add due dates to tasks to see them here.</td></tr>';
+  }
+
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+function ganttDragStart(e, el) {
+  _ganttDragData = { id: el.dataset.id, type: el.dataset.type, startDs: el.dataset.start, endDs: el.dataset.end, colW: parseInt(el.dataset.colw)||20, startX: e.clientX };
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(function(){ el.style.opacity='0.5'; },0);
+}
+function ganttDragEnd(e, el) {
+  el.style.opacity='1';
+  if (!_ganttDragData) return;
+  var dx = e.clientX - _ganttDragData.startX;
+  var dayShift = Math.round(dx / _ganttDragData.colW);
+  if (!dayShift) { _ganttDragData=null; return; }
+  var id = _ganttDragData.id, type = _ganttDragData.type;
+  function shiftDate(ds, days) {
+    if (!ds) return ds;
+    var d = new Date(ds+'T00:00:00'); d.setDate(d.getDate()+days);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  var newStart = shiftDate(_ganttDragData.startDs, dayShift);
+  var newEnd = shiftDate(_ganttDragData.endDs, dayShift);
+  if (type==='event') {
+    var ev = (state.events||[]).find(function(x){ return x.id===id; });
+    if (ev) { updateItem('events', id, { date: newStart, endDate: newEnd }); toast('Event moved'); renderCalGantt(); }
+  } else {
+    var task = (state.tasks||[]).find(function(x){ return x.id===id; });
+    if (task) { updateItem('tasks', id, { due: newEnd, start: newStart }); toast('Task rescheduled'); renderCalGantt(); }
+  }
+  _ganttDragData = null;
+}
+window.ganttDragStart = ganttDragStart;
+window.ganttDragEnd = ganttDragEnd;
+window.renderCalGantt = renderCalGantt;
+
+// ═══════════════════════════════════════════════════
+//  PROJECT MAP VIEW
+// ═══════════════════════════════════════════════════
+var _leafletMap = null;
+var _mapMarkers = [];
+function renderMapView() {
+  var container = document.getElementById('map-container');
+  var listEl = document.getElementById('map-project-list');
+  if (!container) return;
+  var statusF = document.getElementById('map-status-filter') ? document.getElementById('map-status-filter').value : '';
+  var projs = (state.projects||[]).filter(function(p){ return !p.archived && (!statusF || p.status===statusF) && p.location; });
+  // Init or reuse Leaflet map
+  if (!_leafletMap && window.L) {
+    _leafletMap = L.map('map-container', { zoomControl: true }).setView([39.5, -98.35], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19
+    }).addTo(_leafletMap);
+  }
+  if (!window.L) {
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#4a5e7a;font-size:14px">Map unavailable — check internet connection</div>';
+    return;
+  }
+  // Clear old markers
+  _mapMarkers.forEach(function(m){ _leafletMap.removeLayer(m); });
+  _mapMarkers = [];
+  // Geocode and add markers
+  var bounds = [];
+  var pending = projs.length;
+  if (!pending) {
+    if (listEl) listEl.innerHTML = '<div style="color:#4a5e7a;font-size:13px;padding:10px">No projects with addresses. Add a location to a project to see it on the map.</div>';
+    return;
+  }
+  projs.forEach(function(p) {
+    var addr = (p.location && typeof p.location === 'object') ? [p.location.street, p.location.city, p.location.state].filter(Boolean).join(', ') : (p.location||'');
+    if (!addr) { pending--; return; }
+    // Use cached coords if available
+    var cacheKey = 'fop_geocode_'+btoa(addr.substring(0,50)).replace(/[^a-z0-9]/gi,'');
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem(cacheKey)||'null'); } catch(e){}
+    function addMarker(lat, lon) {
+      var color = projectColor(p.id)||'#4f8ef7';
+      var icon = L.divIcon({
+        html: '<div style="background:'+color+';width:28px;height:28px;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">🏗</div>',
+        className:'', iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-16]
+      });
+      var statusColors = { active:'#10b981', planning:'#f59e0b', completed:'#4a5e7a', archived:'#64748b' };
+      var sc = statusColors[p.status]||'#8da0c0';
+      var marker = L.marker([lat,lon],{icon:icon}).addTo(_leafletMap);
+      marker.bindPopup('<div style="min-width:160px"><strong style="font-size:14px">'+escH(p.name||'Project')+'</strong><br><span style="font-size:12px;color:'+sc+'">'+escH(p.status||'')+'</span><br><span style="font-size:11px;color:#666">'+escH(addr)+'</span><br><button onclick="switchView(\'projects\')" style="margin-top:6px;font-size:11px;padding:3px 8px;border-radius:5px;border:none;background:#4f8ef7;color:#fff;cursor:pointer">View Project</button></div>');
+      _mapMarkers.push(marker);
+      bounds.push([lat,lon]);
+      pending--;
+      if (pending===0 && bounds.length>1) _leafletMap.fitBounds(bounds, { padding:[40,40] });
+      else if (pending===0 && bounds.length===1) _leafletMap.setView(bounds[0], 13);
+    }
+    if (cached) { addMarker(cached.lat, cached.lon); return; }
+    fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(addr)+'&limit=1', { headers:{'Accept-Language':'en'} })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data && data[0]) {
+          var lat=parseFloat(data[0].lat), lon=parseFloat(data[0].lon);
+          try { localStorage.setItem(cacheKey, JSON.stringify({lat:lat,lon:lon})); } catch(e){}
+          addMarker(lat,lon);
+        } else { pending--; }
+      }).catch(function(){ pending--; });
+  });
+  // Project list cards below map
+  if (listEl) {
+    listEl.innerHTML = projs.map(function(p) {
+      var sc = {active:'#10b981',planning:'#f59e0b',completed:'#4a5e7a'}[p.status]||'#8da0c0';
+      var addr = (p.location && typeof p.location === 'object') ? [p.location.street, p.location.city, p.location.state].filter(Boolean).join(', ') : (p.location||'');
+      return '<div onclick="switchView(\'projects\')" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.04)\'">'
+        + '<div style="font-size:14px;font-weight:700;color:#f0f4ff;margin-bottom:3px">'+escH(p.name||'Project')+'</div>'
+        + '<div style="font-size:11px;color:'+sc+';font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">'+escH(p.status||'')+'</div>'
+        + (addr?'<div style="font-size:12px;color:#4a5e7a">📍 '+escH(addr)+'</div>':'')
+        + '</div>';
+    }).join('');
+  }
+}
+window.renderMapView = renderMapView;
+
 function calAddBtn(e) {
   if (e) e.stopPropagation();
   var menu = document.getElementById('cal-add-menu');
@@ -8648,6 +9641,7 @@ function calAddEvent() {
   editingId = null;
   clearForm('modal-event');
   populateProjectSelects();
+  populateEventContactList();
   document.getElementById('event-modal-title').textContent = 'New Event';
   openModal('modal-event');
 }
@@ -8826,6 +9820,7 @@ function showCalPreview(type, id) {
     html += pvRow('Date', ev2.date ? fmtDateSmart(ev2.date) : null);
     html += pvRow('End Date', ev2.endDate ? fmtDate(ev2.endDate) : null);
     html += pvRow('Project', ev2.project ? '<span class="proj-chip">'+escH(projectName(ev2.project))+'</span>' : null);
+    html += pvRow('Contact', ev2.contact ? escH(ev2.contact) : null);
     html += '</div>';
     if (ev2.notes) html += '<div class="cal-pv-desc">'+escH(ev2.notes)+'</div>';
   }
