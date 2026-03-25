@@ -2353,6 +2353,10 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
   background-size: 200% 100%;
 }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+#sync-now-btn.syncing #sync-icon { animation: spin 0.8s linear infinite; }
+#sync-now-btn.synced { color: #10b981 !important; }
+#sync-now-btn.sync-error { color: #ef4444 !important; }
 .skeleton-row { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); align-items:center; }
 .skeleton-circle { width:32px; height:32px; border-radius:50%; flex-shrink:0; }
 .skeleton-line { height:12px; border-radius:4px; flex:1; }
@@ -2593,7 +2597,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
       </div>
       <button id="mob-global-search-btn" onclick="openGlobalSearch()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;display:none">🔍</button>
-        <button onclick="openNotifCenter()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;position:relative">🔔<span id="mob-notif-badge2" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;line-height:1">0</span></button>
       <div class="search-wrap" style="position:relative">
         <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
           oninput="if(!_debouncedGlobalSearch)_debouncedGlobalSearch=debounce(globalSearch,250);_debouncedGlobalSearch(this.value)"
@@ -2602,7 +2605,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           autocomplete="off" autocorrect="off" spellcheck="false">
         <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;max-height:480px;overflow-y:auto"></div>
       </div>
-      <button class="btn btn-ghost btn-icon" id="notif-btn" onclick="toggleNotifPanel()" title="Notifications" style="position:relative">
+      <button class="btn btn-ghost btn-icon" id="sync-now-btn" onclick="syncNow()" title="Sync with Firebase (R)" style="position:relative;transition:all 0.2s">
+        <svg id="sync-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon" id="notif-btn" onclick="openNotifCenter()" title="Notifications" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span id="notif-badge" class="notif-badge" style="display:none">0</span>
       </button>
@@ -7058,14 +7064,54 @@ function closeNotifCenter() {
 }
 function updateNotifBadge() {
   var notifs = buildNotifications();
-  var badge = document.getElementById('notif-count-badge');
-  if (badge) { badge.textContent = notifs.length; badge.style.display = notifs.length ? '' : 'none'; }
+  var n = notifs.length;
+  // Desktop SVG bell badge
+  var deskBadge = document.getElementById('notif-badge');
+  if (deskBadge) { deskBadge.textContent = n; deskBadge.style.display = n ? 'flex' : 'none'; }
+  // Sidebar bell badge
+  var sidebarBadge = document.getElementById('notif-count-badge');
+  if (sidebarBadge) { sidebarBadge.textContent = n; sidebarBadge.style.display = n ? '' : 'none'; }
+  // Mobile bottom-bar bell badge
   var mobBadge = document.getElementById('mob-notif-badge');
-  if (mobBadge) { mobBadge.textContent = notifs.length; mobBadge.style.display = notifs.length ? '' : 'none'; }
+  if (mobBadge) { mobBadge.textContent = n; mobBadge.style.display = n ? '' : 'none'; }
 }
 window.openNotifCenter = openNotifCenter;
 window.closeNotifCenter = closeNotifCenter;
 window.updateNotifBadge = updateNotifBadge;
+
+// ── Sync Now button ──────────────────────────────────────────
+function syncNow() {
+  if (!navigator.onLine) { toast('⚠️ Offline — cannot sync'); return; }
+  var btn = document.getElementById('sync-now-btn');
+  if (btn) { btn.classList.add('syncing'); btn.classList.remove('synced','sync-error'); btn.title = 'Syncing…'; }
+  var done = 0;
+  var total = COLLECTIONS.length;
+  if (!db) {
+    if (btn) { btn.classList.remove('syncing'); btn.classList.add('sync-error'); btn.title = 'No Firebase connection'; setTimeout(function(){ btn.classList.remove('sync-error'); btn.title='Sync with Firebase (R)'; }, 2500); }
+    toast('No Firebase connection — check Sync Setup'); return;
+  }
+  COLLECTIONS.forEach(function(col) {
+    db.collection(col).get().then(function(snap) {
+      var items = [];
+      snap.forEach(function(doc){ items.push(Object.assign({ id: doc.id }, doc.data())); });
+      state[col] = items;
+      LOCAL.set(col, items);
+      done++;
+      if (done === total) {
+        renderAll();
+        if (btn) { btn.classList.remove('syncing'); btn.classList.add('synced'); btn.title = 'Synced ✓'; setTimeout(function(){ btn.classList.remove('synced'); btn.title='Sync with Firebase (R)'; }, 2000); }
+        toast('✓ Synced with Firebase');
+      }
+    }).catch(function() {
+      done++;
+      if (done === total) {
+        if (btn) { btn.classList.remove('syncing'); btn.classList.add('sync-error'); btn.title = 'Sync failed'; setTimeout(function(){ btn.classList.remove('sync-error'); btn.title='Sync with Firebase (R)'; }, 2500); }
+        toast('⚠️ Sync error — check connection');
+      }
+    });
+  });
+}
+window.syncNow = syncNow;
 
 function renderTasks() {
   var totalTasks = 0;
@@ -10581,8 +10627,8 @@ function closeCalPreview() {
 
 function calPreviewEdit() {
   if (!_calPreviewData) return;
-  closeCalPreview();
   var type = _calPreviewData.type, id = _calPreviewData.id;
+  closeCalPreview();
   if (type === 'task') editTask(id);
   else if (type === 'ship') editShipment(id);
   else if (type === 'po') editPO(id);
