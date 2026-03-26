@@ -3322,6 +3322,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
     </div><!-- /firebase card -->
 
+    <!-- iOS Home Screen Shortcuts Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:24px">📱</span>
+        <div>
+          <div class="section-title">iOS Home Screen Shortcuts</div>
+          <div class="section-sub">Add quick-launch icons to your iPhone or iPad</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#8da0c0;line-height:1.7;margin-bottom:16px">
+        iOS ignores the <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-size:12px">manifest.json</code> shortcuts. Instead, add each link below as its own Home Screen bookmark in Safari — it will open straight into that section.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="ios-shortcut-list"></div>
+      <div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.04);border-radius:12px;font-size:12px;color:#8da0c0;line-height:1.7">
+        <strong style="color:#f0f4ff">How to add each shortcut:</strong><br>
+        1. Tap <strong>Open in Safari</strong> on a shortcut below<br>
+        2. In Safari, tap the <strong>Share</strong> button (box with arrow)<br>
+        3. Scroll down and tap <strong>Add to Home Screen</strong><br>
+        4. Rename it (e.g. "Add Task") and tap <strong>Add</strong>
+      </div>
+    </div><!-- /ios shortcuts card -->
+
     <!-- Danger Zone Card -->
     <div class="card" style="margin-bottom:20px;border-color:rgba(239,68,68,0.25) !important">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
@@ -5377,6 +5399,8 @@ function switchView(v) {
   document.getElementById('topbarTitle').textContent = viewTitles[v];
   closeSidebar();
   if(v==='troubleshoot') renderTroubleshoot();
+  if(v==='mapview') renderMapView();
+  if(v==='settings') renderIosShortcuts();
   if(v==='calendar') {
     renderCalendar();
   }
@@ -10087,6 +10111,31 @@ function refreshIssueCatSelects() {
   });
   renderIssueCatSettings();
 }
+function renderIosShortcuts() {
+  var el = document.getElementById('ios-shortcut-list');
+  if (!el) return;
+  var base = window.location.href.split('?')[0];
+  var shortcuts = [
+    { icon:'✅', label:'Add Task',       sub:'Opens the New Task form',           url: base + '?add=task' },
+    { icon:'📋', label:'Field Log',      sub:'Goes directly to Field Log',        url: base + '?view=fieldlog' },
+    { icon:'📊', label:'Dashboard',      sub:'Opens the main dashboard',          url: base + '?view=dashboard' },
+    { icon:'📦', label:'New Shipment',   sub:'Opens the New Shipment form',       url: base + '?add=shipping' },
+    { icon:'🛒', label:'New PO',         sub:'Opens the New Purchase Order form', url: base + '?add=pos' },
+    { icon:'🔧', label:'Troubleshoot',   sub:'Goes to Troubleshooting log',       url: base + '?view=troubleshoot' },
+  ];
+  el.innerHTML = shortcuts.map(function(s) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+      + '<span style="font-size:22px;width:32px;text-align:center">'+s.icon+'</span>'
+      + '<div>'
+      + '<div style="font-size:13px;font-weight:600;color:#f0f4ff">'+escH(s.label)+'</div>'
+      + '<div style="font-size:11px;color:#4a5e7a;margin-top:1px">'+escH(s.sub)+'</div>'
+      + '</div></div>'
+      + '<a href="'+escH(s.url)+'" target="_blank" style="flex-shrink:0;padding:7px 14px;background:#1e3a5f;border:1px solid rgba(79,142,247,0.3);border-radius:99px;color:#4f8ef7;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">Open in Safari →</a>'
+      + '</div>';
+  }).join('');
+}
+
 function renderIssueCatSettings() {
   var el = document.getElementById('issue-cats-list');
   if (!el) return;
