@@ -2759,36 +2759,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);color:#4a5e7a;font-size:11px">Click for full list</div>
         </div>
       </div>
-      <div style="position:relative" id="add-btn-wrap">
+      <div id="add-btn-wrap">
         <button class="btn btn-primary" id="addBtn" onclick="toggleAddMenu(event)">+ New</button>
-        <div id="desk-add-menu" style="display:none">
-          <div class="desk-add-hdr">New item — press a number</div>
-          <div class="desk-add-opt" data-key="1" onclick="closeAddMenu();switchView('projects');setTimeout(openAddModal,50)">
-            <span class="desk-add-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24">🏗</span>
-            <span class="desk-add-label">Project</span>
-            <span class="desk-add-key">1</span>
-          </div>
-          <div class="desk-add-opt" data-key="2" onclick="closeAddMenu();switchView('tasks');setTimeout(openAddModal,50)">
-            <span class="desk-add-icon" style="background:rgba(16,185,129,0.15);color:#34d399">✓</span>
-            <span class="desk-add-label">Task</span>
-            <span class="desk-add-key">2</span>
-          </div>
-          <div class="desk-add-opt" data-key="3" onclick="closeAddMenu();switchView('pos');setTimeout(openAddModal,50)">
-            <span class="desk-add-icon" style="background:rgba(139,92,246,0.15);color:#a78bfa">📄</span>
-            <span class="desk-add-label">Purchase Order</span>
-            <span class="desk-add-key">3</span>
-          </div>
-          <div class="desk-add-opt" data-key="4" onclick="closeAddMenu();switchView('shipping');setTimeout(openAddModal,50)">
-            <span class="desk-add-icon" style="background:rgba(6,182,212,0.15);color:#22d3ee">📦</span>
-            <span class="desk-add-label">Shipment</span>
-            <span class="desk-add-key">4</span>
-          </div>
-          <div class="desk-add-opt" data-key="5" onclick="closeAddMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
-            <span class="desk-add-icon" style="background:rgba(239,68,68,0.15);color:#f87171">⚡</span>
-            <span class="desk-add-label">Troubleshoot</span>
-            <span class="desk-add-key">5</span>
-          </div>
-        </div>
       </div>
       <!-- Notification Panel -->
       <div id="notif-panel">
@@ -3228,14 +3200,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <div id="system-filter-options"></div>
         </div>
       </div>
-      <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
-        <option value="all">All Categories</option>
-        <option value="electrical">Electrical</option>
-        <option value="dimming">Dimming</option>
-        <option value="commissioning">Commissioning</option>
-        <option value="hardware">Hardware</option>
-        <option value="network">Network/DALI</option>
-      </select>
+      <div style="position:relative;display:inline-block;min-width:160px">
+        <input type="text" id="troubleCategory" placeholder="All Categories" autocomplete="off"
+          oninput="filterCatFilter(this.value);renderTroubleshoot()" onfocus="openCatFilter()"
+          style="width:100%;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;box-sizing:border-box">
+        <div id="cat-filter-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
+          <div id="cat-filter-options"></div>
+        </div>
+      </div>
       <input type="text" id="troubleSearch" placeholder="Search issues…" style="flex:1; min-width:160px" oninput="if(!window._debTrouble)window._debTrouble=debounce(renderTroubleshoot,200);window._debTrouble()">
       <button class="btn btn-primary btn-sm mob-hide-add" onclick="openAddModal()" style="flex-shrink:0;white-space:nowrap">+ Add Issue</button>
     </div>
@@ -3927,13 +3899,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="form-group"><label>Issue / Question *</label><input type="text" id="issue-q" placeholder="e.g. Dimmer buzzes after installation"></div>
       <div class="form-row">
         <div class="form-group"><label>Category</label>
-          <select id="issue-cat">
-            <option value="electrical">Electrical</option>
-            <option value="dimming">Dimming</option>
-            <option value="commissioning">Commissioning</option>
-            <option value="hardware">Hardware</option>
-            <option value="network">Network / DALI</option>
-          </select>
+          <div style="position:relative">
+            <input type="text" id="issue-cat" placeholder="Type or select category…" autocomplete="off"
+              oninput="filterCatDropdown(this.value)" onfocus="openCatDropdown()"
+              style="width:100%;box-sizing:border-box">
+            <div id="cat-dropdown" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
+              <div id="cat-options"></div>
+            </div>
+          </div>
         </div>
         <div class="form-group"><label>Control System</label>
           <div style="position:relative">
@@ -4327,6 +4300,36 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <div class="fab-option" onclick="closeFabMenu();switchView('tasks');setTimeout(function(){toggleQuickAdd();},50)">
     <span class="fab-option-label">Task</span>
     <div class="fab-option-icon" style="background:rgba(16,185,129,0.2);color:#34d399">✓</div>
+  </div>
+</div>
+
+<!-- ── DESKTOP + NEW MENU (at body level to escape topbar stacking context) ── -->
+<div id="desk-add-menu" style="display:none">
+  <div class="desk-add-hdr">New item — press a number</div>
+  <div class="desk-add-opt" data-key="1" onclick="closeAddMenu();switchView('projects');setTimeout(openAddModal,50)">
+    <span class="desk-add-icon" style="background:rgba(245,158,11,0.15);color:#fbbf24">🏗</span>
+    <span class="desk-add-label">Project</span>
+    <span class="desk-add-key">1</span>
+  </div>
+  <div class="desk-add-opt" data-key="2" onclick="closeAddMenu();switchView('tasks');setTimeout(openAddModal,50)">
+    <span class="desk-add-icon" style="background:rgba(16,185,129,0.15);color:#34d399">✓</span>
+    <span class="desk-add-label">Task</span>
+    <span class="desk-add-key">2</span>
+  </div>
+  <div class="desk-add-opt" data-key="3" onclick="closeAddMenu();switchView('pos');setTimeout(openAddModal,50)">
+    <span class="desk-add-icon" style="background:rgba(139,92,246,0.15);color:#a78bfa">📄</span>
+    <span class="desk-add-label">Purchase Order</span>
+    <span class="desk-add-key">3</span>
+  </div>
+  <div class="desk-add-opt" data-key="4" onclick="closeAddMenu();switchView('shipping');setTimeout(openAddModal,50)">
+    <span class="desk-add-icon" style="background:rgba(6,182,212,0.15);color:#22d3ee">📦</span>
+    <span class="desk-add-label">Shipment</span>
+    <span class="desk-add-key">4</span>
+  </div>
+  <div class="desk-add-opt" data-key="5" onclick="closeAddMenu();switchView('troubleshoot');setTimeout(openAddModal,50)">
+    <span class="desk-add-icon" style="background:rgba(239,68,68,0.15);color:#f87171">⚡</span>
+    <span class="desk-add-label">Troubleshoot</span>
+    <span class="desk-add-key">5</span>
   </div>
 </div>
 
@@ -5511,7 +5514,7 @@ function openAddModal() {
   if(m === 'modal-project') populateCustomFields([]);
   if(m === 'modal-task') populateTaskCustomFields([]);
   if(m !== 'modal-issue') populateProjectSelects();
-  if(m === 'modal-issue') openTagsForEdit('');
+  if(m === 'modal-issue') { openTagsForEdit(''); var ci=document.getElementById('issue-cat'); if(ci) ci.value=''; }
   if(m === 'modal-event') populateEventContactList();
   // Hide notes section for new tasks
   var ns = document.getElementById('task-notes-section');
@@ -8954,11 +8957,11 @@ window.openSystemFilter=openSystemFilter; window.filterSystemFilter=filterSystem
 function renderTroubleshoot() {
   var sysRaw = (document.getElementById('troubleSystem')||{}).value||'all';
   var sysFilter = (sysRaw === 'all' || sysRaw === 'All Systems') ? '' : sysRaw;
-  var cat = document.getElementById('troubleCategory').value;
+  var cat = (document.getElementById('troubleCategory').value||'').trim().toLowerCase();
   var search = document.getElementById('troubleSearch').value.toLowerCase();
   var data = state.issues.slice();
   if (sysFilter) data = data.filter(function(t){ return (t.system||'').toLowerCase() === sysFilter.toLowerCase(); });
-  if (cat !== 'all') data = data.filter(function(t){ return t.cat === cat; });
+  if (cat && cat !== 'all categories') data = data.filter(function(t){ return (t.cat||'').toLowerCase() === cat; });
   if (search) data = data.filter(function(t){
     return (t.q||'').toLowerCase().indexOf(search)>=0 ||
            (t.tags||'').toLowerCase().indexOf(search)>=0 ||
@@ -9035,10 +9038,15 @@ function saveIssue() {
   if (sysVal && _savedSystems.indexOf(sysVal)<0 && _builtinSystems.indexOf(sysVal)<0) {
     _savedSystems.push(sysVal); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems));
   }
+  var catVal = (document.getElementById('issue-cat').value||'').trim().toLowerCase() || 'electrical';
+  var cats = getIssueCats();
+  if (catVal && !cats.find(function(c){ return c.toLowerCase()===catVal; })) {
+    cats.push(catVal); saveIssueCats(cats); renderIssueCatSettings();
+  }
   var item = {
     q: q,
     system: sysVal,
-    cat: document.getElementById('issue-cat').value,
+    cat: catVal,
     tags: document.getElementById('issue-tags').value.trim(),
     a: document.getElementById('issue-a').value.trim(),
     steps: steps,
@@ -10297,19 +10305,67 @@ function getIssueCats() {
 }
 function saveIssueCats(cats) { localStorage.setItem('fop_issue_cats', JSON.stringify(cats)); }
 function refreshIssueCatSelects() {
-  var cats = getIssueCats();
-  ['troubleCategory','issue-cat'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    var cur = el.value;
-    if (id === 'troubleCategory') {
-      el.innerHTML = '<option value="all">All Categories</option>' + cats.map(function(c){ return '<option value="'+escH(c)+'"'+(c===cur?' selected':'')+'>'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</option>'; }).join('');
-    } else {
-      el.innerHTML = cats.map(function(c){ return '<option value="'+escH(c)+'"'+(c===cur?' selected':'')+'>'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</option>'; }).join('');
-    }
-  });
+  // Both fields are now combobox inputs — just refresh settings display
   renderIssueCatSettings();
 }
+
+// ── Category combobox helpers ─────────────────────────────────────────────────
+function _renderCatOptions(optId, q, cb) {
+  var opts = document.getElementById(optId);
+  if (!opts) return;
+  var cats = getIssueCats();
+  var filtered = q ? cats.filter(function(c){ return c.toLowerCase().indexOf(q.toLowerCase()) >= 0; }) : cats;
+  var html = filtered.map(function(c) {
+    return '<div onmousedown="'+cb+'(\''+escH(c)+'\',false)" style="padding:7px 12px;border-radius:8px;font-size:13px;color:#c8d6f0;cursor:pointer" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'\'">'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</div>';
+  }).join('');
+  if (q && !cats.find(function(c){ return c.toLowerCase() === q.toLowerCase(); })) {
+    html += '<div onmousedown="'+cb+'(\''+escH(q)+'\',true)" style="padding:7px 12px;border-radius:8px;font-size:13px;color:#4f8ef7;cursor:pointer;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px" onmouseover="this.style.background=\'rgba(79,142,247,0.1)\'" onmouseout="this.style.background=\'\'">+ Create "'+escH(q)+'"</div>';
+  }
+  if (!html) html = '<div style="padding:8px 10px;font-size:12px;color:#4a5e7a">No categories — type to create</div>';
+  opts.innerHTML = html;
+}
+function openCatDropdown() {
+  var dd = document.getElementById('cat-dropdown');
+  if (dd) { dd.style.display='block'; _renderCatOptions('cat-options', document.getElementById('issue-cat').value||'', 'selectIssueCat'); }
+}
+function filterCatDropdown(q) { _renderCatOptions('cat-options', q, 'selectIssueCat'); }
+function selectIssueCat(val, save) {
+  if (save) {
+    var cats = getIssueCats();
+    var low = val.toLowerCase();
+    if (!cats.find(function(c){ return c.toLowerCase()===low; })) { cats.push(low); saveIssueCats(cats); renderIssueCatSettings(); }
+    val = low;
+  }
+  var inp = document.getElementById('issue-cat'); if(inp) inp.value = val;
+  var dd = document.getElementById('cat-dropdown'); if(dd) dd.style.display='none';
+}
+function openCatFilter() {
+  var dd = document.getElementById('cat-filter-dropdown');
+  if (dd) { dd.style.display='block'; _renderCatFilterOptions(document.getElementById('troubleCategory').value||''); }
+}
+function filterCatFilter(q) { _renderCatFilterOptions(q); }
+function _renderCatFilterOptions(q) {
+  var opts = document.getElementById('cat-filter-options');
+  if (!opts) return;
+  var all = ['All Categories'].concat(getIssueCats());
+  var filtered = q ? all.filter(function(c){ return c.toLowerCase().indexOf(q.toLowerCase()) >= 0; }) : all;
+  opts.innerHTML = filtered.map(function(c) {
+    return '<div onmousedown="selectCatFilter(\''+escH(c)+'\')" style="padding:7px 12px;border-radius:8px;font-size:13px;color:#c8d6f0;cursor:pointer" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'\'">'+escH(c.charAt(0).toUpperCase()+c.slice(1))+'</div>';
+  }).join('') || '<div style="padding:8px 10px;font-size:12px;color:#4a5e7a">No match</div>';
+}
+function selectCatFilter(val) {
+  var inp = document.getElementById('troubleCategory');
+  if (inp) inp.value = (val === 'All Categories') ? '' : val;
+  var dd = document.getElementById('cat-filter-dropdown'); if(dd) dd.style.display='none';
+  renderTroubleshoot();
+}
+document.addEventListener('click', function(e){
+  var dd1=document.getElementById('cat-dropdown'), dd2=document.getElementById('cat-filter-dropdown');
+  if(dd1&&dd1.style.display!=='none'&&!dd1.contains(e.target)&&e.target.id!=='issue-cat') dd1.style.display='none';
+  if(dd2&&dd2.style.display!=='none'&&!dd2.contains(e.target)&&e.target.id!=='troubleCategory') dd2.style.display='none';
+});
+window.openCatDropdown=openCatDropdown; window.filterCatDropdown=filterCatDropdown; window.selectIssueCat=selectIssueCat;
+window.openCatFilter=openCatFilter; window.filterCatFilter=filterCatFilter; window.selectCatFilter=selectCatFilter;
 function renderIosShortcuts() {
   var el = document.getElementById('ios-shortcut-list');
   if (!el) return;
@@ -11151,6 +11207,8 @@ function renderMapView() {
       attribution: '© OpenStreetMap contributors', maxZoom: 19
     }).addTo(_leafletMap);
   }
+  // Container was hidden (display:none) until view switched — recalculate size
+  if (_leafletMap) { setTimeout(function(){ _leafletMap.invalidateSize(); }, 50); }
   if (!window.L) {
     container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#4a5e7a;font-size:14px">Map unavailable — check internet connection</div>';
     return;
