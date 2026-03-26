@@ -1,0 +1,50 @@
+{
+  "name": "FieldOps Pro",
+  "short_name": "FieldOps",
+  "description": "Field operations management — tasks, projects, shipping, troubleshooting",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#080d1a",
+  "theme_color": "#080d1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23080d1a'/><text y='.9em' font-size='80' x='10'>⚡</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Task",
+      "short_name": "Task",
+      "description": "Quickly add a new task",
+      "url": "/index.html?add=task",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>✅</text></svg>", "sizes": "any" }]
+    },
+    {
+      "name": "Field Log",
+      "short_name": "Log",
+      "description": "Open field log",
+      "url": "/index.html?view=fieldlog",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>📋</text></svg>", "sizes": "any" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dash",
+      "description": "Go to dashboard",
+      "url": "/index.html?view=dashboard",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>📊</text></svg>", "sizes": "any" }]
+    },
+    {
+      "name": "New Shipment",
+      "short_name": "Ship",
+      "description": "Track a new shipment",
+      "url": "/index.html?add=shipping",
+      "icons": [{ "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='80'>📦</text></svg>", "sizes": "any" }]
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false
+}

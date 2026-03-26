@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#080d1a">
+  <link rel="manifest" href="manifest.json">
   <title>FieldOps Pro</title>
 
   <!-- Theme loader — must run before body renders to avoid flash -->
@@ -2225,8 +2226,7 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 }
 [data-theme="light"] .t3-row-expanded { background: rgba(37,99,255,0.04) !important; }
 
-/* ── THINGS 3 LIST STYLE (mobile) ─────────────────────── */
-@media (max-width: 768px) {
+/* ── THINGS 3 LIST STYLE (global) ─────────────────────── */
 .t3-section { margin-bottom: 28px; }
 .t3-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; color: #64748b; padding: 0 2px 8px; display: flex; align-items: center; gap: 6px; }
 .t3-section-label.overdue { color: #ef4444; }
@@ -2243,22 +2243,22 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 .t3-row:active { background: rgba(255,255,255,0.05); }
 [data-theme="light"] .t3-row:active { background: rgba(0,0,0,0.025); }
 /* Checkbox circle */
-.t3-check { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; border: 2px solid rgba(148,163,184,0.45); display: flex; align-items: center; justify-content: center; transition: all 0.22s cubic-bezier(.32,.72,0,1); background: transparent; cursor: pointer; }
+.t3-check { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; border: 2px solid rgba(148,163,184,0.45); display: flex; align-items: center; justify-content: center; transition: all 0.22s cubic-bezier(.32,.72,0,1); background: transparent; cursor: pointer; flex-shrink: 0; }
 .t3-check:hover { border-color: #4f8ef7; }
 .t3-check.done { background: #10b981; border-color: #10b981; }
 .t3-check.priority-high { border-color: #ef4444; border-width: 2.5px; }
 .t3-check.priority-medium { border-color: #f59e0b; border-width: 2.5px; }
 [data-theme="light"] .t3-check { border-color: rgba(0,0,0,0.22); }
-.t3-checkmark { display: none; color: #fff; font-size: 13px; font-weight: 700; line-height: 1; }
+.t3-checkmark { display: none; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
 .t3-check.done .t3-checkmark { display: block; }
 /* Content */
 .t3-content { flex: 1; min-width: 0; }
-.t3-title { font-size: 16px; font-weight: 500; color: #f0f4ff; line-height: 1.3; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t3-title { font-size: 15px; font-weight: 500; color: #f0f4ff; line-height: 1.3; letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t3-title.done { text-decoration: line-through; color: rgba(240,244,255,0.3); font-weight: 400; }
 [data-theme="light"] .t3-title { color: #0f172a; }
 [data-theme="light"] .t3-title.done { color: rgba(15,23,42,0.28); }
 .t3-meta { display: flex; align-items: center; gap: 7px; margin-top: 2px; flex-wrap: nowrap; overflow: hidden; }
-.t3-proj { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 140px; }
+.t3-proj { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 160px; }
 [data-theme="light"] .t3-proj { color: #94a3b8; }
 .t3-proj-dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
 .t3-meta-sep { color: rgba(148,163,184,0.3); font-size: 11px; flex-shrink: 0; }
@@ -2272,13 +2272,19 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 /* Leading icon for PO/ship rows */
 .t3-icon { width: 36px; height: 36px; min-width: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
 /* Trailing chevron */
-.t3-chev { color: rgba(148,163,184,0.3); font-size: 18px; font-weight: 300; flex-shrink: 0; }
+.t3-chev { color: rgba(148,163,184,0.3); font-size: 18px; font-weight: 300; flex-shrink: 0; transition: transform 0.18s; }
+.t3-row-expanded > .t3-chev { transform: rotate(90deg); }
 [data-theme="light"] .t3-chev { color: rgba(0,0,0,0.18); }
 /* Status dot */
 .t3-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 /* Subtext line */
 .t3-sub { font-size: 12px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-theme="light"] .t3-sub { color: #94a3b8; }
+/* Desktop: slightly denser rows */
+@media (min-width: 769px) {
+  .t3-row { padding: 11px 14px; }
+  .t3-title { font-size: 14px; }
+  #mob-tasks-cards { max-width: 860px; }
 }
 
 /* ── VENDOR CARDS ────────────────────────────────────────────── */
@@ -2983,9 +2989,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <div class="view" id="view-tasks">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <div class="tabs" style="margin-bottom:0;flex:1;min-width:0">
-        <div class="tab" onclick="filterTasks('all',this)">All</div>
-        <div class="tab active" onclick="filterTasks('active',this)">To Do / In Progress</div>
-        <div class="tab" onclick="filterTasks('done',this)">Done</div>
+        <div class="tab active" onclick="filterTasks('active',this)">Active</div>
+        <div class="tab" onclick="filterTasks('done',this)">✓ Completed</div>
         <div class="tab" onclick="filterTasks('archived',this)">📦 Archived</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
@@ -3137,17 +3142,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ TROUBLESHOOT ═══ -->
   <div class="view" id="view-troubleshoot">
     <div style="margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center">
-      <select id="troubleSystem" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
-        <option value="all">All Systems</option>
-        <option value="Lutron RadioRA3">Lutron RadioRA3</option>
-        <option value="Lutron Homeworks QSX">Lutron Homeworks QSX</option>
-        <option value="Lutron Caseta">Lutron Caseta</option>
-        <option value="Crestron">Crestron</option>
-        <option value="Control4">Control4</option>
-        <option value="Savant">Savant</option>
-        <option value="Leviton">Leviton</option>
-        <option value="Custom">Custom / Other</option>
-      </select>
+      <div style="position:relative;display:inline-block;min-width:160px">
+        <input type="text" id="troubleSystem" placeholder="All Systems" autocomplete="off" value="all"
+          oninput="filterSystemFilter(this.value)" onfocus="openSystemFilter()"
+          style="width:100%;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;box-sizing:border-box">
+        <div id="system-filter-dropdown" style="display:none;position:absolute;top:calc(100%+4px);left:0;min-width:200px;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
+          <div id="system-filter-options"></div>
+        </div>
+      </div>
       <select id="troubleCategory" onchange="renderTroubleshoot()" style="width:auto; min-width:160px">
         <option value="all">All Categories</option>
         <option value="electrical">Electrical</option>
@@ -3415,9 +3417,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       <span class="nav-label">Shipping</span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('vendors')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-      <span class="nav-label">Vendors</span>
+    <div class="mobile-nav-item" onclick="switchView('fieldlog')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span class="nav-label">Field Log</span>
     </div>
     <div class="mobile-nav-item" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3623,7 +3625,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Due Date</label><input type="date" id="task-due" onchange="updateRecurPreview()"></div>
+        <div class="form-group"><label>Due Date</label>
+          <input type="text" id="task-due-smart" placeholder="today · tomorrow · next friday · in 3 weeks" autocomplete="off" oninput="applySmartDate(this.value)" style="margin-bottom:5px;font-size:13px;color:#8da0c0">
+          <span id="task-due-hint" style="font-size:11px;color:#4f8ef7;margin-bottom:4px;display:block;min-height:14px"></span>
+          <input type="date" id="task-due" onchange="updateRecurPreview();(document.getElementById('task-due-smart')&&(document.getElementById('task-due-smart').value=''));(document.getElementById('task-due-hint')&&(document.getElementById('task-due-hint').textContent=''))">
+        </div>
         <div class="form-group"><label>Repeat</label>
           <select id="task-recur" onchange="updateRecurPreview()">
             <option value="">None</option>
@@ -3659,6 +3665,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
       </div>
       <div class="form-group"><label>Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
+      <!-- Custom fields -->
+      <div class="form-group" style="margin-top:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="margin:0">Custom Fields</label>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addTaskCustomField('','')">+ Add Field</button>
+        </div>
+        <div id="task-custom-fields-list"></div>
+      </div>
       <!-- Activity log — shown only when editing -->
       <div id="task-notes-section" style="display:none">
         <div style="font-size:12px;font-weight:700;color:#6b7fa8;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Activity Log</div>
@@ -3822,17 +3836,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           </select>
         </div>
         <div class="form-group"><label>Control System</label>
-          <select id="issue-system">
-            <option value="">All Systems</option>
-            <option value="Lutron RadioRA3">Lutron RadioRA3</option>
-            <option value="Lutron Homeworks QSX">Lutron Homeworks QSX</option>
-            <option value="Lutron Caseta">Lutron Caseta</option>
-            <option value="Crestron">Crestron</option>
-            <option value="Control4">Control4</option>
-            <option value="Savant">Savant</option>
-            <option value="Leviton">Leviton</option>
-            <option value="Custom">Custom / Other</option>
-          </select>
+          <div style="position:relative">
+            <input type="text" id="issue-system" placeholder="Type or select a system…" autocomplete="off"
+              oninput="filterSystemDropdown(this.value)" onfocus="openSystemDropdown()"
+              style="width:100%;box-sizing:border-box">
+            <div id="system-dropdown" style="display:none;position:absolute;top:calc(100%+2px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
+              <div id="system-options"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-group"><label>Tags</label>
@@ -3844,6 +3855,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <div id="tags-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:600;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
             <input type="text" id="tags-search-input" placeholder="Search or create tag…" oninput="filterTagsDropdown(this.value)" onkeydown="tagsInputKeydown(event)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.08);color:#f0f4ff;font-size:13px;margin-bottom:6px;box-sizing:border-box">
             <div id="tags-options"></div>
+            <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);text-align:right">
+              <button onclick="event.stopPropagation();toggleTagsDropdown()" style="background:rgba(79,142,247,0.15);border:1px solid rgba(79,142,247,0.3);border-radius:8px;color:#4f8ef7;font-size:12px;font-weight:600;padding:4px 12px;cursor:pointer">Done</button>
+            </div>
           </div>
         </div>
       </div>
@@ -4138,17 +4152,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"><span style="font-size:30px;font-weight:300;line-height:1;color:#fff;pointer-events:none">+</span></button>
 
-<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:360px;margin:0 auto;box-sizing:border-box">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add Task</span>
-    <button onclick="toggleQuickAdd()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:20px;line-height:1">x</button>
+<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:380px;margin:0 auto;box-sizing:border-box">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add</span>
+    <button onclick="toggleQuickAdd()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:20px;line-height:1">×</button>
   </div>
-  <input type="text" id="qa-title" placeholder="Task title..." style="margin-bottom:10px;width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')saveQuickTask()">
+  <div style="font-size:11px;color:#4a5e7a;margin-bottom:10px;line-height:1.6">
+    <b style="color:#6b7fa8">Tips:</b> <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">log:</code> for field log &nbsp;·&nbsp; <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">@project</code> &nbsp;·&nbsp; <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">!high</code> / <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">!low</code> &nbsp;·&nbsp; <code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:4px">due tomorrow</code>
+  </div>
+  <input type="text" id="qa-title" placeholder="e.g. Fix panel @site1 !high due friday" style="margin-bottom:8px;width:100%;box-sizing:border-box" oninput="previewQuickAdd(this.value)" onkeydown="if(event.key==='Enter')saveQuickTask()">
+  <div id="qa-preview" style="font-size:11px;color:#4f8ef7;min-height:14px;margin-bottom:10px"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
     <select id="qa-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select>
     <select id="qa-project"><option value="">No project</option></select>
   </div>
-  <button class="btn btn-primary" style="width:100%" onclick="saveQuickTask()">Add Task</button>
+  <button class="btn btn-primary" style="width:100%" onclick="saveQuickTask()">Add</button>
 </div>
 
 <!-- BARCODE SCANNER OVERLAY -->
@@ -4638,6 +4656,11 @@ function updateSyncBar() {
     if (txt) txt.textContent = 'Offline' + (_syncQueue.length ? ' — ' + _syncQueue.length + ' change' + (_syncQueue.length!==1?'s':'') + ' pending' : '');
     if (msd) msd.style.background = '#ef4444';
     if (msl) msl.textContent = 'Offline';
+  } else if (_syncQueue.length > 0 && !db) {
+    bar.classList.add('show');
+    if (txt) txt.textContent = _syncQueue.length + ' local change' + (_syncQueue.length!==1?'s':'') + ' — connect Firebase to sync';
+    if (msd) msd.style.background = '#f59e0b';
+    if (msl) msl.textContent = 'Local only';
   } else if (_syncQueue.length > 0) {
     bar.classList.add('show');
     if (txt) txt.textContent = 'Syncing ' + _syncQueue.length + ' pending change' + (_syncQueue.length!==1?'s':'') + '…';
@@ -5051,12 +5074,17 @@ function addItem(col, item) {
   if (db) {
     db.collection(col).doc(item.id).set(item).catch(function(e) {
       console.warn('Firebase addItem error:', e);
+      _syncQueue.push({type:'set', col:col, id:item.id, data:item});
+      saveSyncQueue(); updateSyncBar();
       LOCAL.add(col, item);
       state[col] = LOCAL.get(col);
       renderAll();
     });
     return item;
   }
+  // No Firebase — save locally and queue for when it connects
+  _syncQueue.push({type:'set', col:col, id:item.id, data:item});
+  saveSyncQueue(); updateSyncBar();
   LOCAL.add(col, item);
   state[col] = LOCAL.get(col);
   renderAll();
@@ -5103,6 +5131,9 @@ function updateItem(col, id, data) {
     });
     return;
   }
+  // No Firebase — save locally and queue for when it connects
+  _syncQueue.push({type:'set', col:col, id:id, data:data});
+  saveSyncQueue(); updateSyncBar();
   LOCAL.update(col, id, data);
   state[col] = LOCAL.get(col);
   renderAll();
@@ -5122,6 +5153,9 @@ function deleteItem(col, id) {
     });
     return;
   }
+  // No Firebase — queue deletion for when it connects
+  _syncQueue.push({type:'delete', col:col, id:id});
+  saveSyncQueue(); updateSyncBar();
   LOCAL.delete(col, id);
   state[col] = LOCAL.get(col);
   renderAll();
@@ -5162,6 +5196,7 @@ function initFirebase(config) {
 
       window._fbConfig = config;
       window._fbConnected = true;
+      setTimeout(flushSyncQueue, 800);
       var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
       var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
       var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
@@ -5386,6 +5421,7 @@ function openAddModal() {
     (currentView === 'calendar' && window._calActiveTab === 'events' ? 'modal-event' : 'modal-task');
   clearForm(m);
   if(m === 'modal-project') populateCustomFields([]);
+  if(m === 'modal-task') populateTaskCustomFields([]);
   if(m !== 'modal-issue') populateProjectSelects();
   if(m === 'modal-issue') openTagsForEdit('');
   if(m === 'modal-event') populateEventContactList();
@@ -5481,6 +5517,66 @@ function fmtCurrency(v) {
   return v ? '$'+parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
 }
 
+// ── SMART DATE PARSER ─────────────────────────────────────────────────
+function parseFuzzyDate(str) {
+  if (!str) return '';
+  str = str.trim().toLowerCase();
+  var today = new Date(); today.setHours(0,0,0,0);
+  function toISO(d) { return d.toISOString().slice(0,10); }
+  if (str === 'today') return toISO(today);
+  if (str === 'tomorrow') { var t=new Date(today); t.setDate(t.getDate()+1); return toISO(t); }
+  if (str === 'yesterday') { var y=new Date(today); y.setDate(y.getDate()-1); return toISO(y); }
+  // "end of week" / "eow"
+  if (str === 'end of week' || str === 'eow') {
+    var eow=new Date(today); var d2eow=(7-today.getDay())%7||7; eow.setDate(eow.getDate()+d2eow); return toISO(eow);
+  }
+  // "end of month" / "eom"
+  if (str === 'end of month' || str === 'eom') {
+    return toISO(new Date(today.getFullYear(), today.getMonth()+1, 0));
+  }
+  // "this week" → Friday of current week
+  if (str === 'this week') {
+    var tw=new Date(today); var fri=5-today.getDay(); if(fri<0) fri+=7; tw.setDate(tw.getDate()+fri); return toISO(tw);
+  }
+  // "next week" → Monday of next week
+  if (str === 'next week') {
+    var nw=new Date(today); var mon=(8-today.getDay())%7||7; nw.setDate(nw.getDate()+mon); return toISO(nw);
+  }
+  // "next <weekday>" or "<weekday>"
+  var days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  var nm=str.match(/^(next\s+)?(\w+day)$/);
+  if (nm) {
+    var di=days.indexOf(nm[2]);
+    if (di>=0) {
+      var diff=di-today.getDay();
+      if (diff<=0||nm[1]) diff+=7;
+      var nd=new Date(today); nd.setDate(nd.getDate()+diff); return toISO(nd);
+    }
+  }
+  // "in N days/weeks/months"
+  var inm=str.match(/^in\s+(\d+)\s+(day|week|month)s?$/);
+  if (inm) {
+    var n=parseInt(inm[1],10); var unit=inm[2];
+    var id=new Date(today);
+    if (unit==='day') id.setDate(id.getDate()+n);
+    else if (unit==='week') id.setDate(id.getDate()+n*7);
+    else if (unit==='month') id.setMonth(id.getMonth()+n);
+    return toISO(id);
+  }
+  // Try native parse as last resort
+  var native=new Date(str);
+  if (!isNaN(native.getTime())) return toISO(native);
+  return '';
+}
+function applySmartDate(str) {
+  var result = parseFuzzyDate(str);
+  var dateInput = document.getElementById('task-due');
+  if (dateInput && result) { dateInput.value = result; updateRecurPreview(); }
+  // Show parsed hint
+  var hint = document.getElementById('task-due-hint');
+  if (hint) hint.textContent = result ? ('→ ' + fmtDate(result)) : (str.length > 2 ? '?' : '');
+}
+
 function toast(msg) {
   var el = document.getElementById('toast');
   if (!el) {
@@ -5494,6 +5590,60 @@ function toast(msg) {
   el.classList.add('show');
   setTimeout(function(){ el.style.opacity = '0'; el.classList.remove('show'); }, 2500);
 }
+
+function toastWithAction(msg, actionLabel, actionFn) {
+  var el = document.getElementById('toast-action');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast-action';
+    el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#f0f4ff;padding:10px 16px;border-radius:16px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:opacity 0.2s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.1)';
+    document.body.appendChild(el);
+  }
+  clearTimeout(el._timer);
+  el.innerHTML = escH(msg) + '<button onclick="this.closest(\'#toast-action\')._act&&this.closest(\'#toast-action\')._act();this.closest(\'#toast-action\').style.opacity=\'0\'" style="background:#4f8ef7;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;cursor:pointer">'+escH(actionLabel)+'</button>';
+  el._act = actionFn;
+  el.style.opacity = '1';
+  el._timer = setTimeout(function(){ el.style.opacity='0'; }, 4000);
+}
+window.toastWithAction = toastWithAction;
+
+function launchConfetti() {
+  var canvas = document.getElementById('confetti-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'confetti-canvas';
+    canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998';
+    document.body.appendChild(canvas);
+  }
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  var pieces = [];
+  var colors = ['#4f8ef7','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4'];
+  for (var i=0; i<60; i++) {
+    pieces.push({
+      x: Math.random()*canvas.width, y: -10,
+      vx: (Math.random()-0.5)*6, vy: Math.random()*4+2,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      size: Math.random()*6+4, rot: Math.random()*360, rotV: (Math.random()-0.5)*8
+    });
+  }
+  var frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(function(p){
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0,1-frame/55);
+      ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+      ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.rot+=p.rotV;
+    });
+    frame++;
+    if (frame < 60) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+window.launchConfetti = launchConfetti;
 
 // ═══════════════════════════════════════════════
 //  DASHBOARD
@@ -5771,7 +5921,7 @@ window.renderDashboardCharts = renderDashboardCharts;
 // ═══════════════════════════════════════════════════
 //  CUSTOM DASHBOARD BUILDER
 // ═══════════════════════════════════════════════════
-var _defaultDashLayout = ['stats','tasks','shipping','charts'];
+var _defaultDashLayout = ['stats','tasks','shipping','charts','weather'];
 function getDashLayout() {
   try { return JSON.parse(localStorage.getItem('fop_dash_layout')||JSON.stringify(_defaultDashLayout)); } catch(e) { return _defaultDashLayout.slice(); }
 }
@@ -6004,14 +6154,49 @@ function _fetchWeatherFallback(lat, lon) {
 
 function _fetchWeatherByIP() {
   fetch('https://ipapi.co/json/').then(function(r){ return r.json(); }).then(function(d){
+    if (!d.latitude) { _showWeatherLocationInput(); return; }
     _fetchWeather(d.latitude, d.longitude);
     var locEl = document.getElementById('dash-weather-location');
     if (locEl) locEl.textContent = (d.city||'') + (d.region_code?', '+d.region_code:'');
+  }).catch(function(){ _showWeatherLocationInput(); });
+}
+function _showWeatherLocationInput() {
+  var saved = localStorage.getItem('fop_weather_city');
+  if (saved) { _fetchWeatherByCity(saved); return; }
+  var el = document.getElementById('dash-weather-content');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:13px;color:#8da0c0;margin-bottom:10px">Enter your city to get weather:</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<input id="weather-city-input" type="text" placeholder="e.g. New York" style="flex:1;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;outline:none" onkeydown="if(event.key===\'Enter\') _submitWeatherCity()">'
+    + '<button class="btn btn-primary btn-sm" onclick="_submitWeatherCity()">Go</button></div>';
+  setTimeout(function(){ var i=document.getElementById('weather-city-input'); if(i) i.focus(); }, 50);
+}
+function _submitWeatherCity() {
+  var inp = document.getElementById('weather-city-input');
+  var city = inp ? inp.value.trim() : '';
+  if (!city) return;
+  localStorage.setItem('fop_weather_city', city);
+  _fetchWeatherByCity(city);
+}
+function _fetchWeatherByCity(city) {
+  var el = document.getElementById('dash-weather-content');
+  if (el) el.innerHTML = '<div class="skeleton" style="height:40px;border-radius:10px;margin:8px 0"></div>';
+  var locEl = document.getElementById('dash-weather-location');
+  if (locEl) locEl.textContent = city;
+  var url = 'https://wttr.in/' + encodeURIComponent(city) + '?format=j1';
+  fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    var w = _parseWttr(data, 0, 0);
+    _weatherCache = w; _weatherCacheTime = Date.now(); w.ts = Date.now();
+    try { localStorage.setItem('fop_weather_cache', JSON.stringify(w)); } catch(e) {}
+    _renderWeatherData(w);
   }).catch(function(){
-    var el = document.getElementById('dash-weather-content');
-    if (el) el.innerHTML = '<div style="color:#4a5e7a;font-size:13px">Location unavailable</div>';
+    var e2 = document.getElementById('dash-weather-content');
+    if (e2) e2.innerHTML = '<div style="color:#4a5e7a;font-size:13px">Could not load weather. <span style="color:#4f8ef7;cursor:pointer" onclick="localStorage.removeItem(\'fop_weather_city\');_showWeatherLocationInput()">Try again</span></div>';
   });
 }
+window._submitWeatherCity = _submitWeatherCity;
+window._showWeatherLocationInput = _showWeatherLocationInput;
+window._fetchWeatherByCity = _fetchWeatherByCity;
 
 function _parseWttr(data, lat, lon) {
   var cc = (data.current_condition && data.current_condition[0]) || {};
@@ -6113,6 +6298,36 @@ function populateCustomFields(fields) {
 window.addCustomField = addCustomField;
 window.getCustomFields = getCustomFields;
 window.populateCustomFields = populateCustomFields;
+
+function addTaskCustomField(key, val) {
+  var list = document.getElementById('task-custom-fields-list');
+  if (!list) return;
+  var row = document.createElement('div');
+  row.className = 'custom-field-row';
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.innerHTML = '<input type="text" placeholder="Field name" value="'+escH(key||'')+'" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">'
+    + '<input type="text" placeholder="Value" value="'+escH(val||'')+'" style="flex:1.5;padding:7px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px">'
+    + '<button type="button" onclick="this.parentNode.remove()" style="background:none;border:none;color:#4a5e7a;font-size:18px;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">×</button>';
+  list.appendChild(row);
+}
+function getTaskCustomFields() {
+  var rows = document.querySelectorAll('#task-custom-fields-list .custom-field-row');
+  var fields = [];
+  rows.forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    var k = inputs[0] ? inputs[0].value.trim() : '';
+    var v = inputs[1] ? inputs[1].value.trim() : '';
+    if (k) fields.push({ key: k, val: v });
+  });
+  return fields;
+}
+function populateTaskCustomFields(fields) {
+  var list = document.getElementById('task-custom-fields-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (fields || []).forEach(function(f) { addTaskCustomField(f.key, f.val); });
+}
+window.addTaskCustomField = addTaskCustomField;
 
 // ═══════════════════════════════════════════════
 //  PROJECTS
@@ -6650,12 +6865,32 @@ function toggleExpandDetail(rowEl, col, id) {
   rowEl.parentNode.insertBefore(detailTr, rowEl.nextSibling);
 }
 function buildExpandDetailHtml(col, item) {
-  var editFn = col==='tasks'?'editTask':col==='pos'?'editPO':'editShipment';
+  var editFn = col==='tasks'?'editTask':col==='pos'?'editPO':col==='vendors'?'editVendor':'editShipment';
   function field(lbl, val) {
     if (!val && val !== 0) return '';
     return '<div class="de-field"><div class="de-field-lbl">'+escH(lbl)+'</div><div class="de-field-val">'+val+'</div></div>';
   }
   var html = '';
+  if (col === 'vendors') {
+    var catColors2 = {lighting:'#f59e0b',av:'#8b5cf6',hvac:'#06b6d4',electrical:'#4f8ef7',networking:'#10b981',hardware:'#ef4444',tools:'#64748b',other:'#4a5e7a'};
+    var cc2 = catColors2[item.category]||'#4a5e7a';
+    html += '<div class="de-section"><div class="de-grid">'
+      + field('Category', item.category ? '<span style="color:'+cc2+';font-weight:600;text-transform:capitalize">'+escH(item.category)+'</span>' : null)
+      + field('Contact', item.contact ? escH(item.contact) : null)
+      + field('Phone', item.phone ? '<a href="tel:'+escH(item.phone)+'" style="color:#4f8ef7">'+escH(item.phone)+'</a>' : null)
+      + field('Email', item.email ? '<a href="mailto:'+escH(item.email)+'" style="color:#4f8ef7">'+escH(item.email)+'</a>' : null)
+      + field('Website', item.website ? '<a href="'+escH(item.website)+'" target="_blank" rel="noopener" style="color:#4f8ef7">'+escH(item.website)+'</a>' : null)
+      + field('Account #', item.account ? escH(item.account) : null)
+      + field('Lead Time', item.leadtime ? escH(item.leadtime) : null)
+      + field('Address', item.address ? escH(item.address) : null)
+      + '</div></div>';
+    if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
+    html += '<div class="de-actions">'
+      + '<button class="btn btn-primary btn-sm" onclick="editVendor(\''+item.id+'\')">✏ Edit</button>'
+      + '<button class="btn btn-ghost btn-sm" onclick="softDelete(\'vendors\',\''+item.id+'\',\''+escH(item.name||'Vendor')+'\');document.querySelectorAll(\'.t3-expand-row\').forEach(function(r){r.previousElementSibling&&r.previousElementSibling.classList.remove(\'t3-row-expanded\');r.remove();})">Delete</button>'
+      + '</div>';
+    return html;
+  }
   if (col === 'tasks') {
     // Status + Priority badges at top
     var badgesHtml = statusBadge(item.status) + (item.priority ? priorityBadge(item.priority) : '');
@@ -6723,7 +6958,7 @@ function toggleT3Expand(rowEl, col, id) {
       var _rv = [];
       try { _rv = JSON.parse(localStorage.getItem('fop_recently_viewed')||'[]'); } catch(e){}
       _rv = _rv.filter(function(r){ return r.id !== id; });
-      _rv.unshift({ id:id, col:col, view:col==='pos'?'pos':col==='shipping'?'shipping':col==='tasks'?'tasks':'projects', title:_item.title||_item.name||_item.desc||_item.vendor||'' });
+      _rv.unshift({ id:id, col:col, view:col==='pos'?'pos':col==='shipping'?'shipping':col==='tasks'?'tasks':col==='vendors'?'vendors':'projects', title:_item.title||_item.name||_item.desc||_item.vendor||'' });
       if (_rv.length > 20) _rv.length = 20;
       localStorage.setItem('fop_recently_viewed', JSON.stringify(_rv));
     }
@@ -6750,31 +6985,45 @@ function renderVendors() {
   var q = (document.getElementById('vendor-search') && document.getElementById('vendor-search').value || '').toLowerCase();
   var data = (state.vendors || []).filter(function(v){ return !v.archived; });
   if (q) data = data.filter(function(v){ return (v.name||'').toLowerCase().indexOf(q)>=0 || (v.contact||'').toLowerCase().indexOf(q)>=0 || (v.category||'').toLowerCase().indexOf(q)>=0; });
-  if (!data.length) { list.innerHTML = buildEmptyState('🏪','rgba(79,142,247,0.1)','No vendors yet','Add vendors and supplier contacts.','+ Add Vendor','openAddModal()'); return; }
-  var catColors = {lighting:'#f59e0b',av:'#8b5cf6',hvac:'#06b6d4',electrical:'#4f8ef7',networking:'#10b981',hardware:'#ef4444',tools:'#64748b',other:'#4a5e7a'};
-  var html = '<div class="vendor-grid">';
-  data.forEach(function(v) {
-    var cc = catColors[v.category] || '#4a5e7a';
-    html += '<div class="vendor-card" onclick="editVendor(\''+v.id+'\')">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-      + '<div><div class="vendor-card-name">'+escH(v.name||'Vendor')+'</div>'
-      + '<div class="vendor-card-cat" style="color:'+cc+'">'+escH(v.category||'other')+'</div></div>'
-      + (v.leadtime ? '<span style="font-size:11px;background:rgba(255,255,255,0.06);border-radius:6px;padding:3px 8px;color:#8da0c0">'+escH(v.leadtime)+'</span>' : '')
-      + '</div>'
-      + '<div class="vendor-card-info">'
-      + (v.contact ? '<div class="vendor-info-item">👤 '+escH(v.contact)+'</div>' : '')
-      + (v.phone ? '<div class="vendor-info-item">📞 <a href="tel:'+escH(v.phone)+'" onclick="event.stopPropagation()">'+escH(v.phone)+'</a></div>' : '')
-      + (v.email ? '<div class="vendor-info-item">✉️ <a href="mailto:'+escH(v.email)+'" onclick="event.stopPropagation()">'+escH(v.email)+'</a></div>' : '')
-      + (v.website ? '<div class="vendor-info-item">🌐 <a href="'+escH(v.website)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website</a></div>' : '')
-      + (v.account ? '<div class="vendor-info-item">🔑 Acct: '+escH(v.account)+'</div>' : '')
-      + '</div>'
-      + (v.notes ? '<div style="font-size:12px;color:#4a5e7a;margin-top:10px;line-height:1.5">'+escH(v.notes)+'</div>' : '')
-      + '</div>';
-  });
-  html += '</div>';
-  list.innerHTML = html;
   var b = document.getElementById('badge-vendors');
   if (b) { b.textContent = data.length; b.style.display = data.length ? '' : 'none'; }
+  if (!data.length) { list.innerHTML = buildEmptyState('🏪','rgba(79,142,247,0.1)','No vendors yet','Add vendors and supplier contacts.','+ Add Vendor','openAddModal()'); return; }
+  var catColors = {lighting:'#f59e0b',av:'#8b5cf6',hvac:'#06b6d4',electrical:'#4f8ef7',networking:'#10b981',hardware:'#ef4444',tools:'#64748b',other:'#4a5e7a'};
+  // Group by category
+  var cats = {}; data.forEach(function(v){ var c=v.category||'other'; if(!cats[c]) cats[c]=[]; cats[c].push(v); });
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'padding-bottom:80px';
+  Object.keys(cats).forEach(function(cat){
+    var sec = document.createElement('div');
+    sec.className = 't3-section';
+    var cc = catColors[cat]||'#4a5e7a';
+    var lbl = document.createElement('div');
+    lbl.className = 't3-section-label';
+    lbl.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cc+';margin-right:4px"></span>'+escH(cat.charAt(0).toUpperCase()+cat.slice(1))+' · '+cats[cat].length;
+    sec.appendChild(lbl);
+    var t3list = document.createElement('div');
+    t3list.className = 't3-list';
+    cats[cat].forEach(function(v){
+      var row = document.createElement('div');
+      row.className = 't3-row';
+      var sub = [v.contact, v.phone].filter(Boolean).join('  ·  ');
+      row.innerHTML =
+        '<div class="t3-icon" style="background:'+cc+'22">'+( cat==='electrical'?'⚡':cat==='networking'?'🌐':cat==='av'?'📺':cat==='hvac'?'❄️':cat==='lighting'?'💡':'🏪' )+'</div>'
+        +'<div class="t3-content">'
+          +'<div class="t3-title">'+escH(v.name||'Vendor')+'</div>'
+          +(sub?'<div class="t3-sub">'+escH(sub)+'</div>':'')
+        +'</div>'
+        +'<div class="t3-chev">›</div>';
+      row.addEventListener('click', function(ev){
+        toggleT3Expand(row, 'vendors', v.id);
+      });
+      t3list.appendChild(row);
+    });
+    sec.appendChild(t3list);
+    wrap.appendChild(sec);
+  });
+  list.innerHTML = '';
+  list.appendChild(wrap);
 }
 function saveVendor() {
   var name = document.getElementById('vendor-name').value.trim();
@@ -7238,12 +7487,12 @@ function renderTasks() {
   var data = state.tasks.slice();
   if(taskFilter === 'archived') {
     data = data.filter(function(t){ return t.archived; });
-  } else if(taskFilter === 'all') {
-    data = data.filter(function(t){ return !t.archived; });
+  } else if(taskFilter === 'done') {
+    data = data.filter(function(t){ return t.status === 'done' && !t.archived; });
   } else if(taskFilter === 'active') {
     data = data.filter(function(t){ return (t.status === 'todo' || t.status === 'inprogress') && !t.archived; });
   } else {
-    data = data.filter(function(t){ return t.status === taskFilter && !t.archived; });
+    data = data.filter(function(t){ return !t.archived; });
   }
   if(taskProjectFilter) data = data.filter(function(t){ return t.project === taskProjectFilter; });
   var priorityF = document.getElementById('task-priority-filter') ? document.getElementById('task-priority-filter').value : '';
@@ -7362,10 +7611,25 @@ function renderTasks() {
     var t3Tomorrow=new Date(t3Today.getTime()+86400000);
     var t3NextWeek=new Date(t3Today.getTime()+7*86400000);
     // Group tasks into buckets
-    var t3Groups={overdue:[],today:[],upcoming:[],anytime:[],done:[]};
+    // For 'done' filter: flat completed list
+    if (taskFilter === 'done') {
+      var sec3d = document.createElement('div');
+      sec3d.className = 't3-section';
+      var lbl3d = document.createElement('div');
+      lbl3d.className = 't3-section-label';
+      lbl3d.textContent = 'Completed · ' + data.length;
+      sec3d.appendChild(lbl3d);
+      var list3d = document.createElement('div');
+      list3d.className = 't3-list';
+      for(var di=0;di<data.length;di++) list3d.appendChild(makeT3TaskRow(data[di],'done'));
+      sec3d.appendChild(list3d);
+      mList.appendChild(sec3d);
+      if(mWrap) mWrap.appendChild(mList);
+      return;
+    }
+    var t3Groups={overdue:[],today:[],upcoming:[],anytime:[]};
     for(var t3i=0;t3i<data.length;t3i++){
       var t3t=data[t3i];
-      if(t3t.status==='done'||t3t.archived){ t3Groups.done.push(t3t); continue; }
       if(!t3t.due){ t3Groups.anytime.push(t3t); continue; }
       var t3d=new Date(t3t.due+'T00:00:00');
       if(t3d<t3Today) t3Groups.overdue.push(t3t);
@@ -7412,7 +7676,19 @@ function renderTasks() {
           if(titleEl) titleEl.classList.add('done');
           var updated={}; for(var k in tdata3) updated[k]=tdata3[k];
           updated.status='done';
-          setTimeout(function(){ updateItem('tasks',tid3,updated); renderTasks(); },450);
+          launchConfetti();
+          setTimeout(function(){
+            updateItem('tasks',tid3,updated);
+            renderTasks();
+            // Offer archive after short delay
+            setTimeout(function(){
+              toastWithAction('Task completed! Archive it?', 'Archive', function(){
+                var arch={}; for(var k2 in updated) arch[k2]=updated[k2];
+                arch.archived=true;
+                updateItem('tasks',tid3,arch); renderTasks();
+              });
+            }, 600);
+          }, 350);
         }
         chkEl.addEventListener('touchend', completeTask, {passive:false});
         chkEl.addEventListener('click', function(ev){ ev.stopPropagation(); if(!isMobile()) completeTask(ev); });
@@ -7428,8 +7704,7 @@ function renderTasks() {
       {key:'overdue',label:'Overdue',lClass:'overdue'},
       {key:'today',label:'Today',lClass:'today'},
       {key:'upcoming',label:'Upcoming',lClass:''},
-      {key:'anytime',label:'Anytime',lClass:''},
-      {key:'done',label:'Completed',lClass:''}
+      {key:'anytime',label:'Anytime',lClass:''}
     ];
     for(var gi3=0;gi3<t3GroupDefs.length;gi3++){
       var gd3=t3GroupDefs[gi3];
@@ -7773,7 +8048,8 @@ function saveTask() {
     shipment: document.getElementById('task-shipment').value || null,
     blockedBy: document.getElementById('task-blocked-by').value || null,
     onComplete: document.getElementById('task-on-complete') ? document.getElementById('task-on-complete').value : '',
-    nextTitle: document.getElementById('task-next-title') ? document.getElementById('task-next-title').value.trim() : ''
+    nextTitle: document.getElementById('task-next-title') ? document.getElementById('task-next-title').value.trim() : '',
+    customFields: getTaskCustomFields()
   };
   if(editingId){
     updateItem('tasks',editingId,item);
@@ -7797,6 +8073,8 @@ function editTask(id) {
   document.getElementById('task-priority').value=t.priority||'medium';
   document.getElementById('task-status').value=t.status||'todo';
   document.getElementById('task-due').value=t.due||'';
+  var _sds=document.getElementById('task-due-smart'); if(_sds) _sds.value='';
+  var _sdh=document.getElementById('task-due-hint'); if(_sdh) _sdh.textContent='';
   comboSet('task-category', t.category||'');
   document.getElementById('task-recur').value=t.recur||'';
   document.getElementById('task-shipment').value=t.shipment||'';
@@ -7824,6 +8102,7 @@ function editTask(id) {
   if (ocSel) { ocSel.value = t.onComplete||''; document.getElementById('task-next-task-row').style.display = t.onComplete==='next-task'?'':'none'; }
   var ntSel = document.getElementById('task-next-title');
   if (ntSel) ntSel.value = t.nextTitle||'';
+  populateTaskCustomFields(t.customFields||[]);
   openModal('modal-task');
 }
 
@@ -8387,10 +8666,76 @@ function openDetail(col, id) {
 }
 
 
+// ── Control System Combo Box ─────────────────────────────
+var _builtinSystems = ['Lutron RadioRA3','Lutron Homeworks QSX','Lutron Caseta','Crestron','Control4','Savant','Leviton','Vantage','RTI','URC'];
+var _savedSystems = [];
+try { _savedSystems = JSON.parse(localStorage.getItem('fop_saved_systems')||'[]'); } catch(e) {}
+function getAllSystems() {
+  var all = _builtinSystems.concat(_savedSystems);
+  // Also collect from existing issues
+  (state.issues||[]).forEach(function(i){ if(i.system && all.indexOf(i.system)<0) all.push(i.system); });
+  return all.filter(function(s,i,a){ return s && a.indexOf(s)===i; });
+}
+function _renderSystemOptions(containerId, q, onSelect) {
+  var opts = document.getElementById(containerId);
+  if (!opts) return;
+  var all = getAllSystems();
+  var filtered = q ? all.filter(function(s){ return s.toLowerCase().indexOf(q.toLowerCase())>=0; }) : all;
+  var html = filtered.map(function(s){
+    return '<div onclick="event.stopPropagation();('+onSelect+')(\''+escH(s)+'\')" style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#f0f4ff;white-space:nowrap" onmouseover="this.style.background=\'rgba(79,142,247,0.12)\'" onmouseout="this.style.background=\'\'">'+escH(s)+'</div>';
+  }).join('');
+  if (q && filtered.indexOf(q)===-1) {
+    html += '<div onclick="event.stopPropagation();('+onSelect+')(\''+escH(q)+'\',true)" style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#4f8ef7;border-top:1px solid rgba(255,255,255,0.06);margin-top:2px" onmouseover="this.style.background=\'rgba(79,142,247,0.08)\'" onmouseout="this.style.background=\'\'">+ Save "'+escH(q)+'"</div>';
+  }
+  if (!html) html = '<div style="padding:8px 10px;font-size:12px;color:#4a5e7a">No systems — type to create</div>';
+  opts.innerHTML = html;
+}
+function openSystemDropdown() {
+  var dd = document.getElementById('system-dropdown');
+  if (dd) { dd.style.display='block'; filterSystemDropdown(document.getElementById('issue-system').value||''); }
+}
+function filterSystemDropdown(q) {
+  _renderSystemOptions('system-options', q, 'selectIssueSystem');
+}
+function selectIssueSystem(val, save) {
+  if (save && _savedSystems.indexOf(val)<0) { _savedSystems.push(val); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems)); }
+  var inp = document.getElementById('issue-system'); if(inp) inp.value = val;
+  var dd = document.getElementById('system-dropdown'); if(dd) dd.style.display='none';
+}
+function openSystemFilter() {
+  var dd = document.getElementById('system-filter-dropdown');
+  if (dd) { dd.style.display='block'; filterSystemFilter(''); }
+}
+function filterSystemFilter(q) {
+  var opts = document.getElementById('system-filter-options');
+  if (!opts) return;
+  var all = ['All Systems'].concat(getAllSystems());
+  var filtered = q ? all.filter(function(s){ return s.toLowerCase().indexOf(q.toLowerCase())>=0; }) : all;
+  opts.innerHTML = filtered.map(function(s){
+    return '<div onclick="event.stopPropagation();selectSystemFilter(\''+escH(s)+'\')" style="padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#f0f4ff;white-space:nowrap" onmouseover="this.style.background=\'rgba(79,142,247,0.12)\'" onmouseout="this.style.background=\'\'">'+escH(s)+'</div>';
+  }).join('');
+}
+function selectSystemFilter(val) {
+  var inp = document.getElementById('troubleSystem'); if(inp) inp.value = val==='All Systems'?'all':val;
+  var dd = document.getElementById('system-filter-dropdown'); if(dd) dd.style.display='none';
+  renderTroubleshoot();
+}
+// Close system dropdowns on outside click
+document.addEventListener('click', function(e){
+  var dd1=document.getElementById('system-dropdown'), dd2=document.getElementById('system-filter-dropdown');
+  if(dd1&&dd1.style.display!=='none'&&!dd1.contains(e.target)&&e.target.id!=='issue-system') dd1.style.display='none';
+  if(dd2&&dd2.style.display!=='none'&&!dd2.contains(e.target)&&e.target.id!=='troubleSystem') dd2.style.display='none';
+});
+window.openSystemDropdown=openSystemDropdown; window.filterSystemDropdown=filterSystemDropdown; window.selectIssueSystem=selectIssueSystem;
+window.openSystemFilter=openSystemFilter; window.filterSystemFilter=filterSystemFilter; window.selectSystemFilter=selectSystemFilter;
+
 function renderTroubleshoot() {
+  var sysRaw = (document.getElementById('troubleSystem')||{}).value||'all';
+  var sysFilter = (sysRaw === 'all' || sysRaw === 'All Systems') ? '' : sysRaw;
   var cat = document.getElementById('troubleCategory').value;
   var search = document.getElementById('troubleSearch').value.toLowerCase();
   var data = state.issues.slice();
+  if (sysFilter) data = data.filter(function(t){ return (t.system||'').toLowerCase() === sysFilter.toLowerCase(); });
   if (cat !== 'all') data = data.filter(function(t){ return t.cat === cat; });
   if (search) data = data.filter(function(t){
     return (t.q||'').toLowerCase().indexOf(search)>=0 ||
@@ -8452,6 +8797,7 @@ function editIssue(id) {
   document.getElementById('issue-modal-title').textContent = 'Edit Issue';
   document.getElementById('issue-q').value = t.q || '';
   document.getElementById('issue-cat').value = t.cat || 'electrical';
+  var sysInp = document.getElementById('issue-system'); if(sysInp) sysInp.value = t.system||'';
   openTagsForEdit(t.tags || '');
   document.getElementById('issue-a').value = t.a || '';
   document.getElementById('issue-steps').value = Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps||'');
@@ -8463,8 +8809,13 @@ function saveIssue() {
   if (!q) { toast('Enter the issue/question'); return; }
   var stepsRaw = document.getElementById('issue-steps').value.trim();
   var steps = stepsRaw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  var sysVal = (document.getElementById('issue-system')||{}).value||'';
+  if (sysVal && _savedSystems.indexOf(sysVal)<0 && _builtinSystems.indexOf(sysVal)<0) {
+    _savedSystems.push(sysVal); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems));
+  }
   var item = {
     q: q,
+    system: sysVal,
     cat: document.getElementById('issue-cat').value,
     tags: document.getElementById('issue-tags').value.trim(),
     a: document.getElementById('issue-a').value.trim(),
@@ -8511,13 +8862,13 @@ function filterTagsDropdown(q) {
   var filtered = q ? all.filter(function(t){ return t.toLowerCase().indexOf(q.toLowerCase())>=0; }) : all;
   var html = filtered.map(function(t){
     var sel = _selectedTags.indexOf(t)>=0;
-    return '<div onclick="toggleTag(\''+escH(t)+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background 0.1s'+(sel?';background:rgba(79,142,247,0.15)':'')+'">'
+    return '<div onclick="event.stopPropagation();toggleTag(\''+escH(t)+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background 0.1s'+(sel?';background:rgba(79,142,247,0.15)':'')+'">'
       + '<div style="width:16px;height:16px;border-radius:4px;border:2px solid '+(sel?'#4f8ef7':'rgba(255,255,255,0.2)')+';background:'+(sel?'#4f8ef7':'none')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(sel?'<span style="color:#fff;font-size:10px;font-weight:700">✓</span>':'')+'</div>'
       + '<span style="font-size:13px;color:#f0f4ff">'+escH(t)+'</span>'
       + '</div>';
   }).join('');
   if (q && filtered.indexOf(q)===-1) {
-    html += '<div onclick="createAndToggleTag(\''+escH(q)+'\')" style="padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:#4f8ef7;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px">+ Create "'+escH(q)+'"</div>';
+    html += '<div onclick="event.stopPropagation();createAndToggleTag(\''+escH(q)+'\')" style="padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:#4f8ef7;border-top:1px solid rgba(255,255,255,0.06);margin-top:4px">+ Create "'+escH(q)+'"</div>';
   }
   if (!html) html = '<div style="font-size:12px;color:#4a5e7a;padding:8px">No tags yet — type to create one</div>';
   opts.innerHTML = html;
@@ -8971,6 +9322,23 @@ window.addEventListener('load', function(){
   initDragHandles();
   renderWidgetToggles();
   applyWidgetVisibility();
+
+  // Handle PWA shortcut URL params (?view=X or ?add=X)
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var view = params.get('view');
+    var add = params.get('add');
+    if (view) { setTimeout(function(){ switchView(view); }, 200); }
+    if (add) {
+      setTimeout(function(){
+        if (add === 'task') { switchView('tasks'); setTimeout(openAddModal, 100); }
+        else if (add === 'shipping') { switchView('shipping'); setTimeout(openAddModal, 100); }
+        else if (add === 'fieldlog') { switchView('fieldlog'); setTimeout(openAddModal, 100); }
+      }, 300);
+    }
+    if (view || add) { window.history.replaceState({}, '', window.location.pathname); }
+  })();
+
   setTimeout(checkAndPushNotifs, 3000);
   setInterval(checkAndPushNotifs, 10 * 60 * 1000);
   setInterval(updateTabBadges, 30000);
@@ -11810,21 +12178,69 @@ function toggleQuickAdd() {
     setTimeout(function(){ document.getElementById('qa-title').focus(); }, 50);
   }
 }
+function parseQuickAdd(raw) {
+  var text = raw.trim();
+  var result = { title:'', priority:'medium', project:'', due:'', isLog:false };
+  // "log:" prefix → field log entry
+  if (/^log:/i.test(text)) { result.isLog = true; text = text.replace(/^log:\s*/i,''); }
+  // Extract @project (first word starting with @)
+  text = text.replace(/@(\S+)/, function(_,m){ result.project = m; return ''; });
+  // Extract !priority
+  text = text.replace(/!high\b/i, function(){ result.priority='high'; return ''; });
+  text = text.replace(/!low\b/i,  function(){ result.priority='low';  return ''; });
+  text = text.replace(/!med(?:ium)?\b/i, function(){ result.priority='medium'; return ''; });
+  // Extract "due <phrase>" — greedy phrase after "due"
+  text = text.replace(/\bdue\s+((?:next\s+)?\w[\w\s]*?)(?:\s+(?:!|@|$)|$)/i, function(_,phrase){
+    result.due = parseFuzzyDate(phrase.trim()); return '';
+  });
+  result.title = text.replace(/\s{2,}/g,' ').trim();
+  // Resolve project name to id
+  if (result.project) {
+    var proj = (state.projects||[]).find(function(p){ return p.name && p.name.toLowerCase().startsWith(result.project.toLowerCase()); });
+    result.project = proj ? proj.id : '';
+  }
+  return result;
+}
+function previewQuickAdd(val) {
+  var prev = document.getElementById('qa-preview');
+  if (!prev) return;
+  if (!val.trim()) { prev.textContent = ''; return; }
+  var p = parseQuickAdd(val);
+  var parts = [];
+  if (p.isLog) parts.push('Field log');
+  if (p.priority !== 'medium') parts.push(p.priority.charAt(0).toUpperCase()+p.priority.slice(1)+' priority');
+  if (p.due) parts.push('Due '+fmtDate(p.due));
+  if (p.project) {
+    var proj = (state.projects||[]).find(function(x){ return x.id===p.project; });
+    if (proj) parts.push('Project: '+escH(proj.name));
+  }
+  prev.textContent = parts.length ? parts.join(' · ') : '';
+}
 function saveQuickTask() {
-  var title = (document.getElementById('qa-title').value||'').trim();
-  if (!title) { document.getElementById('qa-title').focus(); return; }
-  var item = {
-    title,
-    priority: document.getElementById('qa-priority').value || 'medium',
-    project: document.getElementById('qa-project').value || '',
-    status: 'todo',
-  };
-  addItem('tasks', item);
-  toast('Task added: ' + title);
+  var raw = (document.getElementById('qa-title').value||'').trim();
+  if (!raw) { document.getElementById('qa-title').focus(); return; }
+  var p = parseQuickAdd(raw);
+  var title = p.title || raw;
+  if (p.isLog) {
+    addItem('fieldlog', { title: title, date: new Date().toISOString().slice(0,10), notes: '' });
+    toast('Field log added');
+  } else {
+    var item = {
+      title: title,
+      priority: document.getElementById('qa-priority').value !== 'medium' ? document.getElementById('qa-priority').value : (p.priority||'medium'),
+      project: p.project || document.getElementById('qa-project').value || '',
+      due: p.due || '',
+      status: 'todo',
+    };
+    addItem('tasks', item);
+    toast('Task added: ' + title);
+  }
   document.getElementById('qa-title').value = '';
   document.getElementById('qa-priority').selectedIndex = 0;
+  var prev = document.getElementById('qa-preview'); if (prev) prev.textContent = '';
   renderDashboard();
   if (currentView === 'tasks') renderTasks();
+  if (currentView === 'fieldlog') renderFieldLog();
 }
 
 // ═══════════════════════════════════════════════

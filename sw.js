@@ -5,7 +5,7 @@ self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(['/index.html']).then(function() {
+      return cache.addAll(['/index.html', '/manifest.json']).then(function() {
         return cache.add('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap').catch(function(){});
       });
     })
