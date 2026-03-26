@@ -5161,6 +5161,7 @@ function initFirebase(config) {
       });
 
       window._fbConfig = config;
+      window._fbConnected = true;
       var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
       var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
       var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
@@ -5184,6 +5185,7 @@ function initFirebase(config) {
 }
 
 function loadLocalData() {
+  window._fbConnected = false;
   COLLECTIONS.forEach(function(col){ state[col] = LOCAL.get(col); });
   var _sd=document.getElementById('syncDot'); if(_sd) _sd.classList.add('offline');
   var _sl=document.getElementById('syncLabel'); if(_sl) _sl.textContent='Local only';
@@ -5250,6 +5252,7 @@ function saveFirebaseConfig() {
 }
 
 function clearFirebaseConfig() {
+  window._fbConnected = false;
   localStorage.removeItem('fop_firebase_cfg');
   db = null;
   unsubscribers.forEach(function(u){u();}); unsubscribers=[];
@@ -7165,6 +7168,9 @@ function syncNow() {
       done++;
       if (done === total) {
         renderAll();
+        window._fbConnected = true;
+        var _sl2=document.getElementById('syncLabel'); if(_sl2) _sl2.textContent='Synced';
+        var _sd2=document.getElementById('syncDot'); if(_sd2) _sd2.classList.remove('offline');
         if (btn) { btn.classList.remove('syncing'); btn.classList.add('synced'); btn.title = 'Synced ✓'; setTimeout(function(){ btn.classList.remove('synced'); btn.title='Sync with Firebase (R)'; }, 2000); }
         toast('✓ Synced with Firebase');
       }
@@ -8928,7 +8934,9 @@ window.addEventListener('load', function(){
     }
   }
   // Online/offline handled by sync queue handlers above
+  // Delay so initFirebase (async) can set window._fbConnected before we check it
   updateOnlineStatus();
+  setTimeout(updateOnlineStatus, 2000);
 
   // Auto-reconnect Firebase when tab becomes visible again (desktop keeps sync fresh)
   document.addEventListener('visibilitychange', function() {
