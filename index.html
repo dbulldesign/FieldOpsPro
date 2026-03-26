@@ -2517,6 +2517,96 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .attach-dropzone:hover, .attach-dropzone.drag-over { border-color:rgba(79,142,247,0.5); background:rgba(79,142,247,0.05); }
 .attach-dropzone-label { font-size:13px; color:#4a5e7a; }
 [data-theme="light"] .attach-chip { background:rgba(37,99,255,0.07); border-color:rgba(37,99,255,0.2); color:#2563ff; }
+
+/* ── MOBILE TAB BAR — explicit anchor ───────────────────────────────── */
+#mob-tab-bar {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  z-index: 9998 !important;
+}
+
+/* ── MOBILE TASKS HEADER — hide cluttered buttons on small screens ───── */
+@media (max-width: 768px) {
+  #task-group-btn,
+  #task-view-kanban,
+  button[onclick*="openTemplateModal"],
+  button[onclick*="exportTasksCSV"] { display: none !important; }
+  /* Task filter tabs → make them scroll horizontally if needed */
+  #view-tasks > div:first-child { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  #view-tasks .tabs { min-width: 0; flex-shrink: 0; }
+}
+
+/* ── MOBILE CALENDAR — week grid scrollable ──────────────────────────── */
+@media (max-width: 768px) {
+  #cal-view-area { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cal-week-grid { min-width: 560px; }
+  .cal-combo-wrap { flex-direction: column; gap: 16px; }
+  .cal-combo-cal, .cal-combo-list { min-width: 0; width: 100%; }
+}
+
+/* ── MOBILE CALENDAR DAY POPUP — bottom sheet on mobile ─────────────── */
+@media (max-width: 768px) {
+  #cal-day-popup {
+    position: fixed !important;
+    bottom: calc(64px + env(safe-area-inset-bottom,0px)) !important;
+    left: 12px !important; right: 12px !important;
+    top: auto !important;
+    width: auto !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    border-radius: 18px !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+  }
+  #cdp-events-list { max-height: 35vh; overflow-y: auto; }
+}
+
+/* ── PROJECT ROWS MOBILE — wrap text, don't clip ────────────────────── */
+@media (max-width: 768px) {
+  .proj-row-name { white-space: normal !important; overflow: visible !important; text-overflow: unset !important; }
+  .proj-row-meta { white-space: normal !important; overflow: visible !important; text-overflow: unset !important; }
+  .proj-row-right { flex-wrap: wrap; gap: 6px; }
+  .proj-row-body { align-items: flex-start !important; padding: 12px 12px 10px !important; }
+  .proj-row-left { align-items: flex-start !important; }
+}
+
+/* ── DASHBOARD WIDGET HOVER GLOW ────────────────────────────────────── */
+@media (min-width: 769px) {
+  .dash-widget-card {
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+    cursor: grab;
+  }
+  .dash-widget-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(79,142,247,0.18);
+  }
+  .dash-widget-card:active { cursor: grabbing; }
+  .dash-widget-card.drag-over-top { border-top: 2px solid #4f8ef7 !important; }
+  .dash-widget-card.drag-over-bot { border-bottom: 2px solid #4f8ef7 !important; }
+  /* 2-col dashboard grid */
+  #dash-widget-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  #dash-widget-grid .dash-widget-card.w-full { grid-column: span 2; }
+}
+@media (max-width: 768px) {
+  #dash-widget-grid { display: flex; flex-direction: column; gap: 14px; }
+}
+
+/* ── DASHBOARD STAT CARDS HOVER (match existing top boxes) ─────────── */
+.stat-card {
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s !important;
+}
+.stat-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 32px rgba(79,142,247,0.18) !important;
+}
   </style>
 </head>
 <body>
@@ -2557,10 +2647,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div class="nav-item" onclick="switchView('shipping')">
           <span class="icon">📦</span> Shipping
           <span class="nav-badge" id="badge-shipping">0</span>
-        </div>
-        <div class="nav-item" onclick="switchView('vendors')">
-          <span class="icon">🏪</span> Vendors
-          <span class="nav-badge" id="badge-vendors">0</span>
         </div>
       </div>
       <div class="nav-section">
@@ -2806,8 +2892,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div><!-- /dash-stat-grid -->
 
+    <!-- DRAGGABLE WIDGET GRID -->
+    <div id="dash-widget-grid">
     <!-- Quick Web Links Widget -->
-    <div class="card" id="dash-weblinks-card" style="margin-bottom:20px">
+    <div class="card dash-widget-card" id="dash-weblinks-card" data-widget-key="weblinks" draggable="true">
       <div class="section-header" style="margin-bottom:12px">
         <div>
           <div class="section-title">🔗 Quick Links</div>
@@ -2824,59 +2912,45 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="quick-links-grid" id="weblinks-grid"></div>
     </div>
 
-    <div class="grid-2" id="dash-recent-grid">
-      <div class="card" id="dash-task-card">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Recent Tasks</div>
-            <div class="section-sub">Latest open items</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
-        </div>
-        <div id="dash-tasks"></div>
+    </div><!-- /dash-weblinks-card -->
+    <div class="card dash-widget-card" id="dash-task-card" data-widget-key="tasks" draggable="true">
+      <div class="section-header">
+        <div><div class="section-title">Recent Tasks</div><div class="section-sub">Latest open items</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('tasks')">View all</button>
       </div>
-      <div class="card" id="dash-ship-card">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Shipment Status</div>
-            <div class="section-sub">Active tracking</div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
-        </div>
-        <div id="dash-shipping"></div>
-      </div>
+      <div id="dash-tasks"></div>
     </div>
-    <div id="dash-charts" style="margin-top:20px"></div>
+    <div class="card dash-widget-card" id="dash-ship-card" data-widget-key="shipping" draggable="true">
+      <div class="section-header">
+        <div><div class="section-title">Shipment Status</div><div class="section-sub">Active tracking</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="switchView('shipping')">View all</button>
+      </div>
+      <div id="dash-shipping"></div>
+    </div>
+    <div class="dash-widget-card w-full" id="dash-charts" data-widget-key="charts" draggable="true"></div>
     <!-- Extra dashboard widgets (shown/hidden by layout) -->
-    <div id="dash-calendar-widget" class="card" style="margin-top:20px;display:none">
+    <div id="dash-calendar-widget" class="card dash-widget-card w-full" data-widget-key="calendar" draggable="true" style="display:none">
       <div class="section-header" style="margin-bottom:12px">
         <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Upcoming</div><div style="font-size:11px;color:#4a5e7a">Events &amp; due tasks</div></div>
         <button class="btn btn-ghost btn-sm" onclick="switchView('calendar')">View all</button>
       </div>
       <div id="dash-calendar-list"></div>
     </div>
-    <div id="dash-punch-widget" class="card" style="margin-top:20px;display:none">
+    <div id="dash-punch-widget" class="card dash-widget-card" data-widget-key="punch" draggable="true" style="display:none">
       <div class="section-header" style="margin-bottom:12px">
         <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Punch List</div><div style="font-size:11px;color:#4a5e7a">Open items</div></div>
         <button class="btn btn-ghost btn-sm" onclick="switchView('punchlist')">View all</button>
       </div>
       <div id="dash-punch-list"></div>
     </div>
-    <div id="dash-vendors-widget" class="card" style="margin-top:20px;display:none">
-      <div class="section-header" style="margin-bottom:12px">
-        <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Vendors</div><div style="font-size:11px;color:#4a5e7a">Supplier directory</div></div>
-        <button class="btn btn-ghost btn-sm" onclick="switchView('vendors')">View all</button>
-      </div>
-      <div id="dash-vendors-list"></div>
-    </div>
-    <div id="dash-fieldlog-widget" class="card" style="margin-top:20px;display:none">
+    <div id="dash-fieldlog-widget" class="card dash-widget-card" data-widget-key="fieldlog" draggable="true" style="display:none">
       <div class="section-header" style="margin-bottom:12px">
         <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Field Log</div><div style="font-size:11px;color:#4a5e7a">Recent daily reports</div></div>
         <button class="btn btn-ghost btn-sm" onclick="switchView('fieldlog')">View all</button>
       </div>
       <div id="dash-fieldlog-list"></div>
     </div>
-    <div id="dash-weather-widget" class="card" style="margin-top:20px;display:none">
+    <div id="dash-weather-widget" class="card dash-widget-card" data-widget-key="weather" draggable="true" style="display:none">
       <div class="section-header" style="margin-bottom:12px">
         <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Weather</div><div id="dash-weather-location" style="font-size:11px;color:#4a5e7a">Loading…</div></div>
         <button class="btn btn-ghost btn-sm" onclick="refreshWeather(true)" style="font-size:12px">↻ Refresh</button>
@@ -2885,13 +2959,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div style="color:#4a5e7a;font-size:13px">Detecting location…</div>
       </div>
     </div>
-    <div id="dash-scratchpad-widget" class="card" style="margin-top:20px;display:none">
+    <div id="dash-scratchpad-widget" class="card dash-widget-card w-full" data-widget-key="scratchpad" draggable="true" style="display:none">
       <div class="section-header" style="margin-bottom:10px">
         <div><div style="font-size:13px;font-weight:700;color:#f0f4ff">Scratchpad</div><div style="font-size:11px;color:#4a5e7a">Quick notes</div></div>
         <span id="scratchpad-saved" style="font-size:11px;color:#4a5e7a;opacity:0;transition:opacity 0.4s">Saved</span>
       </div>
       <textarea id="scratchpad-textarea" placeholder="Jot anything here — auto-saves as you type…" style="width:100%;min-height:140px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;color:#f0f4ff;font-size:13px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;box-sizing:border-box" oninput="saveScratchpad(this.value)"></textarea>
     </div>
+    </div><!-- /dash-widget-grid -->
   </div>
 
   <!-- ═══ CALENDAR + EVENTS (combined, no tabs) ═══ -->
@@ -2963,9 +3038,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- Calendar day quick-add popup -->
   <div id="cal-day-popup">
     <div class="cdp-date" id="cdp-date-label"></div>
-    <button onclick="calDayAddEvent()"><span>📅</span> Add Event</button>
-    <button onclick="calDayAddTask()"><span>✅</span> Add Task</button>
-    <button onclick="calDayView()" style="border-top:1px solid rgba(255,255,255,0.07);margin-top:4px;padding-top:10px"><span>👁</span> View Day</button>
+    <div id="cdp-events-list"></div>
+    <div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:4px;padding-top:4px">
+      <button onclick="calDayAddEvent()"><span>📅</span> Add Event</button>
+      <button onclick="calDayAddTask()"><span>✅</span> Add Task</button>
+      <button onclick="calDayView()"><span>👁</span> View Day</button>
+    </div>
   </div>
   <div id="cdp-backdrop" style="display:none;position:fixed;inset:0;z-index:8999" onclick="closeCalDayPopup()"></div>
 
@@ -3181,8 +3259,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="map-project-list" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
   </div>
 
-  <!-- ═══ VENDORS / SUPPLIER DIRECTORY ═══ -->
-  <div class="view" id="view-vendors">
+  <!-- Vendors removed -->
+  <div class="view" id="view-vendors" style="display:none!important">
     <div class="view-header">
       <h2 class="view-title">🏪 Vendors</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -4070,21 +4148,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <select id="fieldlog-project"><option value="">— None —</option></select>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label>Crew on Site</label><input type="text" id="fieldlog-crew" placeholder="e.g. John, Maria, 2 subcontractors"></div>
-        <div class="form-group"><label>Weather</label>
-          <select id="fieldlog-weather">
-            <option value="">—</option>
-            <option value="sunny">☀️ Sunny</option>
-            <option value="cloudy">☁️ Cloudy</option>
-            <option value="rain">🌧 Rain</option>
-            <option value="hot">🌡 Hot</option>
-            <option value="cold">❄️ Cold</option>
-            <option value="wind">💨 Windy</option>
-            <option value="indoor">🏢 Indoor</option>
-          </select>
-        </div>
-      </div>
+      <div class="form-group"><label>Crew on Site</label><input type="text" id="fieldlog-crew" placeholder="e.g. John, Maria, 2 subcontractors"></div>
       <div class="form-group"><label>Work Performed *</label><textarea id="fieldlog-work" rows="4" placeholder="Describe what was completed today…"></textarea></div>
       <div class="form-group"><label>Materials Used</label><textarea id="fieldlog-materials" rows="2" placeholder="List materials consumed or installed…"></textarea></div>
       <div class="form-group"><label>Delays / Issues</label><textarea id="fieldlog-delays" rows="2" placeholder="Any delays, blockers, or issues encountered…"></textarea></div>
@@ -5470,11 +5534,32 @@ function clearForm(modalId) {
   document.querySelectorAll('#'+modalId+' .combo-input').forEach(function(el){el.value='';el.dataset.value='';});
 }
 
+function _quickNewProject(selectId) {
+  var name = prompt('New project name:');
+  if (!name || !name.trim()) return;
+  var item = { name: name.trim(), status: 'active' };
+  addItem('projects', item);
+  // Re-populate selects, then select the new one
+  setTimeout(function() {
+    populateProjectSelects();
+    var el = document.getElementById(selectId);
+    if (el) {
+      var proj = (state.projects||[]).find(function(p){ return p.name === name.trim(); });
+      if (proj) el.value = proj.id;
+    }
+  }, 100);
+}
+window._quickNewProject = _quickNewProject;
+
 function populateProjectSelects() {
-  var projOpts = '<option value="">— None —</option>' +state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('');
+  var newOpt = '<option value="__new__">+ New Project…</option>';
+  var projOpts = '<option value="">— None —</option>' + state.projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+'</option>';}).join('') + newOpt;
   ['task-project','po-project','ship-project','event-project','punchitem-project','fieldlog-project'].forEach(function(id){
     var el = document.getElementById(id);
-    if(el) el.innerHTML = projOpts;
+    if(el) {
+      el.innerHTML = projOpts;
+      el.onchange = (function(selId){ return function() { if(this.value==='__new__') { this.value=''; _quickNewProject(selId); } }; })(id);
+    }
   });
   // Populate ship-po with PO options
   var poEl = document.getElementById('ship-po');
@@ -5882,6 +5967,87 @@ function renderDashboard() {
   }
   // ─────────────────────────────────────────────────────────────────────────
 }
+
+// ── Dashboard Drag-and-Drop + Width Toggle ────────────────────────────────
+function initDashDrag() {
+  if (window.innerWidth <= 768) return;
+  var grid = document.getElementById('dash-widget-grid');
+  if (!grid) return;
+  // Add width-toggle buttons to each card header
+  grid.querySelectorAll('.dash-widget-card').forEach(function(card) {
+    var key = card.dataset.widgetKey;
+    if (!key || card.querySelector('.dash-width-toggle')) return;
+    var hdr = card.querySelector('.section-header');
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-ghost btn-sm dash-width-toggle';
+    btn.title = 'Toggle full width';
+    btn.style.cssText = 'font-size:14px;padding:2px 6px;opacity:0.5;line-height:1';
+    btn.textContent = '⬚';
+    btn.onclick = function(e){ e.stopPropagation(); toggleWidgetWidth(key); };
+    if (hdr) hdr.appendChild(btn);
+    else { btn.style.cssText += ';position:absolute;top:10px;right:10px'; card.style.position='relative'; card.appendChild(btn); }
+  });
+  var dragging = null;
+  grid.addEventListener('dragstart', function(e) {
+    dragging = e.target.closest('.dash-widget-card');
+    if (dragging) { setTimeout(function(){ dragging.style.opacity='0.4'; }, 0); }
+  });
+  grid.addEventListener('dragend', function() {
+    if (dragging) { dragging.style.opacity=''; dragging=null; }
+    grid.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(el){
+      el.classList.remove('drag-over-top','drag-over-bot');
+    });
+    saveDashWidgetLayout();
+  });
+  grid.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var target = e.target.closest('.dash-widget-card');
+    if (!target || target === dragging) return;
+    grid.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(function(el){
+      el.classList.remove('drag-over-top','drag-over-bot');
+    });
+    var rect = target.getBoundingClientRect();
+    if (e.clientY < rect.top + rect.height / 2) target.classList.add('drag-over-top');
+    else target.classList.add('drag-over-bot');
+  });
+  grid.addEventListener('drop', function(e) {
+    e.preventDefault();
+    var target = e.target.closest('.dash-widget-card');
+    if (!target || target === dragging || !dragging) return;
+    var rect = target.getBoundingClientRect();
+    if (e.clientY < rect.top + rect.height / 2) grid.insertBefore(dragging, target);
+    else grid.insertBefore(dragging, target.nextSibling);
+  });
+}
+function saveDashWidgetLayout() {
+  var grid = document.getElementById('dash-widget-grid');
+  if (!grid) return;
+  var order = Array.from(grid.querySelectorAll(':scope > .dash-widget-card')).map(function(el){
+    return { key: el.dataset.widgetKey, wide: el.classList.contains('w-full') };
+  });
+  localStorage.setItem('fop_dash_widget_order', JSON.stringify(order));
+}
+function loadDashWidgetLayout() {
+  var raw = localStorage.getItem('fop_dash_widget_order');
+  if (!raw) return;
+  var order;
+  try { order = JSON.parse(raw); } catch(e) { return; }
+  var grid = document.getElementById('dash-widget-grid');
+  if (!grid) return;
+  order.forEach(function(entry) {
+    var el = grid.querySelector('[data-widget-key="'+entry.key+'"]');
+    if (!el) return;
+    if (entry.wide) el.classList.add('w-full'); else el.classList.remove('w-full');
+    grid.appendChild(el);
+  });
+}
+function toggleWidgetWidth(key) {
+  var el = document.querySelector('[data-widget-key="'+key+'"]');
+  if (!el) return;
+  el.classList.toggle('w-full');
+  saveDashWidgetLayout();
+}
+// ─────────────────────────────────────────────────────────────────────────
 
 function renderDashboardCharts() {
   var el = document.getElementById('dash-charts');
@@ -7094,7 +7260,6 @@ function renderPunchlist() {
   if (!content) return;
   var projF = document.getElementById('punch-project-filter') ? document.getElementById('punch-project-filter').value : '';
   var statF = document.getElementById('punch-status-filter') ? document.getElementById('punch-status-filter').value : '';
-  // Populate project filter
   var pf = document.getElementById('punch-project-filter');
   if (pf && pf.options.length <= 1) {
     state.projects.forEach(function(p){ var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; pf.appendChild(o); });
@@ -7103,36 +7268,71 @@ function renderPunchlist() {
   if (projF) data = data.filter(function(i){ return i.project === projF; });
   if (statF) data = data.filter(function(i){ return i.status === statF; });
   if (!data.length) { content.innerHTML = buildEmptyState('📋','rgba(16,185,129,0.1)','No punch items','Add items to track field punch list work.','+ Add Item','openAddModal()'); return; }
-  // Group by status
   var groups = { open:[], 'in-progress':[], resolved:[] };
   data.forEach(function(i){ (groups[i.status]||groups['open']).push(i); });
   var priorityColors = { high:'#ef4444', medium:'#f59e0b', low:'#4a5e7a' };
+  var statusDot = { open:'#4a5e7a', 'in-progress':'#f59e0b', resolved:'#10b981' };
   var html = '';
   [['open','Open'],['in-progress','In Progress'],['resolved','Resolved']].forEach(function(grp) {
     var items = groups[grp[0]]; if (!items.length) return;
-    html += '<div class="punch-section-hdr"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(grp[0]==='resolved'?'#10b981':grp[0]==='in-progress'?'#f59e0b':'#4a5e7a')+'"></span>'+grp[1]+' <span style="color:#4a5e7a;font-weight:400">('+items.length+')</span></div>';
+    html += '<div class="t3-section"><div class="t3-section-label"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+statusDot[grp[0]]+';margin-right:6px;vertical-align:middle"></span>'+grp[1]+' <span style="opacity:0.5;font-weight:400">&middot; '+items.length+'</span></div><div class="t3-list">';
     items.forEach(function(item) {
       var pn = projectName(item.project);
       var pc = priorityColors[item.priority||'low'];
-      html += '<div class="punch-item" onclick="editPunchItem(\''+item.id+'\')">'
-        + '<div class="punch-check '+(item.status||'open')+'" onclick="event.stopPropagation();togglePunchStatus(\''+item.id+'\')">'+(item.status==='resolved'?'✓':item.status==='in-progress'?'…':'')+'</div>'
-        + '<div class="punch-item-content">'
-        + '<div class="punch-item-desc'+(item.status==='resolved'?' resolved':'')+'">'+escH(item.desc||'')+'</div>'
-        + '<div class="punch-item-meta">'
-        + '<span class="punch-priority-dot" style="background:'+pc+'"></span>'
-        + (pn ? '<span class="proj-chip">'+escH(pn)+'</span>' : '')
+      var checkIcon = item.status==='resolved' ? '✓' : item.status==='in-progress' ? '…' : '';
+      var checkCls = 'punch-check ' + (item.status||'open');
+      html += '<div class="t3-row" onclick="togglePunchExpand(this,\''+item.id+'\')">'
+        + '<div class="'+checkCls+'" onclick="event.stopPropagation();togglePunchStatus(\''+item.id+'\')">'+checkIcon+'</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div class="t3-title'+(item.status==='resolved'?' resolved':'')+'" style="'+(item.status==='resolved'?'text-decoration:line-through;opacity:0.5':'')+'">'+escH(item.desc||'')+'</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:3px;align-items:center">'
+        + '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+pc+'"></span>'
+        + (pn ? '<span class="proj-chip" style="font-size:10px">'+escH(pn)+'</span>' : '')
         + (item.location ? '<span style="font-size:11px;color:#4a5e7a">📍 '+escH(item.location)+'</span>' : '')
         + (item.assigned ? '<span style="font-size:11px;color:#4a5e7a">👤 '+escH(item.assigned)+'</span>' : '')
-        + '</div>'
-        + (item.notes ? '<div style="font-size:12px;color:#4a5e7a;margin-top:4px">'+escH(item.notes)+'</div>' : '')
-        + '</div></div>';
+        + '</div></div>'
+        + '<svg class="t3-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+        + '</div>';
     });
+    html += '</div></div>';
   });
   content.innerHTML = html;
   var b = document.getElementById('badge-punchlists');
   var openCount = groups['open'].length + groups['in-progress'].length;
   if (b) { b.textContent = openCount; b.style.display = openCount ? '' : 'none'; }
 }
+
+function togglePunchExpand(rowEl, id) {
+  var next = rowEl.nextElementSibling;
+  if (next && next.classList.contains('t3-expand-row')) {
+    next.remove(); rowEl.classList.remove('t3-row-expanded'); return;
+  }
+  document.querySelectorAll('.t3-expand-row').forEach(function(r){ if(r.previousElementSibling) r.previousElementSibling.classList.remove('t3-row-expanded'); r.remove(); });
+  var item = (state.punchlists||[]).find(function(x){ return x.id===id; });
+  if (!item) return;
+  rowEl.classList.add('t3-row-expanded');
+  var pn = projectName(item.project);
+  var pc = {high:'#ef4444',medium:'#f59e0b',low:'#4a5e7a'}[item.priority||'low'];
+  function field(lbl,val){ if(!val) return ''; return '<div class="de-field"><div class="de-field-lbl">'+escH(lbl)+'</div><div class="de-field-val">'+val+'</div></div>'; }
+  var html = '<div class="de-section"><div class="de-grid">'
+    + field('Project', pn ? '<span class="proj-chip">'+escH(pn)+'</span>' : null)
+    + field('Location', item.location ? escH(item.location) : null)
+    + field('Assigned To', item.assigned ? escH(item.assigned) : null)
+    + field('Priority', '<span style="color:'+pc+';font-weight:700">'+(item.priority||'low').charAt(0).toUpperCase()+(item.priority||'low').slice(1)+'</span>')
+    + field('Status', item.status||'open')
+    + '</div></div>';
+  if (item.notes) html += '<div class="de-section"><div class="de-section-hdr">Notes</div><div class="de-notes">'+escH(item.notes)+'</div></div>';
+  html += '<div class="de-actions">'
+    + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();togglePunchStatus(\''+id+'\')">Cycle Status</button>'
+    + '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();editPunchItem(\''+id+'\')">✏ Edit</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();softDelete(\'punchlists\',\''+id+'\',\'Punch item\');document.querySelectorAll(\'.t3-expand-row\').forEach(function(r){if(r.previousElementSibling)r.previousElementSibling.classList.remove(\'t3-row-expanded\');r.remove()});renderPunchlist()">Delete</button>'
+    + '</div>';
+  var expandRow = document.createElement('div');
+  expandRow.className = 't3-expand-row';
+  expandRow.innerHTML = html;
+  rowEl.parentNode.insertBefore(expandRow, rowEl.nextSibling);
+}
+window.togglePunchExpand = togglePunchExpand;
 function togglePunchStatus(id) {
   var item = (state.punchlists||[]).find(function(x){ return x.id===id; });
   if (!item) return;
@@ -7231,7 +7431,6 @@ function saveFieldLog() {
   var item = {
     date: date, project: document.getElementById('fieldlog-project').value,
     crew: document.getElementById('fieldlog-crew').value.trim(),
-    weather: document.getElementById('fieldlog-weather').value,
     work: work,
     materials: document.getElementById('fieldlog-materials').value.trim(),
     delays: document.getElementById('fieldlog-delays').value.trim(),
@@ -7250,7 +7449,6 @@ function editFieldLog(id) {
   document.getElementById('fieldlog-date').value = entry.date||'';
   document.getElementById('fieldlog-project').value = entry.project||'';
   document.getElementById('fieldlog-crew').value = entry.crew||'';
-  document.getElementById('fieldlog-weather').value = entry.weather||'';
   document.getElementById('fieldlog-work').value = entry.work||'';
   document.getElementById('fieldlog-materials').value = entry.materials||'';
   document.getElementById('fieldlog-delays').value = entry.delays||'';
@@ -9200,7 +9398,6 @@ function renderAll() {
   if (cv === 'shipping') renderShipping(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.shipping = true; }
   if (cv === 'troubleshoot') renderTroubleshoot(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.troubleshoot = true; }
   if (cv === 'calendar') renderCalendar();
-  if (cv === 'vendors') renderVendors();
   if (cv === 'punchlist') renderPunchlist();
   if (cv === 'fieldlog') renderFieldLog();
   if (cv === 'mapview') renderMapView();
@@ -9346,6 +9543,8 @@ window.addEventListener('load', function(){
   initDragHandles();
   renderWidgetToggles();
   applyWidgetVisibility();
+  loadDashWidgetLayout();
+  initDashDrag();
 
   // Handle PWA shortcut URL params (?view=X or ?add=X)
   (function() {
@@ -11249,17 +11448,45 @@ function calDayClick(dateStr, e) {
   var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   if (label) label.textContent = dayNames[d.getDay()] + ', ' + monNames[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-  // Position near click point
+  // Populate events list for this day
+  var evListEl = document.getElementById('cdp-events-list');
+  if (evListEl) {
+    var byDate = _calItemsByDate();
+    var dayEvs = byDate[dateStr] || [];
+    if (dayEvs.length) {
+      var icons = { task:'✅', ship:'🚚', po:'📦', event:'📅' };
+      evListEl.innerHTML = '<div style="max-height:200px;overflow-y:auto;margin-bottom:4px">'
+        + dayEvs.map(function(ev) {
+            return '<div onclick="closeCalDayPopup();calEventClick(\''+ev.type+'\',\''+ev.id+'\')" '
+              + 'style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;transition:background 0.12s;margin-bottom:2px" '
+              + 'onmouseover="this.style.background=\'rgba(79,142,247,0.1)\'" onmouseout="this.style.background=\'\'">'
+              + '<span style="width:18px;text-align:center">'+(icons[ev.type]||'📅')+'</span>'
+              + '<span style="font-size:13px;color:#f0f4ff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(ev.title)+'</span>'
+              + '<span style="width:8px;height:8px;border-radius:50%;background:'+ev.color+';flex-shrink:0"></span>'
+              + '</div>';
+          }).join('')
+        + '</div>';
+    } else {
+      evListEl.innerHTML = '<div style="font-size:12px;color:#4a5e7a;padding:6px 10px">Nothing scheduled</div>';
+    }
+  }
+  // Position near click point (desktop) or show as bottom sheet (mobile)
   popup.style.display = 'block';
   if (backdrop) backdrop.style.display = 'block';
-  var x = e ? e.clientX : window.innerWidth/2;
-  var y = e ? e.clientY : window.innerHeight/2;
-  var pw = popup.offsetWidth || 190;
-  var ph = popup.offsetHeight || 148;
-  var left = Math.min(x + 8, window.innerWidth - pw - 12);
-  var top  = Math.min(y + 8, window.innerHeight - ph - 12);
-  popup.style.left = Math.max(8, left) + 'px';
-  popup.style.top  = Math.max(8, top)  + 'px';
+  if (window.innerWidth > 768) {
+    var x = e ? e.clientX : window.innerWidth/2;
+    var y = e ? e.clientY : window.innerHeight/2;
+    var pw = popup.offsetWidth || 220;
+    var ph = popup.offsetHeight || 200;
+    var left = Math.min(x + 8, window.innerWidth - pw - 12);
+    var top  = Math.min(y + 8, window.innerHeight - ph - 12);
+    popup.style.left = Math.max(8, left) + 'px';
+    popup.style.top  = Math.max(8, top)  + 'px';
+  } else {
+    // Mobile: CSS handles positioning as bottom sheet
+    popup.style.left = '';
+    popup.style.top = '';
+  }
 }
 function closeCalDayPopup() {
   var popup = document.getElementById('cal-day-popup');
