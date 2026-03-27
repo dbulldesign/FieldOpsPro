@@ -223,7 +223,7 @@ background: #080d1a !important;
 }
 @keyframes viewFadeSlide {
   from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* CARDS */
@@ -451,6 +451,33 @@ width: 22px; height: 22px; display: flex; align-items: center;
 justify-content: center; font-size: 11px; font-weight: 700;
 flex-shrink: 0; margin-top: 1px;
 }
+/* ── Step block display (rendered view) ── */
+.sblk-note { color: #94a3b8; font-style: italic; font-size: 13px; padding: 2px 0 6px 4px; }
+.sblk-tip { display:flex; gap:8px; align-items:flex-start; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:8px 12px; margin-bottom:8px; font-size:13px; color:#6ee7b7; }
+.sblk-warning { display:flex; gap:8px; align-items:flex-start; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:8px 12px; margin-bottom:8px; font-size:13px; color:#fcd34d; }
+.sblk-divider { border:none; border-top:1px dashed rgba(255,255,255,0.12); margin:10px 0; }
+/* ── Step block editor ── */
+.sbe-row { display:flex; align-items:center; gap:8px; padding:5px 10px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.sbe-row:last-of-type { border-bottom:none; }
+.sbe-badge { flex-shrink:0; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; background:rgba(79,142,247,0.12); color:#7ab3fa; border:1px solid rgba(79,142,247,0.25); }
+.sbe-icon { flex-shrink:0; width:22px; text-align:center; font-size:14px; }
+.sbe-inp { flex:1; background:none; border:none; outline:none; color:#e0eaff; font-size:13px; font-family:inherit; padding:2px 0; min-width:0; }
+.sbe-inp::placeholder { color:#3a4a6a; }
+.sbe-inp.sbe-note { color:#94a3b8; font-style:italic; }
+.sbe-inp.sbe-tip { color:#6ee7b7; }
+.sbe-inp.sbe-warning { color:#fcd34d; }
+.sbe-divider-line { flex:1; border-top:1px dashed rgba(255,255,255,0.15); margin:0 4px; }
+.sbe-del { background:none; border:none; color:#3a4a6a; cursor:pointer; font-size:16px; line-height:1; padding:0 2px; flex-shrink:0; transition:color .15s; }
+.sbe-del:hover { color:#ef4444; }
+.sbe-add-row { display:flex; gap:6px; padding:8px 10px; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; }
+.sbe-add-btn { background:none; border:1px dashed rgba(255,255,255,0.12); border-radius:7px; color:#4a5e7a; font-size:11px; font-weight:600; padding:3px 10px; cursor:pointer; transition:all .15s; }
+.sbe-add-btn:hover { border-color:rgba(79,142,247,0.4); color:#4f8ef7; background:rgba(79,142,247,0.06); }
+/* ── Slash palette ── */
+.slash-cmd { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; cursor:pointer; transition:background .1s; }
+.slash-cmd:hover, .slash-cmd.slash-sel { background:rgba(79,142,247,0.14); }
+.slash-cmd-icon { font-size:15px; width:22px; text-align:center; flex-shrink:0; }
+.slash-cmd-label { font-size:13px; font-weight:600; color:#f0f4ff; }
+.slash-cmd-desc { font-size:11px; color:#4a5e7a; }
 
 /* SHIPPING */
 .tracking-timeline { position: relative; padding-left: 24px; }
@@ -925,7 +952,7 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 
 /* QUICK-ADD FAB */
 #quickAddFab {
-position: fixed; bottom: 28px; right: 24px; z-index: 500;
+position: fixed; bottom: 28px; right: 24px; z-index: 8001;
 width: 56px; height: 56px; border-radius: 50%;
 background: #2563ff; color: #fff; border: none;
 font-size: 26px; cursor: pointer; display: none;
@@ -935,7 +962,7 @@ transition: transform 0.2s, box-shadow 0.2s;
 }
 #quickAddFab:hover { transform: scale(1.1); box-shadow: 0 12px 40px rgba(37,99,255,0.6); }
 #quickAddPanel {
-position: fixed; bottom: 96px; right: 24px; z-index: 500;
+position: fixed; bottom: 96px; right: 24px; z-index: 8000;
 background: #0e1525; border: 1px solid rgba(255,255,255,0.12);
 border-radius: 18px; padding: 20px; width: 300px;
 box-shadow: 0 24px 60px rgba(0,0,0,0.6);
@@ -1845,7 +1872,7 @@ body.light-mode #mob-tab-bar::after { background: rgba(248,250,252,0.99); }
   position: fixed;
   bottom: calc(80px + env(safe-area-inset-bottom,0px));
   right: 16px;
-  z-index: 501;
+  z-index: 8000;
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
@@ -1878,7 +1905,7 @@ body.light-mode #mob-tab-bar::after { background: rgba(248,250,252,0.99); }
   box-shadow: 0 3px 12px rgba(0,0,0,0.4);
 }
 #fab-overlay {
-  display: none; position: fixed; inset: 0; z-index: 499;
+  display: none; position: fixed; inset: 0; z-index: 7999;
   background: rgba(0,0,0,0.3);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
@@ -2393,7 +2420,7 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 /* ── IMPROVED ANIMATIONS & iOS POLISH ───────────────────────── */
 @keyframes slideUpFade {
   from { opacity:0; transform:translateY(12px); }
-  to   { opacity:1; transform:translateY(0); }
+  to   { opacity:1; transform:none; }
 }
 @keyframes fadeIn {
   from { opacity:0; }
@@ -3460,6 +3487,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div>
 
+    <!-- Troubleshoot Tags Card -->
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">🏷 Troubleshoot Tags</div>
+      <div style="font-size:13px;color:#4a5e7a;margin-bottom:14px">Add, rename, or delete tags used in troubleshooting entries.</div>
+      <div id="issue-tags-settings-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="new-issue-tag-input" placeholder="New tag…" style="flex:1" onkeydown="if(event.key==='Enter')addIssueTagSettings()">
+        <button class="btn btn-primary btn-sm" onclick="addIssueTagSettings()">Add</button>
+      </div>
+    </div>
+
     </div><!-- /settings max-width -->
   </div>
 
@@ -3936,8 +3974,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
 
       <div class="form-group"><label>Summary / Cause</label><textarea id="issue-a" placeholder="Brief description of the cause or context..."></textarea></div>
-      <div class="form-group"><label>Troubleshooting Steps (one per line)</label>
-        <textarea id="issue-steps" style="min-height:150px" placeholder="Check the neutral wire connection.&#10;Verify load wattage is within dimmer rating.&#10;Try a compatible LED driver."></textarea>
+      <div class="form-group">
+        <label>Troubleshooting Steps</label>
+        <div id="steps-editor" style="border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.04);overflow:visible;min-height:80px"></div>
+        <div style="margin-top:5px;font-size:11px;color:#4a5e7a">↵ new step &nbsp;·&nbsp; type <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:1px 5px;font-size:10px;color:#c8d6f0">/</kbd> for smart blocks (note, tip, warning, divider)</div>
+      </div>
+      <div class="form-group">
+        <label>Reference Links <span style="font-weight:400;color:#4a5e7a;font-size:11px">(PDFs, manuals, docs)</span></label>
+        <div id="issue-links-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="issue-link-label" placeholder="Label (e.g. Install Guide)" style="flex:1;min-width:0;box-sizing:border-box">
+          <input type="url" id="issue-link-url" placeholder="https://…" style="flex:2;min-width:0;box-sizing:border-box" onkeydown="if(event.key==='Enter'){event.preventDefault();addIssueLink();}">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addIssueLink()" style="flex-shrink:0">+ Add</button>
+        </div>
       </div>
     </div>
     
@@ -4302,6 +4351,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="fab-option-icon" style="background:rgba(16,185,129,0.2);color:#34d399">✓</div>
   </div>
 </div>
+
+<!-- ── STEPS BLOCK EDITOR — slash palette ── -->
+<div id="slash-palette" style="display:none;position:fixed;background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:13px;padding:6px;min-width:220px;z-index:9500;box-shadow:0 20px 60px rgba(0,0,0,0.65)"></div>
 
 <!-- ── DESKTOP + NEW MENU (at body level to escape topbar stacking context) ── -->
 <div id="desk-add-menu" style="display:none">
@@ -4702,6 +4754,7 @@ window.setTaskView = setTaskView;
 window.archiveTask = archiveTask;
 window.archiveProject = archiveProject;
 window.unarchiveProject = unarchiveProject;
+window.permanentlyDeleteProject = permanentlyDeleteProject;
 window.archivePO = archivePO;
 window.unarchivePO = unarchivePO;
 window.archiveShipment = archiveShipment;
@@ -5514,7 +5567,7 @@ function openAddModal() {
   if(m === 'modal-project') populateCustomFields([]);
   if(m === 'modal-task') populateTaskCustomFields([]);
   if(m !== 'modal-issue') populateProjectSelects();
-  if(m === 'modal-issue') { openTagsForEdit(''); var ci=document.getElementById('issue-cat'); if(ci) ci.value=''; }
+  if(m === 'modal-issue') { openTagsForEdit(''); var ci=document.getElementById('issue-cat'); if(ci) ci.value=''; _issueLinks=[]; renderIssueLinksList(); loadStepsEditor([]); }
   if(m === 'modal-event') populateEventContactList();
   // Hide notes section for new tasks
   var ns = document.getElementById('task-notes-section');
@@ -6666,6 +6719,7 @@ function toggleProjExpand(rowEl, id) {
     + '<button class="btn btn-primary btn-sm" onclick="editProject(\''+p.id+'\')">✏ Edit</button>'
     + (p.archived
        ? '<button class="btn btn-ghost btn-sm" style="color:#10b981;border-color:rgba(16,185,129,0.4)" onclick="unarchiveProject(\''+p.id+'\');document.querySelectorAll(\'.proj-expand-row\').forEach(function(r){r.remove();})">Restore</button>'
+         + '<button class="btn btn-danger btn-sm" onclick="permanentlyDeleteProject(\''+p.id+'\')" title="Delete forever (including all tasks)">🗑 Delete Forever</button>'
        : '<button class="btn btn-ghost btn-sm" style="color:#f59e0b;border-color:rgba(245,158,11,0.4)" onclick="archiveProject(\''+p.id+'\');document.querySelectorAll(\'.proj-expand-row\').forEach(function(r){r.remove();})">Archive</button>')
     + '<button class="btn btn-ghost btn-sm" onclick="switchView(\'tasks\');setTimeout(function(){taskProjectFilter=\''+p.id+'\';renderTasks();},100)">View Tasks →</button>'
     + '</div>';
@@ -8995,10 +9049,27 @@ function renderTroubleshoot() {
       '<div class="trouble-answer">' +
         '<p style="margin-bottom:12px;color:#94a3b8">' + escHtml(t.a||'') + '</p>' +
         '<div class="trouble-steps">' +
-          steps.map(function(s, n) {
-            return '<div class="trouble-step"><div class="step-num">' + (n+1) + '</div><div>' + escHtml(s) + '</div></div>';
-          }).join('') +
+          (function(){
+            var stepN = 0;
+            return steps.map(function(b) {
+              var s = typeof b === 'string' ? {type:'step', text:b} : b;
+              if (s.type === 'divider') return '<hr class="sblk-divider">';
+              if (s.type === 'note')    return '<div class="sblk-note">' + escHtml(s.text) + '</div>';
+              if (s.type === 'tip')     return '<div class="sblk-tip"><span>💡</span><span>' + escHtml(s.text) + '</span></div>';
+              if (s.type === 'warning') return '<div class="sblk-warning"><span>⚠️</span><span>' + escHtml(s.text) + '</span></div>';
+              stepN++;
+              return '<div class="trouble-step"><div class="step-num">' + stepN + '</div><div>' + escHtml(s.text||s) + '</div></div>';
+            }).join('');
+          })() +
         '</div>' +
+        (Array.isArray(t.links) && t.links.length ? '<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07)">' +
+          '<div style="font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Reference Links</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+            t.links.map(function(lnk) {
+              return '<a href="'+escHtml(lnk.url)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:500;color:#4f8ef7;text-decoration:none">📄 '+escHtml(lnk.label||lnk.url)+'</a>';
+            }).join('') +
+          '</div>' +
+        '</div>' : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -9025,15 +9096,16 @@ function editIssue(id) {
   var sysInp = document.getElementById('issue-system'); if(sysInp) sysInp.value = t.system||'';
   openTagsForEdit(t.tags || '');
   document.getElementById('issue-a').value = t.a || '';
-  document.getElementById('issue-steps').value = Array.isArray(t.steps) ? t.steps.join('\n') : (t.steps||'');
+  loadStepsEditor(Array.isArray(t.steps) ? t.steps : []);
+  _issueLinks = Array.isArray(t.links) ? t.links.map(function(l){ return {label:l.label||'',url:l.url||''}; }) : [];
+  renderIssueLinksList();
   openModal('modal-issue');
 }
 
 function saveIssue() {
   var q = document.getElementById('issue-q').value.trim();
   if (!q) { toast('Enter the issue/question'); return; }
-  var stepsRaw = document.getElementById('issue-steps').value.trim();
-  var steps = stepsRaw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  var steps = getStepsEditorValue();
   var sysVal = (document.getElementById('issue-system')||{}).value||'';
   if (sysVal && _savedSystems.indexOf(sysVal)<0 && _builtinSystems.indexOf(sysVal)<0) {
     _savedSystems.push(sysVal); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems));
@@ -9050,6 +9122,7 @@ function saveIssue() {
     tags: document.getElementById('issue-tags').value.trim(),
     a: document.getElementById('issue-a').value.trim(),
     steps: steps,
+    links: _issueLinks.slice(),
     builtin: false
   };
   if (editingId) { updateItem('issues', editingId, item); toast('Issue updated'); }
@@ -9061,6 +9134,216 @@ function saveIssue() {
 function deleteIssue(id) {
   undoDelete('issues', id, function(){ renderTroubleshoot(); });
 }
+
+// ── Issue reference links ─────────────────────────────────────────────────────
+var _issueLinks = [];
+function renderIssueLinksList() {
+  var el = document.getElementById('issue-links-list');
+  if (!el) return;
+  if (!_issueLinks.length) { el.innerHTML = ''; return; }
+  el.innerHTML = _issueLinks.map(function(lnk, i) {
+    return '<div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px">' +
+      '<span style="font-size:13px">📄</span>' +
+      '<a href="'+escH(lnk.url)+'" target="_blank" rel="noopener" style="flex:1;font-size:13px;color:#4f8ef7;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(lnk.url)+'">'+escH(lnk.label||lnk.url)+'</a>' +
+      '<button type="button" onclick="_issueLinks.splice('+i+',1);renderIssueLinksList()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:16px;line-height:1;padding:0 2px" title="Remove">×</button>' +
+    '</div>';
+  }).join('');
+}
+function addIssueLink() {
+  var url = (document.getElementById('issue-link-url').value||'').trim();
+  var label = (document.getElementById('issue-link-label').value||'').trim();
+  if (!url) { toast('Enter a URL'); return; }
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  _issueLinks.push({ label: label, url: url });
+  renderIssueLinksList();
+  document.getElementById('issue-link-url').value = '';
+  document.getElementById('issue-link-label').value = '';
+}
+window.addIssueLink = addIssueLink;
+
+// ── STEP BLOCK EDITOR ────────────────────────────────────────────────────────
+var _stepsBlocks = [];
+var _slashIdx = -1;
+var _slashSelIdx = 0;
+
+var _slashCmds = [
+  { type:'step',    icon:'#',  label:'Step',    desc:'Numbered step' },
+  { type:'note',    icon:'📝', label:'Note',    desc:'Plain text, no number' },
+  { type:'tip',     icon:'💡', label:'Tip',     desc:'Helpful tip callout' },
+  { type:'warning', icon:'⚠️', label:'Warning', desc:'Important warning' },
+  { type:'divider', icon:'—',  label:'Divider', desc:'Horizontal separator' },
+];
+
+function _normaliseSteps(raw) {
+  if (!Array.isArray(raw) || !raw.length) return [];
+  return raw.map(function(s) {
+    return (typeof s === 'string') ? { type:'step', text:s } : { type:s.type||'step', text:s.text||'' };
+  });
+}
+
+function loadStepsEditor(rawSteps) {
+  _stepsBlocks = _normaliseSteps(rawSteps);
+  if (!_stepsBlocks.length) _stepsBlocks = [{ type:'step', text:'' }];
+  renderStepsEditor(-1);
+}
+
+function renderStepsEditor(focusIdx) {
+  var el = document.getElementById('steps-editor');
+  if (!el) return;
+  // Save cursor state before wiping DOM
+  var activeEl = document.activeElement;
+  var savedIdx = focusIdx !== undefined ? focusIdx : -1;
+  var savedPos = 0;
+  if (savedIdx < 0 && activeEl && activeEl.classList.contains('sbe-inp')) {
+    savedIdx = parseInt(activeEl.dataset.idx);
+    savedPos = activeEl.selectionStart || 0;
+  }
+  var stepN = 0;
+  var html = _stepsBlocks.map(function(b, i) {
+    if (b.type === 'divider') {
+      return '<div class="sbe-row" data-idx="'+i+'">' +
+        '<span class="sbe-icon">—</span>' +
+        '<div class="sbe-divider-line"></div>' +
+        '<span style="font-size:11px;color:#3a4a6a;white-space:nowrap">divider</span>' +
+        '<button class="sbe-del" onclick="sbeDelete('+i+')" tabindex="-1">×</button>' +
+      '</div>';
+    }
+    if (b.type === 'step') stepN++;
+    var badge = b.type === 'step'
+      ? '<span class="sbe-badge">'+stepN+'</span>'
+      : '<span class="sbe-icon">'+(b.type==='tip'?'💡':b.type==='warning'?'⚠️':'📝')+'</span>';
+    var inpClass = 'sbe-inp' + (b.type!=='step' ? ' sbe-'+b.type : '');
+    return '<div class="sbe-row" data-idx="'+i+'">' +
+      badge +
+      '<input class="'+inpClass+'" data-idx="'+i+'" value="'+escH(b.text)+'" placeholder="'+(b.type==='step'?'Step…':b.type==='tip'?'Tip…':b.type==='warning'?'Warning…':'Note…')+'" '+
+        'oninput="sbeInput(this)" onkeydown="sbeKeydown(event,this)">' +
+      '<button class="sbe-del" onclick="sbeDelete('+i+')" tabindex="-1">×</button>' +
+    '</div>';
+  }).join('');
+  html += '<div class="sbe-add-row">' +
+    '<button type="button" class="sbe-add-btn" onclick="sbeAppend(\'step\')">+ Step</button>' +
+    '<button type="button" class="sbe-add-btn" onclick="sbeAppend(\'note\')">📝 Note</button>' +
+    '<button type="button" class="sbe-add-btn" onclick="sbeAppend(\'tip\')">💡 Tip</button>' +
+    '<button type="button" class="sbe-add-btn" onclick="sbeAppend(\'warning\')">⚠️ Warning</button>' +
+    '<button type="button" class="sbe-add-btn" onclick="sbeAppend(\'divider\')">— Divider</button>' +
+  '</div>';
+  el.innerHTML = html;
+  // Restore focus
+  if (savedIdx >= 0 && savedIdx < _stepsBlocks.length) {
+    var inp = el.querySelector('[data-idx="'+savedIdx+'"].sbe-inp');
+    if (inp) { inp.focus(); try { inp.setSelectionRange(savedPos, savedPos); } catch(e){} }
+  }
+}
+
+function sbeInput(inp) {
+  var i = parseInt(inp.dataset.idx);
+  _stepsBlocks[i].text = inp.value;
+  // Slash trigger: only when val starts with '/'
+  if (inp.value === '/') {
+    _slashIdx = i; _slashSelIdx = 0;
+    showSlashPalette(inp, '');
+  } else if (inp.value.startsWith('/') && _slashIdx === i) {
+    showSlashPalette(inp, inp.value.slice(1).toLowerCase());
+  } else {
+    hideSlashPalette();
+  }
+}
+
+function sbeKeydown(e, inp) {
+  var i = parseInt(inp.dataset.idx);
+  var pal = document.getElementById('slash-palette');
+  var palOpen = pal && pal.style.display !== 'none';
+  if (palOpen) {
+    var visible = _slashCmds.filter(function(c){ return _slashFilter(inp.value.slice(1), c); });
+    if (e.key === 'ArrowDown') { e.preventDefault(); _slashSelIdx = Math.min(_slashSelIdx+1, visible.length-1); _highlightSlash(visible); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); _slashSelIdx = Math.max(_slashSelIdx-1, 0); _highlightSlash(visible); return; }
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); if (visible[_slashSelIdx]) applySlashCmd(visible[_slashSelIdx].type); return; }
+    if (e.key === 'Escape') { hideSlashPalette(); return; }
+  }
+  if (e.key === 'Enter' && !palOpen) {
+    e.preventDefault();
+    // Insert new step block after current
+    _stepsBlocks.splice(i+1, 0, { type:'step', text:'' });
+    renderStepsEditor(i+1);
+  }
+  if (e.key === 'Backspace' && inp.value === '' && _stepsBlocks.length > 1) {
+    e.preventDefault();
+    _stepsBlocks.splice(i, 1);
+    renderStepsEditor(Math.max(0, i-1));
+  }
+}
+
+function sbeDelete(i) {
+  if (_stepsBlocks.length <= 1) { _stepsBlocks[0] = {type:'step',text:''}; renderStepsEditor(0); return; }
+  _stepsBlocks.splice(i, 1);
+  renderStepsEditor(Math.max(0, i-1));
+}
+
+function sbeAppend(type) {
+  _stepsBlocks.push({ type:type, text:'' });
+  renderStepsEditor(_stepsBlocks.length - (type==='divider'?2:1));
+}
+
+function _slashFilter(q, cmd) {
+  if (!q) return true;
+  return cmd.label.toLowerCase().startsWith(q) || cmd.type.startsWith(q);
+}
+
+function showSlashPalette(inp, q) {
+  var pal = document.getElementById('slash-palette');
+  if (!pal) return;
+  _slashSelIdx = 0;
+  var visible = _slashCmds.filter(function(c){ return _slashFilter(q, c); });
+  if (!visible.length) { hideSlashPalette(); return; }
+  pal.innerHTML = visible.map(function(c, i) {
+    return '<div class="slash-cmd'+(i===0?' slash-sel':'')+'" data-type="'+c.type+'" onmousedown="applySlashCmd(\''+c.type+'\')">' +
+      '<span class="slash-cmd-icon">'+c.icon+'</span>' +
+      '<div><div class="slash-cmd-label">'+c.label+'</div><div class="slash-cmd-desc">'+c.desc+'</div></div>' +
+    '</div>';
+  }).join('');
+  var rect = inp.getBoundingClientRect();
+  var top = rect.bottom + 6;
+  if (top + 220 > window.innerHeight) top = rect.top - 220;
+  pal.style.top = top + 'px';
+  pal.style.left = rect.left + 'px';
+  pal.style.display = 'block';
+}
+
+function _highlightSlash(visible) {
+  var pal = document.getElementById('slash-palette');
+  if (!pal) return;
+  pal.querySelectorAll('.slash-cmd').forEach(function(el, i) {
+    el.classList.toggle('slash-sel', i === _slashSelIdx);
+  });
+}
+
+function hideSlashPalette() {
+  var pal = document.getElementById('slash-palette');
+  if (pal) pal.style.display = 'none';
+  _slashIdx = -1;
+}
+
+function applySlashCmd(type) {
+  hideSlashPalette();
+  if (_slashIdx < 0 || _slashIdx >= _stepsBlocks.length) return;
+  _stepsBlocks[_slashIdx].type = type;
+  _stepsBlocks[_slashIdx].text = type === 'divider' ? '' : '';
+  renderStepsEditor(type === 'divider' ? _slashIdx : _slashIdx);
+}
+
+function getStepsEditorValue() {
+  return _stepsBlocks.filter(function(b){ return b.type === 'divider' || b.text.trim(); });
+}
+
+document.addEventListener('click', function(e) {
+  var pal = document.getElementById('slash-palette');
+  if (pal && pal.style.display !== 'none' && !pal.contains(e.target) && !(e.target.classList && e.target.classList.contains('sbe-inp'))) {
+    hideSlashPalette();
+  }
+});
+
+window.sbeInput=sbeInput; window.sbeKeydown=sbeKeydown; window.sbeDelete=sbeDelete; window.sbeAppend=sbeAppend;
+window.applySlashCmd=applySlashCmd; window.hideSlashPalette=hideSlashPalette;
 
 // ── TAG MULTI-SELECT ─────────────────────────────────────────────
 var _savedTags = JSON.parse(localStorage.getItem('fop_saved_tags') || '[]');
@@ -10367,6 +10650,8 @@ document.addEventListener('click', function(e){
 window.openCatDropdown=openCatDropdown; window.filterCatDropdown=filterCatDropdown; window.selectIssueCat=selectIssueCat;
 window.openCatFilter=openCatFilter; window.filterCatFilter=filterCatFilter; window.selectCatFilter=selectCatFilter;
 function renderIosShortcuts() {
+  renderIssueCatSettings();
+  renderIssueTagsSettings();
   var el = document.getElementById('ios-shortcut-list');
   if (!el) return;
   var base = window.location.href.split('?')[0];
@@ -10418,6 +10703,100 @@ function removeIssueCategory(cat) {
   saveIssueCats(cats);
   refreshIssueCatSelects();
 }
+
+// ── Tag management (settings page) ───────────────────────────────────────────
+function _getAllTags() {
+  var tagSet = {};
+  (_savedTags||[]).forEach(function(t){ tagSet[t]=1; });
+  (state.issues||[]).forEach(function(i){
+    if (i.tags) i.tags.split(/[\s,]+/).filter(Boolean).forEach(function(t){ tagSet[t]=1; });
+  });
+  return Object.keys(tagSet).sort();
+}
+function renderIssueTagsSettings() {
+  var el = document.getElementById('issue-tags-settings-list');
+  if (!el) return;
+  var tags = _getAllTags();
+  if (!tags.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#4a5e7a">No tags yet — add one below or create tags when adding issues.</div>';
+    return;
+  }
+  el.innerHTML = tags.map(function(tag) {
+    var safeTag = escH(tag);
+    return '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:7px 10px" id="tag-row-'+safeTag+'">' +
+      '<span style="font-size:13px">🏷</span>' +
+      '<span id="tag-label-'+safeTag+'" style="flex:1;font-size:13px;color:#c8d6f0">'+safeTag+'</span>' +
+      '<input id="tag-edit-'+safeTag+'" style="display:none;flex:1;font-size:13px;padding:3px 8px;box-sizing:border-box" value="'+safeTag+'" onkeydown="if(event.key===\'Enter\')saveTagRename(\''+safeTag+'\');if(event.key===\'Escape\')cancelTagRename(\''+safeTag+'\')">' +
+      '<button onclick="startTagRename(\''+safeTag+'\')" id="tag-edit-btn-'+safeTag+'" style="background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);border-radius:7px;color:#4f8ef7;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer">Rename</button>' +
+      '<button onclick="saveTagRename(\''+safeTag+'\')" id="tag-save-btn-'+safeTag+'" style="display:none;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:7px;color:#34d399;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer">Save</button>' +
+      '<button onclick="deleteTag(\''+safeTag+'\')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:7px;color:#f87171;font-size:11px;font-weight:600;padding:3px 10px;cursor:pointer">Delete</button>' +
+    '</div>';
+  }).join('');
+}
+function startTagRename(tag) {
+  document.getElementById('tag-label-'+tag).style.display = 'none';
+  document.getElementById('tag-edit-btn-'+tag).style.display = 'none';
+  var inp = document.getElementById('tag-edit-'+tag);
+  inp.style.display = '';
+  document.getElementById('tag-save-btn-'+tag).style.display = '';
+  inp.focus(); inp.select();
+}
+function cancelTagRename(tag) {
+  document.getElementById('tag-label-'+tag).style.display = '';
+  document.getElementById('tag-edit-btn-'+tag).style.display = '';
+  document.getElementById('tag-edit-'+tag).style.display = 'none';
+  document.getElementById('tag-save-btn-'+tag).style.display = 'none';
+}
+function saveTagRename(oldTag) {
+  var inp = document.getElementById('tag-edit-'+oldTag);
+  if (!inp) return;
+  var newTag = inp.value.trim().toLowerCase();
+  if (!newTag || newTag === oldTag) { cancelTagRename(oldTag); return; }
+  // Rename in _savedTags
+  var idx = _savedTags.indexOf(oldTag);
+  if (idx >= 0) _savedTags[idx] = newTag; else _savedTags.push(newTag);
+  localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  // Rename in all issues
+  (state.issues||[]).forEach(function(issue) {
+    if (!issue.tags) return;
+    var tags = issue.tags.split(/[\s,]+/).filter(Boolean);
+    var i = tags.indexOf(oldTag);
+    if (i >= 0) { tags[i] = newTag; updateItem('issues', issue.id, { tags: tags.join(' ') }); }
+  });
+  renderIssueTagsSettings();
+  toast('Tag renamed to "' + newTag + '"');
+}
+function deleteTag(tag) {
+  // Remove from _savedTags
+  _savedTags = _savedTags.filter(function(t){ return t !== tag; });
+  localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  // Remove from all issues
+  (state.issues||[]).forEach(function(issue) {
+    if (!issue.tags) return;
+    var tags = issue.tags.split(/[\s,]+/).filter(Boolean).filter(function(t){ return t !== tag; });
+    if (tags.join(' ') !== issue.tags) updateItem('issues', issue.id, { tags: tags.join(' ') });
+  });
+  renderIssueTagsSettings();
+  toast('Tag "' + tag + '" deleted');
+}
+function addIssueTagSettings() {
+  var inp = document.getElementById('new-issue-tag-input');
+  if (!inp) return;
+  var val = inp.value.trim().toLowerCase();
+  if (!val) return;
+  if (_savedTags.indexOf(val) >= 0) { toast('Tag already exists'); return; }
+  _savedTags.push(val);
+  localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  inp.value = '';
+  renderIssueTagsSettings();
+  toast('Tag added');
+}
+window.startTagRename = startTagRename;
+window.cancelTagRename = cancelTagRename;
+window.saveTagRename = saveTagRename;
+window.deleteTag = deleteTag;
+window.addIssueTagSettings = addIssueTagSettings;
+window.renderIssueTagsSettings = renderIssueTagsSettings;
 
 function updateRecurPreview() {
   var recur = document.getElementById('task-recur');
@@ -11200,15 +11579,24 @@ function renderMapView() {
   if (!container) return;
   var statusF = document.getElementById('map-status-filter') ? document.getElementById('map-status-filter').value : '';
   var projs = (state.projects||[]).filter(function(p){ return !p.archived && (!statusF || p.status===statusF) && p.location; });
+  // Validate existing map instance — container may have been replaced
+  if (_leafletMap) {
+    try { if (!document.body.contains(_leafletMap.getContainer())) _leafletMap = null; }
+    catch(e) { _leafletMap = null; }
+  }
   // Init or reuse Leaflet map
   if (!_leafletMap && window.L) {
+    container.innerHTML = '';
     _leafletMap = L.map('map-container', { zoomControl: true }).setView([39.5, -98.35], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors', maxZoom: 19
     }).addTo(_leafletMap);
   }
-  // Container was hidden (display:none) until view switched — recalculate size
-  if (_leafletMap) { setTimeout(function(){ _leafletMap.invalidateSize(); }, 50); }
+  // Container transitions from display:none — force size recalculation after paint
+  if (_leafletMap) {
+    setTimeout(function(){ _leafletMap.invalidateSize(true); }, 80);
+    setTimeout(function(){ _leafletMap.invalidateSize(true); }, 300);
+  }
   if (!window.L) {
     container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#4a5e7a;font-size:14px">Map unavailable — check internet connection</div>';
     return;
@@ -11849,6 +12237,10 @@ function archiveProject(id) {
   var p = state.projects.find(function(x){return x.id===id;});
   if(!p) return;
   updateItem('projects', id, _merge({}, p, {archived: true}));
+  // Also archive all tasks belonging to this project
+  (state.tasks||[]).filter(function(t){ return t.projectId===id && !t.archived; }).forEach(function(t){
+    updateItem('tasks', t.id, _merge({}, t, {archived: true}));
+  });
   renderProjects();
   toast('Project archived');
 }
@@ -11858,6 +12250,18 @@ function unarchiveProject(id) {
   updateItem('projects', id, _merge({}, p, {archived: false}));
   renderProjects();
   toast('Project restored');
+}
+function permanentlyDeleteProject(id) {
+  confirmInline('Delete this project forever? All its tasks will also be deleted.', function() {
+    // Delete all tasks belonging to this project
+    (state.tasks||[]).filter(function(t){ return t.projectId===id; }).forEach(function(t){
+      deleteItem('tasks', t.id);
+    });
+    deleteItem('projects', id);
+    document.querySelectorAll('.proj-expand-row').forEach(function(r){r.remove();});
+    renderProjects();
+    toast('Project permanently deleted');
+  });
 }
 function archivePO(id) {
   var p = state.pos.find(function(x){return x.id===id;});
