@@ -2658,13 +2658,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* ── TIME TRACKER ─────────────────────────────── */
 @keyframes timerPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
 
-/* Timer band — full-width strip at top of view */
+/* Timer band — embedded strip at top of view */
 #timer-band {
   display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-  margin: -22px -22px 20px;
-  padding: 18px 22px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
   background: rgba(79,142,247,0.06);
-  border-bottom: 1px solid rgba(79,142,247,0.15);
+  border: 1px solid rgba(79,142,247,0.14);
+  border-radius: 16px;
 }
 #timer-display {
   font-size: 52px; font-weight: 200; letter-spacing: 3px;
@@ -2805,7 +2806,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 #timer-chip-stop:hover { color: #ef4444; }
 @media (max-width: 768px) {
   #timer-chip-label { display: none; }
-  #timer-band { margin: -14px -14px 14px; padding: 14px; }
+  #timer-band { padding: 14px; margin-bottom: 14px; }
   #timer-display { font-size: 40px; min-width: 130px; }
 }
 
