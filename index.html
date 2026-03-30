@@ -2654,6 +2654,88 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   transform: translateY(-3px) !important;
   box-shadow: 0 10px 32px rgba(79,142,247,0.18) !important;
 }
+
+/* ── TIME TRACKER ─────────────────────────────── */
+#timer-display {
+  font-size: 64px; font-weight: 200; letter-spacing: 4px;
+  color: #f0f4ff; text-align: center; font-variant-numeric: tabular-nums;
+  line-height: 1; padding: 24px 0 8px;
+}
+#timer-display.running { color: #4f8ef7; }
+#timer-running-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(79,142,247,0.15); border: 1px solid rgba(79,142,247,0.3);
+  color: #4f8ef7; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  border-radius: 99px; padding: 3px 12px;
+}
+#timer-running-pill .pulse-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #4f8ef7;
+  animation: timerPulse 1.2s ease-in-out infinite;
+}
+@keyframes timerPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+.timer-card-center { text-align: center; }
+.timer-btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+.timer-start-btn {
+  background: #4f8ef7; color: #fff; border: none; border-radius: 14px;
+  padding: 12px 32px; font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.timer-start-btn:hover { background: #3a7de0; }
+.timer-start-btn:active { transform: scale(0.96); }
+.timer-stop-btn {
+  background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 14px; padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.timer-stop-btn:hover { background: rgba(239,68,68,0.25); }
+.timer-discard-btn {
+  background: rgba(255,255,255,0.06); color: #8da0c0; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 12px 20px; font-size: 14px; cursor: pointer;
+  transition: background 0.15s;
+}
+.timer-discard-btn:hover { background: rgba(255,255,255,0.1); }
+.timer-inputs { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.timer-inputs input, .timer-inputs select {
+  flex: 1; min-width: 160px; background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+  padding: 10px 14px; color: #f0f4ff; font-size: 14px; outline: none;
+}
+.timer-inputs input::placeholder { color: #4a5e7a; }
+.timer-inputs input:focus, .timer-inputs select:focus { border-color: #4f8ef7; }
+.timer-inputs select option { background: #0e1828; }
+.timer-log-entry {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 14px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 8px;
+}
+.timer-log-entry:hover { background: rgba(255,255,255,0.06); }
+.timer-log-duration {
+  font-size: 15px; font-weight: 700; color: #4f8ef7;
+  font-variant-numeric: tabular-nums; min-width: 68px; flex-shrink: 0;
+}
+.timer-log-label { flex: 1; font-size: 13px; color: #c8d8f0; font-weight: 500; }
+.timer-log-meta { font-size: 11px; color: #4a5e7a; }
+.timer-log-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.timer-log-actions button {
+  background: none; border: 1px solid rgba(255,255,255,0.1); color: #8da0c0;
+  border-radius: 8px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-weight: 600;
+  transition: background 0.1s;
+}
+.timer-log-actions button:hover { background: rgba(255,255,255,0.08); }
+.timer-log-actions .create-task-btn { color: #4f8ef7; border-color: rgba(79,142,247,0.3); }
+.timer-log-actions .create-task-btn:hover { background: rgba(79,142,247,0.12); }
+.timer-today-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: rgba(79,142,247,0.08);
+  border: 1px solid rgba(79,142,247,0.15); border-radius: 12px; margin-bottom: 14px;
+}
+[data-theme="light"] #timer-display { color: #0f172a; }
+[data-theme="light"] #timer-display.running { color: #2563ff; }
+[data-theme="light"] .timer-inputs input,
+[data-theme="light"] .timer-inputs select { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #0f172a; }
+[data-theme="light"] .timer-log-entry { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .timer-log-label { color: #1e293b; }
   </style>
 </head>
 <body>
@@ -2708,6 +2790,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
         <div class="nav-item" onclick="switchView('mapview')">
           <span class="icon">🗺</span> Project Map
+        </div>
+        <div class="nav-item" onclick="switchView('timekeeping')" id="nav-timekeeping">
+          <span class="icon">⏱</span> Time Tracker
+          <span id="timer-nav-running" style="display:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:#4f8ef7;animation:timerPulse 1.2s ease-in-out infinite;flex-shrink:0"></span>
         </div>
       </div>
       <div class="nav-section">
@@ -3523,6 +3609,41 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 </div><!-- /content -->
 
+  <!-- ═══ TIME TRACKER ═══ -->
+  <div class="view" id="view-timekeeping">
+    <div class="card" style="max-width:560px;margin:0 auto 20px;padding:20px 24px 24px">
+      <div class="timer-card-center">
+        <div id="timer-display">00:00:00</div>
+        <div id="timer-running-pill-wrap" style="display:none;margin:6px 0 0">
+          <span id="timer-running-pill"><span class="pulse-dot"></span>RUNNING</span>
+        </div>
+      </div>
+      <div class="timer-inputs">
+        <input type="text" id="timer-label-input" placeholder="What are you working on?" maxlength="120">
+        <select id="timer-project-select">
+          <option value="">No project</option>
+        </select>
+      </div>
+      <div class="timer-btn-row">
+        <button class="timer-start-btn" id="timer-start-btn" onclick="startTimer()">▶ Start</button>
+        <button class="timer-stop-btn" id="timer-stop-btn" onclick="stopTimer()" style="display:none">■ Stop &amp; Log</button>
+        <button class="timer-discard-btn" id="timer-discard-btn" onclick="discardTimer()" style="display:none">Discard</button>
+      </div>
+    </div>
+
+    <div style="max-width:560px;margin:0 auto">
+      <div id="timer-today-summary" style="display:none" class="timer-today-bar">
+        <span style="font-size:13px;font-weight:600;color:#f0f4ff">Today</span>
+        <span style="font-size:13px;color:#4f8ef7;font-weight:700" id="timer-today-total">0h 0m</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:700;color:#8da0c0;text-transform:uppercase;letter-spacing:.5px">Log</span>
+        <button onclick="clearTimerLog()" style="background:none;border:none;color:#4a5e7a;font-size:12px;cursor:pointer;padding:2px 6px" title="Clear all entries">Clear all</button>
+      </div>
+      <div id="timer-log-list"><div style="color:#4a5e7a;font-size:13px;text-align:center;padding:32px">No time entries yet. Start a timer above.</div></div>
+    </div>
+  </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -3550,6 +3671,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="mobile-nav-item" onclick="switchView('fieldlog')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span class="nav-label">Field Log</span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('timekeeping')" style="position:relative">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      <span class="nav-label">Timer</span>
+      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#4f8ef7;animation:timerPulse 1.2s ease-in-out infinite"></span>
     </div>
     <div class="mobile-nav-item" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -5128,7 +5254,7 @@ function isMobile(){ return window.innerWidth<=768; }
 var db = null;
 var unsubscribers = [];
 
-var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events','vendors','punchlists','fieldlogs'];
+var COLLECTIONS = ['projects','tasks','pos','shipping','issues','events','vendors','punchlists','fieldlogs','timelog'];
 
 // Local storage fallback
 var LOCAL = {
@@ -5505,7 +5631,8 @@ function loadSavedConfig() {
 var currentView = 'dashboard';
 var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
-  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup'
+  pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
+  timekeeping: 'Time Tracker'
 };
 
 function switchView(v) {
@@ -5546,6 +5673,7 @@ function switchView(v) {
   if(v==='troubleshoot') renderTroubleshoot();
   if(v==='mapview') renderMapView();
   if(v==='settings') renderIosShortcuts();
+  if(v==='timekeeping') renderTimeLog();
   if(v==='calendar') {
     renderCalendar();
   }
@@ -9717,6 +9845,7 @@ function renderAll() {
   if (cv === 'punchlist') renderPunchlist();
   if (cv === 'fieldlog') renderFieldLog();
   if (cv === 'mapview') renderMapView();
+  if (cv === 'timekeeping') renderTimeLog();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
 
@@ -9826,6 +9955,11 @@ window.addEventListener('load', function(){
   updateOnlineStatus();
   setTimeout(updateOnlineStatus, 2000);
 
+  // Persist active timer on page hide
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') _timerSaveActive();
+  });
+
   // Auto-reconnect Firebase when tab becomes visible again (desktop keeps sync fresh)
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && navigator.onLine) {
@@ -9835,6 +9969,9 @@ window.addEventListener('load', function(){
       }
     }
   });
+
+  // Init time tracker (restore any in-progress timer from localStorage)
+  initTimerRestore();
 
   // Init notifications + features
   renderNotifBadge();
@@ -9877,6 +10014,8 @@ window.addEventListener('load', function(){
     }
     if (view || add) { window.history.replaceState({}, '', window.location.pathname); }
   })();
+
+  window.addEventListener('beforeunload', function() { _timerSaveActive(); });
 
   setTimeout(checkAndPushNotifs, 3000);
   setInterval(checkAndPushNotifs, 10 * 60 * 1000);
@@ -9991,6 +10130,242 @@ window.addEventListener('load', function(){
 });
 
 
+
+// ═══════════════════════════════════════════════
+//  TIME TRACKER
+// ═══════════════════════════════════════════════
+var _timerInterval = null;
+var _timerRunning = false;
+var _timerStartMs = 0;   // epoch ms when started
+var _timerElapsedMs = 0; // ms accumulated before current run
+
+function _timerFormatHMS(ms) {
+  var s = Math.floor(ms / 1000);
+  var h = Math.floor(s / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  return (h > 0 ? String(h).padStart(2,'0') + ':' : '')
+    + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function _timerFormatShort(ms) {
+  var totalMin = Math.floor(ms / 60000);
+  var h = Math.floor(totalMin / 60);
+  var m = totalMin % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  return m + 'm';
+}
+
+function _timerSaveActive() {
+  if (_timerRunning) {
+    localStorage.setItem('fop_timer_active', JSON.stringify({
+      startMs: _timerStartMs,
+      elapsedMs: _timerElapsedMs,
+      label: (document.getElementById('timer-label-input')||{}).value || '',
+      project: (document.getElementById('timer-project-select')||{}).value || ''
+    }));
+  } else {
+    localStorage.removeItem('fop_timer_active');
+  }
+}
+
+function _timerRestoreActive() {
+  try {
+    var raw = localStorage.getItem('fop_timer_active');
+    if (!raw) return;
+    var saved = JSON.parse(raw);
+    _timerStartMs = saved.startMs || 0;
+    _timerElapsedMs = saved.elapsedMs || 0;
+    _timerRunning = true;
+    var labelEl = document.getElementById('timer-label-input');
+    var projEl = document.getElementById('timer-project-select');
+    if (labelEl) labelEl.value = saved.label || '';
+    if (projEl) projEl.value = saved.project || '';
+    _timerTick();
+    _timerInterval = setInterval(_timerTick, 1000);
+    _timerUpdateUI(true);
+  } catch(e) {}
+}
+
+function _timerTick() {
+  var totalMs = _timerElapsedMs + (Date.now() - _timerStartMs);
+  var disp = document.getElementById('timer-display');
+  if (disp) disp.textContent = _timerFormatHMS(totalMs);
+}
+
+function _timerUpdateUI(running) {
+  var disp = document.getElementById('timer-display');
+  var pillWrap = document.getElementById('timer-running-pill-wrap');
+  var startBtn = document.getElementById('timer-start-btn');
+  var stopBtn = document.getElementById('timer-stop-btn');
+  var discardBtn = document.getElementById('timer-discard-btn');
+  var navDot = document.getElementById('timer-nav-running');
+  var mobDot = document.getElementById('mob-timer-dot');
+  if (disp) disp.classList.toggle('running', running);
+  if (pillWrap) pillWrap.style.display = running ? '' : 'none';
+  if (startBtn) startBtn.style.display = running ? 'none' : '';
+  if (stopBtn) stopBtn.style.display = running ? '' : 'none';
+  if (discardBtn) discardBtn.style.display = running ? '' : 'none';
+  if (navDot) navDot.style.display = running ? '' : 'none';
+  if (mobDot) mobDot.style.display = running ? '' : 'none';
+}
+
+function startTimer() {
+  if (_timerRunning) return;
+  _timerRunning = true;
+  _timerStartMs = Date.now();
+  _timerTick();
+  _timerInterval = setInterval(_timerTick, 1000);
+  _timerUpdateUI(true);
+  _timerSaveActive();
+}
+
+function stopTimer() {
+  if (!_timerInterval && !_timerRunning) return;
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  var totalMs = _timerElapsedMs + (Date.now() - _timerStartMs);
+  _timerRunning = false;
+  _timerElapsedMs = 0;
+  localStorage.removeItem('fop_timer_active');
+
+  var label = (document.getElementById('timer-label-input')||{}).value || 'Untitled';
+  var project = (document.getElementById('timer-project-select')||{}).value || '';
+
+  addItem('timelog', {
+    label: label,
+    project: project,
+    durationMs: totalMs,
+    stoppedAt: new Date().toISOString()
+  });
+
+  // Reset display
+  var disp = document.getElementById('timer-display');
+  if (disp) disp.textContent = '00:00:00';
+  var labelEl = document.getElementById('timer-label-input');
+  if (labelEl) labelEl.value = '';
+  _timerUpdateUI(false);
+  renderTimeLog();
+  toast('Logged: ' + _timerFormatShort(totalMs));
+}
+
+function discardTimer() {
+  clearInterval(_timerInterval);
+  _timerInterval = null;
+  _timerRunning = false;
+  _timerElapsedMs = 0;
+  localStorage.removeItem('fop_timer_active');
+  var disp = document.getElementById('timer-display');
+  if (disp) disp.textContent = '00:00:00';
+  _timerUpdateUI(false);
+  toast('Timer discarded');
+}
+
+function clearTimerLog() {
+  if (!(state.timelog && state.timelog.length)) return;
+  if (!confirm('Clear all time entries?')) return;
+  var ids = (state.timelog||[]).map(function(e){ return e.id; });
+  ids.forEach(function(id){ deleteItem('timelog', id); });
+  renderTimeLog();
+}
+
+function createTaskFromTimeEntry(id) {
+  var entry = (state.timelog||[]).find(function(e){ return e.id===id; });
+  if (!entry) return;
+  // Open the task modal pre-filled
+  editingId = null;
+  populateProjectSelects();
+  document.getElementById('task-modal-title').textContent = 'New Task from Timer';
+  document.getElementById('task-title').value = entry.label || '';
+  document.getElementById('task-project').value = entry.project || '';
+  document.getElementById('task-priority').value = 'medium';
+  document.getElementById('task-status').value = 'todo';
+  document.getElementById('task-due').value = '';
+  document.getElementById('task-desc').value = 'Time tracked: ' + _timerFormatShort(entry.durationMs);
+  var modal = document.getElementById('modal-task');
+  if (modal) modal.classList.add('open');
+}
+
+function renderTimeLog() {
+  // Populate project select in timer form
+  var projSel = document.getElementById('timer-project-select');
+  if (projSel) {
+    var curVal = projSel.value;
+    projSel.innerHTML = '<option value="">No project</option>'
+      + (state.projects||[]).filter(function(p){ return !p.archived; })
+        .map(function(p){ return '<option value="'+p.id+'"'+(p.id===curVal?' selected':'')+'>'+escH(p.name)+'</option>'; }).join('');
+  }
+
+  // Restore active timer UI state (in case view was re-entered)
+  _timerUpdateUI(_timerRunning);
+
+  var entries = (state.timelog||[]).slice().sort(function(a,b){
+    return new Date(b.stoppedAt||b.createdAt) - new Date(a.stoppedAt||a.createdAt);
+  });
+
+  // Today's total
+  var todayStr = new Date().toISOString().slice(0,10);
+  var todayMs = entries.reduce(function(sum, e){
+    var d = (e.stoppedAt||e.createdAt||'').slice(0,10);
+    return d === todayStr ? sum + (e.durationMs||0) : sum;
+  }, 0);
+  var todaySummary = document.getElementById('timer-today-summary');
+  var todayTotal = document.getElementById('timer-today-total');
+  if (todaySummary) todaySummary.style.display = todayMs > 0 ? '' : 'none';
+  if (todayTotal) todayTotal.textContent = _timerFormatShort(todayMs);
+
+  var list = document.getElementById('timer-log-list');
+  if (!list) return;
+
+  if (!entries.length) {
+    list.innerHTML = '<div style="color:#4a5e7a;font-size:13px;text-align:center;padding:32px">No time entries yet. Start a timer above.</div>';
+    return;
+  }
+
+  // Group by date
+  var groups = {};
+  var groupOrder = [];
+  entries.forEach(function(e) {
+    var d = (e.stoppedAt||e.createdAt||'').slice(0,10);
+    if (!groups[d]) { groups[d] = []; groupOrder.push(d); }
+    groups[d].push(e);
+  });
+
+  var html = '';
+  groupOrder.forEach(function(date) {
+    var dayMs = groups[date].reduce(function(s,e){ return s+(e.durationMs||0); }, 0);
+    var label = date === todayStr ? 'Today' : (date === new Date(Date.now()-86400000).toISOString().slice(0,10) ? 'Yesterday' : date);
+    html += '<div style="font-size:11px;font-weight:700;color:#4a5e7a;text-transform:uppercase;letter-spacing:.5px;padding:12px 0 6px;display:flex;align-items:center;justify-content:space-between">'
+      + '<span>' + escH(label) + '</span>'
+      + '<span style="color:#8da0c0">' + _timerFormatShort(dayMs) + '</span></div>';
+    groups[date].forEach(function(e) {
+      var projName = e.project ? projectName(e.project) : '';
+      var timeStr = e.stoppedAt ? new Date(e.stoppedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+      html += '<div class="timer-log-entry">'
+        + '<div class="timer-log-duration">' + _timerFormatHMS(e.durationMs||0) + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div class="timer-log-label" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escH(e.label||'Untitled') + '</div>'
+        +   '<div class="timer-log-meta">' + (projName ? escH(projName) + ' · ' : '') + timeStr + '</div>'
+        + '</div>'
+        + '<div class="timer-log-actions">'
+        +   '<button class="create-task-btn" onclick="createTaskFromTimeEntry(\''+e.id+'\')">+ Task</button>'
+        +   '<button onclick="deleteTimeEntry(\''+e.id+'\')" style="color:#ef4444;border-color:rgba(239,68,68,0.2)">✕</button>'
+        + '</div>'
+        + '</div>';
+    });
+  });
+  list.innerHTML = html;
+}
+
+function deleteTimeEntry(id) {
+  deleteItem('timelog', id);
+  renderTimeLog();
+}
+
+// Restore timer across page reloads — called during app init
+function initTimerRestore() {
+  _timerRestoreActive();
+}
 
 // ═══════════════════════════════════════════════
 //  THEME — dark / light
