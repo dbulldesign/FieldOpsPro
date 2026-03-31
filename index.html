@@ -5773,6 +5773,26 @@ function switchView(v) {
   haptic('light');
   document.title = (viewTitles[v]||'FieldOps Pro') + ' · FieldOps Pro';
   if (window.innerWidth <= 768) updateThingsNav(v);
+  // Diagnostic overlay (temporary)
+  setTimeout(function() {
+    var ct = document.getElementById('content');
+    var ctR = ct ? ct.getBoundingClientRect() : {top:0,height:0};
+    var av = document.getElementById('view-'+v);
+    var avR = av ? av.getBoundingClientRect() : {top:0,height:0};
+    var avS = av ? window.getComputedStyle(av) : {};
+    var fc = av ? av.firstElementChild : null;
+    var fcR = fc ? fc.getBoundingClientRect() : {top:0,height:0};
+    var lines = [
+      'scr='+window.innerWidth+'x'+window.innerHeight,
+      'content[top='+Math.round(ctR.top)+',h='+Math.round(ctR.height)+']',
+      v+'[top='+Math.round(avR.top)+',h='+Math.round(avR.height)+',pt='+avS.paddingTop+',mt='+avS.marginTop+']',
+      'firstChild[top='+Math.round(fcR.top)+',h='+Math.round(fcR.height)+']'
+    ];
+    var dbg = document.getElementById('_dbg_overlay');
+    if (!dbg) { dbg=document.createElement('div'); dbg.id='_dbg_overlay'; dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.92);color:#0f0;font-size:11px;font-family:monospace;z-index:99999;padding:6px 10px;pointer-events:none;line-height:1.7;white-space:pre;'; document.body.appendChild(dbg); }
+    dbg.textContent = lines.join('\n');
+    setTimeout(function(){ if(dbg) dbg.remove(); }, 15000);
+  }, 80);
 }
 
 function toggleSidebar() {
