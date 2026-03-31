@@ -5759,6 +5759,11 @@ function switchView(v) {
   if (_activeView) _activeView.classList.add('active');
   var _contentEl = document.getElementById('content');
   if (_contentEl) _contentEl.scrollTop = 0;
+  // Hide mobile search bar and large title on all non-dashboard views
+  var _mSrch = document.getElementById('mob-search-bar');
+  var _mTtl  = document.getElementById('mob-large-title-wrap');
+  if (_mSrch) _mSrch.style.display  = (v === 'dashboard') ? '' : 'none';
+  if (_mTtl)  _mTtl.style.display   = (v === 'dashboard') ? '' : 'none';
   document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(function(el){el.classList.remove('active');});
   var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
