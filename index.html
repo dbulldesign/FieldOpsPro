@@ -1244,6 +1244,9 @@ padding: 4px 0 10px;
 [data-theme="light"] #mob-large-title { color: #0f172a; }
 body.mob-subview #mob-large-title { font-size: 22px; font-weight: 700; padding-bottom: 6px; }
 
+/* Hide large title on non-dashboard views — topbar already shows the title */
+body.mob-subview #mob-large-title-wrap { display: none !important; }
+
 /* Hide Things home when in subview */
 body.mob-subview #things-home-wrap { display: none !important; }
 
