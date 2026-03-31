@@ -217,12 +217,6 @@ flex: 1; overflow-y: auto; padding: 14px 22px 22px;
 min-height: 0;
 background: #080d1a !important;
 }
-/* Views outside #content (all except dashboard) must fill the screen when active */
-#main > .view.active {
-flex: 1; overflow-y: auto; min-height: 0; padding: 22px;
-background: #080d1a !important;
-}
-[data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
 .view { display: none; }
 .view.active {
   display: block;
@@ -594,19 +588,6 @@ min-height: 0;
 padding: 14px 14px 0 14px;
 padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
 }
-/* Views outside #content fill screen on mobile when active */
-#main > .view.active {
-flex: 1;
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
-overscroll-behavior-y: contain;
-min-height: 0;
-padding: 14px 14px 0 14px;
-padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-background: #080d1a !important;
-}
-[data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
-
 /* -- iOS Tab Bar -- */
 #mobileNav {
 display: block !important;
@@ -5792,26 +5773,6 @@ function switchView(v) {
   haptic('light');
   document.title = (viewTitles[v]||'FieldOps Pro') + ' · FieldOps Pro';
   if (window.innerWidth <= 768) updateThingsNav(v);
-  // Diagnostic: measure ALL views to find what's creating blank space
-  setTimeout(function() {
-    var ct = document.getElementById('content');
-    var ctR = ct ? ct.getBoundingClientRect() : {top:0,height:0};
-    var ctS = ct ? window.getComputedStyle(ct) : {};
-    var info = ['scr='+window.innerWidth+'x'+window.innerHeight+' scrollTop='+(ct?ct.scrollTop:0),
-      'content[top='+Math.round(ctR.top)+',h='+Math.round(ctR.height)+',pt='+ctS.paddingTop+']'];
-    // Show every view height and display
-    document.querySelectorAll('.view').forEach(function(el) {
-      var r = el.getBoundingClientRect();
-      var cs = window.getComputedStyle(el);
-      if (cs.display !== 'none' || Math.round(r.height) > 0) {
-        info.push(el.id+'[top='+Math.round(r.top)+',h='+Math.round(r.height)+',disp='+cs.display+',cls='+el.className+']');
-      }
-    });
-    var dbg = document.getElementById('_dbg_overlay');
-    if (!dbg) { dbg=document.createElement('div'); dbg.id='_dbg_overlay'; dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-size:10px;font-family:monospace;z-index:99999;padding:4px 8px;max-height:160px;overflow-y:auto;pointer-events:none;line-height:1.5;white-space:pre;'; document.body.appendChild(dbg); }
-    dbg.textContent = info.join('\n');
-    setTimeout(function(){ if(dbg) dbg.remove(); }, 12000);
-  }, 50);
 }
 
 function toggleSidebar() {
