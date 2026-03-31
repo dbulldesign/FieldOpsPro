@@ -3696,12 +3696,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div><!-- /settings max-width -->
   </div>
 
-</div><!-- /content -->
-
   <!-- ═══ TIME TRACKER ═══ -->
   <div class="view" id="view-timekeeping">
 
-    <!-- Full-width timer band at top of view -->
+    <!-- Timer band embedded at top of view -->
     <div id="timer-band">
       <div id="timer-display">00:00:00</div>
       <div class="timer-band-mid">
@@ -3738,6 +3736,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     </div>
     <div id="timer-log-list"><div class="timer-empty-msg">No time entries yet. Start a timer above.</div></div>
   </div>
+
+</div><!-- /content -->
 
   </div><!-- /main -->
 </div><!-- /app -->
@@ -5750,13 +5750,11 @@ function switchView(v) {
     quickAddOpen = false;
   }
   currentView = v;
-  // Show #content only for dashboard (it only wraps view-dashboard in the DOM)
-  var _contentEl = document.getElementById('content');
-  if (_contentEl) _contentEl.style.display = (v === 'dashboard') ? '' : 'none';
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
   var _activeView = document.getElementById('view-'+v);
-  if (_activeView) { _activeView.classList.add('active'); _activeView.scrollTop = 0; }
-  if (_contentEl && v === 'dashboard') _contentEl.scrollTop = 0;
+  if (_activeView) _activeView.classList.add('active');
+  var _contentEl = document.getElementById('content');
+  if (_contentEl) _contentEl.scrollTop = 0;
   document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
   document.querySelectorAll('.mobile-nav-item').forEach(function(el){el.classList.remove('active');});
   var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
@@ -5775,7 +5773,8 @@ function switchView(v) {
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
     window._dirtyViews[v] = false;
-    if (v==='projects') renderProjects();
+    if (v==='dashboard') renderDashboard();
+    else if (v==='projects') renderProjects();
     else if (v==='tasks') renderTasks();
     else if (v==='pos') renderPOs();
     else if (v==='shipping') renderShipping();
@@ -9928,19 +9927,21 @@ function closeSearchDropdown() {
 //  RENDER ALL
 // ═══════════════════════════════════════════════
 function renderAll() {
-  renderDashboard();
-  // Lazy-render: only repaint the currently visible section; mark others dirty
+  if (!window._dirtyViews) window._dirtyViews = {};
   var cv = typeof currentView !== 'undefined' ? currentView : 'dashboard';
-  if (cv === 'projects') renderProjects(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.projects = true; }
-  if (cv === 'tasks')    renderTasks();    else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.tasks    = true; }
-  if (cv === 'pos')      renderPOs();      else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.pos      = true; }
-  if (cv === 'shipping') renderShipping(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.shipping = true; }
-  if (cv === 'troubleshoot') renderTroubleshoot(); else { if (!window._dirtyViews) window._dirtyViews = {}; window._dirtyViews.troubleshoot = true; }
-  if (cv === 'calendar') renderCalendar();
-  if (cv === 'punchlist') renderPunchlist();
-  if (cv === 'fieldlog') renderFieldLog();
-  if (cv === 'mapview') renderMapView();
+  // Lazy-render: only repaint the currently visible section; mark others dirty
+  if (cv === 'dashboard')   renderDashboard();   else window._dirtyViews.dashboard   = true;
+  if (cv === 'projects')    renderProjects();    else window._dirtyViews.projects    = true;
+  if (cv === 'tasks')       renderTasks();       else window._dirtyViews.tasks       = true;
+  if (cv === 'pos')         renderPOs();         else window._dirtyViews.pos         = true;
+  if (cv === 'shipping')    renderShipping();    else window._dirtyViews.shipping    = true;
+  if (cv === 'troubleshoot') renderTroubleshoot(); else window._dirtyViews.troubleshoot = true;
+  if (cv === 'calendar')    renderCalendar();
+  if (cv === 'punchlist')   renderPunchlist();
+  if (cv === 'fieldlog')    renderFieldLog();
+  if (cv === 'mapview')     renderMapView();
   if (cv === 'timekeeping') renderTimeLog();
+  updateTabBadges();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
 
@@ -9954,7 +9955,7 @@ function undoDelete(col, id, onRender) {
 var _renderAllTimer = null;
 function renderAllDebounced() {
   if (_renderAllTimer) clearTimeout(_renderAllTimer);
-  _renderAllTimer = setTimeout(function() { _renderAllTimer = null; renderAll(); }, 40);
+  _renderAllTimer = setTimeout(function() { _renderAllTimer = null; renderAll(); }, 200);
 }
 
 
