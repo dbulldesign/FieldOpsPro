@@ -213,7 +213,7 @@ border: 1px solid rgba(239,68,68,0.25);
 
 /* CONTENT */
 #content {
-flex: 1; overflow-y: auto; padding: 22px;
+flex: 1; overflow-y: auto; padding: 14px 22px 22px;
 min-height: 0;
 background: #080d1a !important;
 }
@@ -1244,8 +1244,9 @@ padding: 4px 0 10px;
 [data-theme="light"] #mob-large-title { color: #0f172a; }
 body.mob-subview #mob-large-title { font-size: 22px; font-weight: 700; padding-bottom: 6px; }
 
-/* Hide large title on non-dashboard views — topbar already shows the title */
+/* Hide large title and search bar on non-dashboard views — topbar already handles both */
 body.mob-subview #mob-large-title-wrap { display: none !important; }
+body.mob-subview #mob-search-bar { display: none !important; }
 
 /* Hide Things home when in subview */
 body.mob-subview #things-home-wrap { display: none !important; }
@@ -13096,9 +13097,11 @@ window.addEventListener('unhandledrejection', function(e) {
 function updateThingsNav(v) {
   var backBtn = document.getElementById('mob-back-btn');
   var menuBtn = document.getElementById('menuBtn');
+  var searchBtn = document.getElementById('mob-global-search-btn');
   if (v === 'dashboard') {
     if (backBtn) backBtn.style.display = 'none';
     if (menuBtn) menuBtn.style.display = 'flex';
+    if (searchBtn) searchBtn.style.display = 'none';
     document.body.classList.remove('mob-subview');
     var hw=document.getElementById('things-home-wrap');
     if(hw) hw.style.display='block';
@@ -13106,6 +13109,7 @@ function updateThingsNav(v) {
   } else {
     if (backBtn) backBtn.style.display = 'flex';
     if (menuBtn) menuBtn.style.display = 'none';
+    if (searchBtn) searchBtn.style.display = 'flex';
     document.body.classList.add('mob-subview');
     var hw=document.getElementById('things-home-wrap');
     if(hw) hw.style.display='none';
