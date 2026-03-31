@@ -5792,29 +5792,25 @@ function switchView(v) {
   haptic('light');
   document.title = (viewTitles[v]||'FieldOps Pro') + ' · FieldOps Pro';
   if (window.innerWidth <= 768) updateThingsNav(v);
-  // Diagnostic: measure element positions to find blank space source
+  // Diagnostic: measure ALL views to find what's creating blank space
   setTimeout(function() {
-    var ids = ['topbar','mob-search-bar','mob-large-title-wrap','content'];
-    var info = ids.map(function(id) {
-      var el = document.getElementById(id);
-      if (!el) return id+':missing';
+    var ct = document.getElementById('content');
+    var ctR = ct ? ct.getBoundingClientRect() : {top:0,height:0};
+    var ctS = ct ? window.getComputedStyle(ct) : {};
+    var info = ['scr='+window.innerWidth+'x'+window.innerHeight+' scrollTop='+(ct?ct.scrollTop:0),
+      'content[top='+Math.round(ctR.top)+',h='+Math.round(ctR.height)+',pt='+ctS.paddingTop+']'];
+    // Show every view height and display
+    document.querySelectorAll('.view').forEach(function(el) {
       var r = el.getBoundingClientRect();
       var cs = window.getComputedStyle(el);
-      return id+'[top='+Math.round(r.top)+',h='+Math.round(r.height)+',disp='+cs.display+']';
+      if (cs.display !== 'none' || Math.round(r.height) > 0) {
+        info.push(el.id+'[top='+Math.round(r.top)+',h='+Math.round(r.height)+',disp='+cs.display+',cls='+el.className+']');
+      }
     });
-    var av = document.getElementById('view-'+v);
-    if (av) {
-      var r2 = av.getBoundingClientRect();
-      var cs2 = window.getComputedStyle(av);
-      info.push('view-'+v+'[top='+Math.round(r2.top)+',h='+Math.round(r2.height)+',disp='+cs2.display+']');
-      // First child of active view
-      var fc = av.firstElementChild;
-      if (fc) { var r3=fc.getBoundingClientRect(); info.push('firstChild[top='+Math.round(r3.top)+',h='+Math.round(r3.height)+']'); }
-    }
     var dbg = document.getElementById('_dbg_overlay');
-    if (!dbg) { dbg=document.createElement('div'); dbg.id='_dbg_overlay'; dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-size:10px;font-family:monospace;z-index:99999;padding:4px 8px;max-height:120px;overflow-y:auto;pointer-events:none;line-height:1.4;'; document.body.appendChild(dbg); }
+    if (!dbg) { dbg=document.createElement('div'); dbg.id='_dbg_overlay'; dbg.style.cssText='position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-size:10px;font-family:monospace;z-index:99999;padding:4px 8px;max-height:160px;overflow-y:auto;pointer-events:none;line-height:1.5;white-space:pre;'; document.body.appendChild(dbg); }
     dbg.textContent = info.join('\n');
-    setTimeout(function(){ if(dbg) dbg.remove(); }, 8000);
+    setTimeout(function(){ if(dbg) dbg.remove(); }, 12000);
   }, 50);
 }
 
