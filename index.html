@@ -5782,10 +5782,12 @@ function switchView(v) {
     var avS = av ? window.getComputedStyle(av) : {};
     var fc = av ? av.firstElementChild : null;
     var fcR = fc ? fc.getBoundingClientRect() : {top:0,height:0};
+    var ctParent = ct ? (ct.parentElement ? ct.parentElement.id||ct.parentElement.tagName : '?') : '?';
+    var avParent = av ? (av.parentElement ? av.parentElement.id||av.parentElement.tagName : '?') : '?';
     var lines = [
       'scr='+window.innerWidth+'x'+window.innerHeight,
-      'content[top='+Math.round(ctR.top)+',h='+Math.round(ctR.height)+']',
-      v+'[top='+Math.round(avR.top)+',h='+Math.round(avR.height)+',pt='+avS.paddingTop+',mt='+avS.marginTop+']',
+      'content[top='+Math.round(ctR.top)+',h='+Math.round(ctR.height)+',parent='+ctParent+']',
+      v+'[top='+Math.round(avR.top)+',h='+Math.round(avR.height)+',parent='+avParent+']',
       'firstChild[top='+Math.round(fcR.top)+',h='+Math.round(fcR.height)+']'
     ];
     var dbg = document.getElementById('_dbg_overlay');
