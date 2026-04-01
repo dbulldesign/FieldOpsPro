@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#080d1a">
+  <meta name="theme-color" content="#0d1526">
   <link rel="manifest" href="manifest.json">
   <title>FieldOps Pro</title>
 
@@ -65,10 +65,10 @@ All colors hardcoded. Zero CSS variable dependencies. */
 
 html, body {
 height: 100%; overflow: hidden;
-background: #080d1a;
+background: #0d1526;
 }
 body {
-background: #080d1a;
+background: #0d1526;
 color: #f0f4ff;
 font-size: 14px;
 -webkit-font-smoothing: antialiased;
@@ -80,12 +80,12 @@ font-size: 14px;
 ::-webkit-scrollbar-thumb { background: #2a3a5c; border-radius: 99px; }
 
 /* LAYOUT */
-#app { display: flex; height: 100vh; overflow: hidden; background: #080d1a !important; }
+#app { display: flex; height: 100vh; overflow: hidden; background: #0d1526 !important; }
 
 /* SIDEBAR */
 #sidebar {
 width: 230px; min-width: 230px;
-background: #0c1220 !important;
+background: #111d30 !important;
 border-right: 1px solid rgba(255,255,255,0.06);
 display: flex; flex-direction: column;
 z-index: 100; transition: transform 0.3s cubic-bezier(.4,0,.2,1);
@@ -142,7 +142,7 @@ background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.7);
 /* MAIN */
 #main {
 flex: 1; display: flex; flex-direction: column;
-overflow: hidden; background: #080d1a !important;
+overflow: hidden; background: #0d1526 !important;
 }
 
 /* TOPBAR */
@@ -215,7 +215,7 @@ border: 1px solid rgba(239,68,68,0.25);
 #content {
 flex: 1; overflow-y: auto; padding: 14px 22px 22px;
 min-height: 0;
-background: #080d1a !important;
+background: #0d1526 !important;
 }
 .view { display: none; }
 .view.active {
@@ -225,7 +225,7 @@ background: #080d1a !important;
 /* Non-dashboard views are direct children of #main and must fill the remaining flex space */
 #main > .view.active {
   flex: 1; overflow-y: auto; min-height: 0; padding: 14px 22px 22px;
-  background: #080d1a !important;
+  background: #0d1526 !important;
 }
 [data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
 @keyframes viewFadeSlide {
@@ -235,7 +235,7 @@ background: #080d1a !important;
 
 /* CARDS */
 .card {
-background: #0c1220 !important;
+background: #111d30 !important;
 border: 1px solid rgba(255,255,255,0.08) !important;
 border-radius: 18px; padding: 22px;
 transition: border-color 0.2s, box-shadow 0.2s;
@@ -255,7 +255,7 @@ box-shadow: 0 8px 32px rgba(37,99,255,0.1), 0 0 0 1px rgba(37,99,255,0.1);
 
 /* STAT CARDS */
 .stat-card {
-background: #0c1220 !important;
+background: #111d30 !important;
 border: 1px solid rgba(255,255,255,0.08) !important;
 border-radius: 18px; padding: 20px;
 position: relative; overflow: hidden;
@@ -297,7 +297,7 @@ font-size: 18px;
 .table-wrap {
 overflow-x: auto; border-radius: 16px;
 border: 1px solid rgba(255,255,255,0.08) !important;
-background: #0c1220 !important;
+background: #111d30 !important;
 }
 table { width: 100%; border-collapse: collapse; }
 thead { background: rgba(255,255,255,0.03) !important; }
@@ -342,7 +342,7 @@ z-index: 1000; align-items: center; justify-content: center; padding: 20px;
 }
 .modal-overlay.open { display: flex; }
 .modal {
-background: #0e1525 !important;
+background: #141f35 !important;
 border: 1px solid rgba(255,255,255,0.1);
 border-radius: 22px; width: 100%; max-width: 600px;
 max-height: 90vh; overflow-y: auto;
@@ -384,7 +384,7 @@ box-shadow: 0 0 0 3px rgba(79,142,247,0.1);
 input::placeholder, textarea::placeholder { color: #3a4a6a; }
 textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
 select { cursor: pointer; }
-select option { background: #0e1525; color: #f0f4ff; }
+select option { background: #141f35; color: #f0f4ff; }
 input:-webkit-autofill, input:-webkit-autofill:focus {
 -webkit-box-shadow: 0 0 0 1000px #111a2e inset !important;
 -webkit-text-fill-color: #f0f4ff !important;
@@ -434,7 +434,7 @@ color: #4a5e7a; transition: all 0.18s; white-space: nowrap;
 
 /* TROUBLESHOOT CARDS */
 .trouble-card {
-background: #0c1220 !important;
+background: #111d30 !important;
 border: 1px solid rgba(255,255,255,0.08) !important;
 border-radius: 16px; padding: 18px;
 margin-bottom: 10px; cursor: pointer; transition: all 0.18s;
@@ -603,7 +603,7 @@ overscroll-behavior-y: contain;
 min-height: 0;
 padding: 14px 14px 0 14px;
 padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-background: #080d1a !important;
+background: #0d1526 !important;
 }
 [data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
 /* -- iOS Tab Bar -- */
@@ -883,7 +883,7 @@ box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 /* LOCATION DROPDOWN */
 .location-dropdown {
 position: absolute; top: 100%; left: 0; right: 0;
-background: #0e1525; border: 1px solid rgba(255,255,255,0.1);
+background: #141f35; border: 1px solid rgba(255,255,255,0.1);
 border-radius: 14px; z-index: 500; max-height: 200px; overflow-y: auto;
 margin-top: 5px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
 }
@@ -958,7 +958,7 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 [data-theme="light"] .search-result-item { color: #0f172a !important; }
 [data-theme="light"] .search-result-item:hover { background: rgba(37,99,255,0.06) !important; }
 [data-theme="light"] .kanban-col { background: rgba(0,0,0,0.03) !important; }
-[data-theme="light"] .kanban-col [style*="background:#0c1220"] { background: #ffffff !important; }
+[data-theme="light"] .kanban-col [style*="background:#111d30"] { background: #ffffff !important; }
 [data-theme="light"] #toast { background: #1e293b !important; color: #f0f4ff !important; border-color: rgba(79,142,247,0.4) !important; }
 [data-theme="light"] .sidebar-footer { border-top-color: rgba(0,0,0,0.08) !important; }
 [data-theme="light"] .sync-status { color: #94a3b8 !important; }
@@ -982,12 +982,32 @@ transition: transform 0.2s, box-shadow 0.2s;
 #quickAddFab:hover { transform: scale(1.1); box-shadow: 0 12px 40px rgba(37,99,255,0.6); }
 #quickAddPanel {
 position: fixed; bottom: 96px; right: 24px; z-index: 8000;
-background: #0e1525; border: 1px solid rgba(255,255,255,0.12);
+background: #141f35; border: 1px solid rgba(255,255,255,0.12);
 border-radius: 18px; padding: 20px; width: 300px;
 box-shadow: 0 24px 60px rgba(0,0,0,0.6);
 display: none; -webkit-animation: slideUp 0.2s cubic-bezier(.4,0,.2,1);
 }
 [data-theme="light"] #quickAddPanel { background: #ffffff; border-color: rgba(0,0,0,0.1); }
+body.light-mode #quickAddPanel {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15) !important;
+  color: #0f172a !important;
+}
+body.light-mode #quickAddPanel span,
+body.light-mode #quickAddPanel b,
+body.light-mode #quickAddPanel div { color: inherit !important; }
+body.light-mode #quickAddPanel input,
+body.light-mode #quickAddPanel select,
+body.light-mode #quickAddPanel textarea {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: rgba(0,0,0,0.15) !important;
+}
+body.light-mode #quickAddPanel code {
+  background: rgba(0,0,0,0.06) !important;
+  color: #374151 !important;
+}
 
 /* SWIPE HINT */
 tr[data-id] { transition: transform 0.25s ease; }
@@ -1030,7 +1050,7 @@ tr.drag-over-row { outline: 2px solid rgba(79,142,247,0.5); outline-offset: -2px
 /* BULK CHECKBOX */
 .task-bulk-cb { accent-color: #2563ff; }
 /* PROJECT FILTER SELECT */
-#task-project-filter option { background: #0e1525; color: #f0f4ff; }
+#task-project-filter option { background: #141f35; color: #f0f4ff; }
 [data-theme="light"] #task-project-filter { background: rgba(0,0,0,0.04) !important; color: #475569 !important; }
 [data-theme="light"] #bulk-action-bar { background: rgba(37,99,255,0.07) !important; }
 [data-theme="light"] #offlineBar { background: #fee2e2 !important; color: #991b1b !important; border-bottom: 1px solid #fca5a5; }
@@ -1052,7 +1072,7 @@ pointer-events: none; color: #4a5e7a; font-size: 10px;
 }
 .combo-dropdown {
 position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-background: #0e1525; border: 1px solid rgba(255,255,255,0.12);
+background: #141f35; border: 1px solid rgba(255,255,255,0.12);
 border-radius: 14px; z-index: 3000; max-height: 220px; overflow-y: auto;
 box-shadow: 0 16px 48px rgba(0,0,0,0.5); display: none;
 }
@@ -1187,7 +1207,7 @@ opacity: 0; transition: opacity 0.15s;
 
 /* KANBAN CARD - theme-aware */
 .kb-card {
-background: #0c1220;
+background: #111d30;
 border: 1px solid rgba(255,255,255,0.08);
 color: #f0f4ff;
 }
@@ -1399,7 +1419,7 @@ right: 16px;
 width: 320px;
 max-height: 480px;
 overflow-y: auto;
-background: #0e1525;
+background: #141f35;
 border: 1px solid rgba(255,255,255,0.12);
 border-radius: 18px;
 box-shadow: 0 24px 60px rgba(0,0,0,0.6);
@@ -1583,7 +1603,7 @@ html[data-theme="light"] [style*="color:#6b7fa8"]{color:#475569!important;}
 
 /* Dark mode explicit (default) */
 body, body.dark-mode {
-  background: #080d1a !important;
+  background: #0d1526 !important;
   color: #f0f4ff !important;
 }
 /* -- LIGHT MODE -- */
@@ -1953,7 +1973,7 @@ body.density-compact .trouble-card { padding:10px 14px !important; }
 /* Desktop smart-add dropdown */
 #desk-add-menu {
   position:fixed;
-  background:#0e1525;border:1px solid rgba(255,255,255,0.12);
+  background:#141f35;border:1px solid rgba(255,255,255,0.12);
   border-radius:16px;padding:6px;min-width:228px;
   z-index:3000;box-shadow:0 20px 60px rgba(0,0,0,0.65);
   animation:deskAddIn .15s ease;transform-origin:top right;
@@ -2026,7 +2046,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 [data-theme="light"] .cal-day-headers { background:rgba(0,0,0,0.03); border-bottom-color:rgba(0,0,0,0.07); }
 [data-theme="light"] .cal-day-header { color:#94a3b8; }
 .cal-body { display:grid; grid-template-columns:repeat(7,1fr); }
-.cal-day { border-right:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 7px; min-height:110px; background:#0c1220; cursor:default; transition:background 0.1s; vertical-align:top; }
+.cal-day { border-right:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 7px; min-height:110px; background:#111d30; cursor:default; transition:background 0.1s; vertical-align:top; }
 [data-theme="light"] .cal-day { background:#ffffff; border-right-color:rgba(0,0,0,0.06); border-bottom-color:rgba(0,0,0,0.06); }
 .cal-day:nth-child(7n) { border-right:none; }
 .cal-body > .cal-day:nth-last-child(-n+7) { border-bottom:none; }
@@ -2051,7 +2071,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 .cal-day[data-date]:hover { background:rgba(79,142,247,0.06) !important; cursor:pointer; }
 /* Cal day quick-add popup */
 #cal-day-popup {
-  position:fixed; z-index:9000; background:#0e1828; border:1px solid rgba(255,255,255,0.14);
+  position:fixed; z-index:9000; background:#152638; border:1px solid rgba(255,255,255,0.14);
   border-radius:14px; padding:6px; box-shadow:0 12px 40px rgba(0,0,0,0.7);
   display:none; animation:t3ExpandIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both;
   min-width:180px;
@@ -2083,7 +2103,7 @@ body.compact .mob-task-card .mob-card-meta { display: none !important; }
 [data-theme="light"] .cal-view-btn.active { background:rgba(37,99,255,0.1); border-color:rgba(37,99,255,0.35); color:#2563ff; }
 
 /* ── CAL PREVIEW PANEL ───────────────────────────────────── */
-#cal-preview-panel { position:fixed; right:0; top:0; bottom:0; width:320px; background:#0e1828; border-left:1px solid rgba(255,255,255,0.1); z-index:2000; transform:translateX(100%); transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow:-8px 0 32px rgba(0,0,0,0.5); overflow-y:auto; display:flex; flex-direction:column; }
+#cal-preview-panel { position:fixed; right:0; top:0; bottom:0; width:320px; background:#152638; border-left:1px solid rgba(255,255,255,0.1); z-index:2000; transform:translateX(100%); transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow:-8px 0 32px rgba(0,0,0,0.5); overflow-y:auto; display:flex; flex-direction:column; }
 #cal-preview-panel.open { transform:translateX(0); }
 [data-theme="light"] #cal-preview-panel { background:#fff; border-left-color:rgba(0,0,0,0.1); box-shadow:-8px 0 32px rgba(0,0,0,0.15); }
 .cal-preview-hdr { padding:18px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.08); }
@@ -2686,7 +2706,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .timer-band-mid input::placeholder { color: #4a5e7a; }
 .timer-band-mid input:focus, .timer-band-mid select:focus { border-color: rgba(79,142,247,0.6); }
-.timer-band-mid select option { background: #0e1828; }
+.timer-band-mid select option { background: #152638; }
 #timer-running-pill {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.25);
@@ -2942,15 +2962,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           onfocus="if(this.value) globalSearch(this.value)"
           onkeydown="searchKeyNav(event)"
           autocomplete="off" autocorrect="off" spellcheck="false">
-        <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;max-height:480px;overflow-y:auto"></div>
+        <div id="searchDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:#141f35;border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);z-index:2000;overflow:hidden;max-height:480px;overflow-y:auto"></div>
       </div>
       <div style="position:relative">
         <button class="btn btn-ghost btn-icon" id="sync-now-btn" onclick="syncNow()" title="Sync with Firebase" style="position:relative;transition:all 0.2s">
           <svg id="sync-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          <span id="sync-status-dot" style="display:none;position:absolute;bottom:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #080d1a"></span>
+          <span id="sync-status-dot" style="display:none;position:absolute;bottom:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #0d1526"></span>
         </button>
         <!-- Firebase connect popup (shown when not connected) -->
-        <div id="fb-connect-popup" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:320px;background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:16px;box-shadow:0 16px 48px rgba(0,0,0,0.7);z-index:3000;animation:t3ExpandIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both">
+        <div id="fb-connect-popup" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:320px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:16px;box-shadow:0 16px 48px rgba(0,0,0,0.7);z-index:3000;animation:t3ExpandIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <div style="font-size:13px;font-weight:700;color:#f0f4ff">🔥 Connect to Firebase</div>
             <button onclick="closeFbPopup()" style="background:none;border:none;color:#4a5e7a;font-size:18px;cursor:pointer;line-height:1;padding:0 2px">✕</button>
@@ -2972,7 +2992,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <button class="btn btn-ghost btn-icon" onclick="openModal('modal-shortcuts')" onmouseenter="document.getElementById('shortcut-tip').style.display='block'" onmouseleave="document.getElementById('shortcut-tip').style.display='none'" title="Keyboard shortcuts">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
-        <div id="shortcut-tip" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;min-width:200px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,0.5);font-size:12px;white-space:nowrap">
+        <div id="shortcut-tip" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#141f35;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 14px;min-width:200px;z-index:2000;box-shadow:0 12px 40px rgba(0,0,0,0.5);font-size:12px;white-space:nowrap">
           <div style="font-weight:700;color:#f0f4ff;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase">Quick Shortcuts</div>
           <div style="display:flex;flex-direction:column;gap:5px">
             <div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#8da0c0">Search</span><span style="background:rgba(255,255,255,0.08);border-radius:5px;padding:1px 7px;color:#c8d6f0;font-weight:600">/</span></div>
@@ -3020,7 +3040,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   </button>
 </div>
 <!-- Mobile search dropdown (positioned by JS) -->
-<div id="mob-search-dropdown" style="display:none;position:fixed;top:108px;left:14px;right:14px;z-index:2001;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:60vh;overflow-y:auto"></div>
+<div id="mob-search-dropdown" style="display:none;position:fixed;top:108px;left:14px;right:14px;z-index:2001;background:#141f35;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:60vh;overflow-y:auto"></div>
 <div id="mob-large-title-wrap">
   <div id="mob-large-title">FieldOps Pro</div>
 </div>
@@ -3404,7 +3424,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <!-- ═══ KEYBOARD SHORTCUTS MODAL ═══ -->
 <div class="modal-overlay" id="modal-shortcuts-enhanced" onclick="if(event.target===this)closeModal('modal-shortcuts-enhanced')" style="display:none;z-index:10000">
-  <div style="background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:560px;max-height:80vh;overflow-y:auto;padding:24px 28px;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
+  <div style="background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:560px;max-height:80vh;overflow-y:auto;padding:24px 28px;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <div style="font-size:17px;font-weight:700;color:#f0f4ff">Keyboard Shortcuts</div>
       <button onclick="closeModal('modal-shortcuts-enhanced')" style="background:none;border:none;color:#4a5e7a;font-size:22px;cursor:pointer">✕</button>
@@ -3421,7 +3441,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <input type="text" id="troubleSystem" placeholder="All Systems" autocomplete="off" value="all"
           oninput="filterSystemFilter(this.value)" onfocus="openSystemFilter()"
           style="width:100%;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;box-sizing:border-box">
-        <div id="system-filter-dropdown" style="display:none;position:absolute;top:calc(100%+4px);left:0;min-width:200px;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
+        <div id="system-filter-dropdown" style="display:none;position:absolute;top:calc(100%+4px);left:0;min-width:200px;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
           <div id="system-filter-options"></div>
         </div>
       </div>
@@ -3429,7 +3449,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <input type="text" id="troubleCategory" placeholder="All Categories" autocomplete="off"
           oninput="filterCatFilter(this.value);renderTroubleshoot()" onfocus="openCatFilter()"
           style="width:100%;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;box-sizing:border-box">
-        <div id="cat-filter-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
+        <div id="cat-filter-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:200px;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:220px;overflow-y:auto">
           <div id="cat-filter-options"></div>
         </div>
       </div>
@@ -3784,7 +3804,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <!-- Global Search Modal -->
 <div id="modal-search" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:80px 20px 20px" onclick="if(event.target===this)closeGlobalSearch()">
-  <div style="background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:580px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
+  <div style="background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:580px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
     <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:18px;color:#4a5e7a">🔍</span>
       <input type="text" id="global-search-input" placeholder="Search tasks, projects, POs, vendors…" oninput="runGlobalSearch(this.value)" autofocus style="flex:1;background:none;border:none;outline:none;font-size:16px;color:#f0f4ff;font-weight:500" autocomplete="off">
@@ -3795,7 +3815,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 </div>
 
 <!-- Notification Center Panel -->
-<div id="notif-center-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:320px;background:#0e1828;border-left:1px solid rgba(255,255,255,0.1);z-index:3000;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
+<div id="notif-center-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:320px;background:#152638;border-left:1px solid rgba(255,255,255,0.1);z-index:3000;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
   <div style="padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between">
     <div style="font-size:17px;font-weight:700;color:#f0f4ff">🔔 Notifications</div>
     <button onclick="closeNotifCenter()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer">✕</button>
@@ -3805,7 +3825,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 <div id="notif-center-backdrop" onclick="closeNotifCenter()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2999"></div>
 
 <!-- Templates Panel -->
-<div id="templates-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:340px;background:#0e1828;border-left:1px solid rgba(255,255,255,0.1);z-index:3500;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
+<div id="templates-panel" style="display:none;position:fixed;right:0;top:0;bottom:0;width:340px;background:#152638;border-left:1px solid rgba(255,255,255,0.1);z-index:3500;overflow-y:auto;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:-8px 0 32px rgba(0,0,0,0.5)">
   <div style="padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
     <div style="font-size:17px;font-weight:700;color:#f0f4ff">📋 Project Templates</div>
     <button onclick="closeTemplatesPanel()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer;padding:4px">✕</button>
@@ -3828,7 +3848,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <!-- Confirm Modal -->
 <div id="modal-confirm" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:28px 24px 20px;max-width:300px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+  <div style="background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:28px 24px 20px;max-width:300px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
     <div style="font-size:32px;margin-bottom:12px">🗑</div>
     <div id="modal-confirm-msg" style="color:#f0f4ff;font-size:16px;font-weight:600;margin-bottom:6px">Delete permanently?</div>
     <div style="color:#4a5e7a;font-size:13px;margin-bottom:24px">This action cannot be undone.</div>
@@ -3896,7 +3916,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
               box-shadow:0 8px 32px rgba(0,0,0,0.4);
             "></div>
           </div>
-          <div id="proj-address-suggestions" style="display:none;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;margin-top:4px;z-index:100;position:relative"></div>
+          <div id="proj-address-suggestions" style="display:none;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;margin-top:4px;z-index:100;position:relative"></div>
           <div id="proj-address-status" style="font-size:11px;color:#4a5e7a;margin-top:4px;min-height:16px"></div>
         </div>
       </div>
@@ -4185,7 +4205,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <input type="text" id="issue-cat" placeholder="Type or select category…" autocomplete="off"
               oninput="filterCatDropdown(this.value)" onfocus="openCatDropdown()"
               style="width:100%;box-sizing:border-box">
-            <div id="cat-dropdown" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
+            <div id="cat-dropdown" style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
               <div id="cat-options"></div>
             </div>
           </div>
@@ -4195,7 +4215,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <input type="text" id="issue-system" placeholder="Type or select a system…" autocomplete="off"
               oninput="filterSystemDropdown(this.value)" onfocus="openSystemDropdown()"
               style="width:100%;box-sizing:border-box">
-            <div id="system-dropdown" style="display:none;position:absolute;top:calc(100%+2px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
+            <div id="system-dropdown" style="display:none;position:absolute;top:calc(100%+2px);left:0;right:0;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;z-index:700;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:200px;overflow-y:auto">
               <div id="system-options"></div>
             </div>
           </div>
@@ -4207,7 +4227,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <span style="font-size:12px;color:#4a5e7a" id="tags-placeholder">Click to add tags…</span>
           </div>
           <input type="hidden" id="issue-tags">
-          <div id="tags-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0e1828;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:600;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+          <div id="tags-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:600;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
             <input type="text" id="tags-search-input" placeholder="Search or create tag…" oninput="filterTagsDropdown(this.value)" onkeydown="tagsInputKeydown(event)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.08);color:#f0f4ff;font-size:13px;margin-bottom:6px;box-sizing:border-box">
             <div id="tags-options"></div>
             <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);text-align:right">
@@ -4504,7 +4524,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <button id="quickAddFab" onclick="toggleQuickAdd()" title="Quick add task" style="display:none"><span style="font-size:30px;font-weight:300;line-height:1;color:#fff;pointer-events:none">+</span></button>
 
-<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#0e1525;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:380px;margin:0 auto;box-sizing:border-box">
+<div id="quickAddPanel" style="display:none;position:fixed;bottom:96px;right:16px;left:16px;z-index:500;background:#141f35;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,0.6);max-width:380px;margin:0 auto;box-sizing:border-box">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
     <span style="font-weight:700;font-size:15px;color:#f0f4ff">Quick Add</span>
     <button onclick="toggleQuickAdd()" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:20px;line-height:1">×</button>
@@ -4597,7 +4617,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 </div>
 
 <!-- ── STEPS BLOCK EDITOR — slash palette ── -->
-<div id="slash-palette" style="display:none;position:fixed;background:#0e1828;border:1px solid rgba(255,255,255,0.14);border-radius:13px;padding:6px;min-width:220px;z-index:9500;box-shadow:0 20px 60px rgba(0,0,0,0.65)"></div>
+<div id="slash-palette" style="display:none;position:fixed;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:13px;padding:6px;min-width:220px;z-index:9500;box-shadow:0 20px 60px rgba(0,0,0,0.65)"></div>
 
 <!-- ── DESKTOP + NEW MENU (at body level to escape topbar stacking context) ── -->
 <div id="desk-add-menu" style="display:none">
@@ -10533,10 +10553,10 @@ function applyTheme(theme){
   if(isDark){
     document.body.classList.remove('light-mode');
     document.body.classList.add('dark-mode');
-    document.body.style.cssText = 'background:#080d1a; color:#f0f4ff;';
-    var _app2=document.getElementById('app'); if(_app2) _app2.style.background='#080d1a';
-    var _main2=document.getElementById('main'); if(_main2) _main2.style.background='#080d1a';
-    var _ct2=document.getElementById('content'); if(_ct2) _ct2.style.background='#080d1a';
+    document.body.style.cssText = 'background:#0d1526; color:#f0f4ff;';
+    var _app2=document.getElementById('app'); if(_app2) _app2.style.background='#0d1526';
+    var _main2=document.getElementById('main'); if(_main2) _main2.style.background='#0d1526';
+    var _ct2=document.getElementById('content'); if(_ct2) _ct2.style.background='#0d1526';
     var _tb2=document.getElementById('topbar'); if(_tb2) _tb2.style.background='';
   } else {
     document.body.classList.remove('dark-mode');
