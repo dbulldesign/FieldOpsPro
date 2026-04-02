@@ -2771,6 +2771,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .timer-log-actions button:hover { background: rgba(255,255,255,0.08); }
 .timer-log-actions .create-task-btn { color: #4f8ef7; border-color: rgba(79,142,247,0.3); }
 .timer-log-actions .create-task-btn:hover { background: rgba(79,142,247,0.12); }
+.timer-log-actions .timer-edit-btn { color: #8da0c0; }
+.timer-log-actions .timer-edit-btn:hover { background: rgba(255,255,255,0.08); color: #f0f4ff; }
 .timer-today-bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 14px; background: rgba(79,142,247,0.07);
@@ -10416,7 +10418,6 @@ function clearTimerLog() {
 function createTaskFromTimeEntry(id) {
   var entry = (state.timelog||[]).find(function(e){ return e.id===id; });
   if (!entry) return;
-  // Open the task modal pre-filled
   editingId = null;
   populateProjectSelects();
   document.getElementById('task-modal-title').textContent = 'New Task from Timer';
@@ -10426,8 +10427,48 @@ function createTaskFromTimeEntry(id) {
   document.getElementById('task-status').value = 'todo';
   document.getElementById('task-due').value = '';
   document.getElementById('task-desc').value = 'Time tracked: ' + _timerFormatShort(entry.durationMs);
-  var modal = document.getElementById('modal-task');
-  if (modal) modal.classList.add('open');
+  openModal('modal-task');
+}
+
+function editTimeEntry(id) {
+  var entry = (state.timelog||[]).find(function(e){ return e.id===id; });
+  if (!entry) return;
+  var ms = entry.durationMs || 0;
+  var h = Math.floor(ms / 3600000);
+  var m = Math.floor((ms % 3600000) / 60000);
+  var s = Math.floor((ms % 60000) / 1000);
+  var projOpts = '<option value="">No project</option>'
+    + (state.projects||[]).filter(function(p){ return !p.archived; })
+      .map(function(p){ return '<option value="'+p.id+'"'+(p.id===entry.project?' selected':'')+'>'+escH(p.name)+'</option>'; }).join('');
+  var el = document.getElementById('timer-entry-'+id);
+  if (!el) return;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;width:100%;padding:2px 0">'
+    + '<div style="display:flex;gap:6px;align-items:center">'
+    +   '<input type="number" id="te-h-'+id+'" value="'+h+'" min="0" style="width:56px;text-align:center" placeholder="h"><span style="color:#4a5e7a;font-size:12px">h</span>'
+    +   '<input type="number" id="te-m-'+id+'" value="'+m+'" min="0" max="59" style="width:56px;text-align:center" placeholder="m"><span style="color:#4a5e7a;font-size:12px">m</span>'
+    +   '<input type="number" id="te-s-'+id+'" value="'+s+'" min="0" max="59" style="width:56px;text-align:center" placeholder="s"><span style="color:#4a5e7a;font-size:12px">s</span>'
+    + '</div>'
+    + '<input type="text" id="te-label-'+id+'" value="'+escH(entry.label||'')+'" placeholder="Label" style="width:100%;box-sizing:border-box">'
+    + '<select id="te-proj-'+id+'" style="width:100%;box-sizing:border-box">'+projOpts+'</select>'
+    + '<div style="display:flex;gap:8px">'
+    +   '<button class="btn btn-primary btn-sm" onclick="saveTimeEdit(\''+id+'\')">Save</button>'
+    +   '<button class="btn btn-ghost btn-sm" onclick="renderTimeLog()">Cancel</button>'
+    + '</div>'
+    + '</div>';
+  setTimeout(function(){ var el2=document.getElementById('te-label-'+id); if(el2) el2.focus(); }, 30);
+}
+
+function saveTimeEdit(id) {
+  var h = parseInt((document.getElementById('te-h-'+id)||{}).value)||0;
+  var m = parseInt((document.getElementById('te-m-'+id)||{}).value)||0;
+  var s = parseInt((document.getElementById('te-s-'+id)||{}).value)||0;
+  var label = ((document.getElementById('te-label-'+id)||{}).value||'').trim();
+  var project = (document.getElementById('te-proj-'+id)||{}).value||'';
+  var ms = (h*3600 + m*60 + s)*1000;
+  if (ms <= 0) { toast('Duration must be greater than zero'); return; }
+  updateItem('timelog', id, { durationMs: ms, label: label||'Untitled', project: project });
+  renderTimeLog();
+  toast('Entry updated');
 }
 
 function renderTimeLog() {
@@ -10511,7 +10552,7 @@ function _timerEntryHTML(e, todayStr) {
   var timeStr = e.stoppedAt ? new Date(e.stoppedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
   var dateStr = (e.stoppedAt||e.createdAt||'').slice(0,10);
   var datePfx = (dateStr && dateStr !== todayStr) ? dateStr + ' · ' : '';
-  return '<div class="timer-log-entry">'
+  return '<div class="timer-log-entry" id="timer-entry-'+e.id+'">'
     + '<div class="timer-log-duration">' + _timerFormatHMS(e.durationMs||0) + '</div>'
     + '<div class="timer-entry-info">'
     +   '<div class="timer-log-label">' + escH(e.label||'Untitled') + '</div>'
@@ -10519,6 +10560,7 @@ function _timerEntryHTML(e, todayStr) {
     + '</div>'
     + '<div class="timer-log-actions">'
     +   '<button class="create-task-btn" onclick="createTaskFromTimeEntry(\''+e.id+'\')">+ Task</button>'
+    +   '<button class="timer-edit-btn" onclick="editTimeEntry(\''+e.id+'\')" title="Edit entry">✎</button>'
     +   '<button class="timer-del-btn" onclick="deleteTimeEntry(\''+e.id+'\')">✕</button>'
     + '</div>'
     + '</div>';
