@@ -3560,6 +3560,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
       </div>
 
+      <!-- API Key field -->
+      <div class="form-group" style="margin-bottom:18px">
+        <label style="font-size:12px;font-weight:700;color:#8da0c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block">Firebase API Key</label>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="firebase-api-key-input" placeholder="AIzaSy…" autocomplete="off" spellcheck="false"
+            style="flex:1;font-family:monospace;font-size:13px;letter-spacing:.5px"
+            onkeydown="if(event.key==='Enter')saveFirebaseApiKey()">
+          <button class="btn btn-primary btn-sm" onclick="saveFirebaseApiKey()">Save</button>
+        </div>
+        <div id="firebase-api-key-status" style="font-size:11px;margin-top:5px;min-height:14px"></div>
+      </div>
+
       <div class="setup-banner" style="margin:18px 0">
         <span class="icon">📋</span>
         <div style="font-size:13px;color:#8da0c0;line-height:1.8">
@@ -4690,14 +4702,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- Firebase SDK -->
   <script>
 window._embeddedFirebaseConfig = {
-  apiKey: "AIzaSyCgRSws8fOvssYsqED4QSkzIw2mwxk2XVs",
   authDomain: "fieldopspro-e47cd.firebaseapp.com",
   projectId: "fieldopspro-e47cd",
   storageBucket: "fieldopspro-e47cd.firebasestorage.app",
   messagingSenderId: "130089981211",
   appId: "1:130089981211:web:200b400a16c4cfd838afbe"
 };
-try { localStorage.setItem('fop_firebase_cfg', JSON.stringify(window._embeddedFirebaseConfig)); } catch(e) {}
+// apiKey is stored separately in localStorage (fop_firebase_apikey) — not embedded in source
   </script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -5769,21 +5780,23 @@ function updateCfgDisplay(cfg) {
 }
 
 function loadSavedConfig() {
-  // Check for config baked directly into the HTML first
-  var cfg = window._embeddedFirebaseConfig || null;
+  // Try the embedded config first, then localStorage
+  var cfg = window._embeddedFirebaseConfig ? Object.assign({}, window._embeddedFirebaseConfig) : null;
   if (!cfg) {
     var raw = localStorage.getItem('fop_firebase_cfg');
-    if (raw) {
-      try { cfg = JSON.parse(raw); } catch(e) {}
-    }
+    if (raw) { try { cfg = JSON.parse(raw); } catch(e) {} }
   }
-  if (!cfg) {
+  // Merge separately stored API key (never hardcoded in source)
+  if (cfg && !cfg.apiKey) {
+    var storedKey = localStorage.getItem('fop_firebase_apikey');
+    if (storedKey) cfg.apiKey = storedKey;
+  }
+  if (!cfg || !cfg.apiKey) {
     loadLocalData();
     var notice = document.getElementById('firebaseNotice');
     if (notice) notice.style.display = 'flex';
     return;
   }
-  // Save to localStorage so it persists even if HTML is re-uploaded without config
   localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
   updateCfgDisplay(cfg);
   initFirebase(cfg);
@@ -11321,7 +11334,38 @@ document.addEventListener('click', function(e){
 });
 window.openCatDropdown=openCatDropdown; window.filterCatDropdown=filterCatDropdown; window.selectIssueCat=selectIssueCat;
 window.openCatFilter=openCatFilter; window.filterCatFilter=filterCatFilter; window.selectCatFilter=selectCatFilter;
+function saveFirebaseApiKey() {
+  var inp = document.getElementById('firebase-api-key-input');
+  var statusEl = document.getElementById('firebase-api-key-status');
+  var key = inp ? inp.value.trim() : '';
+  if (!key) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#ef4444">Enter an API key</span>';
+    return;
+  }
+  localStorage.setItem('fop_firebase_apikey', key);
+  if (statusEl) statusEl.innerHTML = '<span style="color:#10b981">Saved</span>';
+  setTimeout(function(){ if(statusEl) statusEl.innerHTML = ''; }, 3000);
+  // Build config and connect
+  var cfg = _buildEmbeddedConfig();
+  if (cfg) {
+    localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
+    updateCfgDisplay(cfg);
+    toast('Connecting to Firebase…');
+    initFirebase(cfg);
+  }
+}
+
 function renderIosShortcuts() {
+  // Populate the API key field with the currently stored key (masked)
+  var inp = document.getElementById('firebase-api-key-input');
+  if (inp) {
+    var stored = localStorage.getItem('fop_firebase_apikey') || '';
+    inp.value = stored;
+    var statusEl = document.getElementById('firebase-api-key-status');
+    if (statusEl) statusEl.innerHTML = stored
+      ? '<span style="color:#4a5e7a">Key saved — ' + stored.slice(0,8) + '…</span>'
+      : '';
+  }
   renderIssueCatSettings();
   renderIssueTagsSettings();
   var el = document.getElementById('ios-shortcut-list');
@@ -13421,18 +13465,30 @@ function thingsIcon(view, color) {
 
 
 function useBuiltInConfig() {
-  var cfg = {
-    apiKey: "AIzaSyCgRSws8fOvssYsqED4QSkzIw2mwxk2XVs",
+  var cfg = _buildEmbeddedConfig();
+  if (!cfg) {
+    toast('Enter your Firebase API Key in Sync Setup first');
+    var inp = document.getElementById('firebase-api-key-input');
+    if (inp) { switchView('settings'); setTimeout(function(){ inp.focus(); }, 300); }
+    return;
+  }
+  localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
+  updateCfgDisplay(cfg);
+  toast('Connecting to Firebase…');
+  initFirebase(cfg);
+}
+
+function _buildEmbeddedConfig() {
+  var apiKey = localStorage.getItem('fop_firebase_apikey') || '';
+  if (!apiKey) return null;
+  return {
+    apiKey: apiKey,
     authDomain: "fieldopspro-e47cd.firebaseapp.com",
     projectId: "fieldopspro-e47cd",
     storageBucket: "fieldopspro-e47cd.firebasestorage.app",
     messagingSenderId: "130089981211",
     appId: "1:130089981211:web:200b400a16c4cfd838afbe"
   };
-  localStorage.setItem('fop_firebase_cfg', JSON.stringify(cfg));
-  updateCfgDisplay(cfg);
-  toast('Connecting to Firebase…');
-  initFirebase(cfg);
 }
 
 _merge(window, {
