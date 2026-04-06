@@ -5606,6 +5606,46 @@ function initFirebase(config) {
         unsubscribers.push(unsub);
       });
 
+      // Cross-device timer sync — listen for active timer state
+      var timerUnsub = db.collection('_app_state').doc('timer_active')
+        .onSnapshot(function(doc) {
+          if (!doc.exists) {
+            // Timer was stopped on another device
+            if (_timerRunning) {
+              clearInterval(_timerInterval);
+              _timerInterval = null;
+              _timerRunning = false;
+              _timerElapsedMs = 0;
+              localStorage.removeItem('fop_timer_active');
+              var disp = document.getElementById('timer-display');
+              if (disp) disp.textContent = '00:00:00';
+              _timerUpdateUI(false);
+            }
+            return;
+          }
+          var d = doc.data();
+          if (!d || !d.running) return;
+          // Already running the same timer on this device — don't restart
+          if (_timerRunning && _timerStartMs === d.startMs) return;
+          // Adopt the timer started on another device
+          clearInterval(_timerInterval);
+          _timerStartMs = d.startMs || 0;
+          _timerElapsedMs = d.elapsedMs || 0;
+          _timerRunning = true;
+          var labelEl = document.getElementById('timer-label-input');
+          var projEl  = document.getElementById('timer-project-select');
+          if (labelEl) labelEl.value = d.label || '';
+          if (projEl)  projEl.value  = d.project || '';
+          localStorage.setItem('fop_timer_active', JSON.stringify({
+            startMs: _timerStartMs, elapsedMs: _timerElapsedMs,
+            label: d.label || '', project: d.project || ''
+          }));
+          _timerTick();
+          _timerInterval = setInterval(_timerTick, 1000);
+          _timerUpdateUI(true);
+        }, function(err) { console.warn('Timer sync listener error:', err); });
+      unsubscribers.push(timerUnsub);
+
       window._fbConfig = config;
       window._fbConnected = true;
       setTimeout(flushSyncQueue, 800);
@@ -10293,15 +10333,22 @@ function _timerFormatShort(ms) {
 }
 
 function _timerSaveActive() {
+  var label = (document.getElementById('timer-label-input')||{}).value || '';
+  var project = (document.getElementById('timer-project-select')||{}).value || '';
   if (_timerRunning) {
-    localStorage.setItem('fop_timer_active', JSON.stringify({
-      startMs: _timerStartMs,
-      elapsedMs: _timerElapsedMs,
-      label: (document.getElementById('timer-label-input')||{}).value || '',
-      project: (document.getElementById('timer-project-select')||{}).value || ''
-    }));
+    var data = { startMs: _timerStartMs, elapsedMs: _timerElapsedMs, label: label, project: project };
+    localStorage.setItem('fop_timer_active', JSON.stringify(data));
+    if (db) {
+      db.collection('_app_state').doc('timer_active').set(
+        Object.assign({}, data, { running: true, updatedAt: new Date().toISOString() })
+      ).catch(function(e){ console.warn('Timer sync save error:', e); });
+    }
   } else {
     localStorage.removeItem('fop_timer_active');
+    if (db) {
+      db.collection('_app_state').doc('timer_active').delete()
+        .catch(function(e){ console.warn('Timer sync clear error:', e); });
+    }
   }
 }
 
@@ -10378,6 +10425,7 @@ function stopTimer() {
   _timerRunning = false;
   _timerElapsedMs = 0;
   localStorage.removeItem('fop_timer_active');
+  if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
 
   var label = (document.getElementById('timer-label-input')||{}).value || 'Untitled';
   var project = (document.getElementById('timer-project-select')||{}).value || '';
@@ -10405,6 +10453,7 @@ function discardTimer() {
   _timerRunning = false;
   _timerElapsedMs = 0;
   localStorage.removeItem('fop_timer_active');
+  if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
   var disp = document.getElementById('timer-display');
   if (disp) disp.textContent = '00:00:00';
   _timerUpdateUI(false);
