@@ -5462,7 +5462,7 @@ function showSkeletons(containerId, count) {
   el.innerHTML = html;
 }
 
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[], vendors:[], punchlists:[], fieldlogs:[] };
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[], vendors:[], punchlists:[], fieldlogs:[], timelog:[] };
 
 function _merge() {
   var r = {};
@@ -5480,6 +5480,10 @@ function addItem(col, item) {
   item.id = item.id || genId();
   item.createdAt = item.createdAt || new Date().toISOString();
   if (db) {
+    // Optimistic in-memory update so UI reflects the new item immediately
+    if (!state[col]) state[col] = [];
+    state[col].push(item);
+    renderAll();
     db.collection(col).doc(item.id).set(item).catch(function(e) {
       console.warn('Firebase addItem error:', e);
       _syncQueue.push({type:'set', col:col, id:item.id, data:item});
