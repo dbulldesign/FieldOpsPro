@@ -10,6 +10,9 @@
   <meta name="theme-color" content="#0d1526">
   <link rel="manifest" href="manifest.json">
   <title>FieldOps Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 
   <!-- Theme loader — must run before body renders to avoid flash -->
   <script>
@@ -50,7 +53,7 @@
 @charset "UTF-8";
 /* FieldOps Pro - All Styles */
 html {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* FIELDOPS PRO - Modern iOS Dark UI
@@ -59,7 +62,7 @@ All colors hardcoded. Zero CSS variable dependencies. */
 *, *::before, *::after {
   box-sizing: border-box; margin: 0; padding: 0;
   -webkit-tap-highlight-color: transparent;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }
 #mob-large-title-wrap { display: none; }
 
@@ -187,7 +190,7 @@ display: inline-flex; align-items: center; gap: 6px;
 padding: 9px 17px; border-radius: 11px; border: none;
 cursor: pointer; font-size: 13px; font-weight: 600;
 transition: all 0.15s; white-space: nowrap;
-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .btn-primary {
 background: #2563ff; color: #fff;
@@ -256,42 +259,32 @@ box-shadow: 0 8px 32px rgba(37,99,255,0.1), 0 0 0 1px rgba(37,99,255,0.1);
 /* STAT CARDS */
 .stat-card {
 background: #111d30 !important;
-border: 1px solid rgba(255,255,255,0.08) !important;
-border-radius: 18px; padding: 20px;
+border: 1px solid rgba(255,255,255,0.07) !important;
+border-radius: 14px; padding: 20px 20px 18px;
 position: relative; overflow: hidden;
-transition: transform 0.2s, box-shadow 0.2s;
+transition: border-color 0.2s;
 }
 .stat-card:hover {
-transform: translateY(-2px);
-box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+border-color: rgba(255,255,255,0.14) !important;
 }
-.stat-card::before {
-content: ""; position: absolute; top: 0; left: 0; right: 0;
-height: 2px; background: #2563ff;
-background: var(--accent-line, #2563ff);
-}
-.stat-card::after {
-content: ""; position: absolute; top: -40px; right: -20px;
-width: 100px; height: 100px; border-radius: 50%;
-background: rgba(79,142,247,0.04);
-pointer-events: none;
-}
+/* No decorative top line */
+.stat-card::before { display: none; }
+/* No decorative circle */
+.stat-card::after { display: none; }
+/* Icon removed from visual hierarchy */
+.stat-icon { display: none; }
 .stat-label {
-font-size: 10px; color: #4a5e7a !important; letter-spacing: 1.5px;
-text-transform: uppercase; font-weight: 700; margin-bottom: 2px;
+font-size: 11px; color: #4a5e7a !important; letter-spacing: 0.1px;
+text-transform: none; font-weight: 500; margin-bottom: 8px;
 }
 .stat-value {
-font-size: 38px; font-weight: 800; color: #f0f4ff !important;
-line-height: 1; margin: 10px 0 6px; letter-spacing: -1px;
+font-size: 36px; font-weight: 700; color: #f0f4ff !important;
+line-height: 1; margin: 0 0 5px; letter-spacing: -1.5px;
 }
 .stat-sub { font-size: 12px; color: #4a5e7a !important; }
-.stat-icon {
-position: absolute; right: 16px; top: 16px;
-width: 36px; height: 36px;
-border-radius: 10px;
-display: flex; align-items: center; justify-content: center;
-font-size: 18px;
-}
+/* Urgency: orange value when stat signals a problem */
+.stat-urgent .stat-value { color: #f97316 !important; }
+.stat-urgent { border-color: rgba(249,115,22,0.22) !important; }
 
 /* TABLE */
 .table-wrap {
@@ -328,10 +321,10 @@ letter-spacing: 0.3px;
 .badge-green  { background: rgba(16,185,129,0.15)  !important; color: #34d399 !important; border: 1px solid rgba(16,185,129,0.3); }
 .badge-red    { background: rgba(239,68,68,0.15)   !important; color: #f87171 !important; border: 1px solid rgba(239,68,68,0.3); }
 .badge-yellow { background: rgba(251,191,36,0.15)  !important; color: #fcd34d !important; border: 1px solid rgba(251,191,36,0.3); }
-.badge-purple { background: rgba(167,139,250,0.15) !important; color: #c4b5fd !important; border: 1px solid rgba(167,139,250,0.3); }
+.badge-purple { background: rgba(79,142,247,0.15)  !important; color: #7ab3fa !important; border: 1px solid rgba(79,142,247,0.3); }
 .badge-gray   { background: rgba(255,255,255,0.07) !important; color: #6b7fa8 !important; border: 1px solid rgba(255,255,255,0.12); }
-.badge-gold   { background: rgba(245,158,11,0.15)  !important; color: #fbbf24 !important; border: 1px solid rgba(245,158,11,0.3); }
-.badge-cyan   { background: rgba(34,211,238,0.15)  !important; color: #22d3ee !important; border: 1px solid rgba(34,211,238,0.3); }
+.badge-gold   { background: rgba(251,191,36,0.15)  !important; color: #fcd34d !important; border: 1px solid rgba(251,191,36,0.3); }
+.badge-cyan   { background: rgba(79,142,247,0.15)  !important; color: #7ab3fa !important; border: 1px solid rgba(79,142,247,0.3); }
 
 /* MODAL */
 .modal-overlay {
@@ -419,9 +412,9 @@ color: #4a5e7a; transition: all 0.18s; white-space: nowrap;
 /* PRIORITY DOTS */
 .priority { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #6b7fa8; }
 .priority::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.priority-high::before   { background: #ef4444 !important; box-shadow: 0 0 7px rgba(239,68,68,0.7); }
-.priority-medium::before { background: #fbbf24 !important; box-shadow: 0 0 7px rgba(251,191,36,0.7); }
-.priority-low::before    { background: #10b981 !important; box-shadow: 0 0 7px rgba(16,185,129,0.7); }
+.priority-high::before   { background: #ef4444 !important; }
+.priority-medium::before { background: #f59e0b !important; }
+.priority-low::before    { background: #10b981 !important; }
 
 /* PROGRESS */
 .progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
@@ -429,7 +422,7 @@ color: #4a5e7a; transition: all 0.18s; white-space: nowrap;
 
 /* EMPTY STATE */
 .empty-state { text-align: center; padding: 70px 20px; color: #3a4a6a; }
-.empty-state .icon { font-size: 48px; margin-bottom: 14px; opacity: 0.3; }
+.empty-state .icon { font-size: 48px; margin-bottom: 14px; opacity: 0.5; }
 .empty-state p { font-size: 14px; }
 
 /* TROUBLESHOOT CARDS */
@@ -680,8 +673,8 @@ line-height: 1;
 .grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
 .grid-2 { grid-template-columns: 1fr !important; }
 .card { padding: 16px !important; border-radius: 16px !important; }
-.stat-card { padding: 14px !important; border-radius: 16px !important; }
-.stat-value { font-size: 28px !important; }
+.stat-card { padding: 14px !important; border-radius: 12px !important; }
+.stat-value { font-size: 30px !important; letter-spacing: -1px !important; }
 .stat-label { font-size: 11px !important; }
 
 /* -- Tables: hide on mobile, show as cards -- */
@@ -1063,7 +1056,7 @@ border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
 padding: 11px 36px 11px 14px; color: #f0f4ff !important;
 font-size: 14px; outline: none; transition: all 0.2s;
 -webkit-appearance: none; cursor: text;
-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .combo-input:focus { border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.06) !important; }
 .combo-arrow {
@@ -1126,7 +1119,7 @@ white-space: nowrap;
 /* SHORTCUTS MODAL */
 .shortcut-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .shortcut-row:last-child { border-bottom: none; }
-.shortcut-key { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #c8d6f0; font-weight: 600; }
+.shortcut-key { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; color: #c8d6f0; font-weight: 600; }
 [data-theme="light"] .shortcut-key { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: #334155; }
 
 /* DATE INPUT - fix calendar icon in light mode */
@@ -1185,7 +1178,7 @@ align-items: center;
 padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
 background: rgba(255,255,255,0.05); color: #4a5e7a;
 font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
-font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-family: "Plus Jakarta Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .widget-btn:hover { border-color: rgba(79,142,247,0.3); color: #8da0c0; }
 [data-theme="light"] .widget-toolbar { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.07); }
@@ -1793,9 +1786,9 @@ tr[data-taskid]:hover, tr[data-poid]:hover, tr[data-shid]:hover {
 .badge-green  { background:rgba(16,185,129,0.18);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);font-weight:600; }
 .badge-yellow { background:rgba(245,158,11,0.18);color:#fcd34d;border:1px solid rgba(245,158,11,0.4); }
 .badge-red    { background:rgba(239,68,68,0.22);color:#fca5a5;border:1px solid rgba(239,68,68,0.45);font-weight:600; -webkit-animation:badgePulse 2s infinite; }
-.badge-cyan   { background:rgba(6,182,212,0.18);color:#67e8f9;border:1px solid rgba(6,182,212,0.35); }
-.badge-purple { background:rgba(139,92,246,0.18);color:#c4b5fd;border:1px solid rgba(139,92,246,0.35); }
-.badge-gold   { background:rgba(245,158,11,0.18);color:#fcd34d;border:1px solid rgba(245,158,11,0.3); }
+.badge-cyan   { background:rgba(79,142,247,0.15);color:#7ab3fa;border:1px solid rgba(79,142,247,0.3); }
+.badge-purple { background:rgba(79,142,247,0.15);color:#7ab3fa;border:1px solid rgba(79,142,247,0.3); }
+.badge-gold   { background:rgba(251,191,36,0.15);color:#fcd34d;border:1px solid rgba(251,191,36,0.3); }
 /* transit badge pulses blue */
 .badge[class*="transit"], .badge-blue[class*="transit"] { -webkit-animation:badgePulse 2.5s infinite; }
 @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
@@ -2669,13 +2662,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #dash-widget-grid { display: flex; flex-direction: column; gap: 14px; }
 }
 
-/* ── DASHBOARD STAT CARDS HOVER (match existing top boxes) ─────────── */
-.stat-card {
-  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s !important;
-}
+/* ── DASHBOARD STAT CARDS HOVER ─────────── */
 .stat-card:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 10px 32px rgba(79,142,247,0.18) !important;
+  border-color: rgba(255,255,255,0.16) !important;
 }
 
 /* ── TIME TRACKER ─────────────────────────────── */
@@ -2695,7 +2684,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   color: #f0f4ff; font-variant-numeric: tabular-nums;
   line-height: 1; flex-shrink: 0; min-width: 170px;
 }
-#timer-display.running { color: #4f8ef7; }
+#timer-display.running { color: #f97316; }
+#timer-band.running {
+  background: rgba(249,115,22,0.06);
+  border-color: rgba(249,115,22,0.18);
+}
 .timer-band-mid {
   flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px;
 }
@@ -2709,12 +2702,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .timer-band-mid select option { background: #152638; }
 #timer-running-pill {
   display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.25);
+  background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3);
   color: #4f8ef7; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
   border-radius: 99px; padding: 3px 10px; width: fit-content;
 }
 #timer-running-pill .pulse-dot, .timer-topbar-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #4f8ef7;
+  width: 7px; height: 7px; border-radius: 50%; background: #f97316;
   animation: timerPulse 1.2s ease-in-out infinite; flex-shrink: 0;
 }
 .timer-btn-row { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
@@ -2809,14 +2802,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Topbar running chip */
 #timer-topbar-chip {
   display: none; align-items: center; gap: 6px;
-  background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.28);
+  background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.28);
   border-radius: 99px; padding: 4px 12px 4px 8px;
   cursor: pointer; flex-shrink: 0; max-width: 280px;
   transition: background 0.15s;
 }
-#timer-topbar-chip:hover { background: rgba(79,142,247,0.2); }
+#timer-topbar-chip:hover { background: rgba(249,115,22,0.18); }
 #timer-chip-time {
-  font-size: 13px; font-weight: 700; color: #4f8ef7;
+  font-size: 13px; font-weight: 700; color: #f97316;
   font-variant-numeric: tabular-nums; flex-shrink: 0;
 }
 #timer-chip-label {
@@ -2838,7 +2831,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* Light mode */
 [data-theme="light"] #timer-band { background: rgba(37,99,255,0.04); border-bottom-color: rgba(37,99,255,0.12); }
 [data-theme="light"] #timer-display { color: #0f172a; }
-[data-theme="light"] #timer-display.running { color: #2563ff; }
+[data-theme="light"] #timer-display.running { color: #ea580c; }
+[data-theme="light"] #timer-band.running { background: rgba(234,88,12,0.05); border-color: rgba(234,88,12,0.2); }
+[data-theme="light"] .stat-urgent .stat-value { color: #ea580c !important; }
+[data-theme="light"] .stat-urgent { border-color: rgba(234,88,12,0.22) !important; }
 [data-theme="light"] .timer-band-mid input,
 [data-theme="light"] .timer-band-mid select { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #0f172a; }
 [data-theme="light"] .timer-log-entry { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.07); }
@@ -2900,7 +2896,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
         <div class="nav-item" onclick="switchView('timekeeping')" id="nav-timekeeping">
           <span class="icon">⏱</span> Time Tracker
-          <span id="timer-nav-running" style="display:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:#4f8ef7;animation:timerPulse 1.2s ease-in-out infinite;flex-shrink:0"></span>
+          <span id="timer-nav-running" style="display:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite;flex-shrink:0"></span>
         </div>
       </div>
       <div class="nav-section">
@@ -3091,7 +3087,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div class="stat-value" id="stat-projects">0</div>
         <div class="stat-sub">total projects</div>
       </div>
-      <div class="stat-card" style="--accent-line:#fbbf24">
+      <div class="stat-card" id="stat-card-tasks" style="--accent-line:#fbbf24">
         <div class="stat-icon" style="background:rgba(251,191,36,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
         <div class="stat-label">Open Tasks</div>
         <div class="stat-value" id="stat-tasks">0</div>
@@ -3782,7 +3778,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="mobile-nav-item" onclick="switchView('timekeeping')" style="position:relative">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
       <span class="nav-label">Timer</span>
-      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#4f8ef7;animation:timerPulse 1.2s ease-in-out infinite"></span>
+      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
     </div>
     <div class="mobile-nav-item" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -6184,12 +6180,15 @@ function renderDashboard() {
   // Due date alerts
   var today = new Date(); today.setHours(0,0,0,0);
   var overdue = openTasks.filter(function(t){return t.due && new Date(t.due)<today && !t.archived;});
+  // Urgency signal: orange stat card when tasks are overdue or high priority
+  var taskCard = document.getElementById('stat-card-tasks');
+  if (taskCard) taskCard.classList.toggle('stat-urgent', overdue.length > 0 || highTasks > 0);
     var dueSoon = openTasks.filter(function(t){ if(!t.due||t.archived) return false; var d=new Date(t.due); return d>=today && d<=new Date(today.getTime()+3*86400000); });
   var alertEl = document.getElementById('dash-due-alerts');
   if (alertEl) {
     if (overdue.length || dueSoon.length) {
       alertEl.style.display = 'block';
-      var aH='';if(overdue.length)aH+='<div style="padding:8px 12px;background:rgba(239,68,68,0.12);border-radius:10px;margin-bottom:6px;color:#f87171;font-weight:600">'+overdue.length+' overdue task'+(overdue.length>1?'s':'')+'</div>';if(dueSoon.length)aH+='<div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:10px;margin-bottom:6px;color:#fbbf24;font-weight:600">'+dueSoon.length+' due soon</div>';alertEl.innerHTML=aH;alertEl.style.display=aH?'block':'none';
+      var aH='';if(overdue.length)aH+='<div style="padding:8px 12px;background:rgba(249,115,22,0.1);border-radius:10px;margin-bottom:6px;color:#f97316;font-weight:600">'+overdue.length+' overdue task'+(overdue.length>1?'s':'')+'</div>';if(dueSoon.length)aH+='<div style="padding:8px 12px;background:rgba(251,191,36,0.1);border-radius:10px;margin-bottom:6px;color:#fbbf24;font-weight:600">'+dueSoon.length+' due soon</div>';alertEl.innerHTML=aH;alertEl.style.display=aH?'block':'none';
     } else {
       alertEl.style.display = 'none';
     }
@@ -10379,6 +10378,8 @@ function _timerUpdateUI(running) {
   var chip = document.getElementById('timer-topbar-chip');
   var chipLabel = document.getElementById('timer-chip-label');
   if (disp) disp.classList.toggle('running', running);
+  var band = document.getElementById('timer-band');
+  if (band) band.classList.toggle('running', running);
   if (pillWrap) pillWrap.style.display = running ? '' : 'none';
   if (startBtn) startBtn.style.display = running ? 'none' : '';
   if (stopBtn) stopBtn.style.display = running ? '' : 'none';
