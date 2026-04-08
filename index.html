@@ -3770,7 +3770,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </select>
       </div>
     </div>
-    <div id="map-container" style="border-radius:16px;overflow:hidden;height:420px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)"></div>
+    <div id="map-container" style="border-radius:16px;overflow:hidden;height:420px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);overscroll-behavior:none;touch-action:pan-x pan-y pinch-zoom"></div>
     <div id="map-project-list" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px"></div>
   </div>
 
@@ -13762,7 +13762,7 @@ window.addEventListener('unhandledrejection', function(e) {
 (function(){
   var _pty=0,_ptpulling=false,_ptind=null;
   function _ptget(){if(!_ptind){_ptind=document.createElement('div');_ptind.id='ptr-indicator';_ptind.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-40px);z-index:999;background:rgba(30,45,90,0.9);color:#4f8ef7;font-size:12px;font-weight:700;padding:6px 16px;border-radius:99px;pointer-events:none;opacity:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity 0.15s';_ptind.textContent='Pull to refresh';document.body.appendChild(_ptind);}return _ptind;}
-  document.addEventListener('touchstart',function(e){var ct=document.getElementById('content');if(!ct||ct.scrollTop>4)return;_pty=e.touches[0].clientY;_ptpulling=true;},{passive:true});
+  document.addEventListener('touchstart',function(e){var ct=document.getElementById('content');if(!ct||ct.scrollTop>4)return;var mc=document.getElementById('map-container');if(mc&&mc.contains(e.target))return;_pty=e.touches[0].clientY;_ptpulling=true;},{passive:true});
   document.addEventListener('touchmove',function(e){if(!_ptpulling)return;var dy=e.touches[0].clientY-_pty;if(dy>10){var i=_ptget();i.style.opacity=Math.min(dy/60,1);i.style.transform='translateX(-50%) translateY('+Math.min(dy/3,20)+'px)';i.textContent=dy>60?'Release to refresh':'Pull to refresh';}},{passive:true});
   document.addEventListener('touchend',function(e){if(!_ptpulling)return;var dy=e.changedTouches[0].clientY-_pty;_ptpulling=false;var i=_ptget();if(dy>60){i.textContent='Refreshing…';i.style.opacity='1';setTimeout(function(){renderAll();if(typeof haptic==='function')haptic('medium');i.style.opacity='0';},700);}else{i.style.opacity='0';}});
 
