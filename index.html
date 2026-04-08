@@ -171,6 +171,107 @@ stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 fill: none; opacity: 0.8;
 }
 .nav-item.active svg { opacity: 1; }
+
+/* ── NAV ICON ANIMATIONS ──────────────────────────────── */
+/* Shared: SVG child elements use fill-box so transform-origin is their own center */
+.ni-d-tl, .ni-d-tr, .ni-d-bl, .ni-d-br,
+.ni-folder-body, .ni-check, .ni-check-box,
+.ni-cal-pin-l, .ni-cal-pin-r,
+.ni-doc, .ni-doc-fold, .ni-doc-l1, .ni-doc-l2,
+.ni-truck-body, .ni-truck-cab, .ni-truck-wl, .ni-truck-wr,
+.ni-clip-l1, .ni-clip-l2, .ni-book-cover,
+.ni-pin-drop, .ni-pin-dot,
+.ni-gear-dot, .ni-gear-ring, .ni-wrench {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Dashboard – 4 tiles spring outward */
+.ni-d-tl, .ni-d-tr, .ni-d-bl, .ni-d-br {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item:hover .ni-d-tl { transform: translate(-1.5px, -1.5px); }
+.nav-item:hover .ni-d-tr { transform: translate(1.5px, -1.5px); }
+.nav-item:hover .ni-d-bl { transform: translate(-1.5px, 1.5px); }
+.nav-item:hover .ni-d-br { transform: translate(1.5px, 1.5px); }
+
+/* Projects – folder bounces up */
+.ni-folder-body { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-item:hover .ni-folder-body { transform: translateY(-1.5px); }
+
+/* Tasks – checkmark does a quick scale pop */
+.ni-check { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-item:hover .ni-check { transform: scale(1.15); }
+
+/* Calendar – pins drop then spring up */
+.ni-cal-pin-l, .ni-cal-pin-r {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item:hover .ni-cal-pin-l { transform: translateY(2px); }
+.nav-item:hover .ni-cal-pin-r { transform: translateY(2px); }
+
+/* Purchase Orders – doc lifts up */
+.ni-doc, .ni-doc-fold { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ni-doc-l1, .ni-doc-l2 { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-item:hover .ni-doc       { transform: translateY(-1.5px); }
+.nav-item:hover .ni-doc-fold  { transform: translateY(-1.5px); }
+.nav-item:hover .ni-doc-l1    { transform: scaleX(0.85); }
+.nav-item:hover .ni-doc-l2    { transform: scaleX(0.7); }
+
+/* Shipping – whole truck slides right */
+.ni-truck-body, .ni-truck-cab, .ni-truck-wl, .ni-truck-wr {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item:hover .ni-truck-body,
+.nav-item:hover .ni-truck-cab,
+.nav-item:hover .ni-truck-wl,
+.nav-item:hover .ni-truck-wr  { transform: translateX(2px); }
+
+/* Punch Lists – lines extend right */
+.ni-clip-l1, .ni-clip-l2 {
+  transform-origin: left center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nav-item:hover .ni-clip-l1 { transform: scaleX(1.15); }
+.nav-item:hover .ni-clip-l2 { transform: scaleX(1.25); }
+
+/* Field Log – book cover opens (slight skew) */
+.ni-book-cover { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-item:hover .ni-book-cover { transform: translateX(1.5px); }
+
+/* Project Map – pin drops in */
+@keyframes ni-pin-bounce {
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-4px) scale(1.05); }
+  65%  { transform: translateY(1px) scale(0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+.nav-item:hover .ni-pin-drop { animation: ni-pin-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nav-item:hover .ni-pin-dot  { animation: ni-pin-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Time Tracker – hands rotate 360° */
+@keyframes ni-clock-spin { to { transform: rotate(360deg); } }
+.ni-clock-hand { transition: none; }
+.nav-item:hover .ni-clock-hand {
+  animation: ni-clock-spin 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Settings – gear rotates */
+.ni-gear-dot, .ni-gear-ring {
+  transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.nav-item:hover .ni-gear-dot  { transform: rotate(60deg); }
+.nav-item:hover .ni-gear-ring { transform: rotate(60deg); }
+
+/* Troubleshoot – wrench rocks */
+@keyframes ni-wrench-rock {
+  0%   { transform: rotate(0deg); }
+  30%  { transform: rotate(-18deg); }
+  70%  { transform: rotate(12deg); }
+  100% { transform: rotate(0deg); }
+}
+.nav-item:hover .ni-wrench { animation: ni-wrench-rock 0.4s ease-in-out; }
+/* ──────────────────────────────────────────────────────── */
 .nav-badge {
 margin-left: auto; background: rgba(255,255,255,0.1); color: var(--text-secondary);
 font-size: 10px; font-weight: 600; padding: 1px 6px;
@@ -2887,11 +2988,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   text-transform: uppercase; letter-spacing: .5px; margin-right: 4px;
 }
 .timer-sort-row { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+.timer-add-manual-btn {
+  background: none; border: 1px solid var(--border-strong); border-radius: 6px;
+  color: var(--accent); font-size: 11px; font-weight: 600;
+  cursor: pointer; padding: 3px 9px; margin-left: auto; transition: background .12s, color .12s;
+}
+.timer-add-manual-btn:hover { background: rgba(79,142,247,0.1); }
 .timer-clear-btn {
   background: none; border: none; color: var(--text-muted); font-size: 11px;
-  cursor: pointer; padding: 2px 6px; margin-left: auto;
+  cursor: pointer; padding: 2px 6px;
 }
 .timer-clear-btn:hover { color: var(--red); }
+.timer-manual-form-inner {
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: 12px; padding: 16px; margin-bottom: 14px;
+}
 .timer-empty-msg { color: var(--text-muted); font-size: 13px; text-align: center; padding: 32px; }
 .timer-today-label { font-size: 13px; font-weight: 600; color: var(--text); }
 .timer-today-total { font-size: 13px; color: var(--accent); font-weight: 700; }
@@ -2975,21 +3086,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="nav-section">
         <div class="nav-label">Workspace</div>
         <div class="nav-item active" role="button" tabindex="0" onclick="switchView('dashboard')">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <svg viewBox="0 0 24 24"><rect class="ni-d-tl" x="3" y="3" width="7" height="7" rx="1"/><rect class="ni-d-tr" x="14" y="3" width="7" height="7" rx="1"/><rect class="ni-d-bl" x="3" y="14" width="7" height="7" rx="1"/><rect class="ni-d-br" x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('projects')">
-          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-folder-body" d="M3 7a2 2 0 0 1 2-2h3l2 2h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
           Projects
           <span class="nav-badge" id="badge-projects">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('tasks')">
-          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-check" d="M9 11l3 3L22 4"/><path class="ni-check-box" d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           Tasks
           <span class="nav-badge" id="badge-tasks">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('calendar')">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <svg viewBox="0 0 24 24"><rect class="ni-cal-body" x="3" y="4" width="18" height="18" rx="2"/><line class="ni-cal-pin-l" x1="8" y1="2" x2="8" y2="6"/><line class="ni-cal-pin-r" x1="16" y1="2" x2="16" y2="6"/><line class="ni-cal-line" x1="3" y1="10" x2="21" y2="10"/></svg>
           Calendar
           <span class="nav-badge" id="badge-events" style="display:none">0</span>
         </div>
@@ -2997,12 +3108,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="nav-section">
         <div class="nav-label">Operations</div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('pos')">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-doc" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline class="ni-doc-fold" points="14 2 14 8 20 8"/><line class="ni-doc-l1" x1="16" y1="13" x2="8" y2="13"/><line class="ni-doc-l2" x1="16" y1="17" x2="8" y2="17"/></svg>
           Purchase Orders
           <span class="nav-badge" id="badge-pos">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('shipping')">
-          <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <svg viewBox="0 0 24 24"><rect class="ni-truck-body" x="1" y="3" width="15" height="13" rx="1"/><path class="ni-truck-cab" d="M16 8h4l3 5v3h-7V8z"/><circle class="ni-truck-wl" cx="5.5" cy="18.5" r="2.5"/><circle class="ni-truck-wr" cx="18.5" cy="18.5" r="2.5"/></svg>
           Shipping
           <span class="nav-badge" id="badge-shipping">0</span>
         </div>
@@ -3010,21 +3121,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="nav-section">
         <div class="nav-label">Field Work</div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('punchlist')">
-          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line class="ni-clip-l1" x1="9" y1="12" x2="15" y2="12"/><line class="ni-clip-l2" x1="9" y1="16" x2="13" y2="16"/></svg>
           Punch Lists
           <span class="nav-badge" id="badge-punchlists">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('fieldlog')">
-          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-book-spine" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path class="ni-book-cover" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           Field Log
           <span class="nav-badge" id="badge-fieldlogs">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('mapview')">
-          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-pin-drop" d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle class="ni-pin-dot" cx="12" cy="10" r="3"/></svg>
           Project Map
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('timekeeping')" id="nav-timekeeping">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline class="ni-clock-hand" points="12 7 12 12 15 15"/></svg>
           Time Tracker
           <span id="timer-nav-running" style="display:none;margin-left:auto;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite;flex-shrink:0"></span>
         </div>
@@ -3032,14 +3143,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('troubleshoot')">
-          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <svg viewBox="0 0 24 24"><path class="ni-wrench" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           Troubleshoot DB
         </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Settings</div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('settings')">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg viewBox="0 0 24 24"><circle class="ni-gear-dot" cx="12" cy="12" r="3"/><path class="ni-gear-ring" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Sync Setup
         </div>
       </div>
@@ -3894,8 +4005,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <button class="timer-sort-btn" id="tsort-dur-desc" onclick="setTimerSort('dur-desc')">Longest</button>
         <button class="timer-sort-btn" id="tsort-dur-asc" onclick="setTimerSort('dur-asc')">Shortest</button>
       </div>
+      <button class="timer-add-manual-btn" onclick="addManualTimeEntry()" title="Add a time entry manually">+ Manual</button>
       <button class="timer-clear-btn" onclick="clearTimerLog()" title="Clear all entries">Clear all</button>
     </div>
+    <div id="timer-manual-form" style="display:none"></div>
     <div id="timer-log-list"><div class="timer-empty-msg">No time entries yet. Start a timer above.</div></div>
   </div>
 
@@ -10692,6 +10805,76 @@ function clearTimerLog() {
   var ids = (state.timelog||[]).map(function(e){ return e.id; });
   ids.forEach(function(id){ deleteItem('timelog', id); });
   renderTimeLog();
+}
+
+function addManualTimeEntry() {
+  var form = document.getElementById('timer-manual-form');
+  if (!form) return;
+  // Toggle: close if already open
+  if (form.style.display !== 'none') {
+    form.style.display = 'none';
+    form.innerHTML = '';
+    return;
+  }
+  var projOpts = '<option value="">No project</option>'
+    + (state.projects||[]).filter(function(p){ return !p.archived; })
+      .map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
+  var today = new Date().toISOString().slice(0,10);
+  form.innerHTML = '<div class="timer-manual-form-inner">'
+    + '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">'
+    +   '<div style="display:flex;flex-direction:column;gap:3px">'
+    +     '<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Hours</span>'
+    +     '<input type="number" id="tm-h" min="0" max="99" value="0" style="width:62px;text-align:center;font-size:20px;font-weight:700">'
+    +   '</div>'
+    +   '<span style="font-size:22px;font-weight:700;color:var(--text-muted);padding-bottom:4px">:</span>'
+    +   '<div style="display:flex;flex-direction:column;gap:3px">'
+    +     '<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Minutes</span>'
+    +     '<input type="number" id="tm-m" min="0" max="59" value="0" style="width:62px;text-align:center;font-size:20px;font-weight:700">'
+    +   '</div>'
+    +   '<div style="flex:1;min-width:140px;display:flex;flex-direction:column;gap:3px">'
+    +     '<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Label</span>'
+    +     '<input type="text" id="tm-label" placeholder="What did you work on?" maxlength="120" style="font-size:14px">'
+    +   '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:8px">'
+    +   '<div style="flex:1;min-width:140px;display:flex;flex-direction:column;gap:3px">'
+    +     '<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Project</span>'
+    +     '<select id="tm-proj">'+projOpts+'</select>'
+    +   '</div>'
+    +   '<div style="display:flex;flex-direction:column;gap:3px">'
+    +     '<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">Date</span>'
+    +     '<input type="date" id="tm-date" value="'+today+'">'
+    +   '</div>'
+    +   '<div style="display:flex;gap:8px;padding-bottom:1px">'
+    +     '<button class="btn btn-primary btn-sm" onclick="saveManualTimeEntry()">Save</button>'
+    +     '<button class="btn btn-sm" onclick="document.getElementById(\'timer-manual-form\').style.display=\'none\'">Cancel</button>'
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+  form.style.display = 'block';
+  var lbl = document.getElementById('tm-label');
+  if (lbl) lbl.focus();
+}
+
+function saveManualTimeEntry() {
+  var h = parseInt((document.getElementById('tm-h')||{}).value)||0;
+  var m = parseInt((document.getElementById('tm-m')||{}).value)||0;
+  var label = ((document.getElementById('tm-label')||{}).value||'').trim();
+  var project = (document.getElementById('tm-proj')||{}).value||'';
+  var dateVal = (document.getElementById('tm-date')||{}).value || new Date().toISOString().slice(0,10);
+  var ms = (h*3600 + m*60)*1000;
+  if (ms <= 0) { toast('Duration must be greater than zero'); return; }
+  var stoppedAt = new Date(dateVal + 'T23:59:00').toISOString();
+  addItem('timelog', {
+    label: label || 'Untitled',
+    project: project,
+    durationMs: ms,
+    stoppedAt: stoppedAt
+  });
+  var form = document.getElementById('timer-manual-form');
+  if (form) { form.style.display = 'none'; form.innerHTML = ''; }
+  renderTimeLog();
+  toast('Entry added: ' + _timerFormatShort(ms));
 }
 
 function createTaskFromTimeEntry(id) {
