@@ -1351,6 +1351,282 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
   .sun-cal-day-view { flex-direction: column; gap: 20px; }
   .sun-cal-agenda { flex: none; border-right: none; padding-right: 0; border-bottom: 1px solid rgba(255,255,255,0.07); padding-bottom: 16px; }
 }
+/* ── SCHEDULE VIEW ──────────────────────────────────────────── */
+.sched-tab-bar {
+  display: flex; gap: 2px; padding: 3px; border-radius: 13px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 24px; width: fit-content;
+}
+.sched-tab {
+  padding: 7px 18px; border-radius: 10px; border: none;
+  background: transparent; color: var(--text-muted);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.sched-tab:hover { color: var(--text); }
+.sched-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+[data-theme="light"] .sched-tab-bar { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.07); }
+[data-theme="light"] .sched-tab.active { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+/* Daily Schedule wizard */
+.ds-wizard-wrap { max-width: 600px; }
+.ds-wizard-step { display: none; }
+.ds-wizard-step.active { display: block; }
+.ds-q-label {
+  font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.3;
+}
+.ds-q-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+.ds-focus-input {
+  width: 100%; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 16px; font-weight: 500;
+  transition: border-color 0.15s; outline: none; resize: none;
+}
+.ds-focus-input:focus { border-color: var(--accent); }
+.ds-next-btn {
+  margin-top: 20px; padding: 12px 32px; border-radius: 12px; border: none;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.ds-next-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.ds-next-btn:active { transform: translateY(0); }
+.ds-next-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+/* Task planning step */
+.ds-plan-wrap { display: flex; gap: 24px; align-items: flex-start; }
+.ds-time-bar-col { width: 160px; flex-shrink: 0; }
+.ds-time-bar-label { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.ds-time-bar-total { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.ds-time-bar-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; }
+.ds-time-bar-track { width: 100%; height: 8px; border-radius: 99px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 4px; }
+.ds-time-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #4f8ef7, #10b981); transition: width 0.3s; }
+.ds-time-bar-fill.over { background: linear-gradient(90deg, #f97316, #ef4444); }
+.ds-tasks-col { flex: 1; min-width: 0; }
+.ds-plan-task {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border); margin-bottom: 8px;
+  cursor: default; animation: pdItemIn 0.18s ease both;
+}
+.ds-plan-task-title { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-plan-time-btn {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+  background: rgba(79,142,247,0.12); color: var(--accent); border: 1px solid rgba(79,142,247,0.2);
+  cursor: pointer; white-space: nowrap;
+}
+.ds-plan-time-btn:hover { background: rgba(79,142,247,0.22); }
+.ds-add-task-row {
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 12px;
+  border: 2px dashed rgba(255,255,255,0.1); cursor: pointer; color: var(--text-muted);
+  font-size: 13px; font-weight: 600; transition: border-color 0.15s, color 0.15s; margin-bottom: 8px;
+}
+.ds-add-task-row:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Fill in your day — time grid */
+.ds-day-wrap { display: flex; gap: 24px; align-items: flex-start; }
+.ds-day-task-list { width: 200px; flex-shrink: 0; }
+.ds-day-task-chip {
+  padding: 8px 12px; border-radius: 10px; background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.2);
+  color: var(--accent); font-size: 12px; font-weight: 600; margin-bottom: 6px;
+  cursor: grab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: box-shadow 0.12s, transform 0.12s;
+}
+.ds-day-task-chip:active { cursor: grabbing; transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+.ds-day-task-chip.placed { opacity: 0.4; background: rgba(255,255,255,0.04); color: var(--text-muted); border-color: transparent; cursor: default; }
+.ds-time-grid { flex: 1; }
+.ds-time-slot {
+  display: flex; align-items: stretch; min-height: 48px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+  transition: background 0.1s; position: relative;
+}
+.ds-time-slot:hover { background: rgba(79,142,247,0.05); }
+.ds-time-slot.has-task { background: rgba(79,142,247,0.08); }
+.ds-slot-label { width: 50px; flex-shrink: 0; font-size: 11px; color: var(--text-muted); padding: 6px 8px 0 0; text-align: right; }
+.ds-slot-body { flex: 1; padding: 4px 8px; }
+.ds-slot-task {
+  padding: 4px 10px; border-radius: 8px; background: rgba(79,142,247,0.18);
+  border-left: 3px solid var(--accent); font-size: 12px; font-weight: 600; color: var(--accent);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ds-slot-task-del { opacity: 0.5; cursor: pointer; font-size: 11px; padding: 2px 4px; }
+.ds-slot-task-del:hover { opacity: 1; color: #ef4444; }
+
+/* Daily plan summary */
+.ds-plan-summary {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px 24px; margin-bottom: 20px;
+}
+.ds-plan-summary-hdr { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+.ds-plan-line { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.ds-plan-line:last-child { border-bottom: none; }
+.ds-plan-time-tag { font-size: 11px; font-weight: 700; color: var(--text-muted); width: 40px; flex-shrink: 0; }
+.ds-plan-task-name { font-size: 14px; font-weight: 500; color: var(--text); }
+
+/* Daily active view (post wizard) */
+.ds-active-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.ds-active-date { font-size: 24px; font-weight: 800; color: var(--text); }
+.ds-active-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.ds-active-prog { display: flex; align-items: center; gap: 10px; }
+.ds-active-prog-bar { width: 100px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.ds-active-prog-fill { height: 100%; border-radius: 99px; background: #10b981; transition: width 0.4s; }
+.ds-task-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border); margin-bottom: 8px;
+  transition: opacity 0.25s, transform 0.25s;
+}
+.ds-task-item.done { opacity: 0.45; }
+.ds-task-item-check {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+  flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.18s, background 0.18s; position: relative;
+}
+.ds-task-item-check:hover { border-color: #10b981; }
+.ds-task-item-check.done { background: #10b981; border-color: #10b981; }
+.ds-task-check-inner { width: 10px; height: 10px; border-radius: 50%; background: #fff; transform: scale(0); transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.ds-task-item-check.done .ds-task-check-inner { transform: scale(1); }
+.ds-task-item-body { flex: 1; min-width: 0; }
+.ds-task-item-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.ds-task-item.done .ds-task-item-title { text-decoration: line-through; color: var(--text-muted); }
+.ds-task-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.ds-task-item-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+[data-theme="light"] .ds-plan-task { border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .sched-tab.active { color: #0f172a; }
+
+/* Weekly plan */
+.wk-plan-wrap { overflow-x: auto; }
+.wk-plan-grid { display: grid; gap: 12px; min-width: 900px; }
+.wk-plan-col { display: flex; flex-direction: column; gap: 0; }
+.wk-col-hdr {
+  padding: 10px 8px 8px; border-radius: 12px 12px 0 0; margin-bottom: 0; cursor: pointer;
+  border-bottom: 2px solid transparent; transition: background 0.12s;
+}
+.wk-col-hdr:hover { background: rgba(255,255,255,0.04); }
+.wk-col-hdr.is-today { background: rgba(79,142,247,0.08); border-bottom-color: var(--accent); }
+.wk-col-weekday { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+.wk-col-date { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.1; margin: 2px 0; }
+.wk-col-hdr.is-today .wk-col-date { color: var(--accent); }
+.wk-col-prog { height: 3px; border-radius: 99px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 6px; }
+.wk-col-prog-fill { height: 100%; border-radius: 99px; background: #10b981; transition: width 0.4s; }
+.wk-col-body { flex: 1; min-height: 200px; padding: 6px 0; border-radius: 0 0 10px 10px; }
+.wk-task-card {
+  padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border);
+  margin-bottom: 6px; cursor: pointer; position: relative; transition: box-shadow 0.12s, transform 0.12s;
+  animation: pdItemIn 0.18s ease both;
+}
+.wk-task-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.2); transform: translateY(-1px); }
+.wk-task-card.done { opacity: 0.5; }
+.wk-task-card.dragging { opacity: 0.35; transform: scale(0.97); }
+.wk-task-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.wk-task-card.done .wk-task-card-title { text-decoration: line-through; color: var(--text-muted); }
+.wk-task-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.wk-task-card-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.wk-task-check {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.wk-task-check:hover:not(.done) { border-color: #10b981; background: rgba(16,185,129,0.12); }
+.wk-task-check.done { background: #10b981; border-color: #10b981; }
+.wk-task-check.done::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 800; }
+@keyframes checkPop { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
+.wk-task-check.just-done { animation: checkPop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+.wk-drop-target { min-height: 40px; border-radius: 10px; border: 2px dashed rgba(255,255,255,0.1); margin-bottom: 6px; transition: border-color 0.12s, background 0.12s; }
+.wk-drop-target.drag-over { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+/* Floating today timeline */
+.wk-today-timeline {
+  position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+  width: 140px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 12px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  z-index: 50; max-height: 70vh; overflow-y: auto;
+}
+.wk-today-tl-hdr { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); padding: 0 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 4px; }
+.wk-today-tl-slot { position: relative; min-height: 24px; padding: 0 12px; }
+.wk-today-tl-label { font-size: 9px; color: var(--text-muted); }
+.wk-today-tl-event { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-today-tl-now { height: 2px; background: #ef4444; border-radius: 99px; position: absolute; left: 8px; right: 8px; }
+.wk-today-tl-now::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; position: absolute; left: -3px; top: -2px; }
+@media (max-width: 1100px) { .wk-today-timeline { display: none; } }
+
+/* Backlog */
+.bl-section { margin-bottom: 24px; }
+.bl-section-hdr {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; user-select: none;
+}
+.bl-section-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.bl-section-title { font-size: 13px; font-weight: 700; flex: 1; }
+.bl-section-count { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,0.08); color: var(--text-muted); }
+.bl-section-toggle { font-size: 12px; color: var(--text-muted); transition: transform 0.15s; }
+.bl-section.collapsed .bl-section-toggle { transform: rotate(-90deg); }
+.bl-section.collapsed .bl-section-body { display: none; }
+.bl-task-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer;
+  transition: box-shadow 0.12s;
+}
+.bl-task-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.bl-task-title { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); }
+.bl-task-meta { font-size: 11px; color: var(--text-muted); }
+.bl-add-row {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px;
+  border: 1.5px dashed rgba(255,255,255,0.1); cursor: pointer; color: var(--text-muted);
+  font-size: 12px; font-weight: 600; transition: all 0.15s;
+}
+.bl-add-row:hover { border-color: var(--accent); color: var(--accent); }
+[data-theme="light"] .bl-task-row { border-color: rgba(0,0,0,0.07); }
+[data-theme="light"] .wk-task-card { border-color: rgba(0,0,0,0.07); }
+
+/* Add task popup (shared) */
+.sched-add-popup {
+  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0,0,0,0.55); animation: fadeIn 0.15s ease;
+}
+.sched-add-popup-inner {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px; width: 100%; max-width: 540px;
+  animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sched-add-title-input {
+  width: 100%; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text); font-size: 15px; font-weight: 500;
+  outline: none; transition: border-color 0.15s; margin-bottom: 10px;
+}
+.sched-add-title-input:focus { border-color: var(--accent); }
+.sched-add-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.sched-meta-btn {
+  display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 99px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.sched-meta-btn:hover, .sched-meta-btn.active { background: rgba(79,142,247,0.15); color: var(--accent); border-color: rgba(79,142,247,0.3); }
+.sched-time-dropdown {
+  position: absolute; z-index: 1100; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; min-width: 200px;
+}
+.sched-time-opt {
+  padding: 7px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); cursor: pointer; text-align: center; white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+.sched-time-opt:hover { background: rgba(79,142,247,0.12); color: var(--accent); }
+.sched-time-opt.selected { background: rgba(79,142,247,0.2); color: var(--accent); }
+.sched-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.sched-tag-chip {
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+  background: rgba(79,142,247,0.12); color: var(--accent); cursor: pointer;
+}
+.sched-tag-chip:hover { background: rgba(79,142,247,0.25); }
+.sched-add-submit-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--accent);
+  color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s, background 0.15s; flex-shrink: 0;
+}
+.sched-add-submit-btn:hover { transform: scale(1.08) rotate(-10deg); }
+[data-theme="light"] .sched-add-popup-inner { background: #fff; }
+[data-theme="light"] .sched-add-title-input { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .sched-meta-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .sched-time-dropdown { background: #fff; }
+
 [data-theme="light"] #sidebarOverlay { background: rgba(0,0,0,0.3) !important; }
 [data-theme="light"] .note-card { background: rgba(0,0,0,0.04) !important; }
 [data-theme="light"] #menuBtn { color: #0f172a !important; }
@@ -3297,15 +3573,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           Projects
           <span class="nav-badge" id="badge-projects">0</span>
         </div>
-        <div class="nav-item" role="button" tabindex="0" onclick="switchView('tasks')">
-          <svg viewBox="0 0 48 48"><path pathLength="1" class="ni-dcheck1" d="M3 26.4L11.8846 39L35 11"/><path pathLength="1" class="ni-dcheck2" d="M45 11L21.8847 39L20.2098 36.6248"/></svg>
-          Tasks
-          <span class="nav-badge" id="badge-tasks">0</span>
-        </div>
-        <div class="nav-item" role="button" tabindex="0" onclick="switchView('calendar')">
-          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path pathLength="1" class="ni-world-line" d="M3.6 9h16.8"/><path pathLength="1" class="ni-world-line" d="M3.6 15h16.8"/><path pathLength="1" class="ni-world-line" d="M11.5 3a17 17 0 0 0 0 18"/><path pathLength="1" class="ni-world-line" d="M12.5 3a17 17 0 0 1 0 18"/></svg>
-          Calendar
-          <span class="nav-badge" id="badge-events" style="display:none">0</span>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('schedule')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="8.01" y2="18"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Schedule
+          <span class="nav-badge" id="badge-schedule" style="display:none">0</span>
         </div>
       </div>
       <div class="nav-section">
@@ -3850,6 +4121,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="tasks-kanban-view" style="display:none"></div>
   </div>
 
+  <!-- ═══ SCHEDULE ═══ -->
+  <div class="view" id="view-schedule">
+    <div class="sched-tab-bar">
+      <button class="sched-tab active" id="sched-tab-daily" onclick="switchScheduleTab('daily',this)">Daily Schedule</button>
+      <button class="sched-tab" id="sched-tab-weekly" onclick="switchScheduleTab('weekly',this)">Weekly Plan</button>
+      <button class="sched-tab" id="sched-tab-backlog" onclick="switchScheduleTab('backlog',this)">Backlog</button>
+    </div>
+    <div id="sched-content"></div>
+  </div>
+
   <!-- ═══ PURCHASE ORDERS ═══ -->
   <div class="view" id="view-pos">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
@@ -4286,10 +4567,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       <span class="nav-label">Projects</span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('tasks')" style="position:relative">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      <span class="nav-label">Tasks</span>
-      <span id="mob-overdue-badge" style="display:none;position:absolute;top:4px;right:12px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;min-width:15px;text-align:center;line-height:1.6"></span>
+    <div class="mobile-nav-item" onclick="switchView('schedule')" style="position:relative">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/></svg>
+      <span class="nav-label">Schedule</span>
     </div>
     <div class="mobile-nav-item" onclick="switchView('shipping')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
@@ -6052,7 +6332,7 @@ function showSkeletons(containerId, count) {
   el.innerHTML = html;
 }
 
-var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[], vendors:[], punchlists:[], fieldlogs:[], timelog:[] };
+var state = { projects:[], tasks:[], pos:[], shipping:[], issues:[], events:[], vendors:[], punchlists:[], fieldlogs:[], timelog:[], dailyPlans:{}, backlog:[] };
 
 function _merge() {
   var r = {};
@@ -6393,7 +6673,7 @@ var currentView = 'dashboard';
 var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
-  timekeeping: 'Time Tracker'
+  timekeeping: 'Time Tracker', schedule: 'Schedule'
 };
 
 function switchView(v) {
@@ -6435,7 +6715,7 @@ function switchView(v) {
   document.querySelectorAll('.mobile-nav-item').forEach(function(el){el.classList.remove('active');});
   var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
   if(ni) ni.classList.add('active');
-  var mi=null;
+  var mi=document.querySelector('.mobile-nav-item[onclick*="\''+v+'\'"');
   if(mi) mi.classList.add('active');
   document.getElementById('topbarTitle').textContent = viewTitles[v];
   closeSidebar();
@@ -6445,6 +6725,9 @@ function switchView(v) {
   if(v==='timekeeping') renderTimeLog();
   if(v==='calendar') {
     renderCalendar();
+  }
+  if(v==='schedule') {
+    renderSchedule();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -10926,6 +11209,7 @@ function renderAll() {
   if (cv === 'fieldlog')    renderFieldLog();
   if (cv === 'mapview')     renderMapView();
   if (cv === 'timekeeping') renderTimeLog();
+  if (cv === 'schedule')    renderSchedule();
   updateTabBadges();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
@@ -11212,7 +11496,7 @@ window.addEventListener('load', function(){
       case 'n': openAddMenu(); break;               // N = open smart-add menu
       case '1': switchView('dashboard'); break;
       case '2': switchView('projects'); break;
-      case '3': switchView('tasks'); break;
+      case '3': switchView('schedule'); break;
       case '4': switchView('pos'); break;
       case '5': switchView('shipping'); break;
       case '6': switchView('troubleshoot'); break;
@@ -14499,7 +14783,7 @@ function updateThingsNav(v) {
   var lt = document.getElementById('mob-large-title');
   if (lt) {
     var titles = {dashboard:'FieldOps Pro', projects:'Projects', tasks:'Tasks',
-      calendar:'Calendar & Events',
+      calendar:'Calendar & Events', schedule:'Schedule',
       pos:'Purchase Orders', shipping:'Shipping', troubleshoot:'Troubleshoot', settings:'Settings'};
     lt.textContent = titles[v] || v;
   }
@@ -15036,6 +15320,917 @@ function bulkShipments(action) {
   clearShipBulk(); renderShipping();
 }
 window.shipSelectAll=shipSelectAll; window.toggleShipSelect=toggleShipSelect; window.clearShipBulk=clearShipBulk; window.bulkShipments=bulkShipments;
+
+// ═══════════════════════════════════════════════
+//  SCHEDULE (Daily / Weekly / Backlog)
+// ═══════════════════════════════════════════════
+
+var _scheduleTab = 'daily';
+
+function switchScheduleTab(tab, btn) {
+  _scheduleTab = tab;
+  document.querySelectorAll('.sched-tab').forEach(function(b){ b.classList.remove('active'); });
+  var target = btn || document.getElementById('sched-tab-'+tab);
+  if (target) target.classList.add('active');
+  renderSchedule();
+}
+
+function renderSchedule() {
+  var el = document.getElementById('sched-content');
+  if (!el) return;
+  if (_scheduleTab === 'daily') renderDailySchedule(el);
+  else if (_scheduleTab === 'weekly') renderWeeklyPlan(el);
+  else if (_scheduleTab === 'backlog') renderBacklog(el);
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function _todayStr() {
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _fmtMin(m) {
+  if (!m) return '0m';
+  var h = Math.floor(m/60), mm = m%60;
+  return h ? (h+'h'+(mm?mm+'m':'')) : mm+'m';
+}
+function _planTimeOpts() {
+  return [5,10,15,20,25,30,60,90,120,150,180,210,240,270,300,330,360,390,420,450,480,510,540];
+}
+function _fmtPlanTime(m) {
+  var h = Math.floor(m/60), mm = m%60;
+  if (h >= 1 && mm) return h+'h '+mm+'m';
+  if (h >= 1) return h+'h';
+  return mm+'m';
+}
+
+// ─── Daily Schedule ──────────────────────────────────────────────────────────
+var _dsState = null; // in-memory state for current day's wizard
+
+function _getDayPlan(dateStr) {
+  try { var all = JSON.parse(localStorage.getItem('fop_dailyPlans')||'{}'); return all[dateStr] || null; } catch(e) { return null; }
+}
+function _saveDayPlan(dateStr, plan) {
+  try {
+    var all = JSON.parse(localStorage.getItem('fop_dailyPlans')||'{}');
+    all[dateStr] = plan;
+    localStorage.setItem('fop_dailyPlans', JSON.stringify(all));
+    if (!state.dailyPlans) state.dailyPlans = {};
+    state.dailyPlans[dateStr] = plan;
+  } catch(e) {}
+}
+
+function renderDailySchedule(el) {
+  var today = _todayStr();
+  var plan = _getDayPlan(today);
+
+  // Roll over incomplete tasks from yesterday
+  if (!plan) {
+    var yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    var yStr = yesterday.getFullYear()+'-'+String(yesterday.getMonth()+1).padStart(2,'0')+'-'+String(yesterday.getDate()).padStart(2,'0');
+    var yPlan = _getDayPlan(yStr);
+    var rolledOver = [];
+    if (yPlan && yPlan.tasks) {
+      rolledOver = yPlan.tasks.filter(function(t){ return !t.done; }).map(function(t){
+        return { id: t.id, title: t.title, plannedMin: t.plannedMin, tags: t.tags||[], url: t.url||'', timeSlot: null, done: false };
+      });
+    }
+    plan = { step: 0, focus: '', tasks: rolledOver, startedAt: null };
+    _dsState = plan;
+  } else {
+    _dsState = plan;
+  }
+
+  if (plan.startedAt) {
+    _renderDailyActive(el, plan, today);
+  } else {
+    _renderDailyWizard(el, plan, today);
+  }
+}
+
+function _renderDailyWizard(el, plan, today) {
+  var d = new Date(today+'T00:00:00');
+  var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var monNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dateLabel = dayNames[d.getDay()]+', '+monNames[d.getMonth()]+' '+d.getDate();
+
+  var step = plan.step || 0;
+
+  if (step === 0) {
+    el.innerHTML = '<div class="ds-wizard-wrap">'
+      +'<div style="margin-bottom:32px">'
+      +'<div style="font-size:13px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Daily Schedule</div>'
+      +'<div style="font-size:28px;font-weight:800;color:var(--text);line-height:1.1">'+escH(dateLabel)+'</div>'
+      +'</div>'
+      +'<div class="ds-q-label">What\'s one thing you want to work on today?</div>'
+      +'<div class="ds-q-sub">This becomes your main focus for the day.</div>'
+      +'<textarea class="ds-focus-input" id="ds-focus-input" rows="3" placeholder="e.g. Finish kitchen tile layout for the Henderson job…">'+escH(plan.focus||'')+'</textarea>'
+      +'<div><button class="ds-next-btn" id="ds-step0-next" onclick="_dsStep0Next()">Next →</button></div>'
+      +'</div>';
+    var inp = document.getElementById('ds-focus-input');
+    if (inp) {
+      inp.addEventListener('input', function() {
+        var btn = document.getElementById('ds-step0-next');
+        if (btn) btn.disabled = !this.value.trim();
+      });
+      // Init disabled state
+      var btn0 = document.getElementById('ds-step0-next');
+      if (btn0) btn0.disabled = !inp.value.trim();
+    }
+  } else if (step === 1) {
+    _renderDayPlanStep(el, plan, today);
+  } else if (step === 2) {
+    _renderFillInDayStep(el, plan, today);
+  } else if (step === 3) {
+    _renderDailyPlanSummary(el, plan, today);
+  }
+}
+
+function _dsStep0Next() {
+  var inp = document.getElementById('ds-focus-input');
+  if (!inp || !inp.value.trim()) return;
+  var today = _todayStr();
+  _dsState.focus = inp.value.trim();
+  // Ensure focus task is at top
+  var hasMain = _dsState.tasks.some(function(t){ return t.isMain; });
+  if (!hasMain) {
+    _dsState.tasks.unshift({ id: 'main-'+Date.now(), title: _dsState.focus, plannedMin: 60, tags: [], url: '', timeSlot: null, done: false, isMain: true });
+  } else {
+    var mt = _dsState.tasks.find(function(t){ return t.isMain; });
+    if (mt) mt.title = _dsState.focus;
+  }
+  _dsState.step = 1;
+  _saveDayPlan(today, _dsState);
+  renderSchedule();
+}
+
+function _renderDayPlanStep(el, plan, today) {
+  var totalMin = plan.tasks.reduce(function(s,t){ return s+(t.plannedMin||0); }, 0);
+  var workDayMin = 480; // 8 hours
+  var pct = Math.min(100, Math.round(totalMin/workDayMin*100));
+  var over = totalMin > workDayMin;
+
+  var tasksHtml = plan.tasks.map(function(t, i) {
+    return '<div class="ds-plan-task" id="ds-plan-t-'+i+'">'
+      +'<div class="ds-plan-task-title">'+escH(t.title)+'</div>'
+      +'<button class="ds-plan-time-btn" onclick="_dsOpenTimePopup('+i+', this)">'+_fmtPlanTime(t.plannedMin||0)+'</button>'
+      +'<button onclick="_dsRemoveTask('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:16px;opacity:0.6" title="Remove">×</button>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = '<div class="ds-wizard-wrap">'
+    +'<div class="ds-q-label">How much time do you plan to spend?</div>'
+    +'<div class="ds-q-sub">Adjust planned time for each task. Press <kbd style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:11px">A</kbd> or click below to add more tasks.</div>'
+    +'<div class="ds-plan-wrap">'
+    +'<div class="ds-time-bar-col">'
+    +'<div class="ds-time-bar-label">Total Planned</div>'
+    +'<div class="ds-time-bar-total" id="ds-total-label">'+_fmtMin(totalMin)+'</div>'
+    +'<div class="ds-time-bar-sub" id="ds-total-sub">'+(over?'Over by '+_fmtMin(totalMin-workDayMin):_fmtMin(workDayMin-totalMin)+' remaining')+'</div>'
+    +'<div class="ds-time-bar-track"><div class="ds-time-bar-fill'+(over?' over':'')+'" id="ds-time-bar-fill" style="width:'+pct+'%"></div></div>'
+    +'</div>'
+    +'<div class="ds-tasks-col">'
+    +tasksHtml
+    +'<div class="ds-add-task-row" id="ds-add-row" onclick="_dsOpenAddTask()">'
+    +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    +' Add Task'
+    +'</div>'
+    +'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin-top:24px">'
+    +'<button class="ds-next-btn" onclick="_dsStep1Back()" style="background:rgba(255,255,255,0.08);color:var(--text)">← Back</button>'
+    +'<button class="ds-next-btn" onclick="_dsStep1Next()">Next: Fill in your day →</button>'
+    +'</div>'
+    +'</div>';
+}
+
+function _dsUpdateTimeBar() {
+  if (!_dsState) return;
+  var totalMin = _dsState.tasks.reduce(function(s,t){ return s+(t.plannedMin||0); }, 0);
+  var workDayMin = 480;
+  var pct = Math.min(100, Math.round(totalMin/workDayMin*100));
+  var over = totalMin > workDayMin;
+  var fill = document.getElementById('ds-time-bar-fill');
+  var lbl = document.getElementById('ds-total-label');
+  var sub = document.getElementById('ds-total-sub');
+  if (fill) { fill.style.width = pct+'%'; fill.className = 'ds-time-bar-fill'+(over?' over':''); }
+  if (lbl) lbl.textContent = _fmtMin(totalMin);
+  if (sub) sub.textContent = over ? 'Over by '+_fmtMin(totalMin-workDayMin) : _fmtMin(workDayMin-totalMin)+' remaining';
+}
+
+var _dsTimePopupIdx = -1;
+function _dsOpenTimePopup(idx, btn) {
+  _dsTimePopupIdx = idx;
+  var existing = document.getElementById('ds-time-popup');
+  if (existing) existing.remove();
+  var opts = _planTimeOpts();
+  var curMin = (_dsState.tasks[idx]||{}).plannedMin || 0;
+  var html = '<div id="ds-time-popup" class="sched-time-dropdown">';
+  opts.forEach(function(m) {
+    html += '<div class="sched-time-opt'+(m===curMin?' selected':'')+'" onclick="_dsSetTaskTime('+idx+','+m+')">' + _fmtPlanTime(m) + '</div>';
+  });
+  html += '</div>';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;display:inline-block';
+  btn.parentNode.insertBefore(wrap, btn.nextSibling);
+  wrap.innerHTML = html;
+  var popup = document.getElementById('ds-time-popup');
+  popup.style.position = 'fixed';
+  var r = btn.getBoundingClientRect();
+  popup.style.top = (r.bottom+4)+'px';
+  popup.style.left = r.left+'px';
+  document.body.appendChild(popup);
+  setTimeout(function() {
+    document.addEventListener('click', function closer(e) {
+      if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); document.removeEventListener('click', closer); }
+    });
+  }, 10);
+}
+
+function _dsSetTaskTime(idx, min) {
+  if (_dsState && _dsState.tasks[idx]) {
+    _dsState.tasks[idx].plannedMin = min;
+    _saveDayPlan(_todayStr(), _dsState);
+    _dsUpdateTimeBar();
+    var btn = document.querySelector('#ds-plan-t-'+idx+' .ds-plan-time-btn');
+    if (btn) btn.textContent = _fmtPlanTime(min);
+    var p = document.getElementById('ds-time-popup');
+    if (p) p.remove();
+  }
+}
+
+function _dsRemoveTask(idx) {
+  if (!_dsState) return;
+  _dsState.tasks.splice(idx, 1);
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+
+function _dsStep1Back() {
+  if (!_dsState) return;
+  _dsState.step = 0;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsStep1Next() {
+  if (!_dsState) return;
+  _dsState.step = 2;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+
+// Add task popup for Daily Schedule
+var _dsAddCallback = null;
+function _dsOpenAddTask() {
+  _dsAddCallback = function(task) {
+    if (!_dsState) return;
+    _dsState.tasks.push(task);
+    _saveDayPlan(_todayStr(), _dsState);
+    renderSchedule();
+  };
+  _openSchedAddPopup({ section: null, onSave: _dsAddCallback });
+}
+// Keyboard shortcut 'A' in step 1
+document.addEventListener('keydown', function(e) {
+  if (currentView !== 'schedule' || _scheduleTab !== 'daily') return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'a' || e.key === 'A') {
+    if (_dsState && _dsState.step === 1 && !_dsState.startedAt) _dsOpenAddTask();
+  }
+});
+
+// ─── Fill In Your Day (step 2) ──────────────────────────────────────────────
+function _renderFillInDayStep(el, plan, today) {
+  var hours = [];
+  for (var h = 6; h <= 21; h++) {
+    hours.push({ label: _fmt12hr(h), h: h, slot: _padH(h)+':00' });
+    hours.push({ label: '', h: h, slot: _padH(h)+':30' });
+  }
+
+  var taskListHtml = plan.tasks.map(function(t, i) {
+    var placed = plan.tasks.some(function(x){ return x !== t && x.timeSlot; }) || t.timeSlot;
+    return '<div class="ds-day-task-chip'+(t.timeSlot?' placed':'')+'" id="ds-chip-'+i+'" draggable="true" '
+      +'ondragstart="_dsDragStart(event,'+i+')">'
+      +escH(t.title)+' ('+_fmtPlanTime(t.plannedMin||0)+')'
+      +'</div>';
+  }).join('');
+
+  var slotsHtml = hours.map(function(info) {
+    var task = plan.tasks.find(function(t){ return t.timeSlot === info.slot; });
+    return '<div class="ds-time-slot'+(task?' has-task':'')+'" ondragover="event.preventDefault()" ondrop="_dsDrop(event,\''+info.slot+'\')" onclick="_dsSlotClick(\''+info.slot+'\')">'
+      +'<div class="ds-slot-label">'+escH(info.label)+'</div>'
+      +'<div class="ds-slot-body">'
+      +(task ? '<div class="ds-slot-task"><span>'+escH(task.title)+'</span><span class="ds-slot-task-del" onclick="event.stopPropagation();_dsRemoveSlot(\''+info.slot+'\')">×</span></div>' : '')
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = '<div class="ds-wizard-wrap" style="max-width:760px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+    +'<div class="ds-q-label" style="margin-bottom:0">Fill in your day.</div>'
+    +'<button class="ds-next-btn" onclick="_dsStep2Next()">Next: Daily Plan →</button>'
+    +'</div>'
+    +'<div class="ds-day-wrap">'
+    +'<div class="ds-day-task-list">'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Your Tasks</div>'
+    +taskListHtml
+    +'</div>'
+    +'<div class="ds-time-grid" id="ds-time-grid">'
+    +slotsHtml
+    +'</div>'
+    +'</div>'
+    +'<button class="ds-next-btn" onclick="_dsStep2Back()" style="margin-top:16px;background:rgba(255,255,255,0.08);color:var(--text)">← Back</button>'
+    +'</div>';
+}
+
+var _dsDragIdx = -1;
+function _dsDragStart(e, idx) { _dsDragIdx = idx; e.dataTransfer.effectAllowed = 'move'; }
+function _dsDrop(e, slot) {
+  e.preventDefault();
+  if (_dsDragIdx < 0 || !_dsState) return;
+  // Remove old slot for this task
+  var t = _dsState.tasks[_dsDragIdx];
+  if (!t) return;
+  // Clear any other task on this slot
+  _dsState.tasks.forEach(function(x){ if(x.timeSlot === slot && x !== t) x.timeSlot = null; });
+  t.timeSlot = slot;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+  _dsDragIdx = -1;
+}
+var _dsSlotClickPending = null;
+function _dsSlotClick(slot) {
+  // If no drag/drop, show picker to assign task
+  if (!_dsState) return;
+  var unplaced = _dsState.tasks.filter(function(t){ return !t.timeSlot; });
+  if (!unplaced.length) return;
+  // Assign first unplaced task
+  _dsState.tasks.forEach(function(x){ if(x.timeSlot === slot) x.timeSlot = null; });
+  unplaced[0].timeSlot = slot;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsRemoveSlot(slot) {
+  if (!_dsState) return;
+  _dsState.tasks.forEach(function(t){ if(t.timeSlot === slot) t.timeSlot = null; });
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsStep2Back() {
+  if (!_dsState) return;
+  _dsState.step = 1;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsStep2Next() {
+  if (!_dsState) return;
+  _dsState.step = 3;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+
+function _fmt12hr(h) {
+  if (h === 0) return '12am';
+  if (h === 12) return '12pm';
+  return h < 12 ? h+'am' : (h-12)+'pm';
+}
+function _padH(h) { return String(h).padStart(2,'0'); }
+
+// ─── Daily Plan Summary (step 3) ─────────────────────────────────────────────
+function _renderDailyPlanSummary(el, plan, today) {
+  var d = new Date(today+'T00:00:00');
+  var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var monNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var scheduledTasks = plan.tasks.filter(function(t){ return t.timeSlot; })
+    .sort(function(a,b){ return a.timeSlot < b.timeSlot ? -1 : 1; });
+  var unscheduledTasks = plan.tasks.filter(function(t){ return !t.timeSlot; });
+
+  var linesHtml = '';
+  scheduledTasks.forEach(function(t) {
+    var slot12 = _slotTo12(t.timeSlot);
+    linesHtml += '<div class="ds-plan-line">'
+      +'<div class="ds-plan-time-tag">'+escH(slot12)+'</div>'
+      +'<div class="ds-plan-task-name">'+escH(t.title)+'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted);margin-left:auto">'+_fmtPlanTime(t.plannedMin||0)+'</div>'
+      +'</div>';
+  });
+  unscheduledTasks.forEach(function(t) {
+    linesHtml += '<div class="ds-plan-line">'
+      +'<div class="ds-plan-time-tag" style="color:rgba(255,255,255,0.2)">—</div>'
+      +'<div class="ds-plan-task-name">'+escH(t.title)+'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted);margin-left:auto">'+_fmtPlanTime(t.plannedMin||0)+'</div>'
+      +'</div>';
+  });
+
+  el.innerHTML = '<div class="ds-wizard-wrap">'
+    +'<div class="ds-q-label" style="margin-bottom:4px">Daily Plan</div>'
+    +'<div class="ds-q-sub">'+dayNames[d.getDay()]+', '+monNames[d.getMonth()]+' '+d.getDate()+'</div>'
+    +'<div class="ds-plan-summary">'
+    +'<div class="ds-plan-summary-hdr">'+plan.tasks.length+' tasks · '+_fmtMin(plan.tasks.reduce(function(s,t){ return s+(t.plannedMin||0); },0))+' planned</div>'
+    +(linesHtml || '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No tasks planned yet — go back and add some.</div>')
+    +'</div>'
+    +'<div style="display:flex;gap:10px;">'
+    +'<button class="ds-next-btn" onclick="_dsStep3Back()" style="background:rgba(255,255,255,0.08);color:var(--text)">← Back</button>'
+    +'<button class="ds-next-btn" onclick="_dsGetStarted()" style="background:linear-gradient(135deg,#10b981,#059669)">Get Started ✓</button>'
+    +'</div>'
+    +'</div>';
+}
+
+function _slotTo12(slot) {
+  if (!slot) return '';
+  var p = slot.split(':');
+  var h = parseInt(p[0]), m = p[1];
+  var ampm = h < 12 ? 'am' : 'pm';
+  var h12 = h % 12 || 12;
+  return h12+(m!=='00'?':'+m:'')+ampm;
+}
+
+function _dsStep3Back() {
+  if (!_dsState) return;
+  _dsState.step = 2;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsGetStarted() {
+  if (!_dsState) return;
+  _dsState.startedAt = new Date().toISOString();
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+
+// ─── Daily Active View ───────────────────────────────────────────────────────
+function _renderDailyActive(el, plan, today) {
+  var d = new Date(today+'T00:00:00');
+  var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var monNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var done = plan.tasks.filter(function(t){ return t.done; }).length;
+  var total = plan.tasks.length;
+  var pct = total ? Math.round(done/total*100) : 0;
+
+  var scheduledTasks = plan.tasks.filter(function(t){ return t.timeSlot; })
+    .sort(function(a,b){ return a.timeSlot < b.timeSlot ? -1 : 1; });
+  var unscheduledTasks = plan.tasks.filter(function(t){ return !t.timeSlot; });
+  var allSorted = scheduledTasks.concat(unscheduledTasks);
+
+  var taskRows = allSorted.map(function(t, i) {
+    var realIdx = plan.tasks.indexOf(t);
+    return '<div class="ds-task-item'+(t.done?' done':'')+'">'
+      +'<div class="ds-task-item-check'+(t.done?' done':'')+'" onclick="_dsToggleTaskDone(\''+today+'\','+realIdx+')">'
+      +'<div class="ds-task-check-inner"></div>'
+      +'</div>'
+      +'<div class="ds-task-item-body">'
+      +'<div class="ds-task-item-title">'+escH(t.title)+'</div>'
+      +(t.timeSlot ? '<div class="ds-task-item-meta">'+escH(_slotTo12(t.timeSlot))+' · '+_fmtPlanTime(t.plannedMin||0)+'</div>' : '<div class="ds-task-item-meta">'+_fmtPlanTime(t.plannedMin||0)+'</div>')
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = '<div>'
+    +'<div class="ds-active-hdr">'
+    +'<div>'
+    +'<div class="ds-active-date">'+dayNames[d.getDay()]+', '+monNames[d.getMonth()]+' '+d.getDate()+'</div>'
+    +'<div class="ds-active-sub">'+escH(plan.focus||'')+'</div>'
+    +'</div>'
+    +'<div class="ds-active-prog">'
+    +'<span style="font-size:12px;color:var(--text-muted)">'+done+'/'+total+'</span>'
+    +'<div class="ds-active-prog-bar"><div class="ds-active-prog-fill" style="width:'+pct+'%"></div></div>'
+    +'<button onclick="_dsRePlan()" class="btn btn-ghost btn-sm" style="font-size:11px">Re-plan</button>'
+    +'</div>'
+    +'</div>'
+    +(taskRows || '<div style="color:var(--text-muted);font-size:14px;padding:24px 0">No tasks for today. <button class="btn btn-ghost btn-sm" onclick="_dsRePlan()">Add tasks →</button></div>')
+    +'</div>';
+}
+
+function _dsToggleTaskDone(dateStr, idx) {
+  var plan = _getDayPlan(dateStr);
+  if (!plan || !plan.tasks[idx]) return;
+  plan.tasks[idx].done = !plan.tasks[idx].done;
+  _dsState = plan;
+  _saveDayPlan(dateStr, plan);
+  // Animate the check
+  var checks = document.querySelectorAll('.ds-task-item-check');
+  if (checks[idx]) {
+    checks[idx].classList.toggle('done', plan.tasks[idx].done);
+    var inner = checks[idx].querySelector('.ds-task-check-inner');
+    if (inner) {
+      inner.style.transform = plan.tasks[idx].done ? 'scale(1)' : 'scale(0)';
+    }
+    var row = checks[idx].closest('.ds-task-item');
+    if (row) row.classList.toggle('done', plan.tasks[idx].done);
+  }
+  // Update progress bar
+  var done = plan.tasks.filter(function(t){ return t.done; }).length;
+  var pct = plan.tasks.length ? Math.round(done/plan.tasks.length*100) : 0;
+  var bar = document.querySelector('.ds-active-prog-fill');
+  if (bar) bar.style.width = pct+'%';
+  var cnt = document.querySelector('.ds-active-prog span');
+  if (cnt) cnt.textContent = done+'/'+plan.tasks.length;
+}
+
+function _dsRePlan() {
+  if (!_dsState) return;
+  _dsState.startedAt = null;
+  _dsState.step = 1;
+  _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+
+// ─── Add Task Popup (shared) ─────────────────────────────────────────────────
+var _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: null, due: null, onSave: null };
+var _schedTagInput = '';
+var _schedTimeDropShown = false;
+
+function _openSchedAddPopup(opts) {
+  _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: opts.section||null, due: opts.due||null, onSave: opts.onSave||null };
+  var existing = document.getElementById('sched-add-popup');
+  if (existing) existing.remove();
+  var sectionLabel = opts.section ? ' to "'+escH(opts.section)+'"' : '';
+  var popup = document.createElement('div');
+  popup.className = 'sched-add-popup';
+  popup.id = 'sched-add-popup';
+  popup.onclick = function(e){ if(e.target===popup) _closeSchedAdd(); };
+  popup.innerHTML = '<div class="sched-add-popup-inner">'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Add Task'+sectionLabel+'</div>'
+    +'<input class="sched-add-title-input" id="sched-add-title" placeholder="Task description…" autocomplete="off">'
+    +'<div class="sched-add-meta-row">'
+    +'<button class="sched-meta-btn" id="sched-time-btn" onclick="_toggleSchedTimeMenu()">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>'
+    +' <span id="sched-time-lbl">Time</span>'
+    +'</button>'
+    +(opts.section !== null ? '' : '')  // Date picker only for backlog
+    +'<button class="sched-meta-btn" id="sched-tag-btn" onclick="_toggleSchedTagInput()">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
+    +' Tags'
+    +'</button>'
+    +'</div>'
+    +'<div id="sched-tag-area" style="display:none;margin-bottom:10px">'
+    +'<input id="sched-tag-input" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:13px;outline:none" placeholder="Type tag, press Enter…">'
+    +'<div class="sched-tag-row" id="sched-tag-chips" style="margin-top:6px"></div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:flex-end">'
+    +'<button class="sched-add-submit-btn" onclick="_submitSchedAdd()">↑</button>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(popup);
+  var inp = document.getElementById('sched-add-title');
+  if (inp) {
+    inp.focus();
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); _submitSchedAdd(); } if(e.key==='Escape') _closeSchedAdd(); });
+  }
+  var tagInp = document.getElementById('sched-tag-input');
+  if (tagInp) tagInp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); _addSchedTag(this.value.trim()); this.value=''; } });
+}
+
+function _toggleSchedTimeMenu() {
+  var existing = document.getElementById('sched-time-popup');
+  if (existing) { existing.remove(); return; }
+  var opts = _planTimeOpts();
+  var html = '<div id="sched-time-popup" class="sched-time-dropdown">';
+  opts.forEach(function(m) {
+    html += '<div class="sched-time-opt'+(m===_schedAddState.plannedMin?' selected':'')+'" onclick="_setSchedTime('+m+')">' + _fmtPlanTime(m) + '</div>';
+  });
+  html += '</div>';
+  var btn = document.getElementById('sched-time-btn');
+  if (!btn) return;
+  var r = btn.getBoundingClientRect();
+  var div = document.createElement('div');
+  div.innerHTML = html;
+  var popup = div.firstChild;
+  popup.style.position = 'fixed';
+  popup.style.top = (r.bottom+4)+'px';
+  popup.style.left = r.left+'px';
+  popup.style.zIndex = '2000';
+  document.body.appendChild(popup);
+  setTimeout(function() {
+    document.addEventListener('click', function closer(e) {
+      if (!popup.contains(e.target) && e.target !== btn) { popup.remove(); document.removeEventListener('click', closer); }
+    });
+  }, 10);
+}
+function _setSchedTime(m) {
+  _schedAddState.plannedMin = m;
+  var lbl = document.getElementById('sched-time-lbl');
+  if (lbl) lbl.textContent = _fmtPlanTime(m);
+  var btn = document.getElementById('sched-time-btn');
+  if (btn) btn.classList.add('active');
+  var p = document.getElementById('sched-time-popup');
+  if (p) p.remove();
+}
+function _toggleSchedTagInput() {
+  var area = document.getElementById('sched-tag-area');
+  if (!area) return;
+  area.style.display = area.style.display==='none' ? '' : 'none';
+  if (area.style.display !== 'none') { var i = document.getElementById('sched-tag-input'); if(i) i.focus(); }
+}
+function _addSchedTag(tag) {
+  if (!tag || _schedAddState.tags.includes(tag)) return;
+  _schedAddState.tags.push(tag);
+  var chips = document.getElementById('sched-tag-chips');
+  if (chips) chips.innerHTML = _schedAddState.tags.map(function(t){ return '<span class="sched-tag-chip" onclick="this.remove();_schedAddState.tags.splice(_schedAddState.tags.indexOf(\''+escH(t)+'\'),1)">'+escH(t)+'</span>'; }).join('');
+}
+function _submitSchedAdd() {
+  var inp = document.getElementById('sched-add-title');
+  var title = inp ? inp.value.trim() : '';
+  if (!title) { toast('Please enter a task description'); return; }
+  var task = { id: 'sched-'+Date.now(), title: title, plannedMin: _schedAddState.plannedMin, tags: _schedAddState.tags.slice(), url: _schedAddState.url, timeSlot: null, done: false };
+  if (_schedAddState.onSave) _schedAddState.onSave(task);
+  _closeSchedAdd();
+}
+function _closeSchedAdd() {
+  var popup = document.getElementById('sched-add-popup');
+  if (popup) popup.remove();
+}
+
+// ─── Weekly Plan ─────────────────────────────────────────────────────────────
+var _wkPlanDragData = null;
+
+function renderWeeklyPlan(el) {
+  var today = _todayStr();
+  var todayD = new Date(today+'T00:00:00');
+  var days = [];
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(todayD); d.setDate(todayD.getDate()+i);
+    days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
+  }
+
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var allTasks = (state.tasks||[]).filter(function(t){ return !t.archived; });
+  var todayPlan = _getDayPlan(today);
+
+  // Collect tasks per day (from main tasks that have due dates, plus daily plan tasks)
+  var tasksByDay = {};
+  days.forEach(function(d){ tasksByDay[d] = []; });
+
+  allTasks.forEach(function(t) {
+    var due = t.due || t.start;
+    if (due && tasksByDay[due]) {
+      tasksByDay[due].push({ id: t.id, title: t.title, done: t.status==='done', source: 'task', priority: t.priority });
+    }
+  });
+
+  // Add today's plan tasks
+  if (todayPlan && todayPlan.tasks) {
+    todayPlan.tasks.forEach(function(t) {
+      var exists = tasksByDay[today].some(function(x){ return x.id === t.id; });
+      if (!exists) tasksByDay[today].push({ id: t.id, title: t.title, done: t.done, source: 'daily', timeSlot: t.timeSlot });
+    });
+  }
+
+  var colsHtml = days.map(function(day) {
+    var d = new Date(day+'T00:00:00');
+    var isToday = day === today;
+    var tasks = tasksByDay[day] || [];
+    var doneCount = tasks.filter(function(t){ return t.done; }).length;
+    var pct = tasks.length ? Math.round(doneCount/tasks.length*100) : 0;
+
+    var taskCards = tasks.map(function(t) {
+      var priColor = { high:'#ef4444', medium:'#f59e0b', low:'rgba(255,255,255,0.2)' }[t.priority||'low']||'rgba(255,255,255,0.2)';
+      return '<div class="wk-task-card'+(t.done?' done':'')+'" id="wk-card-'+t.id+'" draggable="true" '
+        +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)">'
+        +'<div class="wk-task-card-title">'+escH(t.title)+'</div>'
+        +(t.timeSlot ? '<div class="wk-task-card-meta">'+escH(_slotTo12(t.timeSlot))+'</div>' : '')
+        +'<div class="wk-task-card-foot">'
+        +'<div class="wk-task-check'+(t.done?' done':'')+'" onclick="_wkToggleDone(\''+t.id+'\',\''+day+'\',\''+t.source+'\',this)"></div>'
+        +(t.priority&&t.priority!=='low' ? '<div style="width:6px;height:6px;border-radius:50%;background:'+priColor+';flex-shrink:0"></div>' : '')
+        +'</div>'
+        +'</div>';
+    }).join('');
+
+    return '<div class="wk-plan-col">'
+      +'<div class="wk-col-hdr'+(isToday?' is-today':'')+'">'
+      +'<div class="wk-col-weekday">'+dayNames[d.getDay()]+'</div>'
+      +'<div class="wk-col-date">'+d.getDate()+'</div>'
+      +'<div class="wk-col-prog"><div class="wk-col-prog-fill" style="width:'+pct+'%"></div></div>'
+      +'</div>'
+      +'<div class="wk-col-body" id="wk-col-'+day+'" ondragover="event.preventDefault();_wkDragOver(event,\''+day+'\')" ondragleave="_wkDragLeave(event)" ondrop="_wkDropOn(event,\''+day+'\')">'
+      +(taskCards || '<div class="wk-drop-target" id="wk-dt-'+day+'"></div>')
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  // Floating today timeline
+  var now = new Date();
+  var curSlot = now.getHours()*60+now.getMinutes();
+  var dayStart = 6*60, dayEnd = 22*60;
+  var tlPct = Math.max(0, Math.min(100, (curSlot-dayStart)/(dayEnd-dayStart)*100));
+  var tlTasks = tasksByDay[today] || [];
+  var tlHtml = tlTasks.slice(0,8).map(function(t){
+    return '<div class="wk-today-tl-event" style="background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(t.title.slice(0,18))+'</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="display:flex;gap:0;align-items:flex-start">'
+    +'<div class="wk-plan-wrap" style="flex:1">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+    +'<button class="btn btn-ghost btn-sm" onclick="_wkJumpToday()">Jump to Today</button>'
+    +'<button class="btn btn-ghost btn-sm" id="wk-filter-btn" onclick="_wkOpenFilter()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter</button>'
+    +'</div>'
+    +'<div class="wk-plan-grid" id="wk-grid" style="grid-template-columns:repeat(14,minmax(110px,1fr))">'
+    +colsHtml
+    +'</div>'
+    +'</div>'
+    +'<div class="wk-today-timeline">'
+    +'<div class="wk-today-tl-hdr">Today</div>'
+    +'<div style="position:relative;padding:0 0 8px">'
+    +(tlTasks.length ? tlHtml : '<div style="padding:4px 12px;font-size:11px;color:var(--text-muted)">No tasks</div>')
+    +'<div class="wk-today-tl-now" style="top:'+tlPct+'%"></div>'
+    +'</div>'
+    +'<div style="padding:4px 12px;font-size:10px;color:var(--text-muted)">'
+    +_fmt12hr(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0')
+    +'</div>'
+    +'</div>'
+    +'</div>';
+}
+
+function _wkDragStart(e, taskId, fromDay) {
+  _wkPlanDragData = { taskId: taskId, fromDay: fromDay };
+  e.dataTransfer.effectAllowed = 'move';
+  var card = document.getElementById('wk-card-'+taskId);
+  if (card) { setTimeout(function(){ card.classList.add('dragging'); }, 0); }
+}
+function _wkDragEnd(e) {
+  document.querySelectorAll('.wk-task-card.dragging').forEach(function(c){ c.classList.remove('dragging'); });
+  document.querySelectorAll('.wk-col-body').forEach(function(c){ c.classList.remove('drag-over'); });
+}
+function _wkDragOver(e, day) {
+  document.querySelectorAll('.wk-col-body').forEach(function(c){ c.classList.remove('drag-over'); });
+  var col = document.getElementById('wk-col-'+day);
+  if (col) col.classList.add('drag-over');
+}
+function _wkDragLeave(e) {
+  if (e.target.classList && e.target.classList.contains('wk-col-body')) e.target.classList.remove('drag-over');
+}
+function _wkDropOn(e, toDay) {
+  e.preventDefault();
+  document.querySelectorAll('.wk-col-body').forEach(function(c){ c.classList.remove('drag-over'); });
+  if (!_wkPlanDragData) return;
+  var taskId = _wkPlanDragData.taskId;
+  var fromDay = _wkPlanDragData.fromDay;
+  _wkPlanDragData = null;
+  if (fromDay === toDay) return;
+
+  // Update task due date
+  var t = (state.tasks||[]).find(function(x){ return x.id === taskId; });
+  if (t) { updateItem('tasks', taskId, { due: toDay, start: toDay }); toast('Rescheduled to '+toDay); }
+  else {
+    // Daily plan task
+    var plan = _getDayPlan(fromDay);
+    if (plan) {
+      var pt = plan.tasks.find(function(x){ return x.id === taskId; });
+      if (pt) {
+        plan.tasks = plan.tasks.filter(function(x){ return x.id !== taskId; });
+        _saveDayPlan(fromDay, plan);
+        var toPlan = _getDayPlan(toDay) || { step: 4, focus: '', tasks: [], startedAt: null };
+        toPlan.tasks.push(pt);
+        _saveDayPlan(toDay, toPlan);
+        toast('Moved to '+toDay);
+      }
+    }
+  }
+  renderSchedule();
+}
+
+function _wkToggleDone(taskId, day, source, el) {
+  el.classList.toggle('done');
+  el.classList.add('just-done');
+  setTimeout(function(){ el.classList.remove('just-done'); }, 400);
+  if (source === 'task') {
+    var t = (state.tasks||[]).find(function(x){ return x.id === taskId; });
+    if (t) { var newStatus = t.status==='done' ? 'active' : 'done'; updateItem('tasks', taskId, { status: newStatus }); }
+  } else {
+    var plan = _getDayPlan(day);
+    if (plan) {
+      var pt = plan.tasks.find(function(x){ return x.id === taskId; });
+      if (pt) { pt.done = !pt.done; _saveDayPlan(day, plan); }
+    }
+  }
+  var card = el.closest('.wk-task-card');
+  if (card) card.classList.toggle('done');
+}
+
+function _wkJumpToday() {
+  var grid = document.getElementById('wk-grid');
+  if (grid) { var first = grid.querySelector('.wk-col-hdr.is-today'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }
+}
+function _wkOpenFilter() { toast('Filter by tags coming soon'); }
+
+// ─── Backlog ─────────────────────────────────────────────────────────────────
+var _blSections = [
+  { key: 'week2', label: 'Someday in the next week or two', color: '#10b981' },
+  { key: 'month', label: 'Someday in the next month', color: '#14b8a6' },
+  { key: 'quarter', label: 'Someday in the next quarter', color: '#4f8ef7' },
+  { key: 'year', label: 'Someday in the next year', color: '#a78bfa' },
+  { key: 'someday', label: 'Someday', color: '#64748b' },
+  { key: 'never', label: 'Never', color: '#475569' }
+];
+var _blCollapsed = {};
+
+function _getBacklog() {
+  try { return JSON.parse(localStorage.getItem('fop_backlog')||'[]'); } catch(e) { return []; }
+}
+function _saveBacklog(items) {
+  try { localStorage.setItem('fop_backlog', JSON.stringify(items)); state.backlog = items; } catch(e) {}
+}
+
+function renderBacklog(el) {
+  var items = _getBacklog();
+  var sectionsHtml = _blSections.map(function(sec) {
+    var secItems = items.filter(function(i){ return i.section === sec.key && !i.archived; });
+    var collapsed = _blCollapsed[sec.key] ? ' collapsed' : '';
+    var rowsHtml = secItems.map(function(item) {
+      return '<div class="bl-task-row" onclick="_blOpenItem(\''+item.id+'\')">'
+        +'<div class="bl-task-title">'+escH(item.title)+'</div>'
+        +(item.plannedMin ? '<div class="bl-task-meta">'+_fmtPlanTime(item.plannedMin)+'</div>' : '')
+        +(item.tags&&item.tags.length ? '<div class="bl-task-meta">'+item.tags.map(function(t){ return '<span style="background:rgba(79,142,247,0.1);color:var(--accent);padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700">'+escH(t)+'</span>'; }).join(' ')+'</div>' : '')
+        +'<button onclick="event.stopPropagation();_blArchive(\''+item.id+'\')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:13px;opacity:0.5;flex-shrink:0" title="Remove">×</button>'
+        +'</div>';
+    }).join('');
+
+    return '<div class="bl-section'+collapsed+'" id="bl-sec-'+sec.key+'">'
+      +'<div class="bl-section-hdr" onclick="_blToggleSection(\''+sec.key+'\')">'
+      +'<div class="bl-section-dot" style="background:'+sec.color+'"></div>'
+      +'<div class="bl-section-title" style="color:'+sec.color+'">'+escH(sec.label)+'</div>'
+      +'<div class="bl-section-count">'+secItems.length+'</div>'
+      +'<div class="bl-section-toggle">▾</div>'
+      +'</div>'
+      +'<div class="bl-section-body">'
+      +rowsHtml
+      +'<div class="bl-add-row" onclick="_blOpenAdd(\''+sec.key+'\',\''+escH(sec.label)+'\')">'
+      +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      +' Add task'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+
+  el.innerHTML = sectionsHtml;
+}
+
+function _blToggleSection(key) {
+  _blCollapsed[key] = !_blCollapsed[key];
+  var sec = document.getElementById('bl-sec-'+key);
+  if (sec) sec.classList.toggle('collapsed', !!_blCollapsed[key]);
+}
+
+function _blOpenAdd(sectionKey, sectionLabel) {
+  _openSchedAddPopup({
+    section: sectionLabel,
+    onSave: function(task) {
+      var items = _getBacklog();
+      task.section = sectionKey;
+      task.createdAt = new Date().toISOString();
+      items.unshift(task);
+      _saveBacklog(items);
+      renderSchedule();
+    }
+  });
+}
+function _blArchive(id) {
+  var items = _getBacklog();
+  var item = items.find(function(x){ return x.id===id; });
+  if (item) { item.archived = true; _saveBacklog(items); renderSchedule(); }
+}
+function _blOpenItem(id) {
+  var item = _getBacklog().find(function(x){ return x.id===id; });
+  if (!item) return;
+  toast(escH(item.title) + (item.plannedMin ? ' · '+_fmtPlanTime(item.plannedMin) : ''));
+}
+
+window.switchScheduleTab = switchScheduleTab;
+window.renderSchedule = renderSchedule;
+window._dsStep0Next = _dsStep0Next;
+window._dsOpenTimePopup = _dsOpenTimePopup;
+window._dsSetTaskTime = _dsSetTaskTime;
+window._dsRemoveTask = _dsRemoveTask;
+window._dsStep1Back = _dsStep1Back;
+window._dsStep1Next = _dsStep1Next;
+window._dsOpenAddTask = _dsOpenAddTask;
+window._dsDragStart = _dsDragStart;
+window._dsDrop = _dsDrop;
+window._dsSlotClick = _dsSlotClick;
+window._dsRemoveSlot = _dsRemoveSlot;
+window._dsStep2Back = _dsStep2Back;
+window._dsStep2Next = _dsStep2Next;
+window._dsStep3Back = _dsStep3Back;
+window._dsGetStarted = _dsGetStarted;
+window._dsToggleTaskDone = _dsToggleTaskDone;
+window._dsRePlan = _dsRePlan;
+window._toggleSchedTimeMenu = _toggleSchedTimeMenu;
+window._setSchedTime = _setSchedTime;
+window._toggleSchedTagInput = _toggleSchedTagInput;
+window._addSchedTag = _addSchedTag;
+window._submitSchedAdd = _submitSchedAdd;
+window._closeSchedAdd = _closeSchedAdd;
+window._wkDragStart = _wkDragStart;
+window._wkDragEnd = _wkDragEnd;
+window._wkDragOver = _wkDragOver;
+window._wkDragLeave = _wkDragLeave;
+window._wkDropOn = _wkDropOn;
+window._wkToggleDone = _wkToggleDone;
+window._wkJumpToday = _wkJumpToday;
+window._wkOpenFilter = _wkOpenFilter;
+window._blToggleSection = _blToggleSection;
+window._blOpenAdd = _blOpenAdd;
+window._blArchive = _blArchive;
+window._blOpenItem = _blOpenItem;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
