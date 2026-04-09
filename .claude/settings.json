@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -sL \"https://itshover.com/r/gear-icon.json\")"
+      "Bash(curl -sL \"https://itshover.com/r/gear-icon.json\")",
+      "Bash(node -e ':*)"
     ]
   }
 }
