@@ -15470,7 +15470,7 @@ function _dsStep0Next() {
 
 function _renderDayPlanStep(el, plan, today) {
   var totalMin = plan.tasks.reduce(function(s,t){ return s+(t.plannedMin||0); }, 0);
-  var workDayMin = 480; // 8 hours
+  var workDayMin = 540; // 9 hours
   var pct = Math.min(100, Math.round(totalMin/workDayMin*100));
   var over = totalMin > workDayMin;
 
@@ -15510,7 +15510,7 @@ function _renderDayPlanStep(el, plan, today) {
 function _dsUpdateTimeBar() {
   if (!_dsState) return;
   var totalMin = _dsState.tasks.reduce(function(s,t){ return s+(t.plannedMin||0); }, 0);
-  var workDayMin = 480;
+  var workDayMin = 540;
   var pct = Math.min(100, Math.round(totalMin/workDayMin*100));
   var over = totalMin > workDayMin;
   var fill = document.getElementById('ds-time-bar-fill');
