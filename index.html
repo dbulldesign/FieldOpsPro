@@ -1575,13 +1575,18 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 
 /* Add task popup (shared) */
 .sched-add-popup {
-  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(0,0,0,0.55); animation: fadeIn 0.15s ease;
+  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55); animation: fadeIn 0.15s ease; padding: 20px;
 }
 .sched-add-popup-inner {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0;
-  padding: 20px 20px 32px; width: 100%; max-width: 540px;
-  animation: slideUp 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 20px 20px 24px; width: 100%; max-width: 480px;
+  max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.22s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@media (max-width: 600px) {
+  .sched-add-popup { align-items: flex-end; padding: 0; }
+  .sched-add-popup-inner { border-radius: 20px 20px 0 0; max-height: 75vh; padding-bottom: env(safe-area-inset-bottom, 24px); }
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .sched-add-title-input {
