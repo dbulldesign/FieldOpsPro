@@ -1421,32 +1421,49 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 .ds-add-task-row:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Fill in your day — time grid */
-.ds-day-wrap { display: flex; gap: 24px; align-items: flex-start; }
-.ds-day-task-list { width: 200px; flex-shrink: 0; }
+.ds-day-wrap { display: flex; gap: 20px; align-items: flex-start; }
+.ds-day-task-list { width: 190px; flex-shrink: 0; }
 .ds-day-task-chip {
   padding: 8px 12px; border-radius: 10px; background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.2);
   color: var(--accent); font-size: 12px; font-weight: 600; margin-bottom: 6px;
-  cursor: grab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  transition: box-shadow 0.12s, transform 0.12s;
+  cursor: grab; transition: box-shadow 0.12s, transform 0.12s;
 }
 .ds-day-task-chip:active { cursor: grabbing; transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
-.ds-day-task-chip.placed { opacity: 0.4; background: rgba(255,255,255,0.04); color: var(--text-muted); border-color: transparent; cursor: default; }
-.ds-time-grid { flex: 1; }
-.ds-time-slot {
-  display: flex; align-items: stretch; min-height: 48px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-  transition: background 0.1s; position: relative;
-}
-.ds-time-slot:hover { background: rgba(79,142,247,0.05); }
-.ds-time-slot.has-task { background: rgba(79,142,247,0.08); }
-.ds-slot-label { width: 50px; flex-shrink: 0; font-size: 11px; color: var(--text-muted); padding: 6px 8px 0 0; text-align: right; }
-.ds-slot-body { flex: 1; padding: 4px 8px; }
+.ds-day-task-chip.placed { opacity: 0.35; background: rgba(255,255,255,0.04); color: var(--text-muted); border-color: transparent; cursor: default; }
+.ds-day-task-chip .chip-tag { font-size: 10px; font-weight: 700; opacity: 0.7; }
+.ds-time-grid { flex: 1; min-width: 0; }
+/* Hour rows vs 15-min sub-rows */
+.ds-time-row { display: flex; align-items: stretch; position: relative; }
+.ds-time-row.is-hour { border-top: 1px solid rgba(255,255,255,0.1); }
+.ds-time-row.is-quarter { border-top: 1px dashed rgba(255,255,255,0.04); }
+.ds-time-row { min-height: 28px; transition: background 0.1s; cursor: pointer; }
+.ds-time-row:hover { background: rgba(79,142,247,0.05); }
+.ds-time-row.drag-over { background: rgba(79,142,247,0.12); }
+.ds-slot-label { width: 46px; flex-shrink: 0; font-size: 10px; color: var(--text-muted); padding: 4px 6px 0 0; text-align: right; line-height: 1; }
+.ds-slot-label.quarter-lbl { font-size: 9px; opacity: 0.5; }
+.ds-slot-body { flex: 1; padding: 2px 6px; min-width: 0; }
 .ds-slot-task {
-  padding: 4px 10px; border-radius: 8px; background: rgba(79,142,247,0.18);
-  border-left: 3px solid var(--accent); font-size: 12px; font-weight: 600; color: var(--accent);
-  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 8px; border-radius: 8px; background: rgba(79,142,247,0.18);
+  border-left: 3px solid var(--accent); color: var(--accent); cursor: grab;
+  display: flex; align-items: flex-start; gap: 6px;
+  animation: pdItemIn 0.15s ease both;
 }
-.ds-slot-task-del { opacity: 0.5; cursor: pointer; font-size: 11px; padding: 2px 4px; }
+.ds-slot-task:active { cursor: grabbing; }
+.ds-slot-task-body { flex: 1; min-width: 0; }
+.ds-slot-task-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-slot-task-meta { font-size: 10px; opacity: 0.75; margin-top: 1px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ds-slot-task-tag { font-size: 10px; font-weight: 700; padding: 0px 6px; border-radius: 99px; background: rgba(79,142,247,0.25); }
+.ds-slot-task-controls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.ds-slot-dur-btn {
+  width: 18px; height: 18px; border-radius: 4px; border: none; background: rgba(255,255,255,0.1);
+  color: var(--accent); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  line-height: 1; transition: background 0.1s;
+}
+.ds-slot-dur-btn:hover { background: rgba(79,142,247,0.3); }
+.ds-slot-task-del { width: 18px; height: 18px; border-radius: 4px; border: none; background: none; color: var(--text-muted); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.1s; }
 .ds-slot-task-del:hover { opacity: 1; color: #ef4444; }
+[data-theme="light"] .ds-time-row.is-hour { border-top-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .ds-time-row.is-quarter { border-top-color: rgba(0,0,0,0.04); }
 
 /* Daily plan summary */
 .ds-plan-summary {
@@ -15616,31 +15633,61 @@ document.addEventListener('keydown', function(e) {
 
 // ─── Fill In Your Day (step 2) ──────────────────────────────────────────────
 function _renderFillInDayStep(el, plan, today) {
-  var hours = [];
+  // Build 15-min slots from 6am–10pm
+  var slots = [];
   for (var h = 6; h <= 21; h++) {
-    hours.push({ label: _fmt12hr(h), h: h, slot: _padH(h)+':00' });
-    hours.push({ label: '', h: h, slot: _padH(h)+':30' });
+    slots.push({ label: _fmt12hr(h), slot: _padH(h)+':00', isHour: true });
+    slots.push({ label: _padH(h)+':15', slot: _padH(h)+':15', isHour: false });
+    slots.push({ label: _padH(h)+':30', slot: _padH(h)+':30', isHour: false });
+    slots.push({ label: _padH(h)+':45', slot: _padH(h)+':45', isHour: false });
   }
 
+  // Task sidebar — show title, time, tags
   var taskListHtml = plan.tasks.map(function(t, i) {
-    var placed = plan.tasks.some(function(x){ return x !== t && x.timeSlot; }) || t.timeSlot;
-    return '<div class="ds-day-task-chip'+(t.timeSlot?' placed':'')+'" id="ds-chip-'+i+'" draggable="true" '
-      +'ondragstart="_dsDragStart(event,'+i+')">'
-      +escH(t.title)+' ('+_fmtPlanTime(t.plannedMin||0)+')'
+    var tagLine = (t.tags&&t.tags.length) ? '<div class="chip-tag">'+t.tags.map(function(tg){ return escH(tg); }).join(', ')+'</div>' : '';
+    return '<div class="ds-day-task-chip'+(t.timeSlot?' placed':'')+'" id="ds-chip-'+i+'" draggable="'+(t.timeSlot?'false':'true')+'" '
+      +'ondragstart="_dsDragStart(event,'+i+',\'list\')">'
+      +'<div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(t.title)+'</div>'
+      +'<div style="font-size:10px;opacity:0.75;margin-top:2px">'+_fmtPlanTime(t.plannedMin||0)+(t.timeSlot?' · '+escH(_slotTo12(t.timeSlot)):'')+'</div>'
+      +tagLine
       +'</div>';
   }).join('');
 
-  var slotsHtml = hours.map(function(info) {
+  // Time grid rows
+  var slotsHtml = slots.map(function(info) {
     var task = plan.tasks.find(function(t){ return t.timeSlot === info.slot; });
-    return '<div class="ds-time-slot'+(task?' has-task':'')+'" ondragover="event.preventDefault()" ondrop="_dsDrop(event,\''+info.slot+'\')" onclick="_dsSlotClick(\''+info.slot+'\')">'
-      +'<div class="ds-slot-label">'+escH(info.label)+'</div>'
-      +'<div class="ds-slot-body">'
-      +(task ? '<div class="ds-slot-task"><span>'+escH(task.title)+'</span><span class="ds-slot-task-del" onclick="event.stopPropagation();_dsRemoveSlot(\''+info.slot+'\')">×</span></div>' : '')
-      +'</div>'
+    var qLabel = info.isHour ? escH(info.label) : '<span class="quarter-lbl">'+info.label.split(':')[1]+'</span>';
+    var taskHtml = '';
+    if (task) {
+      var tagChips = (task.tags&&task.tags.length)
+        ? task.tags.map(function(tg){ return '<span class="ds-slot-task-tag">'+escH(tg)+'</span>'; }).join('')
+        : '';
+      taskHtml = '<div class="ds-slot-task" draggable="true" ondragstart="_dsDragStart(event,'+plan.tasks.indexOf(task)+',\'grid\',event)">'
+        +'<div class="ds-slot-task-body">'
+        +'<div class="ds-slot-task-name">'+escH(task.title)+'</div>'
+        +'<div class="ds-slot-task-meta">'
+        +'<span>'+_fmtPlanTime(task.plannedMin||0)+'</span>'
+        +tagChips
+        +'</div>'
+        +'</div>'
+        +'<div class="ds-slot-task-controls">'
+        +'<button class="ds-slot-dur-btn" onclick="event.stopPropagation();_dsAdjustDur(\''+info.slot+'\',-15)" title="−15 min">−</button>'
+        +'<button class="ds-slot-dur-btn" onclick="event.stopPropagation();_dsAdjustDur(\''+info.slot+'\',15)" title="+15 min">+</button>'
+        +'<button class="ds-slot-task-del" onclick="event.stopPropagation();_dsRemoveSlot(\''+info.slot+'\')" title="Remove">×</button>'
+        +'</div>'
+        +'</div>';
+    }
+    return '<div class="ds-time-row'+(info.isHour?' is-hour':' is-quarter')+'" '
+      +'ondragover="event.preventDefault();this.classList.add(\'drag-over\')" '
+      +'ondragleave="this.classList.remove(\'drag-over\')" '
+      +'ondrop="_dsDrop(event,\''+info.slot+'\')" '
+      +'onclick="_dsSlotClick(\''+info.slot+'\')">'
+      +'<div class="ds-slot-label">'+qLabel+'</div>'
+      +'<div class="ds-slot-body">'+taskHtml+'</div>'
       +'</div>';
   }).join('');
 
-  el.innerHTML = '<div class="ds-wizard-wrap" style="max-width:760px">'
+  el.innerHTML = '<div class="ds-wizard-wrap" style="max-width:800px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
     +'<div class="ds-q-label" style="margin-bottom:0">Fill in your day.</div>'
     +'<button class="ds-next-btn" onclick="_dsStep2Next()">Next: Daily Plan →</button>'
@@ -15648,9 +15695,10 @@ function _renderFillInDayStep(el, plan, today) {
     +'<div class="ds-day-wrap">'
     +'<div class="ds-day-task-list">'
     +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Your Tasks</div>'
+    +'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Drag onto a time slot →</div>'
     +taskListHtml
     +'</div>'
-    +'<div class="ds-time-grid" id="ds-time-grid">'
+    +'<div class="ds-time-grid" id="ds-time-grid" style="overflow-y:auto;max-height:70vh">'
     +slotsHtml
     +'</div>'
     +'</div>'
@@ -15658,29 +15706,37 @@ function _renderFillInDayStep(el, plan, today) {
     +'</div>';
 }
 
+// Drag from sidebar (source='list') or from grid (source='grid')
 var _dsDragIdx = -1;
-function _dsDragStart(e, idx) { _dsDragIdx = idx; e.dataTransfer.effectAllowed = 'move'; }
+var _dsDragSource = 'list';
+function _dsDragStart(e, idx, source) {
+  _dsDragIdx = idx;
+  _dsDragSource = source || 'list';
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+}
 function _dsDrop(e, slot) {
   e.preventDefault();
+  e.stopPropagation();
+  // Remove drag-over highlight
+  if (e.currentTarget && e.currentTarget.classList) e.currentTarget.classList.remove('drag-over');
   if (_dsDragIdx < 0 || !_dsState) return;
-  // Remove old slot for this task
   var t = _dsState.tasks[_dsDragIdx];
   if (!t) return;
-  // Clear any other task on this slot
+  // Clear the target slot if occupied by another task
   _dsState.tasks.forEach(function(x){ if(x.timeSlot === slot && x !== t) x.timeSlot = null; });
   t.timeSlot = slot;
+  _dsDragIdx = -1;
   _saveDayPlan(_todayStr(), _dsState);
   renderSchedule();
-  _dsDragIdx = -1;
 }
-var _dsSlotClickPending = null;
 function _dsSlotClick(slot) {
-  // If no drag/drop, show picker to assign task
   if (!_dsState) return;
+  // If slot already has a task, remove it (toggle off)
+  var existing = _dsState.tasks.find(function(t){ return t.timeSlot === slot; });
+  if (existing) return; // let drag handle it
   var unplaced = _dsState.tasks.filter(function(t){ return !t.timeSlot; });
   if (!unplaced.length) return;
-  // Assign first unplaced task
-  _dsState.tasks.forEach(function(x){ if(x.timeSlot === slot) x.timeSlot = null; });
   unplaced[0].timeSlot = slot;
   _saveDayPlan(_todayStr(), _dsState);
   renderSchedule();
@@ -15689,6 +15745,15 @@ function _dsRemoveSlot(slot) {
   if (!_dsState) return;
   _dsState.tasks.forEach(function(t){ if(t.timeSlot === slot) t.timeSlot = null; });
   _saveDayPlan(_todayStr(), _dsState);
+  renderSchedule();
+}
+function _dsAdjustDur(slot, deltaMin) {
+  if (!_dsState) return;
+  var t = _dsState.tasks.find(function(x){ return x.timeSlot === slot; });
+  if (!t) return;
+  t.plannedMin = Math.max(15, (t.plannedMin||0) + deltaMin);
+  _saveDayPlan(_todayStr(), _dsState);
+  // Re-render just the slot task in place for snappiness
   renderSchedule();
 }
 function _dsStep2Back() {
@@ -16293,6 +16358,7 @@ window._dsDragStart = _dsDragStart;
 window._dsDrop = _dsDrop;
 window._dsSlotClick = _dsSlotClick;
 window._dsRemoveSlot = _dsRemoveSlot;
+window._dsAdjustDur = _dsAdjustDur;
 window._dsStep2Back = _dsStep2Back;
 window._dsStep2Next = _dsStep2Next;
 window._dsStep3Back = _dsStep3Back;
