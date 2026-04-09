@@ -7111,10 +7111,10 @@ function renderDashboard() {
   var _ttEl = document.getElementById('stat-time-today'); if(_ttEl) _ttEl.textContent = _timerFormatShort(_todayMs)||'0h 0m';
   var _twEl = document.getElementById('stat-time-week');  if(_twEl) _twEl.textContent = _timerFormatShort(_weekMs)+' this week';
 
-  document.getElementById('badge-projects').textContent = state.projects.length;
-  document.getElementById('badge-tasks').textContent = openTasks.length;
-  document.getElementById('badge-pos').textContent = state.pos.filter(function(p){return p.status!=='received'&&p.status!=='cancelled';}).length;
-  document.getElementById('badge-shipping').textContent = inTransit;
+  var _bpEl = document.getElementById('badge-projects'); if(_bpEl) _bpEl.textContent = state.projects.length;
+  var _btEl = document.getElementById('badge-tasks'); if(_btEl) _btEl.textContent = openTasks.length;
+  var _bpoEl = document.getElementById('badge-pos'); if(_bpoEl) _bpoEl.textContent = state.pos.filter(function(p){return p.status!=='received'&&p.status!=='cancelled';}).length;
+  var _bsEl = document.getElementById('badge-shipping'); if(_bsEl) _bsEl.textContent = inTransit;
 
   // Due date alerts
   var today = new Date(); today.setHours(0,0,0,0);
