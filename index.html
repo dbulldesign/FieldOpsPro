@@ -15476,10 +15476,10 @@ function _renderDayPlanStep(el, plan, today) {
 
   var tasksHtml = plan.tasks.map(function(t, i) {
     var tagHtml = (t.tags&&t.tags.length) ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">'+t.tags.map(function(tg){ return '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(tg)+'</span>'; }).join('')+'</div>' : '';
-    return '<div class="ds-plan-task" id="ds-plan-t-'+i+'">'
+    return '<div class="ds-plan-task" id="ds-plan-t-'+i+'" onclick="_dsEditTask('+i+')" style="cursor:pointer">'
       +'<div class="ds-plan-task-title" style="flex:1;min-width:0;white-space:normal"><div>'+escH(t.title)+'</div>'+tagHtml+'</div>'
-      +'<button class="ds-plan-time-btn" onclick="_dsOpenTimePopup('+i+', this)" style="flex-shrink:0">'+_fmtPlanTime(t.plannedMin||0)+'</button>'
-      +'<button onclick="_dsRemoveTask('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:16px;opacity:0.6;flex-shrink:0" title="Remove">×</button>'
+      +'<button class="ds-plan-time-btn" onclick="event.stopPropagation();_dsOpenTimePopup('+i+', this)" style="flex-shrink:0">'+_fmtPlanTime(t.plannedMin||0)+'</button>'
+      +'<button onclick="event.stopPropagation();_dsRemoveTask('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:16px;opacity:0.6;flex-shrink:0" title="Remove">×</button>'
       +'</div>';
   }).join('');
 
@@ -15586,13 +15586,24 @@ function _dsStep1Next() {
 // Add task popup for Daily Schedule
 var _dsAddCallback = null;
 function _dsOpenAddTask() {
-  _dsAddCallback = function(task) {
-    if (!_dsState) return;
-    _dsState.tasks.push(task);
-    _saveDayPlan(_todayStr(), _dsState);
-    renderSchedule();
-  };
-  _openSchedAddPopup({ section: null, onSave: _dsAddCallback });
+  _openSchedAddPopup({
+    section: null,
+    onSave: function(task) {
+      if (!_dsState) return;
+      _dsState.tasks.push(task);
+      _saveDayPlan(_todayStr(), _dsState);
+      renderSchedule();
+    }
+  });
+}
+function _dsEditTask(idx) {
+  if (!_dsState || !_dsState.tasks[idx]) return;
+  var t = _dsState.tasks[idx];
+  _openSchedAddPopup({
+    section: null,
+    editIdx: idx,
+    existing: { title: t.title, plannedMin: t.plannedMin||0, tags: t.tags||[] }
+  });
 }
 // Keyboard shortcut 'A' in step 1
 document.addEventListener('keydown', function(e) {
@@ -15845,50 +15856,78 @@ function _dsRePlan() {
   renderSchedule();
 }
 
-// ─── Add Task Popup (shared) ─────────────────────────────────────────────────
-var _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: null, due: null, onSave: null };
-var _schedTagInput = '';
-var _schedTimeDropShown = false;
+// ─── Add / Edit Task Popup (shared) ──────────────────────────────────────────
+var _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: null, due: null, onSave: null, editIdx: -1 };
 
 function _openSchedAddPopup(opts) {
-  _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: opts.section||null, due: opts.due||null, onSave: opts.onSave||null };
-  var existing = document.getElementById('sched-add-popup');
-  if (existing) existing.remove();
-  var sectionLabel = opts.section ? ' to "'+escH(opts.section)+'"' : '';
+  // opts: { section, onSave, editIdx, existing: { title, plannedMin, tags } }
+  var existing = opts.existing || {};
+  _schedAddState = {
+    title:      existing.title      || '',
+    plannedMin: existing.plannedMin || 0,
+    tags:       (existing.tags      || []).slice(),
+    url:        existing.url        || '',
+    section:    opts.section        != null ? opts.section : null,
+    due:        opts.due            || null,
+    onSave:     opts.onSave         || null,
+    editIdx:    opts.editIdx        != null ? opts.editIdx : -1
+  };
+
+  var old = document.getElementById('sched-add-popup');
+  if (old) old.remove();
+
+  var isEdit   = _schedAddState.editIdx >= 0;
+  var heading  = isEdit ? 'Edit Task' : ('Add Task' + (opts.section ? ' to "'+escH(opts.section)+'"' : ''));
+  var timeLbl  = _schedAddState.plannedMin ? _fmtPlanTime(_schedAddState.plannedMin) : 'Time';
+  var hasTags  = _schedAddState.tags.length > 0;
+  var tagChips = _schedAddState.tags.map(function(t){
+    return '<span class="sched-tag-chip" data-tag="'+escH(t)+'" onclick="_removeSchedTag(\''+escH(t)+'\')">'+escH(t)+' ×</span>';
+  }).join('');
+
   var popup = document.createElement('div');
   popup.className = 'sched-add-popup';
   popup.id = 'sched-add-popup';
   popup.onclick = function(e){ if(e.target===popup) _closeSchedAdd(); };
   popup.innerHTML = '<div class="sched-add-popup-inner">'
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">Add Task'+sectionLabel+'</div>'
-    +'<input class="sched-add-title-input" id="sched-add-title" placeholder="Task description…" autocomplete="off">'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">'+heading+'</div>'
+    +'<input class="sched-add-title-input" id="sched-add-title" placeholder="Task description…" autocomplete="off" value="'+escH(_schedAddState.title)+'">'
     +'<div class="sched-add-meta-row">'
-    +'<button class="sched-meta-btn" id="sched-time-btn" onclick="_toggleSchedTimeMenu()">'
+    +'<button class="sched-meta-btn'+(isEdit&&_schedAddState.plannedMin?' active':'')+'" id="sched-time-btn" onclick="_toggleSchedTimeMenu()">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>'
-    +' <span id="sched-time-lbl">Time</span>'
+    +' <span id="sched-time-lbl">'+timeLbl+'</span>'
     +'</button>'
-    +(opts.section !== null ? '' : '')  // Date picker only for backlog
-    +'<button class="sched-meta-btn" id="sched-tag-btn" onclick="_toggleSchedTagInput()">'
+    +'<button class="sched-meta-btn'+(hasTags?' active':'')+'" id="sched-tag-btn" onclick="_toggleSchedTagInput()">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>'
-    +' Tags'
+    +' Tags'+(hasTags ? ' ('+_schedAddState.tags.length+')' : '')
     +'</button>'
     +'</div>'
-    +'<div id="sched-tag-area" style="display:none;margin-bottom:10px">'
+    +'<div id="sched-tag-area" style="'+(hasTags?'':'display:none;')+'margin-bottom:10px">'
+    +'<div class="sched-tag-row" id="sched-tag-chips" style="margin-bottom:6px">'+tagChips+'</div>'
     +'<input id="sched-tag-input" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:13px;outline:none" placeholder="Type tag, press Enter…">'
-    +'<div class="sched-tag-row" id="sched-tag-chips" style="margin-top:6px"></div>'
     +'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:flex-end">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
+    +(isEdit ? '<button onclick="_dsDeleteTask('+_schedAddState.editIdx+')" style="background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;padding:0">Delete task</button>' : '<div></div>')
     +'<button class="sched-add-submit-btn" onclick="_submitSchedAdd()">↑</button>'
     +'</div>'
     +'</div>';
+
   document.body.appendChild(popup);
+
   var inp = document.getElementById('sched-add-title');
   if (inp) {
     inp.focus();
-    inp.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); _submitSchedAdd(); } if(e.key==='Escape') _closeSchedAdd(); });
+    // Put cursor at end
+    var len = inp.value.length; inp.setSelectionRange(len, len);
+    inp.addEventListener('keydown', function(e){
+      if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); _submitSchedAdd(); }
+      if (e.key==='Escape') _closeSchedAdd();
+    });
   }
   var tagInp = document.getElementById('sched-tag-input');
-  if (tagInp) tagInp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); _addSchedTag(this.value.trim()); this.value=''; } });
+  if (tagInp) tagInp.addEventListener('keydown', function(e){
+    if (e.key==='Enter'){ e.preventDefault(); _addSchedTag(this.value.trim()); this.value=''; }
+    if (e.key==='Escape'){ e.stopPropagation(); _toggleSchedTagInput(); }
+  });
 }
 
 function _toggleSchedTimeMenu() {
@@ -15935,16 +15974,52 @@ function _toggleSchedTagInput() {
 function _addSchedTag(tag) {
   if (!tag || _schedAddState.tags.includes(tag)) return;
   _schedAddState.tags.push(tag);
+  _refreshSchedTagChips();
+}
+function _removeSchedTag(tag) {
+  _schedAddState.tags = _schedAddState.tags.filter(function(t){ return t !== tag; });
+  _refreshSchedTagChips();
+}
+function _refreshSchedTagChips() {
   var chips = document.getElementById('sched-tag-chips');
-  if (chips) chips.innerHTML = _schedAddState.tags.map(function(t){ return '<span class="sched-tag-chip" onclick="this.remove();_schedAddState.tags.splice(_schedAddState.tags.indexOf(\''+escH(t)+'\'),1)">'+escH(t)+'</span>'; }).join('');
+  if (chips) chips.innerHTML = _schedAddState.tags.map(function(t){
+    return '<span class="sched-tag-chip" onclick="_removeSchedTag(\''+escH(t)+'\')">'+escH(t)+' ×</span>';
+  }).join('');
+  var btn = document.getElementById('sched-tag-btn');
+  if (btn) {
+    var n = _schedAddState.tags.length;
+    btn.classList.toggle('active', n > 0);
+    var svg = btn.querySelector('svg');
+    btn.innerHTML = (svg ? svg.outerHTML : '') + ' Tags' + (n ? ' ('+n+')' : '');
+  }
 }
 function _submitSchedAdd() {
   var inp = document.getElementById('sched-add-title');
   var title = inp ? inp.value.trim() : '';
   if (!title) { toast('Please enter a task description'); return; }
-  var task = { id: 'sched-'+Date.now(), title: title, plannedMin: _schedAddState.plannedMin, tags: _schedAddState.tags.slice(), url: _schedAddState.url, timeSlot: null, done: false };
-  if (_schedAddState.onSave) _schedAddState.onSave(task);
+  var isEdit = _schedAddState.editIdx >= 0;
+  if (isEdit && _dsState) {
+    var t = _dsState.tasks[_schedAddState.editIdx];
+    if (t) {
+      t.title = title;
+      t.plannedMin = _schedAddState.plannedMin;
+      t.tags = _schedAddState.tags.slice();
+      if (_schedAddState.editIdx === 0 && t.isMain) _dsState.focus = title;
+      _saveDayPlan(_todayStr(), _dsState);
+    }
+  } else {
+    var task = { id: 'sched-'+Date.now(), title: title, plannedMin: _schedAddState.plannedMin, tags: _schedAddState.tags.slice(), url: _schedAddState.url, timeSlot: null, done: false };
+    if (_schedAddState.onSave) _schedAddState.onSave(task);
+  }
   _closeSchedAdd();
+  renderSchedule();
+}
+function _dsDeleteTask(idx) {
+  if (!_dsState) return;
+  _dsState.tasks.splice(idx, 1);
+  _saveDayPlan(_todayStr(), _dsState);
+  _closeSchedAdd();
+  renderSchedule();
 }
 function _closeSchedAdd() {
   var popup = document.getElementById('sched-add-popup');
@@ -16228,8 +16303,12 @@ window._toggleSchedTimeMenu = _toggleSchedTimeMenu;
 window._setSchedTime = _setSchedTime;
 window._toggleSchedTagInput = _toggleSchedTagInput;
 window._addSchedTag = _addSchedTag;
+window._removeSchedTag = _removeSchedTag;
+window._refreshSchedTagChips = _refreshSchedTagChips;
 window._submitSchedAdd = _submitSchedAdd;
 window._closeSchedAdd = _closeSchedAdd;
+window._dsEditTask = _dsEditTask;
+window._dsDeleteTask = _dsDeleteTask;
 window._wkDragStart = _wkDragStart;
 window._wkDragEnd = _wkDragEnd;
 window._wkDragOver = _wkDragOver;
