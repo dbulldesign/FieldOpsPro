@@ -15475,10 +15475,11 @@ function _renderDayPlanStep(el, plan, today) {
   var over = totalMin > workDayMin;
 
   var tasksHtml = plan.tasks.map(function(t, i) {
+    var tagHtml = (t.tags&&t.tags.length) ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">'+t.tags.map(function(tg){ return '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(tg)+'</span>'; }).join('')+'</div>' : '';
     return '<div class="ds-plan-task" id="ds-plan-t-'+i+'">'
-      +'<div class="ds-plan-task-title">'+escH(t.title)+'</div>'
-      +'<button class="ds-plan-time-btn" onclick="_dsOpenTimePopup('+i+', this)">'+_fmtPlanTime(t.plannedMin||0)+'</button>'
-      +'<button onclick="_dsRemoveTask('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:16px;opacity:0.6" title="Remove">×</button>'
+      +'<div class="ds-plan-task-title" style="flex:1;min-width:0;white-space:normal"><div>'+escH(t.title)+'</div>'+tagHtml+'</div>'
+      +'<button class="ds-plan-time-btn" onclick="_dsOpenTimePopup('+i+', this)" style="flex-shrink:0">'+_fmtPlanTime(t.plannedMin||0)+'</button>'
+      +'<button onclick="_dsRemoveTask('+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 6px;font-size:16px;opacity:0.6;flex-shrink:0" title="Remove">×</button>'
       +'</div>';
   }).join('');
 
@@ -15778,13 +15779,18 @@ function _renderDailyActive(el, plan, today) {
 
   var taskRows = allSorted.map(function(t, i) {
     var realIdx = plan.tasks.indexOf(t);
+    var tagHtml = (t.tags&&t.tags.length) ? '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+t.tags.map(function(tg){ return '<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(tg)+'</span>'; }).join('')+'</div>' : '';
+    var metaParts = [];
+    if (t.timeSlot) metaParts.push(escH(_slotTo12(t.timeSlot)));
+    if (t.plannedMin) metaParts.push(_fmtPlanTime(t.plannedMin));
     return '<div class="ds-task-item'+(t.done?' done':'')+'">'
       +'<div class="ds-task-item-check'+(t.done?' done':'')+'" onclick="_dsToggleTaskDone(\''+today+'\','+realIdx+')">'
       +'<div class="ds-task-check-inner"></div>'
       +'</div>'
       +'<div class="ds-task-item-body">'
       +'<div class="ds-task-item-title">'+escH(t.title)+'</div>'
-      +(t.timeSlot ? '<div class="ds-task-item-meta">'+escH(_slotTo12(t.timeSlot))+' · '+_fmtPlanTime(t.plannedMin||0)+'</div>' : '<div class="ds-task-item-meta">'+_fmtPlanTime(t.plannedMin||0)+'</div>')
+      +(metaParts.length ? '<div class="ds-task-item-meta">'+metaParts.join(' · ')+'</div>' : '')
+      +tagHtml
       +'</div>'
       +'</div>';
   }).join('');
