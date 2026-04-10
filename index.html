@@ -1525,14 +1525,14 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 .wk-task-card {
   padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border);
   margin-bottom: 6px; cursor: pointer; position: relative; transition: box-shadow 0.12s, transform 0.12s;
-  animation: pdItemIn 0.18s ease both;
+  animation: pdItemIn 0.18s ease both; width: 100%; box-sizing: border-box;
 }
 .wk-task-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.2); transform: translateY(-1px); }
 .wk-task-card.done { opacity: 0.5; }
 .wk-task-card.dragging { opacity: 0.35; transform: scale(0.97); }
-.wk-task-card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.wk-task-card-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; word-break: break-word; overflow-wrap: break-word; white-space: normal; }
 .wk-task-card.done .wk-task-card-title { text-decoration: line-through; color: var(--text-muted); }
-.wk-task-card-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.wk-task-card-meta { font-size: 10px; color: var(--text-muted); margin-top: 3px; line-height: 1.3; }
 .wk-task-card-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .wk-task-check {
   width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
@@ -16136,13 +16136,15 @@ function renderWeeklyPlan(el) {
     }
   });
 
-  // Add today's plan tasks
-  if (todayPlan && todayPlan.tasks) {
-    todayPlan.tasks.forEach(function(t) {
-      var exists = tasksByDay[today].some(function(x){ return x.id === t.id; });
-      if (!exists) tasksByDay[today].push({ id: t.id, title: t.title, done: t.done, source: 'daily', timeSlot: t.timeSlot, plannedMin: t.plannedMin||0, tags: t.tags||[] });
+  // Add daily plan tasks for ALL days in the window (not just today)
+  days.forEach(function(day) {
+    var dayPlan = _getDayPlan(day);
+    if (!dayPlan || !dayPlan.tasks) return;
+    dayPlan.tasks.forEach(function(t) {
+      var exists = tasksByDay[day].some(function(x){ return x.id === t.id; });
+      if (!exists) tasksByDay[day].push({ id: t.id, title: t.title, done: t.done, source: 'daily', timeSlot: t.timeSlot, plannedMin: t.plannedMin||0, tags: t.tags||[], day: day });
     });
-  }
+  });
 
   var colsHtml = days.map(function(day) {
     var d = new Date(day+'T00:00:00');
@@ -16234,7 +16236,7 @@ function renderWeeklyPlan(el) {
     +'<button class="btn btn-ghost btn-sm" onclick="_wkJumpToday()">Jump to Today</button>'
     +'<button class="btn btn-ghost btn-sm" id="wk-filter-btn" onclick="_wkOpenFilter()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter</button>'
     +'</div>'
-    +'<div class="wk-plan-grid" id="wk-grid" style="grid-template-columns:repeat(14,minmax(110px,1fr))">'
+    +'<div class="wk-plan-grid" id="wk-grid" style="grid-template-columns:repeat(14,minmax(150px,1fr))">'
     +colsHtml
     +'</div>'
     +'</div>'
