@@ -16263,15 +16263,23 @@ function renderWeeklyPlan(el) {
     +'</div>'
     +'</div>';
 
-  // Event delegation for card clicks — more reliable than inline onclick on draggable elements
+  // Use pointerdown/pointerup for card taps — click is suppressed by draggable on many browsers
   var grid = document.getElementById('wk-grid');
   if (grid) {
-    grid.addEventListener('click', function(e) {
-      if (_wkDragGuard) return;
-      // Ignore clicks on the check circle
+    var _wkPtrStart = {};
+    grid.addEventListener('pointerdown', function(e) {
+      var card = e.target.closest('.wk-task-card');
+      if (card) _wkPtrStart[card.id] = { x: e.clientX, y: e.clientY };
+    });
+    grid.addEventListener('pointerup', function(e) {
       if (e.target.closest('.wk-task-check')) return;
       var card = e.target.closest('.wk-task-card');
       if (!card) return;
+      var start = _wkPtrStart[card.id];
+      if (!start) return;
+      delete _wkPtrStart[card.id];
+      // Ignore if pointer moved more than 6px (it was a drag, not a tap)
+      if (Math.abs(e.clientX - start.x) > 6 || Math.abs(e.clientY - start.y) > 6) return;
       var taskId = card.getAttribute('data-taskid');
       var taskDay = card.getAttribute('data-day');
       var taskSource = card.getAttribute('data-source');
@@ -16371,7 +16379,6 @@ function _wkAddTaskToDay(day) {
   });
 }
 function _wkEditTask(taskId, day, source) {
-  if (_wkDragGuard) return;
   if (source === 'task') {
     // Open standard task detail
     if (typeof openDetail === 'function') openDetail('tasks', taskId);
