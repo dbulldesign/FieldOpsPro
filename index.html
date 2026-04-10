@@ -16170,8 +16170,8 @@ function renderWeeklyPlan(el) {
       if (t.plannedMin) metaParts.push(_fmtPlanTime(t.plannedMin));
       var metaHtml = metaParts.length ? '<div class="wk-task-card-meta">'+escH(metaParts.join(' · '))+'</div>' : '';
       return '<div class="wk-task-card'+(t.done?' done':'')+'" id="wk-card-'+t.id+'" draggable="true" '
-        +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)" '
-        +'onclick="_wkEditTask(\''+t.id+'\',\''+day+'\',\''+t.source+'\')">'
+        +'data-taskid="'+escH(t.id)+'" data-day="'+day+'" data-source="'+t.source+'" '
+        +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)">'
         +'<div style="display:flex;align-items:flex-start;gap:8px">'
         +'<div class="wk-task-check'+(t.done?' done':'')+'" onclick="event.stopPropagation();_wkToggleDone(\''+t.id+'\',\''+day+'\',\''+t.source+'\',this)" style="margin-top:2px;flex-shrink:0"></div>'
         +'<div style="flex:1;min-width:0">'
@@ -16262,6 +16262,22 @@ function renderWeeklyPlan(el) {
     +'</div>'
     +'</div>'
     +'</div>';
+
+  // Event delegation for card clicks — more reliable than inline onclick on draggable elements
+  var grid = document.getElementById('wk-grid');
+  if (grid) {
+    grid.addEventListener('click', function(e) {
+      if (_wkDragGuard) return;
+      // Ignore clicks on the check circle
+      if (e.target.closest('.wk-task-check')) return;
+      var card = e.target.closest('.wk-task-card');
+      if (!card) return;
+      var taskId = card.getAttribute('data-taskid');
+      var taskDay = card.getAttribute('data-day');
+      var taskSource = card.getAttribute('data-source');
+      if (taskId && taskDay && taskSource) _wkEditTask(taskId, taskDay, taskSource);
+    });
+  }
 }
 
 function _wkDragStart(e, taskId, fromDay) {
