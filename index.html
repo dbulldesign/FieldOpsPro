@@ -1548,18 +1548,23 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 .wk-drop-target.drag-over { border-color: var(--accent); background: rgba(79,142,247,0.08); }
 /* Floating today timeline */
 .wk-today-timeline {
-  position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
-  width: 140px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 12px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  z-index: 50; max-height: 70vh; overflow-y: auto;
+  position: sticky; top: 20px; align-self: flex-start;
+  width: 148px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  z-index: 50; max-height: calc(100vh - 80px); display: flex; flex-direction: column; overflow: hidden;
 }
-.wk-today-tl-hdr { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); padding: 0 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 4px; }
-.wk-today-tl-slot { position: relative; min-height: 24px; padding: 0 12px; }
-.wk-today-tl-label { font-size: 9px; color: var(--text-muted); }
-.wk-today-tl-event { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wk-today-tl-now { height: 2px; background: #ef4444; border-radius: 99px; position: absolute; left: 8px; right: 8px; }
+.wk-today-tl-hdr { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); padding: 10px 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
+.wk-today-tl-grid { flex: 1; overflow-y: auto; position: relative; }
+.wk-today-tl-inner { position: relative; } /* height set inline */
+.wk-today-tl-hour { position: absolute; left: 0; right: 0; display: flex; align-items: flex-start; padding-left: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+.wk-today-tl-label { font-size: 9px; color: var(--text-muted); line-height: 1; padding-top: 2px; }
+.wk-today-tl-event { position: absolute; left: 44px; right: 6px; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(79,142,247,0.18); color: var(--accent); }
+.wk-today-tl-now { height: 2px; background: #ef4444; border-radius: 99px; position: absolute; left: 6px; right: 6px; pointer-events: none; }
 .wk-today-tl-now::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; position: absolute; left: -3px; top: -2px; }
 @media (max-width: 1100px) { .wk-today-timeline { display: none; } }
+/* Weekly plan add-day button */
+.wk-add-day-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; margin: 4px 0 2px; border-radius: 8px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; border: 1.5px dashed rgba(255,255,255,0.1); transition: border-color 0.12s, color 0.12s, background 0.12s; }
+.wk-add-day-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,0.06); }
 
 /* Backlog */
 .bl-section { margin-bottom: 24px; }
@@ -15925,7 +15930,7 @@ function _dsRePlan() {
 var _schedAddState = { title: '', plannedMin: 0, tags: [], url: '', section: null, due: null, onSave: null, editIdx: -1 };
 
 function _openSchedAddPopup(opts) {
-  // opts: { section, onSave, editIdx, existing: { title, plannedMin, tags } }
+  // opts: { section, sectionKey, onSave, editIdx, existing: { title, plannedMin, tags } }
   var existing = opts.existing || {};
   _schedAddState = {
     title:      existing.title      || '',
@@ -15933,6 +15938,7 @@ function _openSchedAddPopup(opts) {
     tags:       (existing.tags      || []).slice(),
     url:        existing.url        || '',
     section:    opts.section        != null ? opts.section : null,
+    sectionKey: opts.sectionKey     != null ? opts.sectionKey : null,
     due:        opts.due            || null,
     onSave:     opts.onSave         || null,
     editIdx:    opts.editIdx        != null ? opts.editIdx : -1
@@ -15953,9 +15959,17 @@ function _openSchedAddPopup(opts) {
   popup.className = 'sched-add-popup';
   popup.id = 'sched-add-popup';
   popup.onclick = function(e){ if(e.target===popup) _closeSchedAdd(); };
+  var sectionDropdownHtml = '';
+  if (_schedAddState.sectionKey !== null) {
+    sectionDropdownHtml = '<select id="sched-section-select" onchange="_schedAddState.sectionKey=this.value" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;outline:none;margin-bottom:10px;cursor:pointer">'
+      +_blSections.map(function(s){ return '<option value="'+s.key+'"'+(s.key===_schedAddState.sectionKey?' selected':'')+'>'+escH(s.label)+'</option>'; }).join('')
+      +'</select>';
+  }
+
   popup.innerHTML = '<div class="sched-add-popup-inner">'
     +'<div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px">'+heading+'</div>'
     +'<input class="sched-add-title-input" id="sched-add-title" placeholder="Task description…" autocomplete="off" value="'+escH(_schedAddState.title)+'">'
+    +sectionDropdownHtml
     +'<div class="sched-add-meta-row">'
     +'<button class="sched-meta-btn'+(isEdit&&_schedAddState.plannedMin?' active':'')+'" id="sched-time-btn" onclick="_toggleSchedTimeMenu()">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>'
@@ -16135,13 +16149,17 @@ function renderWeeklyPlan(el) {
 
     var taskCards = tasks.map(function(t) {
       var priColor = { high:'#ef4444', medium:'#f59e0b', low:'rgba(255,255,255,0.2)' }[t.priority||'low']||'rgba(255,255,255,0.2)';
+      var tagHtml = (t.tags&&t.tags.length) ? '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">'+t.tags.map(function(tg){ return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(tg)+'</span>'; }).join('')+'</div>' : '';
       return '<div class="wk-task-card'+(t.done?' done':'')+'" id="wk-card-'+t.id+'" draggable="true" '
         +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)">'
+        +'<div style="display:flex;align-items:flex-start;gap:8px">'
+        +'<div class="wk-task-check'+(t.done?' done':'')+'" onclick="event.stopPropagation();_wkToggleDone(\''+t.id+'\',\''+day+'\',\''+t.source+'\',this)" style="margin-top:2px;flex-shrink:0"></div>'
+        +'<div style="flex:1;min-width:0">'
         +'<div class="wk-task-card-title">'+escH(t.title)+'</div>'
         +(t.timeSlot ? '<div class="wk-task-card-meta">'+escH(_slotTo12(t.timeSlot))+'</div>' : '')
-        +'<div class="wk-task-card-foot">'
-        +'<div class="wk-task-check'+(t.done?' done':'')+'" onclick="_wkToggleDone(\''+t.id+'\',\''+day+'\',\''+t.source+'\',this)"></div>'
-        +(t.priority&&t.priority!=='low' ? '<div style="width:6px;height:6px;border-radius:50%;background:'+priColor+';flex-shrink:0"></div>' : '')
+        +(t.priority&&t.priority!=='low' ? '<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><div style="width:5px;height:5px;border-radius:50%;background:'+priColor+'"></div><span style="font-size:9px;color:'+priColor+';font-weight:700">'+t.priority+'</span></div>' : '')
+        +tagHtml
+        +'</div>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -16155,21 +16173,47 @@ function renderWeeklyPlan(el) {
       +'<div class="wk-col-body" id="wk-col-'+day+'" ondragover="event.preventDefault();_wkDragOver(event,\''+day+'\')" ondragleave="_wkDragLeave(event)" ondrop="_wkDropOn(event,\''+day+'\')">'
       +(taskCards || '<div class="wk-drop-target" id="wk-dt-'+day+'"></div>')
       +'</div>'
+      +'<div class="wk-add-day-btn" onclick="_wkAddTaskToDay(\''+day+'\')">'
+      +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      +' Add'
+      +'</div>'
       +'</div>';
   }).join('');
 
-  // Floating today timeline
+  // Floating today timeline — full-day hourly grid 6am–10pm
   var now = new Date();
-  var curSlot = now.getHours()*60+now.getMinutes();
-  var dayStart = 6*60, dayEnd = 22*60;
-  var tlPct = Math.max(0, Math.min(100, (curSlot-dayStart)/(dayEnd-dayStart)*100));
-  var tlTasks = tasksByDay[today] || [];
-  var tlHtml = tlTasks.slice(0,8).map(function(t){
-    return '<div class="wk-today-tl-event" style="background:rgba(79,142,247,0.12);color:var(--accent)">'+escH(t.title.slice(0,18))+'</div>';
-  }).join('');
+  var tlDayStart = 6, tlDayEnd = 22; // hours
+  var tlTotalHours = tlDayEnd - tlDayStart; // 16
+  var tlPxPerHour = 36;
+  var tlTotalPx = tlTotalHours * tlPxPerHour;
+  var curMinFromStart = (now.getHours() - tlDayStart) * 60 + now.getMinutes();
+  var nowTopPx = Math.max(0, Math.min(tlTotalPx, curMinFromStart / 60 * tlPxPerHour));
+  var showNowLine = now.getHours() >= tlDayStart && now.getHours() < tlDayEnd;
 
-  el.innerHTML = '<div style="display:flex;gap:0;align-items:flex-start">'
-    +'<div class="wk-plan-wrap" style="flex:1">'
+  // Build hour rows
+  var hourRowsHtml = '';
+  for (var hi = tlDayStart; hi <= tlDayEnd; hi++) {
+    var topPx = (hi - tlDayStart) * tlPxPerHour;
+    hourRowsHtml += '<div class="wk-today-tl-hour" style="top:'+topPx+'px;height:'+tlPxPerHour+'px">'
+      +'<span class="wk-today-tl-label">'+_fmt12hr(hi)+'</span>'
+      +'</div>';
+  }
+
+  // Place task events at their timeSlot
+  var tlTasks = tasksByDay[today] || [];
+  var tlEventHtml = '';
+  tlTasks.forEach(function(t) {
+    if (!t.timeSlot) return;
+    var parts = t.timeSlot.split(':');
+    var tH = parseInt(parts[0]), tM = parseInt(parts[1]||0);
+    if (tH < tlDayStart || tH >= tlDayEnd) return;
+    var tTop = ((tH - tlDayStart) + tM/60) * tlPxPerHour;
+    var tHeight = Math.max(14, Math.round((t.plannedMin||30)/60*tlPxPerHour));
+    tlEventHtml += '<div class="wk-today-tl-event" style="top:'+tTop+'px;height:'+tHeight+'px;line-height:'+tHeight+'px">'+escH(t.title.slice(0,16))+'</div>';
+  });
+
+  el.innerHTML = '<div style="display:flex;gap:12px;align-items:flex-start">'
+    +'<div class="wk-plan-wrap" style="flex:1;min-width:0">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
     +'<button class="btn btn-ghost btn-sm" onclick="_wkJumpToday()">Jump to Today</button>'
     +'<button class="btn btn-ghost btn-sm" id="wk-filter-btn" onclick="_wkOpenFilter()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Filter</button>'
@@ -16179,13 +16223,13 @@ function renderWeeklyPlan(el) {
     +'</div>'
     +'</div>'
     +'<div class="wk-today-timeline">'
-    +'<div class="wk-today-tl-hdr">Today</div>'
-    +'<div style="position:relative;padding:0 0 8px">'
-    +(tlTasks.length ? tlHtml : '<div style="padding:4px 12px;font-size:11px;color:var(--text-muted)">No tasks</div>')
-    +'<div class="wk-today-tl-now" style="top:'+tlPct+'%"></div>'
+    +'<div class="wk-today-tl-hdr">Today · '+_fmt12hr(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0')+'</div>'
+    +'<div class="wk-today-tl-grid">'
+    +'<div class="wk-today-tl-inner" style="height:'+tlTotalPx+'px">'
+    +hourRowsHtml
+    +tlEventHtml
+    +(showNowLine ? '<div class="wk-today-tl-now" style="top:'+nowTopPx+'px"></div>' : '')
     +'</div>'
-    +'<div style="padding:4px 12px;font-size:10px;color:var(--text-muted)">'
-    +_fmt12hr(now.getHours())+':'+String(now.getMinutes()).padStart(2,'0')
     +'</div>'
     +'</div>'
     +'</div>';
@@ -16262,6 +16306,22 @@ function _wkJumpToday() {
   if (grid) { var first = grid.querySelector('.wk-col-hdr.is-today'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }
 }
 function _wkOpenFilter() { toast('Filter by tags coming soon'); }
+function _wkAddTaskToDay(day) {
+  var d = new Date(day+'T00:00:00');
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  _openSchedAddPopup({
+    section: dayNames[d.getDay()]+' '+monNames[d.getMonth()]+' '+d.getDate(),
+    onSave: function(task) {
+      var plan = _getDayPlan(day) || { step: 4, focus: '', tasks: [], startedAt: null };
+      if (!plan.tasks) plan.tasks = [];
+      task.id = task.id || ('wk-'+Date.now());
+      plan.tasks.push(task);
+      _saveDayPlan(day, plan);
+      renderSchedule();
+    }
+  });
+}
 
 // ─── Backlog ─────────────────────────────────────────────────────────────────
 var _blSections = [
@@ -16323,10 +16383,11 @@ function _blToggleSection(key) {
 
 function _blOpenAdd(sectionKey, sectionLabel) {
   _openSchedAddPopup({
-    section: sectionLabel,
+    section: 'Add to Backlog',
+    sectionKey: sectionKey,
     onSave: function(task) {
       var items = _getBacklog();
-      task.section = sectionKey;
+      task.section = _schedAddState.sectionKey || sectionKey;
       task.createdAt = new Date().toISOString();
       items.unshift(task);
       _saveBacklog(items);
@@ -16383,6 +16444,7 @@ window._wkDropOn = _wkDropOn;
 window._wkToggleDone = _wkToggleDone;
 window._wkJumpToday = _wkJumpToday;
 window._wkOpenFilter = _wkOpenFilter;
+window._wkAddTaskToDay = _wkAddTaskToDay;
 window._blToggleSection = _blToggleSection;
 window._blOpenAdd = _blOpenAdd;
 window._blArchive = _blArchive;
