@@ -15989,7 +15989,7 @@ function _openSchedAddPopup(opts) {
     +'<input id="sched-tag-input" style="width:100%;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:13px;outline:none" placeholder="Type tag, press Enter…">'
     +'</div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
-    +(isEdit ? '<button onclick="_dsDeleteTask('+_schedAddState.editIdx+')" style="background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;padding:0">Delete task</button>' : '<div></div>')
+    +(isEdit ? '<button onclick="_schedDeleteTask()" style="background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer;padding:0">Delete task</button>' : '<div></div>')
     +'<button class="sched-add-submit-btn" onclick="_submitSchedAdd()">↑</button>'
     +'</div>'
     +'</div>';
@@ -16081,7 +16081,12 @@ function _submitSchedAdd() {
   var title = inp ? inp.value.trim() : '';
   if (!title) { toast('Please enter a task description'); return; }
   var isEdit = _schedAddState.editIdx >= 0;
-  if (isEdit && _dsState) {
+  var task = { id: 'sched-'+Date.now(), title: title, plannedMin: _schedAddState.plannedMin, tags: _schedAddState.tags.slice(), url: _schedAddState.url||'', timeSlot: null, done: false };
+  if (_schedAddState.onSave) {
+    // Generic callback path — used by weekly plan edit and backlog
+    _schedAddState.onSave(task);
+  } else if (isEdit && _dsState) {
+    // Legacy: daily schedule inline edit
     var t = _dsState.tasks[_schedAddState.editIdx];
     if (t) {
       t.title = title;
@@ -16090,12 +16095,16 @@ function _submitSchedAdd() {
       if (_schedAddState.editIdx === 0 && t.isMain) _dsState.focus = title;
       _saveDayPlan(_todayStr(), _dsState);
     }
-  } else {
-    var task = { id: 'sched-'+Date.now(), title: title, plannedMin: _schedAddState.plannedMin, tags: _schedAddState.tags.slice(), url: _schedAddState.url, timeSlot: null, done: false };
-    if (_schedAddState.onSave) _schedAddState.onSave(task);
   }
   _closeSchedAdd();
   renderSchedule();
+}
+function _schedDeleteTask() {
+  if (_schedAddState.onDelete) {
+    _schedAddState.onDelete();
+  } else {
+    _dsDeleteTask(_schedAddState.editIdx);
+  }
 }
 function _dsDeleteTask(idx) {
   if (!_dsState) return;
@@ -16161,7 +16170,8 @@ function renderWeeklyPlan(el) {
       if (t.plannedMin) metaParts.push(_fmtPlanTime(t.plannedMin));
       var metaHtml = metaParts.length ? '<div class="wk-task-card-meta">'+escH(metaParts.join(' · '))+'</div>' : '';
       return '<div class="wk-task-card'+(t.done?' done':'')+'" id="wk-card-'+t.id+'" draggable="true" '
-        +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)">'
+        +'ondragstart="_wkDragStart(event,\''+t.id+'\',\''+day+'\')" ondragend="_wkDragEnd(event)" '
+        +'onclick="_wkEditTask(\''+t.id+'\',\''+day+'\',\''+t.source+'\')">'
         +'<div style="display:flex;align-items:flex-start;gap:8px">'
         +'<div class="wk-task-check'+(t.done?' done':'')+'" onclick="event.stopPropagation();_wkToggleDone(\''+t.id+'\',\''+day+'\',\''+t.source+'\',this)" style="margin-top:2px;flex-shrink:0"></div>'
         +'<div style="flex:1;min-width:0">'
@@ -16256,6 +16266,7 @@ function renderWeeklyPlan(el) {
 
 function _wkDragStart(e, taskId, fromDay) {
   _wkPlanDragData = { taskId: taskId, fromDay: fromDay };
+  _wkDragGuard = true;
   e.dataTransfer.effectAllowed = 'move';
   var card = document.getElementById('wk-card-'+taskId);
   if (card) { setTimeout(function(){ card.classList.add('dragging'); }, 0); }
@@ -16263,6 +16274,7 @@ function _wkDragStart(e, taskId, fromDay) {
 function _wkDragEnd(e) {
   document.querySelectorAll('.wk-task-card.dragging').forEach(function(c){ c.classList.remove('dragging'); });
   document.querySelectorAll('.wk-col-body').forEach(function(c){ c.classList.remove('drag-over'); });
+  setTimeout(function(){ _wkDragGuard = false; }, 80);
 }
 function _wkDragOver(e, day) {
   document.querySelectorAll('.wk-col-body').forEach(function(c){ c.classList.remove('drag-over'); });
@@ -16325,6 +16337,7 @@ function _wkJumpToday() {
   if (grid) { var first = grid.querySelector('.wk-col-hdr.is-today'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }); }
 }
 function _wkOpenFilter() { toast('Filter by tags coming soon'); }
+var _wkDragGuard = false;
 function _wkAddTaskToDay(day) {
   var d = new Date(day+'T00:00:00');
   var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -16337,6 +16350,42 @@ function _wkAddTaskToDay(day) {
       task.id = task.id || ('wk-'+Date.now());
       plan.tasks.push(task);
       _saveDayPlan(day, plan);
+      renderSchedule();
+    }
+  });
+}
+function _wkEditTask(taskId, day, source) {
+  if (_wkDragGuard) return;
+  if (source === 'task') {
+    // Open standard task detail
+    if (typeof openDetail === 'function') openDetail('tasks', taskId);
+    return;
+  }
+  // source === 'daily' — open schedule popup in edit mode
+  var plan = _getDayPlan(day);
+  if (!plan || !plan.tasks) return;
+  var idx = -1;
+  for (var i = 0; i < plan.tasks.length; i++) { if (plan.tasks[i].id === taskId) { idx = i; break; } }
+  if (idx < 0) return;
+  var t = plan.tasks[idx];
+  _openSchedAddPopup({
+    editIdx: idx,
+    existing: { title: t.title, plannedMin: t.plannedMin||0, tags: t.tags||[] },
+    onSave: function(updated) {
+      var p = _getDayPlan(day);
+      if (!p || !p.tasks[idx]) return;
+      p.tasks[idx].title = updated.title;
+      p.tasks[idx].plannedMin = updated.plannedMin;
+      p.tasks[idx].tags = updated.tags.slice();
+      _saveDayPlan(day, p);
+      renderSchedule();
+    },
+    onDelete: function() {
+      var p = _getDayPlan(day);
+      if (!p) return;
+      p.tasks.splice(idx, 1);
+      _saveDayPlan(day, p);
+      _closeSchedAdd();
       renderSchedule();
     }
   });
@@ -16464,6 +16513,8 @@ window._wkToggleDone = _wkToggleDone;
 window._wkJumpToday = _wkJumpToday;
 window._wkOpenFilter = _wkOpenFilter;
 window._wkAddTaskToDay = _wkAddTaskToDay;
+window._wkEditTask = _wkEditTask;
+window._schedDeleteTask = _schedDeleteTask;
 window._blToggleSection = _blToggleSection;
 window._blOpenAdd = _blOpenAdd;
 window._blArchive = _blArchive;
