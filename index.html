@@ -16785,7 +16785,11 @@ function renderSystainer() {
   var cas = d.cases[_sysActiveCase];
 
   var tabsHtml = d.cases.map(function(c,i){
-    return '<button class="sys-case-tab'+(i===_sysActiveCase?' active':'')+'" onclick="_sysSelectCase('+i+')">'+escH(c.name)+'</button>';
+    var isActive = i===_sysActiveCase;
+    return '<div class="sys-case-tab-wrap" style="position:relative;display:inline-flex;align-items:center;gap:2px">'
+      +'<button class="sys-case-tab'+(isActive?' active':'')+'" onclick="_sysSelectCase('+i+')" ondblclick="_sysRenameCase('+i+',this)">'+escH(c.name)+'</button>'
+      +(isActive?'<button onclick="_sysRenameCase('+i+',this.previousElementSibling)" title="Rename" style="background:none;border:none;color:rgba(255,255,255,0.45);cursor:pointer;padding:0 2px;font-size:11px;line-height:1">✎</button>':'')
+      +'</div>';
   }).join('') + '<button class="sys-add-case-btn" onclick="_sysAddCase()">+ Case</button>';
 
   var usedCells=0, totalItems=0;
@@ -16815,6 +16819,8 @@ function renderSystainer() {
       +(b.label?'<div class="sys-bin-size">'+b.rows+'×'+b.cols+'</div>':'')
       +'</div>';
   }).join('');
+  // Tooltip layer
+  var tooltipHtml = '<div id="sys-bin-tooltip" style="display:none;position:fixed;z-index:4000;pointer-events:none"></div>';
 
   var paletteHtml = '<div class="sys-palette">'
     +'<div class="sys-palette-hdr">Bin Sizes — drag to place</div>'
@@ -16828,8 +16834,10 @@ function renderSystainer() {
         +'</div>';
     }).join('')
     +'</div>'
-    +'<div style="margin-top:14px;font-size:11px;color:var(--text-muted);line-height:1.6">'
-    +'Drag a bin onto the grid. Click a placed bin to manage its contents.'
+    +'<div style="margin-top:14px;font-size:11px;color:var(--text-muted);line-height:1.8">'
+    +'Drag a bin onto the grid to place it.<br>'
+    +'Press <kbd style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:1px 5px;font-size:10px;font-family:monospace">R</kbd> while dragging to rotate.<br>'
+    +'Click a placed bin to manage its contents.'
     +'</div>'
     +'</div>';
 
@@ -16845,7 +16853,9 @@ function renderSystainer() {
     +'</div>'
     +paletteHtml
     +'</div>'
-    +'</div>';
+    +'</div>'
+    +tooltipHtml;
+  _sysAttachTooltips();
 
   _sysAttachEvents();
 }
@@ -17015,22 +17025,51 @@ function _sysClearPreview() {
   });
 }
 
+// ── Item library ─────────────────────────────────────────────
+function _getSysLibrary() {
+  try { return JSON.parse(localStorage.getItem('fop_sys_lib')||'[]'); } catch(e){ return []; }
+}
+function _saveSysLibrary(lib) {
+  try { localStorage.setItem('fop_sys_lib', JSON.stringify(lib)); } catch(e){}
+}
+function _sysLibAdd(name, notes, url) {
+  if (!name) return;
+  var lib = _getSysLibrary();
+  if (!lib.some(function(x){ return x.name===name; })) {
+    lib.unshift({ name:name, notes:notes||'', url:url||'' });
+    if (lib.length > 200) lib = lib.slice(0,200);
+    _saveSysLibrary(lib);
+  }
+}
+function _sysLibDatalist() {
+  var lib = _getSysLibrary();
+  return '<datalist id="sys-item-lib">'
+    + lib.map(function(it){ return '<option value="'+escH(it.name)+'">'; }).join('')
+    + '</datalist>';
+}
+
 // ── Items popup ──────────────────────────────────────────────
+function _sysItemRowHtml(item, binId, i) {
+  return '<div class="sys-item-row">'
+    +'<div style="flex:1;min-width:0">'
+    +'<div class="sys-item-name">'+escH(item.name)+'</div>'
+    +((item.notes||item.url)?'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">'
+      +(item.notes?escH(item.notes):'')
+      +(item.url&&item.notes?' · ':'')
+      +(item.url?'<a href="'+escH(item.url)+'" target="_blank" style="color:var(--accent);text-decoration:none;word-break:break-all">'+escH(item.url.replace(/^https?:\/\//,'').slice(0,40))+'</a>':'')
+      +'</div>':'')
+    +'</div>'
+    +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
+    +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 8px;font-size:16px;opacity:0.5;flex-shrink:0">×</button>'
+    +'</div>';
+}
+
 function _sysOpenItems(binId) {
   var d = _getSysData();
   var cas = d.cases[_sysActiveCase];
   var b = cas.bins.find(function(x){ return x.id===binId; });
   if (!b) return;
   if (!b.items) b.items = [];
-
-  function itemRowHtml(item, i) {
-    return '<div class="sys-item-row">'
-      +'<div class="sys-item-name">'+escH(item.name)+'</div>'
-      +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
-      +(item.notes?'<div style="font-size:10px;color:var(--text-muted);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="'+escH(item.notes)+'">'+escH(item.notes)+'</div>':'')
-      +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;font-size:15px;opacity:0.5;flex-shrink:0">×</button>'
-      +'</div>';
-  }
 
   var swatchHtml = _sysColors.map(function(c){
     return '<div class="sys-swatch'+(c===b.color?' active':'')+'" style="background:'+c+'" data-c="'+c+'" onclick="_sysSetColor(\''+binId+'\',\''+c+'\')"></div>';
@@ -17040,7 +17079,8 @@ function _sysOpenItems(binId) {
   ol.className = 'sys-overlay'; ol.id = 'sys-overlay';
   ol.onclick = function(e){ if(e.target===ol) _sysCloseItems(); };
 
-  ol.innerHTML = '<div class="sys-panel">'
+  ol.innerHTML = _sysLibDatalist()
+    +'<div class="sys-panel">'
     +'<div class="sys-panel-hdr">'
     +'<div id="sys-edit-dot" style="width:16px;height:16px;border-radius:4px;background:'+b.color+';flex-shrink:0"></div>'
     +'<input id="sys-lbl-inp" value="'+escH(b.label||'')+'" placeholder="Label this bin…" '
@@ -17050,21 +17090,31 @@ function _sysOpenItems(binId) {
     +'</div>'
     +'<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">'+b.rows+'×'+b.cols+' bin · Case '+(d.cases[_sysActiveCase].name)+'</div>'
     +'<div class="sys-color-row">'+swatchHtml+'</div>'
-    +'<div id="sys-items-list">'+(b.items.map(itemRowHtml).join('')||'<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>')+'</div>'
-    +'<div id="sys-items-list-count" style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:6px">'+b.items.length+' item'+(b.items.length===1?'':'s')+'</div>'
-    +'<div class="sys-add-row">'
-    +'<input id="sys-ni-name" placeholder="Item name…" style="flex:1">'
+    +'<div id="sys-items-list">'+(b.items.length ? b.items.map(function(it,i){ return _sysItemRowHtml(it,binId,i); }).join('') : '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>')+'</div>'
+    +'<div id="sys-items-list-count" style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:10px">'+b.items.length+' item'+(b.items.length===1?'':'s')+'</div>'
+    // Add item form
+    +'<div style="border:1px solid var(--border);border-radius:12px;padding:10px;background:rgba(255,255,255,0.025)">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Add Item</div>'
+    +'<div class="sys-add-row" style="flex-wrap:wrap;gap:6px">'
+    +'<input id="sys-ni-name" placeholder="Item name…" list="sys-item-lib" style="flex:1;min-width:120px" autocomplete="off">'
     +'<input id="sys-ni-qty" placeholder="Qty" style="width:60px;text-align:center">'
-    +'<input id="sys-ni-notes" placeholder="Notes" style="width:80px">'
-    +'<button onclick="_sysAddItem(\''+binId+'\')" '
-    +'style="padding:8px 14px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Add</button>'
     +'</div>'
-    +'<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;gap:8px">'
+    +'<div class="sys-add-row" style="margin-top:6px;flex-wrap:wrap;gap:6px">'
+    +'<input id="sys-ni-notes" placeholder="Notes" style="flex:1;min-width:120px">'
+    +'<input id="sys-ni-url" placeholder="Link (URL)…" type="url" style="flex:2;min-width:160px">'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;margin-top:8px;align-items:center">'
+    +'<button onclick="_sysAddItem(\''+binId+'\')" '
+    +'style="flex:1;padding:8px 14px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Add</button>'
+    +'</div>'
+    +'</div>'
+    // Footer
+    +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
     +'<button onclick="_sysPrintLabel(\''+binId+'\')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print Label</button>'
     +'<div style="display:flex;gap:10px;align-items:center">'
     +(b.rows!==b.cols
       ? '<button onclick="_sysRotateBin(\''+binId+'\')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>Rotate</button>'
-      : '<span style="font-size:11px;color:var(--text-muted);opacity:0.5">Square — no rotation</span>'
+      : '<span style="font-size:11px;color:var(--text-muted);opacity:0.5">Square</span>'
     )
     +'<button onclick="_sysRemoveBin(\''+binId+'\')" style="background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer">Remove bin</button>'
     +'</div>'
@@ -17075,7 +17125,18 @@ function _sysOpenItems(binId) {
   var inp = document.getElementById('sys-lbl-inp');
   if (inp) { inp.focus(); var l=inp.value.length; inp.setSelectionRange(l,l); }
   var nameInp = document.getElementById('sys-ni-name');
-  if (nameInp) nameInp.addEventListener('keydown', function(e){ if(e.key==='Enter') _sysAddItem(binId); });
+  if (nameInp) {
+    nameInp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); _sysAddItem(binId); } });
+    // Auto-fill notes+url from library when name is selected
+    nameInp.addEventListener('change', function(){
+      var lib = _getSysLibrary();
+      var match = lib.find(function(x){ return x.name===nameInp.value; });
+      if (match) {
+        var ni=document.getElementById('sys-ni-notes'); if(ni&&!ni.value) ni.value=match.notes||'';
+        var ui=document.getElementById('sys-ni-url'); if(ui&&!ui.value) ui.value=match.url||'';
+      }
+    });
+  }
 }
 
 function _sysRefreshItemsList(binId) {
@@ -17085,15 +17146,11 @@ function _sysRefreshItemsList(binId) {
   if (!b) return;
   var list = document.getElementById('sys-items-list');
   if (!list) return;
-  if (!b.items || !b.items.length) { list.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>'; return; }
-  list.innerHTML = b.items.map(function(item,i){
-    return '<div class="sys-item-row">'
-      +'<div class="sys-item-name">'+escH(item.name)+'</div>'
-      +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
-      +(item.notes?'<div style="font-size:10px;color:var(--text-muted);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">'+escH(item.notes)+'</div>':'')
-      +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;font-size:15px;opacity:0.5;flex-shrink:0">×</button>'
-      +'</div>';
-  }).join('');
+  list.innerHTML = b.items && b.items.length
+    ? b.items.map(function(it,i){ return _sysItemRowHtml(it,binId,i); }).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>';
+  var cnt = document.getElementById('sys-items-list-count');
+  if (cnt) cnt.textContent = (b.items||[]).length + ' item' + ((b.items||[]).length===1?'':'s');
 }
 
 function _sysCloseItems() {
@@ -17119,19 +17176,23 @@ function _sysSetColor(binId, color) {
   });
 }
 function _sysAddItem(binId) {
-  var nameEl=document.getElementById('sys-ni-name'), qtyEl=document.getElementById('sys-ni-qty'), notesEl=document.getElementById('sys-ni-notes');
+  var nameEl=document.getElementById('sys-ni-name'), qtyEl=document.getElementById('sys-ni-qty'),
+      notesEl=document.getElementById('sys-ni-notes'), urlEl=document.getElementById('sys-ni-url');
   var name=(nameEl?nameEl.value.trim():'');
   if (!name) return;
+  var qty=(qtyEl?qtyEl.value.trim():''), notes=(notesEl?notesEl.value.trim():''), url=(urlEl?urlEl.value.trim():'');
   var d = _getSysData();
   var cas = d.cases[_sysActiveCase];
   var b = cas.bins.find(function(x){ return x.id===binId; });
   if (!b) return;
   if (!b.items) b.items=[];
-  b.items.push({ id:'si-'+Date.now(), name:name, qty:(qtyEl?qtyEl.value.trim():''), notes:(notesEl?notesEl.value.trim():'') });
+  b.items.push({ id:'si-'+Date.now(), name:name, qty:qty, notes:notes, url:url });
   _saveSysData(d);
+  _sysLibAdd(name, notes, url); // save to library
   if (nameEl) { nameEl.value=''; nameEl.focus(); }
   if (qtyEl) qtyEl.value='';
   if (notesEl) notesEl.value='';
+  if (urlEl) urlEl.value='';
   _sysRefreshItemsList(binId);
 }
 function _sysDel(binId, idx) {
@@ -17166,26 +17227,34 @@ function _sysPrintAllLabels() {
   _sysPrintLabelsSheet(cas.bins, cas.name);
 }
 
+function _sysQrUrl(url, size) {
+  // Uses api.qrserver.com (free, no key needed)
+  return 'https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(url);
+}
+
 function _sysPrintLabelsSheet(bins, caseName) {
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
     +'<title>Systainer Labels — '+escH(caseName)+'</title>'
     +'<style>'
-    +'@page{margin:12mm}'
+    +'@page{margin:10mm}'
     +'*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:#fff;color:#000}'
-    +'.sheet{display:flex;flex-wrap:wrap;gap:8px;padding:4px}'
-    +'.label{border:2px solid #000;border-radius:8px;padding:8px 10px;width:90mm;break-inside:avoid;page-break-inside:avoid}'
-    +'.label-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}'
+    +'.sheet{display:flex;flex-wrap:wrap;gap:10px;padding:4px}'
+    +'.label{border:2px solid #000;border-radius:8px;padding:10px 12px;width:90mm;break-inside:avoid;page-break-inside:avoid}'
+    +'.label-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}'
     +'.label-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0}'
-    +'.label-title{font-size:15px;font-weight:800;flex:1}'
+    +'.label-title{font-size:16px;font-weight:800;flex:1}'
     +'.label-size{font-size:10px;color:#666;font-weight:600;white-space:nowrap}'
-    +'.label-case{font-size:9px;color:#999;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}'
+    +'.label-case{font-size:9px;color:#999;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}'
     +'.label-items{border-top:1px solid #e0e0e0;padding-top:6px}'
-    +'.label-item{display:flex;align-items:center;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid #f0f0f0}'
+    +'.label-item{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid #f0f0f0}'
     +'.label-item:last-child{border-bottom:none}'
-    +'.label-item-name{flex:1}'
-    +'.label-item-qty{font-weight:700;color:#333;margin-left:8px}'
-    +'.label-empty{font-size:11px;color:#bbb;font-style:italic}'
+    +'.label-item-info{flex:1}'
+    +'.label-item-name{font-size:12px;font-weight:600;color:#000}'
+    +'.label-item-notes{font-size:9px;color:#777;margin-top:1px}'
+    +'.label-item-qty{font-size:11px;font-weight:800;color:#333;white-space:nowrap;margin-top:2px}'
+    +'.label-item-qr{width:40px;height:40px;flex-shrink:0}'
+    +'.label-empty{font-size:11px;color:#bbb;font-style:italic;padding:4px 0}'
     +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
     +'</style></head><body><div class="sheet">';
 
@@ -17203,12 +17272,17 @@ function _sysPrintLabelsSheet(bins, caseName) {
       +'<div class="label-items">'
       +(items.length
         ? items.map(function(it){
-            return '<div class="label-item"><span class="label-item-name">'+escH(it.name)+'</span>'
-              +(it.qty?'<span class="label-item-qty">×'+escH(it.qty)+'</span>':'')
-              +(it.notes?'<span style="font-size:9px;color:#999;margin-left:6px">'+escH(it.notes)+'</span>':'')
+            var hasQr = it.url && it.url.trim();
+            return '<div class="label-item">'
+              +'<div class="label-item-info">'
+              +'<div class="label-item-name">'+escH(it.name)+(it.qty?' <span class="label-item-qty">×'+escH(it.qty)+'</span>':'')+'</div>'
+              +(it.notes?'<div class="label-item-notes">'+escH(it.notes)+'</div>':'')
+              +(it.url&&!hasQr?'<div style="font-size:8px;color:#4f8ef7;word-break:break-all">'+escH(it.url)+'</div>':'')
+              +'</div>'
+              +(hasQr?'<img class="label-item-qr" src="'+_sysQrUrl(it.url.trim(),80)+'" alt="QR">':'')
               +'</div>';
           }).join('')
-        : '<div class="label-empty">Empty</div>'
+        : '<div class="label-empty">Empty bin</div>'
       )
       +'</div>'
       +'</div>';
@@ -17216,7 +17290,7 @@ function _sysPrintLabelsSheet(bins, caseName) {
 
   html += '</div></body></html>';
 
-  var w = window.open('', '_blank', 'width=900,height=700');
+  var w = window.open('', '_blank', 'width=960,height=720');
   if (!w) { toast('Allow pop-ups to print labels'); return; }
   w.document.write(html);
   w.document.close();
@@ -17248,6 +17322,93 @@ function _sysAddCase() {
   _sysActiveCase = d.cases.length-1;
   renderSystainer();
 }
+function _sysRenameCase(i, btn) {
+  var d = _getSysData();
+  var cur = d.cases[i] ? d.cases[i].name : '';
+  var inp = document.createElement('input');
+  inp.value = cur;
+  inp.style.cssText = 'padding:4px 10px;border-radius:16px;border:2px solid var(--accent);background:var(--surface);color:var(--text);font-size:12px;font-weight:700;outline:none;width:110px';
+  var wrap = btn.parentElement;
+  wrap.innerHTML = '';
+  wrap.appendChild(inp);
+  inp.focus(); inp.select();
+  function commit() {
+    var val = inp.value.trim();
+    if (val) { d.cases[i].name = val; _saveSysData(d); }
+    renderSystainer();
+  }
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('keydown', function(e){
+    if (e.key==='Enter') { e.preventDefault(); inp.blur(); }
+    if (e.key==='Escape') { inp.value=cur; inp.blur(); }
+  });
+}
+
+// ── Hover tooltip ────────────────────────────────────────────
+var _sysTooltipTimer = null;
+function _sysAttachTooltips() {
+  var layer = document.getElementById('sys-bins-layer');
+  if (!layer) return;
+  layer.addEventListener('pointerover', function(e) {
+    var bin = e.target.closest('.sys-bin');
+    if (!bin) return;
+    var binId = bin.getAttribute('data-binid');
+    clearTimeout(_sysTooltipTimer);
+    _sysTooltipTimer = setTimeout(function(){ _sysShowTooltip(binId, bin); }, 600);
+  });
+  layer.addEventListener('pointerout', function(e) {
+    var bin = e.target.closest('.sys-bin');
+    if (!bin) return;
+    // Only hide if leaving the bin entirely
+    var to = e.relatedTarget;
+    if (to && bin.contains(to)) return;
+    clearTimeout(_sysTooltipTimer);
+    _sysHideTooltip();
+  });
+}
+function _sysShowTooltip(binId, binEl) {
+  var tt = document.getElementById('sys-bin-tooltip');
+  if (!tt) return;
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas && cas.bins.find(function(x){ return x.id===binId; });
+  if (!b || !(b.items&&b.items.length)) return;
+
+  var itemsHtml = b.items.map(function(it){
+    var hasQr = it.url && it.url.trim();
+    return '<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07)">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:12px;font-weight:600;color:var(--text)">'+escH(it.name)+(it.qty?' <span style="color:var(--accent);font-weight:700">×'+escH(it.qty)+'</span>':'')+'</div>'
+      +(it.notes?'<div style="font-size:10px;color:var(--text-muted);margin-top:1px">'+escH(it.notes)+'</div>':'')
+      +(it.url?'<a href="'+escH(it.url)+'" target="_blank" style="font-size:9px;color:var(--accent);text-decoration:none;word-break:break-all;display:block;margin-top:2px">'+escH(it.url.replace(/^https?:\/\//,'').slice(0,36))+'</a>':'')
+      +'</div>'
+      +(hasQr?'<img src="'+_sysQrUrl(it.url.trim(),52)+'" width="52" height="52" style="border-radius:4px;flex-shrink:0" alt="QR">':'')
+      +'</div>';
+  }).join('');
+
+  tt.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:220px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.45)">'
+    +'<div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">'
+    +'<div style="width:10px;height:10px;border-radius:3px;background:'+b.color+';flex-shrink:0"></div>'
+    +escH(b.label||b.rows+'×'+b.cols)+' <span style="font-size:10px;font-weight:500;color:var(--text-muted)">('+b.items.length+' items)</span>'
+    +'</div>'
+    +itemsHtml
+    +'</div>';
+
+  var rect = binEl.getBoundingClientRect();
+  var left = rect.right + 10;
+  var top  = rect.top;
+  // Clamp to viewport
+  if (left + 310 > window.innerWidth) left = rect.left - 310;
+  if (top + 300 > window.innerHeight) top = window.innerHeight - 310;
+  tt.style.left = Math.max(8, left)+'px';
+  tt.style.top  = Math.max(8, top)+'px';
+  tt.style.display = 'block';
+}
+function _sysHideTooltip() {
+  var tt = document.getElementById('sys-bin-tooltip');
+  if (tt) tt.style.display = 'none';
+  clearTimeout(_sysTooltipTimer);
+}
 
 window.renderSystainer = renderSystainer;
 window._sysSelectCase  = _sysSelectCase;
@@ -17262,6 +17423,9 @@ window._sysRemoveBin   = _sysRemoveBin;
 window._sysRotateBin      = _sysRotateBin;
 window._sysPrintLabel     = _sysPrintLabel;
 window._sysPrintAllLabels = _sysPrintAllLabels;
+window._sysRenameCase     = _sysRenameCase;
+window._sysItemRowHtml    = _sysItemRowHtml;
+window._sysHideTooltip    = _sysHideTooltip;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
