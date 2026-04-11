@@ -1570,6 +1570,56 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 /* Give the weekly plan grid right margin on large screens to avoid timeline overlap */
 @media (min-width: 1101px) { .wk-plan-wrap { padding-right: 208px; } }
 
+/* ── Systainer ─────────────────────────────────────────────── */
+.sys-wrap { max-width: 960px; }
+.sys-case-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.sys-case-tab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.12s; }
+.sys-case-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.sys-add-case-btn { padding: 6px 12px; border-radius: 20px; border: 1.5px dashed rgba(255,255,255,0.18); background: none; color: var(--text-muted); font-size: 12px; cursor: pointer; transition: color 0.12s, border-color 0.12s; }
+.sys-add-case-btn:hover { color: var(--accent); border-color: var(--accent); }
+.sys-stats { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+.sys-stat { font-size: 11px; color: var(--text-muted); }
+.sys-stat strong { color: var(--text); font-weight: 700; }
+.sys-body { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+/* Grid */
+.sys-grid-outer { overflow-x: auto; }
+.sys-grid-wrap { position: relative; width: 378px; height: 270px; flex-shrink: 0; border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.35); background: #0a1020; }
+.sys-grid-bg { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(7, 54px); grid-template-rows: repeat(5, 54px); border-radius: 10px; overflow: hidden; }
+.sys-grid-cell { width: 54px; height: 54px; border-right: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); box-sizing: border-box; background: rgba(255,255,255,0.015); transition: background 0.08s, border-color 0.08s; }
+.sys-grid-cell.sys-prev-valid { background: rgba(79,142,247,0.22) !important; border-color: rgba(79,142,247,0.5) !important; }
+.sys-grid-cell.sys-prev-invalid { background: rgba(239,68,68,0.18) !important; border-color: rgba(239,68,68,0.5) !important; }
+.sys-bins-layer { position: absolute; inset: 0; pointer-events: none; }
+/* Bin */
+.sys-bin { position: absolute; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; pointer-events: all; box-sizing: border-box; border: 2px solid rgba(255,255,255,0.28); user-select: none; transition: box-shadow 0.12s, transform 0.12s; overflow: hidden; padding: 3px; }
+.sys-bin:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.5); transform: scale(1.03); z-index: 10; }
+.sys-bin.sys-drag-src { opacity: 0.25; pointer-events: none; }
+.sys-bin-label { font-size: 10px; font-weight: 700; color: #fff; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.5); word-break: break-word; line-height: 1.2; max-width: 100%; }
+.sys-bin-size { font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+.sys-bin-badge { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.45); color: #fff; font-size: 8px; font-weight: 700; padding: 1px 4px; border-radius: 99px; line-height: 1.4; }
+/* Drag ghost */
+.sys-ghost { position: fixed; pointer-events: none; border-radius: 7px; border: 2px solid rgba(255,255,255,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); opacity: 0.88; box-shadow: 0 8px 24px rgba(0,0,0,0.5); transition: box-shadow 0.08s; }
+/* Palette */
+.sys-palette { flex: 1; min-width: 200px; }
+.sys-palette-hdr { font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.sys-palette-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.sys-pal-item { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px; border-radius: 10px; border: 1px solid var(--border); cursor: grab; user-select: none; transition: border-color 0.12s, background 0.12s; -webkit-user-select: none; touch-action: none; }
+.sys-pal-item:hover { border-color: var(--accent); background: rgba(79,142,247,0.06); }
+.sys-pal-swatch { border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.sys-pal-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); }
+/* Items popup */
+.sys-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
+.sys-panel { background: var(--surface); border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; max-height: 82vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.6); }
+.sys-panel-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.sys-color-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.sys-swatch { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s, transform 0.1s; flex-shrink: 0; }
+.sys-swatch.active { border-color: #fff; transform: scale(1.15); }
+.sys-item-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 6px; }
+.sys-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sys-item-qty { font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.sys-add-row { display: flex; gap: 6px; margin-top: 10px; }
+.sys-add-row input { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); font-size: 13px; outline: none; }
+[data-theme="light"] .sys-grid-wrap { background: #e8edf5; }
+[data-theme="light"] .sys-grid-cell { border-color: rgba(0,0,0,0.09); background: rgba(255,255,255,0.5); }
 /* Schedule Calendar tab */
 .sc-cal-selected { background: rgba(79,142,247,0.08) !important; outline: 2px solid var(--accent); outline-offset: -2px; }
 .sc-cal-agenda-empty { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
@@ -3638,6 +3688,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           Field Log
           <span class="nav-badge" id="badge-fieldlogs">0</span>
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('systainer')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/><line x1="8" y1="9" x2="8" y2="21"/><line x1="16" y1="9" x2="16" y2="21"/></svg>
+          Systainer
+        </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('mapview')">
           <svg viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle class="ni-pin-dot" cx="12" cy="10" r="3"/></svg>
           Project Map
@@ -4339,6 +4393,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </div>
     </div>
     <div id="punchlist-content"></div>
+  </div>
+
+  <!-- ═══ SYSTAINER ═══ -->
+  <div class="view" id="view-systainer">
+    <div id="sys-content"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -6708,7 +6767,7 @@ var currentView = 'dashboard';
 var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
-  timekeeping: 'Time Tracker', schedule: 'Schedule'
+  timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer'
 };
 
 function switchView(v) {
@@ -6763,6 +6822,9 @@ function switchView(v) {
   }
   if(v==='schedule') {
     renderSchedule();
+  }
+  if(v==='systainer') {
+    renderSystainer();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -11245,6 +11307,7 @@ function renderAll() {
   if (cv === 'mapview')     renderMapView();
   if (cv === 'timekeeping') renderTimeLog();
   if (cv === 'schedule')    renderSchedule();
+  if (cv === 'systainer')   renderSystainer();
   updateTabBadges();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
@@ -16662,6 +16725,543 @@ window.renderSchedCal = renderSchedCal;
 window._scCalNav = _scCalNav;
 window._scCalToday = _scCalToday;
 window._scCalSelect = _scCalSelect;
+
+// ═══════════════════════════════════════════════
+//  SYSTAINER
+// ═══════════════════════════════════════════════
+
+var SYS_COLS = 7, SYS_ROWS = 5, SYS_CELL = 54;
+
+var _sysBinTypes = [
+  { rows:1, cols:1, label:'1×1' },
+  { rows:1, cols:2, label:'1×2' },
+  { rows:2, cols:1, label:'2×1 ↺' },
+  { rows:2, cols:2, label:'2×2' },
+  { rows:2, cols:3, label:'2×3' },
+  { rows:3, cols:2, label:'3×2 ↺' },
+  { rows:2, cols:7, label:'2×7' },
+  { rows:3, cols:3, label:'3×3' },
+  { rows:3, cols:6, label:'3×6' }
+];
+
+var _sysColors = ['#4f8ef7','#10b981','#f97316','#f59e0b','#ef4444','#a78bfa','#ec4899','#06b6d4','#64748b','#84cc16'];
+var _sysActiveCase = 0;
+var _sysDrag = null;
+
+function _getSysData() {
+  try { return JSON.parse(localStorage.getItem('fop_systainer')||'null') || { cases:[] }; }
+  catch(e) { return { cases:[] }; }
+}
+function _saveSysData(d) {
+  try { localStorage.setItem('fop_systainer', JSON.stringify(d)); } catch(e) {}
+}
+function _ensureSysCases(d) {
+  if (!d.cases || !d.cases.length) {
+    d.cases = [
+      { id:'sc-1', name:'Case 1', bins:[] },
+      { id:'sc-2', name:'Case 2', bins:[] },
+      { id:'sc-3', name:'Case 3', bins:[] }
+    ];
+    _saveSysData(d);
+  }
+  return d;
+}
+
+function _sysFits(bins, row, col, rows, cols, excludeId) {
+  if (row < 0 || col < 0 || row+rows > SYS_ROWS || col+cols > SYS_COLS) return false;
+  for (var i=0; i<bins.length; i++) {
+    var b = bins[i];
+    if (excludeId && b.id === excludeId) continue;
+    if (row < b.row+b.rows && row+rows > b.row && col < b.col+b.cols && col+cols > b.col) return false;
+  }
+  return true;
+}
+
+function renderSystainer() {
+  var el = document.getElementById('sys-content');
+  if (!el) return;
+  var d = _ensureSysCases(_getSysData());
+  if (_sysActiveCase >= d.cases.length) _sysActiveCase = 0;
+  var cas = d.cases[_sysActiveCase];
+
+  var tabsHtml = d.cases.map(function(c,i){
+    return '<button class="sys-case-tab'+(i===_sysActiveCase?' active':'')+'" onclick="_sysSelectCase('+i+')">'+escH(c.name)+'</button>';
+  }).join('') + '<button class="sys-add-case-btn" onclick="_sysAddCase()">+ Case</button>';
+
+  var usedCells=0, totalItems=0;
+  cas.bins.forEach(function(b){ usedCells += b.rows*b.cols; totalItems += (b.items||[]).length; });
+
+  var statsHtml = '<div class="sys-stats">'
+    +'<div class="sys-stat"><strong>'+cas.bins.length+'</strong> bins</div>'
+    +'<div class="sys-stat"><strong>'+usedCells+'</strong>/'+(SYS_COLS*SYS_ROWS)+' cells</div>'
+    +'<div class="sys-stat"><strong>'+(SYS_COLS*SYS_ROWS-usedCells)+'</strong> free</div>'
+    +'<div class="sys-stat"><strong>'+totalItems+'</strong> items tracked</div>'
+    +'<div style="margin-left:auto">'
+    +'<button onclick="_sysPrintAllLabels()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;padding:4px 11px;border-radius:8px;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print All Labels</button>'
+    +'</div>'
+    +'</div>';
+
+  var cellsHtml = '';
+  for (var r=0; r<SYS_ROWS; r++) for (var c=0; c<SYS_COLS; c++)
+    cellsHtml += '<div class="sys-grid-cell" data-row="'+r+'" data-col="'+c+'"></div>';
+
+  var binsHtml = cas.bins.map(function(b){
+    var l=b.col*SYS_CELL+2, t=b.row*SYS_CELL+2, w=b.cols*SYS_CELL-4, h=b.rows*SYS_CELL-4;
+    var cnt=(b.items||[]).length;
+    return '<div class="sys-bin" id="sys-bin-'+b.id+'" data-binid="'+b.id+'" '
+      +'style="left:'+l+'px;top:'+t+'px;width:'+w+'px;height:'+h+'px;background:'+b.color+'">'
+      +(cnt?'<div class="sys-bin-badge">'+cnt+'</div>':'')
+      +'<div class="sys-bin-label">'+(b.label?escH(b.label):b.rows+'×'+b.cols)+'</div>'
+      +(b.label?'<div class="sys-bin-size">'+b.rows+'×'+b.cols+'</div>':'')
+      +'</div>';
+  }).join('');
+
+  var paletteHtml = '<div class="sys-palette">'
+    +'<div class="sys-palette-hdr">Bin Sizes — drag to place</div>'
+    +'<div class="sys-palette-grid">'
+    +_sysBinTypes.map(function(bt,i){
+      var sw = Math.min(bt.cols*16,80), sh = Math.min(bt.rows*16,64);
+      var col = _sysColors[i % _sysColors.length];
+      return '<div class="sys-pal-item" data-rows="'+bt.rows+'" data-cols="'+bt.cols+'" data-color="'+col+'">'
+        +'<div class="sys-pal-swatch" style="width:'+sw+'px;height:'+sh+'px;background:'+col+'">'+escH(bt.label)+'</div>'
+        +'<div class="sys-pal-lbl">'+escH(bt.label)+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>'
+    +'<div style="margin-top:14px;font-size:11px;color:var(--text-muted);line-height:1.6">'
+    +'Drag a bin onto the grid. Click a placed bin to manage its contents.'
+    +'</div>'
+    +'</div>';
+
+  el.innerHTML = '<div class="sys-wrap">'
+    +'<div class="sys-case-tabs">'+tabsHtml+'</div>'
+    +statsHtml
+    +'<div class="sys-body">'
+    +'<div class="sys-grid-outer">'
+    +'<div class="sys-grid-wrap" id="sys-grid-wrap">'
+    +'<div class="sys-grid-bg" id="sys-grid-bg">'+cellsHtml+'</div>'
+    +'<div class="sys-bins-layer" id="sys-bins-layer">'+binsHtml+'</div>'
+    +'</div>'
+    +'</div>'
+    +paletteHtml
+    +'</div>'
+    +'</div>';
+
+  _sysAttachEvents();
+}
+
+function _sysAttachEvents() {
+  // Palette items
+  document.querySelectorAll('.sys-pal-item').forEach(function(item) {
+    item.addEventListener('pointerdown', function(e) {
+      if (e.button && e.button > 0) return;
+      e.preventDefault();
+      var rows = parseInt(item.getAttribute('data-rows'));
+      var cols = parseInt(item.getAttribute('data-cols'));
+      var color = item.getAttribute('data-color');
+      var offX = (cols * SYS_CELL) / 2;
+      var offY = (rows * SYS_CELL) / 2;
+      _sysStartDrag(e, rows, cols, color, null, offX, offY);
+    });
+  });
+
+  // Placed bins
+  document.querySelectorAll('.sys-bin').forEach(function(bin) {
+    var pdownX, pdownY;
+    bin.addEventListener('pointerdown', function(e) {
+      if (e.button && e.button > 0) return;
+      e.preventDefault(); e.stopPropagation();
+      pdownX = e.clientX; pdownY = e.clientY;
+      var binId = bin.getAttribute('data-binid');
+      var d2 = _getSysData();
+      var cas = d2.cases[_sysActiveCase];
+      var b = cas.bins.find(function(x){ return x.id===binId; });
+      if (!b) return;
+      var rect = bin.getBoundingClientRect();
+      var offX = e.clientX - rect.left;
+      var offY = e.clientY - rect.top;
+      _sysStartDrag(e, b.rows, b.cols, b.color, binId, offX, offY);
+    });
+  });
+}
+
+function _sysStartDrag(e, rows, cols, color, existingBinId, offX, offY) {
+  var ghost = null;
+  var started = false;
+  var startX = e.clientX, startY = e.clientY;
+  var curRows = rows, curCols = cols;
+  var lastClientX = e.clientX, lastClientY = e.clientY;
+
+  function rebuildGhost() {
+    if (!ghost) return;
+    ghost.style.width  = (curCols*SYS_CELL-4)+'px';
+    ghost.style.height = (curRows*SYS_CELL-4)+'px';
+    ghost.textContent = curRows+'×'+curCols+(curRows!==rows||curCols!==cols ? ' ↺' : '');
+    // re-center offset
+    offX = (curCols*SYS_CELL)/2;
+    offY = (curRows*SYS_CELL)/2;
+    ghost.style.left = (lastClientX - offX)+'px';
+    ghost.style.top  = (lastClientY - offY)+'px';
+    _sysUpdatePreview(lastClientX, lastClientY, curRows, curCols, offX, offY, existingBinId);
+  }
+
+  function onKey(e2) {
+    if ((e2.key==='r'||e2.key==='R') && curRows!==curCols) {
+      var t=curRows; curRows=curCols; curCols=t;
+      rebuildGhost();
+    }
+  }
+
+  function onMove(e2) {
+    lastClientX = e2.clientX; lastClientY = e2.clientY;
+    var dx = e2.clientX - startX, dy = e2.clientY - startY;
+    if (!started && Math.sqrt(dx*dx+dy*dy) < 6) return;
+
+    if (!started) {
+      started = true;
+      ghost = document.createElement('div');
+      ghost.className = 'sys-ghost';
+      ghost.style.background = color;
+      ghost.textContent = curRows+'×'+curCols;
+      ghost.style.width  = (curCols*SYS_CELL-4)+'px';
+      ghost.style.height = (curRows*SYS_CELL-4)+'px';
+      document.body.appendChild(ghost);
+      if (existingBinId) {
+        var src = document.getElementById('sys-bin-'+existingBinId);
+        if (src) src.classList.add('sys-drag-src');
+      }
+    }
+
+    ghost.style.left = (e2.clientX - offX)+'px';
+    ghost.style.top  = (e2.clientY - offY)+'px';
+    _sysUpdatePreview(e2.clientX, e2.clientY, curRows, curCols, offX, offY, existingBinId);
+  }
+
+  function onUp(e2) {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('keydown', onKey);
+
+    if (ghost) ghost.remove();
+    _sysClearPreview();
+
+    if (existingBinId) {
+      var src2 = document.getElementById('sys-bin-'+existingBinId);
+      if (src2) src2.classList.remove('sys-drag-src');
+    }
+
+    if (!started) {
+      if (existingBinId) _sysOpenItems(existingBinId);
+      return;
+    }
+
+    var gridEl = document.getElementById('sys-grid-wrap');
+    if (!gridEl) return;
+    var rect = gridEl.getBoundingClientRect();
+    if (e2.clientX < rect.left-20 || e2.clientX > rect.right+20 || e2.clientY < rect.top-20 || e2.clientY > rect.bottom+20) return;
+
+    var col = Math.round((e2.clientX - offX - rect.left) / SYS_CELL);
+    var row = Math.round((e2.clientY - offY - rect.top)  / SYS_CELL);
+    col = Math.max(0, Math.min(SYS_COLS-curCols, col));
+    row = Math.max(0, Math.min(SYS_ROWS-curRows, row));
+
+    var d2 = _getSysData();
+    var cas = d2.cases[_sysActiveCase];
+    if (!_sysFits(cas.bins, row, col, curRows, curCols, existingBinId)) return;
+
+    if (existingBinId) {
+      var b = cas.bins.find(function(x){ return x.id===existingBinId; });
+      if (b) { b.row=row; b.col=col; b.rows=curRows; b.cols=curCols; }
+    } else {
+      cas.bins.push({ id:'sb-'+Date.now(), rows:curRows, cols:curCols, row:row, col:col, color:color, label:'', items:[] });
+    }
+    _saveSysData(d2);
+    renderSystainer();
+  }
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('keydown', onKey);
+}
+
+function _sysUpdatePreview(clientX, clientY, rows, cols, offX, offY, excludeId) {
+  _sysClearPreview();
+  var gridEl = document.getElementById('sys-grid-wrap');
+  if (!gridEl) return;
+  var rect = gridEl.getBoundingClientRect();
+  if (clientX < rect.left-40 || clientX > rect.right+40 || clientY < rect.top-40 || clientY > rect.bottom+40) return;
+
+  var col = Math.round((clientX - offX - rect.left) / SYS_CELL);
+  var row = Math.round((clientY - offY - rect.top)  / SYS_CELL);
+  col = Math.max(0, Math.min(SYS_COLS-cols, col));
+  row = Math.max(0, Math.min(SYS_ROWS-rows, row));
+
+  var d2 = _getSysData();
+  var cas = d2.cases[_sysActiveCase];
+  var valid = _sysFits(cas.bins, row, col, rows, cols, excludeId);
+  var cls = valid ? 'sys-prev-valid' : 'sys-prev-invalid';
+
+  for (var r=row; r<row+rows; r++) {
+    for (var c=col; c<col+cols; c++) {
+      var cell = document.querySelector('.sys-grid-cell[data-row="'+r+'"][data-col="'+c+'"]');
+      if (cell) cell.classList.add(cls);
+    }
+  }
+}
+
+function _sysClearPreview() {
+  document.querySelectorAll('.sys-prev-valid,.sys-prev-invalid').forEach(function(c){
+    c.classList.remove('sys-prev-valid','sys-prev-invalid');
+  });
+}
+
+// ── Items popup ──────────────────────────────────────────────
+function _sysOpenItems(binId) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b) return;
+  if (!b.items) b.items = [];
+
+  function itemRowHtml(item, i) {
+    return '<div class="sys-item-row">'
+      +'<div class="sys-item-name">'+escH(item.name)+'</div>'
+      +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
+      +(item.notes?'<div style="font-size:10px;color:var(--text-muted);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px" title="'+escH(item.notes)+'">'+escH(item.notes)+'</div>':'')
+      +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;font-size:15px;opacity:0.5;flex-shrink:0">×</button>'
+      +'</div>';
+  }
+
+  var swatchHtml = _sysColors.map(function(c){
+    return '<div class="sys-swatch'+(c===b.color?' active':'')+'" style="background:'+c+'" data-c="'+c+'" onclick="_sysSetColor(\''+binId+'\',\''+c+'\')"></div>';
+  }).join('');
+
+  var ol = document.createElement('div');
+  ol.className = 'sys-overlay'; ol.id = 'sys-overlay';
+  ol.onclick = function(e){ if(e.target===ol) _sysCloseItems(); };
+
+  ol.innerHTML = '<div class="sys-panel">'
+    +'<div class="sys-panel-hdr">'
+    +'<div id="sys-edit-dot" style="width:16px;height:16px;border-radius:4px;background:'+b.color+';flex-shrink:0"></div>'
+    +'<input id="sys-lbl-inp" value="'+escH(b.label||'')+'" placeholder="Label this bin…" '
+    +'style="flex:1;border:none;background:none;color:var(--text);font-size:15px;font-weight:700;outline:none" '
+    +'oninput="_sysSetLabel(\''+binId+'\',this.value)">'
+    +'<button onclick="_sysCloseItems()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">×</button>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">'+b.rows+'×'+b.cols+' bin · Case '+(d.cases[_sysActiveCase].name)+'</div>'
+    +'<div class="sys-color-row">'+swatchHtml+'</div>'
+    +'<div id="sys-items-list">'+(b.items.map(itemRowHtml).join('')||'<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>')+'</div>'
+    +'<div id="sys-items-list-count" style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:6px">'+b.items.length+' item'+(b.items.length===1?'':'s')+'</div>'
+    +'<div class="sys-add-row">'
+    +'<input id="sys-ni-name" placeholder="Item name…" style="flex:1">'
+    +'<input id="sys-ni-qty" placeholder="Qty" style="width:60px;text-align:center">'
+    +'<input id="sys-ni-notes" placeholder="Notes" style="width:80px">'
+    +'<button onclick="_sysAddItem(\''+binId+'\')" '
+    +'style="padding:8px 14px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Add</button>'
+    +'</div>'
+    +'<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;gap:8px">'
+    +'<button onclick="_sysPrintLabel(\''+binId+'\')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print Label</button>'
+    +'<div style="display:flex;gap:10px;align-items:center">'
+    +(b.rows!==b.cols
+      ? '<button onclick="_sysRotateBin(\''+binId+'\')" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>Rotate</button>'
+      : '<span style="font-size:11px;color:var(--text-muted);opacity:0.5">Square — no rotation</span>'
+    )
+    +'<button onclick="_sysRemoveBin(\''+binId+'\')" style="background:none;border:none;color:#ef4444;font-size:12px;font-weight:600;cursor:pointer">Remove bin</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(ol);
+  var inp = document.getElementById('sys-lbl-inp');
+  if (inp) { inp.focus(); var l=inp.value.length; inp.setSelectionRange(l,l); }
+  var nameInp = document.getElementById('sys-ni-name');
+  if (nameInp) nameInp.addEventListener('keydown', function(e){ if(e.key==='Enter') _sysAddItem(binId); });
+}
+
+function _sysRefreshItemsList(binId) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b) return;
+  var list = document.getElementById('sys-items-list');
+  if (!list) return;
+  if (!b.items || !b.items.length) { list.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No items yet.</div>'; return; }
+  list.innerHTML = b.items.map(function(item,i){
+    return '<div class="sys-item-row">'
+      +'<div class="sys-item-name">'+escH(item.name)+'</div>'
+      +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
+      +(item.notes?'<div style="font-size:10px;color:var(--text-muted);margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">'+escH(item.notes)+'</div>':'')
+      +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;font-size:15px;opacity:0.5;flex-shrink:0">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function _sysCloseItems() {
+  var ol = document.getElementById('sys-overlay');
+  if (ol) ol.remove();
+  renderSystainer();
+}
+function _sysSetLabel(binId, val) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (b) { b.label=val; _saveSysData(d); }
+}
+function _sysSetColor(binId, color) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (b) { b.color=color; _saveSysData(d); }
+  var dot = document.getElementById('sys-edit-dot');
+  if (dot) dot.style.background = color;
+  document.querySelectorAll('.sys-swatch').forEach(function(s){
+    s.classList.toggle('active', s.getAttribute('data-c')===color);
+  });
+}
+function _sysAddItem(binId) {
+  var nameEl=document.getElementById('sys-ni-name'), qtyEl=document.getElementById('sys-ni-qty'), notesEl=document.getElementById('sys-ni-notes');
+  var name=(nameEl?nameEl.value.trim():'');
+  if (!name) return;
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b) return;
+  if (!b.items) b.items=[];
+  b.items.push({ id:'si-'+Date.now(), name:name, qty:(qtyEl?qtyEl.value.trim():''), notes:(notesEl?notesEl.value.trim():'') });
+  _saveSysData(d);
+  if (nameEl) { nameEl.value=''; nameEl.focus(); }
+  if (qtyEl) qtyEl.value='';
+  if (notesEl) notesEl.value='';
+  _sysRefreshItemsList(binId);
+}
+function _sysDel(binId, idx) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b||!b.items) return;
+  b.items.splice(idx,1);
+  _saveSysData(d);
+  _sysRefreshItemsList(binId);
+}
+function _sysRemoveBin(binId) {
+  if (!confirm('Remove this bin and all its contents?')) return;
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  cas.bins = cas.bins.filter(function(b){ return b.id!==binId; });
+  _saveSysData(d);
+  _sysCloseItems();
+}
+function _sysPrintLabel(binId) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b) return;
+  _sysPrintLabelsSheet([b], cas.name);
+}
+
+function _sysPrintAllLabels() {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  if (!cas.bins.length) { toast('No bins to print'); return; }
+  _sysPrintLabelsSheet(cas.bins, cas.name);
+}
+
+function _sysPrintLabelsSheet(bins, caseName) {
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    +'<title>Systainer Labels — '+escH(caseName)+'</title>'
+    +'<style>'
+    +'@page{margin:12mm}'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:#fff;color:#000}'
+    +'.sheet{display:flex;flex-wrap:wrap;gap:8px;padding:4px}'
+    +'.label{border:2px solid #000;border-radius:8px;padding:8px 10px;width:90mm;break-inside:avoid;page-break-inside:avoid}'
+    +'.label-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}'
+    +'.label-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0}'
+    +'.label-title{font-size:15px;font-weight:800;flex:1}'
+    +'.label-size{font-size:10px;color:#666;font-weight:600;white-space:nowrap}'
+    +'.label-case{font-size:9px;color:#999;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}'
+    +'.label-items{border-top:1px solid #e0e0e0;padding-top:6px}'
+    +'.label-item{display:flex;align-items:center;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid #f0f0f0}'
+    +'.label-item:last-child{border-bottom:none}'
+    +'.label-item-name{flex:1}'
+    +'.label-item-qty{font-weight:700;color:#333;margin-left:8px}'
+    +'.label-empty{font-size:11px;color:#bbb;font-style:italic}'
+    +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+    +'</style></head><body><div class="sheet">';
+
+  bins.forEach(function(b) {
+    var label = b.label || (b.rows+'×'+b.cols+' Bin');
+    var swColor = b.color || '#4f8ef7';
+    var items = b.items || [];
+    html += '<div class="label">'
+      +'<div class="label-top">'
+      +'<div class="label-swatch" style="background:'+swColor+'"></div>'
+      +'<div class="label-title">'+escH(label)+'</div>'
+      +'<div class="label-size">'+b.rows+'×'+b.cols+'</div>'
+      +'</div>'
+      +'<div class="label-case">'+escH(caseName)+'</div>'
+      +'<div class="label-items">'
+      +(items.length
+        ? items.map(function(it){
+            return '<div class="label-item"><span class="label-item-name">'+escH(it.name)+'</span>'
+              +(it.qty?'<span class="label-item-qty">×'+escH(it.qty)+'</span>':'')
+              +(it.notes?'<span style="font-size:9px;color:#999;margin-left:6px">'+escH(it.notes)+'</span>':'')
+              +'</div>';
+          }).join('')
+        : '<div class="label-empty">Empty</div>'
+      )
+      +'</div>'
+      +'</div>';
+  });
+
+  html += '</div></body></html>';
+
+  var w = window.open('', '_blank', 'width=900,height=700');
+  if (!w) { toast('Allow pop-ups to print labels'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.onload = function(){ w.focus(); w.print(); };
+}
+
+function _sysRotateBin(binId) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b || b.rows===b.cols) return; // square — rotation is identity
+  var newRows = b.cols, newCols = b.rows;
+  // Try current position first, then shift if it goes out of bounds
+  var newRow = b.row, newCol = b.col;
+  newRow = Math.min(newRow, SYS_ROWS - newRows);
+  newCol = Math.min(newCol, SYS_COLS - newCols);
+  if (!_sysFits(cas.bins, newRow, newCol, newRows, newCols, binId)) {
+    toast('Not enough space to rotate here — move the bin first'); return;
+  }
+  b.rows = newRows; b.cols = newCols; b.row = newRow; b.col = newCol;
+  _saveSysData(d);
+  _sysCloseItems();
+}
+function _sysSelectCase(i) { _sysActiveCase=i; renderSystainer(); }
+function _sysAddCase() {
+  var d = _getSysData();
+  d.cases.push({ id:'sc-'+Date.now(), name:'Case '+(d.cases.length+1), bins:[] });
+  _saveSysData(d);
+  _sysActiveCase = d.cases.length-1;
+  renderSystainer();
+}
+
+window.renderSystainer = renderSystainer;
+window._sysSelectCase  = _sysSelectCase;
+window._sysAddCase     = _sysAddCase;
+window._sysOpenItems   = _sysOpenItems;
+window._sysCloseItems  = _sysCloseItems;
+window._sysSetLabel    = _sysSetLabel;
+window._sysSetColor    = _sysSetColor;
+window._sysAddItem     = _sysAddItem;
+window._sysDel         = _sysDel;
+window._sysRemoveBin   = _sysRemoveBin;
+window._sysRotateBin      = _sysRotateBin;
+window._sysPrintLabel     = _sysPrintLabel;
+window._sysPrintAllLabels = _sysPrintAllLabels;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
