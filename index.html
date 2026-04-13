@@ -6617,6 +6617,9 @@ function initFirebase(config) {
         }, function(err) { console.warn('Timer sync listener error:', err); });
       unsubscribers.push(timerUnsub);
 
+      // Subscribe to blob-synced data (schedule, backlog, systainer)
+      _initBlobListeners();
+
       window._fbConfig = config;
       window._fbConnected = true;
       setTimeout(flushSyncQueue, 800);
@@ -6640,6 +6643,39 @@ function initFirebase(config) {
   } else {
     _doInit();
   }
+}
+
+// ── Blob sync: syncs localStorage-backed blobs (schedule, backlog, systainer) to Firestore ──
+function _syncBlob(key, data) {
+  if (!db) return;
+  db.collection('_app_blobs').doc(key)
+    .set({ data: data, updatedAt: new Date().toISOString() })
+    .catch(function(e){ console.warn('_syncBlob error ('+key+'):', e); });
+}
+
+function _initBlobListeners() {
+  var blobDefs = [
+    { key:'dailyPlans', ls:'fop_dailyPlans' },
+    { key:'backlog',    ls:'fop_backlog'    },
+    { key:'systainer',  ls:'fop_systainer'  },
+    { key:'sysLibrary', ls:'fop_sys_lib'    }
+  ];
+  blobDefs.forEach(function(b) {
+    var unsub = db.collection('_app_blobs').doc(b.key)
+      .onSnapshot(function(doc) {
+        if (!doc.exists) return;
+        var remote = doc.data();
+        if (!remote || remote.data === undefined) return;
+        // Only apply if remote is newer than what we have
+        try {
+          var localRaw = localStorage.getItem(b.ls);
+          // Simple last-write-wins: trust remote
+          localStorage.setItem(b.ls, JSON.stringify(remote.data));
+        } catch(e) {}
+        renderAllDebounced();
+      }, function(err){ console.warn('Blob listener error ('+b.key+'):', err); });
+    unsubscribers.push(unsub);
+  });
 }
 
 function loadLocalData() {
@@ -9106,6 +9142,20 @@ function syncNow() {
     if (popup) { popup.style.display = popup.style.display === 'none' ? 'block' : 'none'; }
     return;
   }
+  // Push current local blobs to Firebase so remote devices get them
+  var blobPushDefs = [
+    { key:'dailyPlans', ls:'fop_dailyPlans', def:'{}' },
+    { key:'backlog',    ls:'fop_backlog',    def:'[]' },
+    { key:'systainer',  ls:'fop_systainer',  def:'null' },
+    { key:'sysLibrary', ls:'fop_sys_lib',    def:'[]'  }
+  ];
+  blobPushDefs.forEach(function(b) {
+    try {
+      var localData = JSON.parse(localStorage.getItem(b.ls) || b.def);
+      if (localData !== null) _syncBlob(b.key, localData);
+    } catch(e) {}
+  });
+
   COLLECTIONS.forEach(function(col) {
     db.collection(col).get().then(function(snap) {
       var items = [];
@@ -15475,6 +15525,7 @@ function _saveDayPlan(dateStr, plan) {
     localStorage.setItem('fop_dailyPlans', JSON.stringify(all));
     if (!state.dailyPlans) state.dailyPlans = {};
     state.dailyPlans[dateStr] = plan;
+    _syncBlob('dailyPlans', all);
   } catch(e) {}
 }
 
@@ -16608,7 +16659,7 @@ function _getBacklog() {
   try { return JSON.parse(localStorage.getItem('fop_backlog')||'[]'); } catch(e) { return []; }
 }
 function _saveBacklog(items) {
-  try { localStorage.setItem('fop_backlog', JSON.stringify(items)); state.backlog = items; } catch(e) {}
+  try { localStorage.setItem('fop_backlog', JSON.stringify(items)); state.backlog = items; _syncBlob('backlog', items); } catch(e) {}
 }
 
 function renderBacklog(el) {
@@ -16753,7 +16804,7 @@ function _getSysData() {
   catch(e) { return { cases:[] }; }
 }
 function _saveSysData(d) {
-  try { localStorage.setItem('fop_systainer', JSON.stringify(d)); } catch(e) {}
+  try { localStorage.setItem('fop_systainer', JSON.stringify(d)); _syncBlob('systainer', d); } catch(e) {}
 }
 function _ensureSysCases(d) {
   if (!d.cases || !d.cases.length) {
@@ -17030,7 +17081,7 @@ function _getSysLibrary() {
   try { return JSON.parse(localStorage.getItem('fop_sys_lib')||'[]'); } catch(e){ return []; }
 }
 function _saveSysLibrary(lib) {
-  try { localStorage.setItem('fop_sys_lib', JSON.stringify(lib)); } catch(e){}
+  try { localStorage.setItem('fop_sys_lib', JSON.stringify(lib)); _syncBlob('sysLibrary', lib); } catch(e){}
 }
 function _sysLibAdd(name, notes, url) {
   if (!name) return;
