@@ -1570,6 +1570,53 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 /* Give the weekly plan grid right margin on large screens to avoid timeline overlap */
 @media (min-width: 1101px) { .wk-plan-wrap { padding-right: 208px; } }
 
+/* ── DMX Calculator ─────────────────────────────────────────── */
+#view-dmxcalc { padding: 0; }
+.dmx-calc { width: 100%; max-width: 520px; padding: 24px 24px 40px; }
+.dmx-header { margin-bottom: 2rem; }
+.dmx-header h1 { font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--text); }
+.dmx-header p { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+.dmx-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem; }
+.dmx-tab { flex: 1; padding: 11px 10px; background: transparent; border: none; color: var(--text-muted); font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; transition: background 0.1s, color 0.1s; }
+.dmx-tab + .dmx-tab { border-left: 1px solid var(--border); }
+.dmx-tab.active { background: var(--text); color: var(--bg); }
+[data-theme="light"] .dmx-tab.active { background: #111; color: #f0f0f0; }
+.dmx-tab:not(.active):hover { background: rgba(255,255,255,0.07); color: var(--text); }
+[data-theme="light"] .dmx-tab:not(.active):hover { background: #e0e0de; color: #111; }
+.dmx-panel { display: none; }
+.dmx-panel.active { display: block; }
+.dmx-field { margin-bottom: 1rem; }
+.dmx-field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.dmx-input-row { display: flex; align-items: center; gap: 14px; }
+.dmx-num-input { width: 110px; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: Helvetica, Arial, sans-serif; font-size: 24px; font-weight: 500; outline: none; transition: border-color 0.15s; -moz-appearance: textfield; }
+.dmx-num-input::-webkit-inner-spin-button, .dmx-num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.dmx-num-input:focus { border-color: var(--accent); }
+[data-theme="light"] .dmx-num-input { background: #fff; }
+.dmx-input-row input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; border: none; padding: 0; margin: 0; }
+.dmx-input-row input[type=range]::-webkit-slider-runnable-track { height: 4px; background: transparent; border-radius: 2px; border: none; }
+.dmx-input-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; margin-top: -8px; transition: transform 0.1s; }
+.dmx-input-row input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.dmx-input-row input[type=range]::-moz-range-track { height: 4px; background: var(--border); border-radius: 2px; border: none; }
+.dmx-input-row input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--text); border: none; }
+.dmx-result { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem 1.5rem; margin-top: 0.5rem; min-height: 96px; display: flex; align-items: center; gap: 1rem; }
+[data-theme="light"] .dmx-result { background: #fff; }
+.dmx-result-main { flex: 1; }
+.dmx-result-num { font-size: 48px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; color: var(--text); }
+.dmx-result-sub { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
+.dmx-result-eq { font-size: 12px; color: #666; margin-top: 4px; }
+[data-theme="light"] .dmx-result-eq { color: #999; }
+.dmx-result-empty { font-size: 14px; color: var(--text-muted); }
+.dmx-bar-col { width: 100px; flex-shrink: 0; }
+.dmx-bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.dmx-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.1s; width: 0%; }
+.dmx-bar-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.dmx-divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0 1rem; }
+.dmx-presets-label { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.dmx-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.dmx-preset-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text-muted); font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.1s, color 0.1s; letter-spacing: 0.02em; }
+.dmx-preset-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); border-color: rgba(255,255,255,0.2); }
+[data-theme="light"] .dmx-preset-btn:hover { background: #e6e6e4; color: #111; }
+
 /* ── Systainer ─────────────────────────────────────────────── */
 .sys-wrap { max-width: 960px; }
 .sys-case-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
@@ -3703,6 +3750,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         </div>
       </div>
       <div class="nav-section">
+        <div class="nav-label">Tools</div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('dmxcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+          DMX Calculator
+        </div>
+      </div>
+      <div class="nav-section">
         <div class="nav-label">Knowledge</div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('troubleshoot')">
           <svg viewBox="0 0 24 24"><path class="ni-brain" d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path pathLength="1" class="ni-circuit" d="M9 13a4.5 4.5 0 0 0 3-4"/><path class="ni-brain" d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path class="ni-brain" d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path class="ni-brain" d="M6 18a4 4 0 0 1-1.967-.516"/><path pathLength="1" class="ni-circuit" d="M12 13h4"/><path pathLength="1" class="ni-circuit" d="M12 18h6a2 2 0 0 1 2 2v1"/><path pathLength="1" class="ni-circuit" d="M12 8h8"/><path pathLength="1" class="ni-circuit" d="M16 8V5a2 2 0 0 1 2-2"/><circle class="ni-term-1" cx="16" cy="13" r=".5" fill="currentColor"/><circle class="ni-term-2" cx="18" cy="3" r=".5" fill="currentColor"/><circle class="ni-term-3" cx="20" cy="21" r=".5" fill="currentColor"/><circle class="ni-term-4" cx="9" cy="3" r=".5" fill="currentColor"/></svg>
@@ -4398,6 +4452,47 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ SYSTAINER ═══ -->
   <div class="view" id="view-systainer">
     <div id="sys-content"></div>
+  </div>
+
+  <!-- ═══ DMX CALCULATOR ═══ -->
+  <div class="view" id="view-dmxcalc">
+    <div class="dmx-calc">
+      <div class="dmx-header">
+        <h1>DMX Calculator</h1>
+        <p>Convert between 0&#8211;255 DMX values and percentages</p>
+      </div>
+      <div class="dmx-tabs">
+        <button class="dmx-tab active" id="dmx-tab-d2p" onclick="_dmxSwitchMode('d2p')">DMX &#8594; %</button>
+        <button class="dmx-tab" id="dmx-tab-p2d" onclick="_dmxSwitchMode('p2d')">% &#8594; DMX</button>
+      </div>
+      <div id="dmx-panel-d2p" class="dmx-panel active">
+        <div class="dmx-field">
+          <label>DMX value (0 &#8211; 255)</label>
+          <div class="dmx-input-row">
+            <input class="dmx-num-input" type="number" id="dmx-d2p-num" min="0" max="255" placeholder="128" oninput="_dmxSyncSlider('d2p');_dmxCalcD2P();">
+            <input type="range" min="0" max="255" step="1" id="dmx-d2p-slider" value="0" oninput="_dmxSyncNum('d2p');_dmxCalcD2P();">
+          </div>
+        </div>
+        <div class="dmx-result" id="dmx-d2p-result">
+          <span class="dmx-result-empty">Enter a DMX value (0&#8211;255)</span>
+        </div>
+      </div>
+      <div id="dmx-panel-p2d" class="dmx-panel">
+        <div class="dmx-field">
+          <label>Percentage (0 &#8211; 100%)</label>
+          <div class="dmx-input-row">
+            <input class="dmx-num-input" type="number" id="dmx-p2d-num" min="0" max="100" placeholder="50" oninput="_dmxSyncSlider('p2d');_dmxCalcP2D();">
+            <input type="range" min="0" max="100" step="0.1" id="dmx-p2d-slider" value="0" oninput="_dmxSyncNum('p2d');_dmxCalcP2D();">
+          </div>
+        </div>
+        <div class="dmx-result" id="dmx-p2d-result">
+          <span class="dmx-result-empty">Enter a percentage (0&#8211;100)</span>
+        </div>
+      </div>
+      <hr class="dmx-divider">
+      <div class="dmx-presets-label">Common levels</div>
+      <div class="dmx-presets" id="dmx-presets"></div>
+    </div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -6617,9 +6712,6 @@ function initFirebase(config) {
         }, function(err) { console.warn('Timer sync listener error:', err); });
       unsubscribers.push(timerUnsub);
 
-      // Subscribe to blob-synced data (schedule, backlog, systainer)
-      _initBlobListeners();
-
       window._fbConfig = config;
       window._fbConnected = true;
       setTimeout(flushSyncQueue, 800);
@@ -6803,7 +6895,8 @@ var currentView = 'dashboard';
 var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
-  timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer'
+  timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer',
+  dmxcalc: 'DMX Calculator'
 };
 
 function switchView(v) {
@@ -9142,17 +9235,33 @@ function syncNow() {
     if (popup) { popup.style.display = popup.style.display === 'none' ? 'block' : 'none'; }
     return;
   }
-  // Push current local blobs to Firebase so remote devices get them
-  var blobPushDefs = [
+  // Sync blobs (schedule, backlog, systainer) — push local to Firebase, then pull remote back
+  var _blobDefs = [
     { key:'dailyPlans', ls:'fop_dailyPlans', def:'{}' },
     { key:'backlog',    ls:'fop_backlog',    def:'[]' },
     { key:'systainer',  ls:'fop_systainer',  def:'null' },
     { key:'sysLibrary', ls:'fop_sys_lib',    def:'[]'  }
   ];
-  blobPushDefs.forEach(function(b) {
+  _blobDefs.forEach(function(b) {
+    // Push local data to Firebase (write), then pull latest back (read)
     try {
       var localData = JSON.parse(localStorage.getItem(b.ls) || b.def);
-      if (localData !== null) _syncBlob(b.key, localData);
+      if (localData !== null) {
+        db.collection('_app_blobs').doc(b.key)
+          .set({ data: localData, updatedAt: new Date().toISOString() }, { merge: true })
+          .catch(function(e){ console.warn('Blob push error ('+b.key+'):', e); });
+      }
+      // Pull latest from Firebase
+      db.collection('_app_blobs').doc(b.key).get()
+        .then(function(doc) {
+          if (!doc.exists) return;
+          var remote = doc.data();
+          if (remote && remote.data !== undefined) {
+            try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e2) {}
+            renderAllDebounced();
+          }
+        })
+        .catch(function(e){ console.warn('Blob pull error ('+b.key+'):', e); });
     } catch(e) {}
   });
 
@@ -17477,6 +17586,125 @@ window._sysPrintAllLabels = _sysPrintAllLabels;
 window._sysRenameCase     = _sysRenameCase;
 window._sysItemRowHtml    = _sysItemRowHtml;
 window._sysHideTooltip    = _sysHideTooltip;
+
+// ═══════════════════════════════════════════════
+//  DMX CALCULATOR
+// ═══════════════════════════════════════════════
+var _dmxMode = 'd2p';
+
+(function _dmxInit() {
+  var _presets = [
+    { l: 'Full \u2014 255', d: 255 },
+    { l: '75% \u2014 191',  d: 191 },
+    { l: '50% \u2014 128',  d: 128 },
+    { l: '25% \u2014 64',   d: 64  },
+    { l: '10% \u2014 26',   d: 26  },
+    { l: 'Off \u2014 0',    d: 0   }
+  ];
+  function buildPresets() {
+    var pg = document.getElementById('dmx-presets');
+    if (!pg || pg.children.length) return;
+    _presets.forEach(function(p) {
+      var b = document.createElement('button');
+      b.className = 'dmx-preset-btn';
+      b.textContent = p.l;
+      b.onclick = function() {
+        if (_dmxMode === 'd2p') {
+          document.getElementById('dmx-d2p-num').value = p.d;
+          document.getElementById('dmx-d2p-slider').value = p.d;
+          _dmxCalcD2P();
+        } else {
+          var pct = parseFloat(((p.d / 255) * 100).toFixed(1));
+          document.getElementById('dmx-p2d-num').value = pct;
+          document.getElementById('dmx-p2d-slider').value = pct;
+          _dmxCalcP2D();
+        }
+      };
+      pg.appendChild(b);
+    });
+  }
+  // Build presets lazily when the view is first shown
+  document.addEventListener('click', function(e) {
+    if (e.target.closest && e.target.closest('.nav-item[onclick*="dmxcalc"]')) {
+      setTimeout(buildPresets, 50);
+    }
+  });
+  // Also build on DOMContentLoaded in case it's the first view
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildPresets);
+  } else {
+    setTimeout(buildPresets, 200);
+  }
+})();
+
+function _dmxSwitchMode(m) {
+  _dmxMode = m;
+  document.getElementById('dmx-panel-d2p').classList.toggle('active', m === 'd2p');
+  document.getElementById('dmx-panel-p2d').classList.toggle('active', m === 'p2d');
+  document.getElementById('dmx-tab-d2p').classList.toggle('active', m === 'd2p');
+  document.getElementById('dmx-tab-p2d').classList.toggle('active', m === 'p2d');
+}
+
+function _dmxSyncSlider(id) {
+  var n = document.getElementById('dmx-' + id + '-num');
+  var s = document.getElementById('dmx-' + id + '-slider');
+  var max = id === 'd2p' ? 255 : 100;
+  var v = parseFloat(n.value);
+  if (!isNaN(v)) s.value = Math.min(Math.max(v, 0), max);
+}
+
+function _dmxSyncNum(id) {
+  document.getElementById('dmx-' + id + '-num').value = document.getElementById('dmx-' + id + '-slider').value;
+}
+
+function _dmxSetResult(id, big, sub, eq, pct) {
+  document.getElementById(id).innerHTML =
+    '<div class="dmx-result-main">' +
+      '<div class="dmx-result-num">' + big + '</div>' +
+      '<div class="dmx-result-sub">' + sub + '</div>' +
+      '<div class="dmx-result-eq">' + eq + '</div>' +
+    '</div>' +
+    '<div class="dmx-bar-col">' +
+      '<div class="dmx-bar-track"><div class="dmx-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="dmx-bar-ends"><span>0</span><span>100%</span></div>' +
+    '</div>';
+}
+
+function _dmxSetEmpty(id, msg) {
+  document.getElementById(id).innerHTML = '<span class="dmx-result-empty">' + msg + '</span>';
+}
+
+function _dmxCalcD2P() {
+  var raw = document.getElementById('dmx-d2p-num').value;
+  if (raw === '') { _dmxSetEmpty('dmx-d2p-result', 'Enter a DMX value (0\u2013255)'); return; }
+  var v = Math.min(Math.max(parseFloat(raw), 0), 255);
+  var pct = (v / 255) * 100;
+  _dmxSetResult('dmx-d2p-result',
+    pct.toFixed(2) + '%',
+    'DMX ' + Math.round(v) + ' = ' + pct.toFixed(2) + '%',
+    Math.round(v) + ' \u00f7 255 \u00d7 100',
+    pct
+  );
+}
+
+function _dmxCalcP2D() {
+  var raw = document.getElementById('dmx-p2d-num').value;
+  if (raw === '') { _dmxSetEmpty('dmx-p2d-result', 'Enter a percentage (0\u2013100)'); return; }
+  var v = Math.min(Math.max(parseFloat(raw), 0), 100);
+  var dmx = Math.round((v / 100) * 255);
+  _dmxSetResult('dmx-p2d-result',
+    dmx.toString(),
+    v.toFixed(1) + '% = DMX ' + dmx,
+    v + ' \u00f7 100 \u00d7 255',
+    v
+  );
+}
+
+window._dmxSwitchMode = _dmxSwitchMode;
+window._dmxSyncSlider = _dmxSyncSlider;
+window._dmxSyncNum    = _dmxSyncNum;
+window._dmxCalcD2P    = _dmxCalcD2P;
+window._dmxCalcP2D    = _dmxCalcP2D;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
