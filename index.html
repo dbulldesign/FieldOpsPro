@@ -1570,6 +1570,14 @@ html[data-theme="light"] #app, html[data-theme="light"] #main, html[data-theme="
 /* Give the weekly plan grid right margin on large screens to avoid timeline overlap */
 @media (min-width: 1101px) { .wk-plan-wrap { padding-right: 208px; } }
 
+/* ── Sortable table headers ─────────────────────────────────── */
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { color: var(--accent); }
+th.sortable .sort-arrow { display: inline-block; margin-left: 4px; font-size: 10px; opacity: 0.4; }
+th.sortable.sort-asc .sort-arrow::after { content: '↑'; opacity: 1; color: var(--accent); }
+th.sortable.sort-desc .sort-arrow::after { content: '↓'; opacity: 1; color: var(--accent); }
+th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after { content: '↕'; }
+
 /* ── DMX Calculator ─────────────────────────────────────────── */
 #view-dmxcalc { padding: 0; }
 .dmx-calc { width: 100%; max-width: 520px; padding: 24px 24px 40px; }
@@ -3738,6 +3746,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('systainer')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/><line x1="8" y1="9" x2="8" y2="21"/><line x1="16" y1="9" x2="16" y2="21"/></svg>
           Systainer
+          <span id="sys-lowstock-badge" class="nav-badge" style="display:none;background:#f97316;color:#fff;margin-left:auto">0</span>
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('mapview')">
           <svg viewBox="0 0 24 24"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle class="ni-pin-dot" cx="12" cy="10" r="3"/></svg>
@@ -3782,9 +3791,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         Notifications
         <span id="notif-count-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px">0</span>
       </button>
-      <div class="sync-status">
-        <div class="sync-dot" id="syncDot"></div>
-        <span id="syncLabel">Local only</span>
+      <div class="sync-status" style="flex-direction:column;align-items:flex-start;gap:5px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="sync-dot" id="syncDot"></div>
+          <span id="syncLabel">Local only</span>
+        </div>
+        <div id="net-status" style="display:flex;align-items:center;gap:6px;font-size:11px">
+          <div id="net-dot" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#f59e0b"></div>
+          <span id="net-label" style="font-weight:600;letter-spacing:0.02em">Checking…</span>
+        </div>
       </div>
     </div>
   </aside>
@@ -3828,6 +3843,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <button class="btn btn-ghost btn-icon" id="sync-now-btn" onclick="syncNow()" title="Sync with Firebase" aria-label="Sync with Firebase" style="position:relative;transition:transform 0.2s, opacity 0.2s">
           <svg id="sync-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           <span id="sync-status-dot" style="display:none;position:absolute;bottom:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #0d1526"></span>
+          <span id="sync-queue-badge" style="display:none;position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#f59e0b;color:#000;font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #0d1526;line-height:1"></span>
         </button>
         <!-- Firebase connect popup (shown when not connected) -->
         <div id="fb-connect-popup" style="display:none;position:absolute;top:calc(100% + 10px);right:0;width:320px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:16px;padding:16px;box-shadow:0 16px 48px rgba(0,0,0,0.7);z-index:3000;animation:t3ExpandIn 0.18s cubic-bezier(0.25,0.46,0.45,0.94) both">
@@ -3922,6 +3938,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="things-home-wrap">
       <div id="things-home-cards"></div>
     </div>
+    <!-- Today at a glance -->
+    <div id="dash-today-strip" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.18);border-radius:14px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">Today</div>
+      <div id="dash-today-items" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <!-- Project health strip -->
+    <div id="dash-project-health" style="display:none;margin-bottom:14px"></div>
     <div id="dash-due-alerts" style="display:none;margin-bottom:8px"></div>
     <div id="dash-ship-delay-alert" style="display:none;margin-bottom:16px"></div>
     <!-- Recently Viewed -->
@@ -4307,12 +4330,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <thead>
           <tr>
             <th style="width:32px"><input type="checkbox" onchange="poSelectAll(this.checked)" style="width:15px;height:15px;cursor:pointer"></th>
-            <th>PO #</th>
-            <th>Vendor</th>
-            <th class="hide-sm">Project</th>
+            <th class="sortable" onclick="_sortPOs('number')" id="po-th-number">PO #<span class="sort-arrow"></span></th>
+            <th class="sortable" onclick="_sortPOs('vendor')" id="po-th-vendor">Vendor<span class="sort-arrow"></span></th>
+            <th class="hide-sm sortable" onclick="_sortPOs('project')" id="po-th-project">Project<span class="sort-arrow"></span></th>
             <th class="hide-sm">Items</th>
-            <th>Status</th>
-            <th class="hide-xs">Date</th>
+            <th class="sortable" onclick="_sortPOs('status')" id="po-th-status">Status<span class="sort-arrow"></span></th>
+            <th class="hide-xs sortable" onclick="_sortPOs('date')" id="po-th-date">Date<span class="sort-arrow"></span></th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -4349,12 +4372,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <thead>
           <tr>
             <th style="width:32px"><input type="checkbox" onchange="shipSelectAll(this.checked)" style="width:15px;height:15px;cursor:pointer"></th>
-            <th>Tracking #</th>
-            <th>Description</th>
-            <th class="hide-sm">Carrier</th>
+            <th class="sortable" onclick="_sortShipping('tracking')" id="ship-th-tracking">Tracking #<span class="sort-arrow"></span></th>
+            <th class="sortable" onclick="_sortShipping('desc')" id="ship-th-desc">Description<span class="sort-arrow"></span></th>
+            <th class="hide-sm sortable" onclick="_sortShipping('carrier')" id="ship-th-carrier">Carrier<span class="sort-arrow"></span></th>
             <th class="hide-sm">Project/PO</th>
-            <th>Status</th>
-            <th class="hide-xs">ETA</th>
+            <th class="sortable" onclick="_sortShipping('status')" id="ship-th-status">Status<span class="sort-arrow"></span></th>
+            <th class="hide-xs sortable" onclick="_sortShipping('eta')" id="ship-th-eta">ETA<span class="sort-arrow"></span></th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -4362,6 +4385,23 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       </table>
     </div>
   </div>
+
+<!-- ═══ CLIENT VIEW OVERLAY ═══ -->
+<div id="client-view-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:#0d1526;overflow-y:auto">
+  <div style="max-width:720px;margin:0 auto;padding:32px 20px 60px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+      <div id="cv-logo-dot" style="width:12px;height:12px;border-radius:50%;background:#4f8ef7;flex-shrink:0"></div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#4a5e7a">Project Status Report</div>
+      <div style="margin-left:auto;font-size:12px;color:#4a5e7a" id="cv-generated"></div>
+    </div>
+    <div id="cv-content">
+      <div style="text-align:center;padding:60px 20px;color:#4a5e7a">Loading…</div>
+    </div>
+    <div style="margin-top:40px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07);text-align:center;font-size:11px;color:#2a3a52">
+      Generated by <strong style="color:#4a5e7a">FieldOps Pro</strong>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ KEYBOARD SHORTCUTS MODAL ═══ -->
 <div class="modal-overlay" id="modal-shortcuts-enhanced" onclick="if(event.target===this)closeModal('modal-shortcuts-enhanced')" style="display:none;z-index:10000">
@@ -4785,7 +4825,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <div style="background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:20px;width:100%;max-width:580px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6)">
     <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.08)">
       <span style="font-size:18px;color:#4a5e7a">🔍</span>
-      <input type="text" id="global-search-input" placeholder="Search tasks, projects, POs, vendors…" oninput="runGlobalSearch(this.value)" autofocus style="flex:1;background:none;border:none;outline:none;font-size:16px;color:#f0f4ff;font-weight:500" autocomplete="off">
+      <input type="text" id="global-search-input" placeholder="Search or type a command… (/ or ⌘K)" oninput="runGlobalSearch(this.value)" autofocus style="flex:1;background:none;border:none;outline:none;font-size:16px;color:#f0f4ff;font-weight:500" autocomplete="off">
       <button onclick="closeGlobalSearch()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px">✕</button>
     </div>
     <div id="global-search-results" style="max-height:420px;overflow-y:auto;padding:8px"></div>
@@ -5421,6 +5461,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="form-group"><label>Materials Used</label><textarea id="fieldlog-materials" rows="2" placeholder="List materials consumed or installed…"></textarea></div>
       <div class="form-group"><label>Delays / Issues</label><textarea id="fieldlog-delays" rows="2" placeholder="Any delays, blockers, or issues encountered…"></textarea></div>
       <div class="form-group"><label>Next Steps</label><textarea id="fieldlog-nextsteps" rows="2" placeholder="What's planned for tomorrow…"></textarea></div>
+      <div class="form-group">
+        <label>Photos</label>
+        <div id="fieldlog-photo-drop" onclick="document.getElementById('fieldlog-photo-input').click()" style="border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:border-color 0.2s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;margin-bottom:6px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <div style="font-size:13px;color:var(--text-muted)">Click or drag to add photos</div>
+        </div>
+        <input type="file" id="fieldlog-photo-input" multiple accept="image/*" style="display:none" onchange="_flHandlePhotos(this.files)">
+        <div id="fieldlog-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -6032,27 +6081,55 @@ function saveSyncQueue() {
   localStorage.setItem('fop_sync_queue', JSON.stringify(_syncQueue));
 }
 
+function _updateNetStatus() {
+  var dot = document.getElementById('net-dot');
+  var lbl = document.getElementById('net-label');
+  if (!dot || !lbl) return;
+  if (_isOnline) {
+    dot.style.background = '#22c55e';
+    dot.style.boxShadow = '0 0 0 2px rgba(34,197,94,0.2)';
+    lbl.textContent = 'CONNECTED';
+    lbl.style.color = '#22c55e';
+  } else {
+    dot.style.background = '#f97316';
+    dot.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.2)';
+    lbl.textContent = 'OFFLINE';
+    lbl.style.color = '#f97316';
+  }
+}
+
 function updateSyncBar() {
   var bar = document.getElementById('sync-queue-bar');
   var txt = document.getElementById('sync-queue-text');
   var msd = document.getElementById('mobSyncDot');
   var msl = document.getElementById('mobSyncLabel');
+  // Sync queue badge on the sync button
+  var badge = document.getElementById('sync-queue-badge');
+  if (badge) {
+    if (_syncQueue.length > 0) {
+      badge.textContent = _syncQueue.length;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+  _updateNetStatus();
   if (!bar) return;
   if (!_isOnline) {
     bar.classList.add('show');
-    if (txt) txt.textContent = 'Offline' + (_syncQueue.length ? ' — ' + _syncQueue.length + ' change' + (_syncQueue.length!==1?'s':'') + ' pending' : '');
+    if (txt) txt.textContent = 'Offline' + (_syncQueue.length ? ' \u2014 ' + _syncQueue.length + ' change' + (_syncQueue.length!==1?'s':'') + ' pending upload' : '');
     if (msd) msd.style.background = '#ef4444';
     if (msl) msl.textContent = 'Offline';
   } else if (_syncQueue.length > 0 && !db) {
     bar.classList.add('show');
-    if (txt) txt.textContent = _syncQueue.length + ' local change' + (_syncQueue.length!==1?'s':'') + ' — connect Firebase to sync';
+    if (txt) txt.textContent = _syncQueue.length + ' local change' + (_syncQueue.length!==1?'s':'') + ' \u2014 connect Firebase to sync';
     if (msd) msd.style.background = '#f59e0b';
     if (msl) msl.textContent = 'Local only';
   } else if (_syncQueue.length > 0) {
     bar.classList.add('show');
-    if (txt) txt.textContent = 'Syncing ' + _syncQueue.length + ' pending change' + (_syncQueue.length!==1?'s':'') + '…';
+    if (txt) txt.textContent = 'Syncing ' + _syncQueue.length + ' pending change' + (_syncQueue.length!==1?'s':'') + '\u2026';
     if (msd) msd.style.background = '#f59e0b';
-    if (msl) msl.textContent = 'Syncing…';
+    if (msl) msl.textContent = 'Syncing\u2026';
   } else {
     bar.classList.remove('show');
   }
@@ -6087,13 +6164,19 @@ window.addEventListener('online', function() {
   _isOnline = true;
   updateSyncBar();
   setTimeout(flushSyncQueue, 500);
-  toast('Back online — syncing…');
+  toast('Back online — syncing\u2026');
 });
 window.addEventListener('offline', function() {
   _isOnline = false;
   updateSyncBar();
-  toast('You are offline — changes saved locally');
+  toast('You are offline \u2014 changes saved locally');
 });
+// Set initial network status as soon as DOM is ready
+(function() {
+  function _initNetStatus() { _isOnline = navigator.onLine; _updateNetStatus(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', _initNetStatus); }
+  else { _initNetStatus(); }
+})();
 
 // ── SKELETON LOADING ────────────────────────────────────────────────
 function showSkeleton(containerId, count) {
@@ -6988,7 +7071,7 @@ function openAddModal() {
   editingId = null;
   if (currentView === 'vendors') { clearForm('modal-vendor'); document.getElementById('vendor-modal-title').textContent = 'New Vendor'; openModal('modal-vendor'); return; }
   else if (currentView === 'punchlist') { clearForm('modal-punchitem'); populateProjectSelects(); document.getElementById('punchitem-modal-title').textContent = 'New Punch Item'; openModal('modal-punchitem'); return; }
-  else if (currentView === 'fieldlog') { clearForm('modal-fieldlog'); populateProjectSelects(); var today = new Date(); document.getElementById('fieldlog-date').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'); document.getElementById('fieldlog-modal-title').textContent = 'New Field Log Entry'; openModal('modal-fieldlog'); return; }
+  else if (currentView === 'fieldlog') { clearForm('modal-fieldlog'); _flPendingPhotos=[]; var _flPrev=document.getElementById('fieldlog-photo-previews'); if(_flPrev)_flPrev.innerHTML=''; populateProjectSelects(); var today = new Date(); document.getElementById('fieldlog-date').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'); document.getElementById('fieldlog-modal-title').textContent = 'New Field Log Entry'; openModal('modal-fieldlog'); return; }
   var modals = {
     dashboard: 'modal-task', projects: 'modal-project', tasks: 'modal-task',
     pos: 'modal-po', shipping: 'modal-shipping', troubleshoot: 'modal-issue'
@@ -7386,6 +7469,66 @@ function renderDashboard() {
   } else {
     var _dae = document.getElementById('dash-ship-delay-alert');
     if (_dae) _dae.style.display = 'none';
+  }
+
+  // ── Today at a glance ───────────────────────────────────────────────────────
+  var _todayStrD = new Date().toISOString().slice(0,10);
+  var todayStrip = document.getElementById('dash-today-strip');
+  var todayItems = document.getElementById('dash-today-items');
+  if (todayItems) {
+    var todayChips = [];
+    var tasksDueToday = (state.tasks||[]).filter(function(t){ return !t.archived && t.status !== 'done' && t.due === _todayStrD; });
+    var eventsToday = (state.events||[]).filter(function(e){ return !e.archived && e.date === _todayStrD; });
+    var arrivingToday = (state.shipping||[]).filter(function(s){ return !s.archived && s.status !== 'delivered' && s.eta === _todayStrD; });
+    tasksDueToday.forEach(function(t) {
+      todayChips.push('<div onclick="switchView(\'tasks\');setTimeout(function(){openDetail(\'tasks\',\''+t.id+'\');},80)" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);cursor:pointer;font-size:12px;font-weight:600;color:#10b981"><span>✅</span>'+escH(t.title.slice(0,30))+'</div>');
+    });
+    eventsToday.forEach(function(e) {
+      todayChips.push('<div onclick="switchView(\'calendar\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);cursor:pointer;font-size:12px;font-weight:600;color:#a78bfa"><span>📅</span>'+escH(e.title.slice(0,30))+'</div>');
+    });
+    arrivingToday.forEach(function(s) {
+      todayChips.push('<div onclick="switchView(\'shipping\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.25);cursor:pointer;font-size:12px;font-weight:600;color:#22d3ee"><span>📦</span>'+escH((s.desc||s.tracking||'Shipment').slice(0,25))+' arriving</div>');
+    });
+    if (todayChips.length) {
+      todayItems.innerHTML = todayChips.join('');
+      if (todayStrip) todayStrip.style.display = '';
+    } else {
+      if (todayStrip) todayStrip.style.display = 'none';
+    }
+  }
+
+  // ── Project health strip ─────────────────────────────────────────────────────
+  var healthEl = document.getElementById('dash-project-health');
+  if (healthEl) {
+    var activeP = (state.projects||[]).filter(function(p){ return p.status === 'active' || p.status === 'in-progress'; });
+    if (activeP.length) {
+      var todayD = new Date(); todayD.setHours(0,0,0,0);
+      var healthRows = activeP.slice(0,6).map(function(p) {
+        var ptasks = (state.tasks||[]).filter(function(t){ return t.project === p.id && !t.archived; });
+        var pdone = ptasks.filter(function(t){ return t.status === 'done'; }).length;
+        var poverdue = ptasks.filter(function(t){ return t.status !== 'done' && t.due && new Date(t.due) < todayD; }).length;
+        var ppct = ptasks.length ? Math.round(pdone / ptasks.length * 100) : 0;
+        var health = poverdue > 0 ? { label: 'At Risk', color: '#f97316', bg: 'rgba(249,115,22,0.12)' }
+          : (p.end && new Date(p.end) < todayD) ? { label: 'Overdue', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' }
+          : { label: 'On Track', color: '#10b981', bg: 'rgba(16,185,129,0.12)' };
+        var dotColor = p.color || '#4f8ef7';
+        return '<div onclick="openDetail(\'projects\',\''+p.id+'\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);transition:background 0.12s" onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.03)\'">'
+          +'<div style="width:8px;height:8px;border-radius:50%;background:'+dotColor+';flex-shrink:0"></div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(p.name)+'</div>'
+          +(p.client?'<div style="font-size:11px;color:#4a5e7a">'+escH(p.client)+'</div>':'')+'</div>'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+          +'<div style="width:60px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+ppct+'%;background:'+dotColor+';border-radius:2px;transition:width 0.3s"></div></div>'
+          +'<span style="font-size:11px;color:#4a5e7a;min-width:26px;text-align:right">'+ppct+'%</span>'
+          +'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+health.bg+';color:'+health.color+'">'+health.label+'</span>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+      healthEl.style.display = '';
+      healthEl.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">Project Health</div>'
+        + '<div style="display:flex;flex-direction:column;gap:5px">'+healthRows+'</div>';
+    } else {
+      healthEl.style.display = 'none';
+    }
   }
 
   // Quick web links
@@ -8990,6 +9133,8 @@ function renderFieldLog() {
       + '<div class="fieldlog-sub">'+(entry.work ? escH(entry.work.substring(0,80))+(entry.work.length>80?'…':'') : 'No work summary')+'</div>'
       + '</div>'
       + '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">'
+      + (entry.photos&&entry.photos.length?'<span style="font-size:11px;color:var(--text-muted);padding:2px 6px;background:rgba(255,255,255,0.05);border-radius:4px">📷 '+entry.photos.length+'</span>':'')
+      + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();shareFieldLogReport(\''+id+'\')" title="Download Report">⬇</button>'
       + '<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editFieldLog(\''+id+'\')">✏</button>'
       + '</div></div>'
       + '<div class="fieldlog-body" id="fl-body-'+id+'">'
@@ -8997,6 +9142,7 @@ function renderFieldLog() {
       + (entry.materials?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Materials Used</div><div class="fieldlog-section-val">'+escH(entry.materials)+'</div></div>':'')
       + (entry.delays?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Delays / Issues</div><div class="fieldlog-section-val">'+escH(entry.delays)+'</div></div>':'')
       + (entry.nextsteps?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Next Steps</div><div class="fieldlog-section-val">'+escH(entry.nextsteps)+'</div></div>':'')
+      + (entry.photos&&entry.photos.length?'<div class="fieldlog-section"><div class="fieldlog-section-lbl">Photos ('+entry.photos.length+')</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+entry.photos.map(function(ph){ return '<img src="'+ph.data+'" alt="'+escH(ph.name||'')+'" style="width:100px;height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer" onclick="_flViewPhoto(this.src)">'; }).join('')+'</div></div>':'')
       + '</div></div>';
   });
   content.innerHTML = html;
@@ -9007,6 +9153,107 @@ function toggleFieldLogEntry(bodyId) {
   var el = document.getElementById(bodyId);
   if (!el) return;
   el.classList.toggle('open');
+}
+function _flViewPhoto(src) {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+  ov.innerHTML = '<img src="'+src+'" style="max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.8)">';
+  ov.addEventListener('click', function(){ ov.remove(); });
+  document.body.appendChild(ov);
+}
+function shareFieldLogReport(id) {
+  var entry = (state.fieldlogs||[]).find(function(x){ return x.id===id; });
+  if (!entry) return;
+  var pn = projectName(entry.project) || 'Field Operations';
+  var dateStr = entry.date ? new Date(entry.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '';
+  var photosHtml = '';
+  if (entry.photos && entry.photos.length) {
+    photosHtml = '<div style="margin-top:32px"><h2 style="font-size:16px;font-weight:700;color:#1e293b;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px">Photos</h2>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">'
+      + entry.photos.map(function(ph){ return '<img src="'+ph.data+'" alt="'+escH(ph.name||'')+'" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0">'; }).join('')
+      + '</div></div>';
+  }
+  function section(label, val) {
+    if (!val) return '';
+    return '<div style="margin-bottom:20px"><div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;margin-bottom:6px">'+label+'</div>'
+      + '<div style="font-size:14px;color:#1e293b;line-height:1.6;white-space:pre-wrap">'+escH(val)+'</div></div>';
+  }
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '<title>Field Log – '+escH(pn)+' – '+dateStr+'</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#1e293b;padding:24px}@media print{body{background:#fff;padding:0}}.page{max-width:760px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow:hidden}@media print{.page{box-shadow:none;border-radius:0}}.hdr{background:#0d1526;color:#fff;padding:32px 36px}.hdr-company{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.6;margin-bottom:4px}.hdr-title{font-size:22px;font-weight:700;margin-bottom:4px}.hdr-sub{font-size:13px;opacity:0.7}.body{padding:32px 36px}.meta-row{display:flex;gap:32px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}.meta-item label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;display:block;margin-bottom:3px}.meta-item span{font-size:14px;color:#1e293b}h2{font-size:16px;font-weight:700;color:#1e293b;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:16px;margin-top:32px}.footer{margin-top:40px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between}@media print{.no-print{display:none}}</style></head><body>'
+    + '<div class="no-print" style="max-width:760px;margin:0 auto 16px;display:flex;gap:8px">'
+    + '<button onclick="window.print()" style="padding:8px 16px;background:#0d1526;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">Print / Save PDF</button>'
+    + '</div>'
+    + '<div class="page"><div class="hdr"><div class="hdr-company">Field Operations Pro</div><div class="hdr-title">Daily Field Log</div><div class="hdr-sub">'+escH(pn)+' &nbsp;•&nbsp; '+dateStr+'</div></div>'
+    + '<div class="body">'
+    + '<div class="meta-row">'
+    + (entry.crew?'<div class="meta-item"><label>Crew on Site</label><span>'+escH(entry.crew)+'</span></div>':'')
+    + '</div>'
+    + (entry.work?'<h2>Work Performed</h2><div style="font-size:14px;color:#1e293b;line-height:1.6;white-space:pre-wrap;margin-bottom:20px">'+escH(entry.work)+'</div>':'')
+    + (entry.materials||entry.delays||entry.nextsteps?'<h2>Details</h2>':'')
+    + section('Materials Used', entry.materials)
+    + section('Delays / Issues', entry.delays)
+    + section('Next Steps', entry.nextsteps)
+    + photosHtml
+    + '<div class="footer"><span>Generated by Field Ops Pro</span><span>'+new Date().toLocaleDateString()+'</span></div>'
+    + '</div></div></body></html>';
+  var blob = new Blob([html], { type: 'text/html' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'field-log-'+escH(pn).replace(/[^a-z0-9]/gi,'-').toLowerCase()+'-'+(entry.date||'').replace(/-/g,'')+'.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Report downloaded');
+}
+window.shareFieldLogReport = shareFieldLogReport; window._flViewPhoto = _flViewPhoto; window._flHandlePhotos = _flHandlePhotos; window._flRemovePhoto = _flRemovePhoto;
+// Drag-and-drop for photo drop zone (wired via event delegation on document)
+document.addEventListener('dragover', function(e) {
+  var drop = document.getElementById('fieldlog-photo-drop');
+  if (drop && document.getElementById('modal-fieldlog').style.display !== 'none') {
+    e.preventDefault(); drop.style.borderColor = 'var(--accent)';
+  }
+});
+document.addEventListener('dragleave', function(e) {
+  var drop = document.getElementById('fieldlog-photo-drop');
+  if (drop) drop.style.borderColor = '';
+});
+document.addEventListener('drop', function(e) {
+  var drop = document.getElementById('fieldlog-photo-drop');
+  if (drop && document.getElementById('modal-fieldlog').style.display !== 'none') {
+    e.preventDefault(); drop.style.borderColor = '';
+    if (e.dataTransfer && e.dataTransfer.files) _flHandlePhotos(e.dataTransfer.files);
+  }
+});
+var _flPendingPhotos = [];
+function _flHandlePhotos(files) {
+  var previews = document.getElementById('fieldlog-photo-previews');
+  Array.from(files).forEach(function(file) {
+    if (!file.type.startsWith('image/')) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target.result;
+      _flPendingPhotos.push({ name: file.name, data: dataUrl });
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
+      var idx = _flPendingPhotos.length - 1;
+      wrap.innerHTML = '<img src="'+dataUrl+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">'
+        + '<button onclick="_flRemovePhoto('+idx+',this.parentNode)" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>';
+      if (previews) previews.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+  if (document.getElementById('fieldlog-photo-input')) document.getElementById('fieldlog-photo-input').value = '';
+}
+function _flRemovePhoto(idx, node) {
+  _flPendingPhotos.splice(idx, 1);
+  if (node) node.remove();
+  // re-index remove buttons
+  var previews = document.getElementById('fieldlog-photo-previews');
+  if (!previews) return;
+  Array.from(previews.children).forEach(function(wrap, i) {
+    var btn = wrap.querySelector('button');
+    if (btn) btn.setAttribute('onclick', '_flRemovePhoto('+i+',this.parentNode)');
+  });
 }
 function saveFieldLog() {
   var work = document.getElementById('fieldlog-work').value.trim();
@@ -9019,16 +9266,19 @@ function saveFieldLog() {
     work: work,
     materials: document.getElementById('fieldlog-materials').value.trim(),
     delays: document.getElementById('fieldlog-delays').value.trim(),
-    nextsteps: document.getElementById('fieldlog-nextsteps').value.trim()
+    nextsteps: document.getElementById('fieldlog-nextsteps').value.trim(),
+    photos: _flPendingPhotos.slice()
   };
   if (editingId) { updateItem('fieldlogs', editingId, item); toast('Log updated'); }
   else { addItem('fieldlogs', item); toast('Field log saved'); }
+  _flPendingPhotos = [];
   closeModal('modal-fieldlog'); renderFieldLog();
 }
 function editFieldLog(id) {
   var entry = (state.fieldlogs||[]).find(function(x){ return x.id===id; });
   if (!entry) return;
   editingId = id;
+  _flPendingPhotos = (entry.photos||[]).slice();
   populateProjectSelects();
   document.getElementById('fieldlog-modal-title').textContent = 'Edit Field Log';
   document.getElementById('fieldlog-date').value = entry.date||'';
@@ -9038,6 +9288,18 @@ function editFieldLog(id) {
   document.getElementById('fieldlog-materials').value = entry.materials||'';
   document.getElementById('fieldlog-delays').value = entry.delays||'';
   document.getElementById('fieldlog-nextsteps').value = entry.nextsteps||'';
+  // restore photo previews
+  var previews = document.getElementById('fieldlog-photo-previews');
+  if (previews) {
+    previews.innerHTML = '';
+    _flPendingPhotos.forEach(function(ph, i) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:80px;height:80px;flex-shrink:0';
+      wrap.innerHTML = '<img src="'+ph.data+'" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">'
+        + '<button onclick="_flRemovePhoto('+i+',this.parentNode)" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>';
+      previews.appendChild(wrap);
+    });
+  }
   openModal('modal-fieldlog');
 }
 window.saveFieldLog = saveFieldLog; window.editFieldLog = editFieldLog;
@@ -10003,6 +10265,31 @@ function editTask(id) {
 //  PURCHASE ORDERS
 // ═══════════════════════════════════════════════
 var poFilter = 'all';
+var _poSort = { col: 'date', dir: 'desc' };
+var _shipSort = { col: 'eta', dir: 'asc' };
+
+function _applySortHeaders(tablePrefix, sortState) {
+  var cols = tablePrefix === 'po'
+    ? ['number','vendor','project','status','date']
+    : ['tracking','desc','carrier','status','eta'];
+  cols.forEach(function(c) {
+    var th = document.getElementById(tablePrefix+'-th-'+c);
+    if (!th) return;
+    th.classList.remove('sort-asc','sort-desc');
+    if (sortState.col === c) th.classList.add(sortState.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+  });
+}
+function _sortPOs(col) {
+  if (_poSort.col === col) _poSort.dir = _poSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _poSort.col = col; _poSort.dir = 'asc'; }
+  renderPOs();
+}
+function _sortShipping(col) {
+  if (_shipSort.col === col) _shipSort.dir = _shipSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _shipSort.col = col; _shipSort.dir = 'asc'; }
+  renderShipping();
+}
+window._sortPOs = _sortPOs; window._sortShipping = _sortShipping;
 function filterPOs(f,el){
   _poPage = 1;
   poFilter=f;
@@ -10029,6 +10316,13 @@ function renderPOs() {
   }
   var poq = (document.getElementById('po-search')||{}).value||'';
   if (poq) { var poql=poq.toLowerCase(); data=data.filter(function(p){ return (p.number||'').toLowerCase().indexOf(poql)>=0||(p.vendor||'').toLowerCase().indexOf(poql)>=0||(p.items||'').toLowerCase().indexOf(poql)>=0; }); }
+  // Sort
+  data.sort(function(a,b) {
+    var av = a[_poSort.col]||'', bv = b[_poSort.col]||'';
+    if (_poSort.col === 'project') { av = projectName(a.project)||''; bv = projectName(b.project)||''; }
+    var r = av < bv ? -1 : av > bv ? 1 : 0;
+    return _poSort.dir === 'desc' ? -r : r;
+  });
   totalPOs = data.length;
   data = data.slice(0, _poPage * PAGE_SIZE);
   var tb = document.getElementById('pos-tbody');
@@ -10156,6 +10450,7 @@ data.reverse();
     if(e.key==='Enter'||e.key===' '){e.preventDefault();_poRowActivate(e);}
   });
   attachRowSwipe(tb, 'pos', 'poid');
+  _applySortHeaders('po', _poSort);
   // Paginator
   var posWrap = document.getElementById('view-pos');
   var existingLMpo = posWrap && posWrap.querySelector('.load-more-btn');
@@ -10237,6 +10532,12 @@ function renderShipping() {
   }
   var sq = (document.getElementById('ship-search')||{}).value||'';
   if (sq) { var sql=sq.toLowerCase(); data=data.filter(function(s){ return (s.tracking||'').toLowerCase().indexOf(sql)>=0||(s.desc||'').toLowerCase().indexOf(sql)>=0||(s.carrier||'').toLowerCase().indexOf(sql)>=0; }); }
+  // Sort
+  data.sort(function(a,b) {
+    var av = a[_shipSort.col]||'', bv = b[_shipSort.col]||'';
+    var r = av < bv ? -1 : av > bv ? 1 : 0;
+    return _shipSort.dir === 'desc' ? -r : r;
+  });
   totalShipments = data.length;
   data = data.slice(0, _shipPage * PAGE_SIZE);
   var tb=document.getElementById('shipping-tbody');
@@ -10397,6 +10698,7 @@ data.reverse();
     if(e.key==='Enter'||e.key===' '){e.preventDefault();_shRowActivate(e);}
   });
   attachRowSwipe(tb, 'shipping', 'shid');
+  _applySortHeaders('ship', _shipSort);
   // Paginator
   var shipWrap = document.getElementById('view-shipping');
   var existingLMsh = shipWrap && shipWrap.querySelector('.load-more-btn');
@@ -10474,7 +10776,7 @@ function switchProjectDetailTab(key) {
 }
 window.switchProjectDetailTab = switchProjectDetailTab;
 
-function setDetailFooter(f, editFn, id) {
+function setDetailFooter(f, editFn, id, col) {
   f.innerHTML = '';
   if (editFn) {
     var editBtn = document.createElement('button');
@@ -10483,12 +10785,179 @@ function setDetailFooter(f, editFn, id) {
     editBtn.addEventListener('click', function(){ closeModal('modal-detail'); window[editFn](id); });
     f.appendChild(editBtn);
   }
+  // Duplicate button for tasks and projects
+  if (col === 'tasks' || col === 'projects') {
+    var dupBtn = document.createElement('button');
+    dupBtn.className = 'btn btn-ghost';
+    dupBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Duplicate';
+    dupBtn.addEventListener('click', function(){ closeModal('modal-detail'); duplicateItem(col, id); });
+    f.appendChild(dupBtn);
+  }
   var closeBtn = document.createElement('button');
   closeBtn.className = 'btn btn-ghost';
   closeBtn.textContent = 'Close';
   closeBtn.addEventListener('click', function(){ closeModal('modal-detail'); });
   f.appendChild(closeBtn);
 }
+
+function duplicateItem(col, id) {
+  var item = state[col] ? state[col].find(function(x){ return x.id === id; }) : null;
+  if (!item) return;
+  var copy = _merge({}, item);
+  delete copy.id;
+  delete copy.createdAt;
+  if (col === 'tasks') {
+    copy.title = (copy.title || 'Task') + ' (copy)';
+    copy.status = 'todo';
+  } else if (col === 'projects') {
+    copy.name = (copy.name || 'Project') + ' (copy)';
+    copy.status = 'planning';
+  }
+  var newItem = addItem(col, copy);
+  toast('Duplicated \u2014 ' + (col === 'tasks' ? (copy.title) : (copy.name)));
+  setTimeout(function(){ openDetail(col, newItem.id); }, 150);
+}
+window.duplicateItem = duplicateItem;
+
+// ═══════════════════════════════════════════════
+//  CLIENT PROJECT STATUS PAGE
+// ═══════════════════════════════════════════════
+function shareProjectStatus(projectId) {
+  var p = (state.projects||[]).find(function(x){ return x.id === projectId; });
+  if (!p) return;
+  // Build public snapshot
+  var tasks = (state.tasks||[]).filter(function(t){ return t.project === projectId && !t.archived; });
+  var done = tasks.filter(function(t){ return t.status === 'done'; }).length;
+  var pct = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+  var snap = {
+    id: projectId,
+    name: p.name, client: p.client||'', status: p.status||'',
+    start: p.start||'', end: p.end||'', location: p.location||'',
+    notes: p.notes||'', color: p.color||'#4f8ef7',
+    tasksTotal: tasks.length, tasksDone: done, pct: pct,
+    tasks: tasks.map(function(t){ return { title:t.title, status:t.status, priority:t.priority, due:t.due||'', category:t.category||'' }; }),
+    generatedAt: new Date().toISOString()
+  };
+  var token = projectId + '_' + Math.random().toString(36).slice(2,8);
+  // Try to push to Firebase if available
+  if (db) {
+    db.collection('_public_projects').doc(token).set(snap)
+      .then(function() { _copyShareLink(token); })
+      .catch(function() { _copyShareLink(token); });
+  } else {
+    // Store locally so it works on same device
+    try { var pub = JSON.parse(localStorage.getItem('fop_public_snaps')||'{}'); pub[token] = snap; localStorage.setItem('fop_public_snaps', JSON.stringify(pub)); } catch(e) {}
+    _copyShareLink(token);
+  }
+}
+function _copyShareLink(token) {
+  var base = window.location.href.split('#')[0];
+  var url = base + '#client-view=' + token;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function(){ toast('Share link copied to clipboard!'); }).catch(function(){ _fallbackCopyLink(url); });
+  } else { _fallbackCopyLink(url); }
+}
+function _fallbackCopyLink(url) {
+  var ta = document.createElement('textarea'); ta.value = url; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('Share link copied!'); } catch(e) { toast('Link: ' + url); } document.body.removeChild(ta);
+}
+function renderClientView(token) {
+  var overlay = document.getElementById('client-view-overlay');
+  var content = document.getElementById('cv-content');
+  if (!overlay || !content) return;
+  overlay.style.display = '';
+  // Try Firebase first, then local
+  function renderSnap(snap) {
+    if (!snap) { content.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444">Project not found or link has expired.</div>'; return; }
+    var genEl = document.getElementById('cv-generated');
+    if (genEl) genEl.textContent = 'Generated ' + (snap.generatedAt ? new Date(snap.generatedAt).toLocaleDateString() : '');
+    var dot = document.getElementById('cv-logo-dot');
+    if (dot) dot.style.background = snap.color || '#4f8ef7';
+    var statusColors = { active:'#10b981', planning:'#4f8ef7', completed:'#64748b', 'in-progress':'#f59e0b', 'on-hold':'#f97316' };
+    var sc = statusColors[snap.status] || '#4a5e7a';
+    var pctBar = '<div style="width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-top:8px;overflow:hidden"><div style="height:100%;width:'+snap.pct+'%;background:'+(snap.color||'#4f8ef7')+';border-radius:3px;transition:width 0.5s"></div></div>';
+    var html = '<div style="margin-bottom:28px">'
+      + '<div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">'
+      + '<div style="flex:1;min-width:0">'
+      + '<h1 style="font-size:26px;font-weight:800;color:#f0f4ff;margin:0 0 6px">'+escH(snap.name)+'</h1>'
+      + (snap.client?'<div style="font-size:14px;color:#8da0c0;margin-bottom:10px">Client: '+escH(snap.client)+'</div>':'')
+      + '</div>'
+      + '<span style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;background:'+sc+'20;color:'+sc+';border:1px solid '+sc+'40;flex-shrink:0">'+escH(snap.status||'Active')+'</span>'
+      + '</div>'
+      + '<div style="display:flex;gap:20px;flex-wrap:wrap;margin:12px 0">'
+      + (snap.start?'<div style="font-size:13px;color:#8da0c0"><span style="color:#4a5e7a">Start</span> '+escH(fmtDate(snap.start))+'</div>':'')
+      + (snap.end?'<div style="font-size:13px;color:#8da0c0"><span style="color:#4a5e7a">Est. Complete</span> '+escH(fmtDate(snap.end))+'</div>':'')
+      + (snap.location?'<div style="font-size:13px;color:#8da0c0"><span style="color:#4a5e7a">Location</span> '+escH(snap.location)+'</div>':'')
+      + '</div>'
+      + '</div>';
+    // Progress card
+    html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;margin-bottom:18px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div style="font-size:13px;font-weight:600;color:#8da0c0">Overall Progress</div>'
+      + '<div style="font-size:22px;font-weight:800;color:#f0f4ff">'+snap.pct+'%</div>'
+      + '</div>'
+      + pctBar
+      + '<div style="font-size:12px;color:#4a5e7a;margin-top:8px">'+snap.tasksDone+' of '+snap.tasksTotal+' tasks completed</div>'
+      + '</div>';
+    // Tasks by status
+    if (snap.tasks && snap.tasks.length) {
+      var byStatus = {};
+      snap.tasks.forEach(function(t) { var s = t.status||'todo'; if (!byStatus[s]) byStatus[s] = []; byStatus[s].push(t); });
+      var statusOrder = ['todo','in-progress','done'];
+      var statusLabels = { todo:'To Do', 'in-progress':'In Progress', done:'Completed' };
+      var statusIcons = { todo:'○', 'in-progress':'◑', done:'●' };
+      statusOrder.forEach(function(st) {
+        var items = byStatus[st]; if (!items || !items.length) return;
+        html += '<div style="margin-bottom:14px">'
+          + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">'+statusIcons[st]+' '+statusLabels[st]+' ('+items.length+')</div>'
+          + items.map(function(t){
+            var pc = t.priority==='high'?'#ef4444':t.priority==='low'?'#64748b':'#f59e0b';
+            return '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);margin-bottom:4px">'
+              + (t.priority?'<span style="width:6px;height:6px;border-radius:50%;background:'+pc+';flex-shrink:0"></span>':'')
+              + '<span style="flex:1;font-size:13px;color:#c8d8f0">'+escH(t.title)+'</span>'
+              + (t.due?'<span style="font-size:11px;color:#4a5e7a">Due '+escH(fmtDate(t.due))+'</span>':'')
+              + '</div>';
+          }).join('')
+          + '</div>';
+      });
+    }
+    if (snap.notes) {
+      html += '<div style="margin-top:16px;padding:16px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.06)">'
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">Notes</div>'
+        + '<div style="font-size:13px;color:#8da0c0;white-space:pre-wrap">'+escH(snap.notes)+'</div>'
+        + '</div>';
+    }
+    content.innerHTML = html;
+  }
+  if (db) {
+    db.collection('_public_projects').doc(token).get()
+      .then(function(doc){ renderSnap(doc.exists ? doc.data() : null); })
+      .catch(function(){ renderSnapLocal(token, renderSnap); });
+  } else {
+    renderSnapLocal(token, renderSnap);
+  }
+}
+function renderSnapLocal(token, cb) {
+  try { var pub = JSON.parse(localStorage.getItem('fop_public_snaps')||'{}'); cb(pub[token]||null); } catch(e){ cb(null); }
+}
+// Check hash on load
+(function() {
+  function checkShareHash() {
+    var h = window.location.hash;
+    if (h && h.indexOf('#client-view=') === 0) {
+      var token = h.slice('#client-view='.length);
+      if (token) {
+        // Wait for app to init then render
+        setTimeout(function(){ renderClientView(token); }, 600);
+      }
+    }
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', checkShareHash); }
+  else { checkShareHash(); }
+  window.addEventListener('hashchange', function(){ if(window.location.hash.indexOf('#client-view=')===0) renderClientView(window.location.hash.slice(13)); });
+})();
+window.shareProjectStatus = shareProjectStatus;
+window.renderClientView = renderClientView;
 
 function openDetail(col, id) {
   trackView(col, id);
@@ -10635,7 +11104,14 @@ function openDetail(col, id) {
     b.innerHTML = tabNav + overviewHtml + tasksTabHtml + posTabHtml + shipsTabHtml + punchTabHtml + timeTabHtml + logsTabHtml;
     // Activate first tab
     setTimeout(function(){ switchProjectDetailTab('overview'); }, 0);
-    setDetailFooter(f, 'editProject', id);
+    // Share button
+    var shareBtn = document.createElement('button');
+    shareBtn.className = 'btn btn-ghost';
+    shareBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share';
+    shareBtn.style.color = '#4f8ef7';
+    (function(pid){ shareBtn.addEventListener('click', function(){ shareProjectStatus(pid); }); })(id);
+    f.appendChild(shareBtn);
+    setDetailFooter(f, 'editProject', id, 'projects');
   }
   else if(col==='tasks') {
     t.textContent = item.title;
@@ -10677,7 +11153,7 @@ function openDetail(col, id) {
         +'</div>';
       b.innerHTML += row('Punch Items', punchHtml);
     }
-    setDetailFooter(f, 'editTask', id);
+    setDetailFooter(f, 'editTask', id, 'tasks');
   }
   else if(col==='pos') {
     t.textContent = item.number||item.vendor||'PO';
@@ -11690,6 +12166,8 @@ window.addEventListener('load', function(){
     var modalOpen = document.querySelector('.modal-overlay.open');
 
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openGlobalSearch(); return; }
+    // / key opens command palette (when not typing in an input)
+    if (e.key === '/' && !inInput && !modalOpen) { e.preventDefault(); openGlobalSearch(); return; }
 
     // Escape: close smart-add menu or any open modal
     if (e.key === 'Escape') {
@@ -14958,33 +15436,54 @@ function showSearchHistory() {
     var _mobDd=document.getElementById('mob-search-dropdown');if(_mobDd){_mobDd.style.display='block';_mobDd.innerHTML=dd.innerHTML;}
     return;
   }
-  // Quick actions
-  var actions = [
-    { icon:'➕', label:'New Task',        fn:"openAddModal();closeGlobalSearch()" },
-    { icon:'📁', label:'New Project',     fn:"closeGlobalSearch();switchView('projects');setTimeout(openAddModal,100)" },
-    { icon:'🛒', label:'New Purchase Order', fn:"closeGlobalSearch();switchView('pos');setTimeout(openAddModal,100)" },
-    { icon:'📦', label:'New Shipment',    fn:"closeGlobalSearch();switchView('shipping');setTimeout(openAddModal,100)" },
-    { icon:'📅', label:'New Event',       fn:"closeGlobalSearch();switchView('calendar');setTimeout(openAddModal,100)" },
+  // Quick create actions
+  var createActions = [
+    { icon:'✅', label:'New Task',           hint:'T', fn:"closeGlobalSearch();switchView('tasks');setTimeout(openAddModal,60)" },
+    { icon:'📁', label:'New Project',        hint:'P', fn:"closeGlobalSearch();switchView('projects');setTimeout(openAddModal,60)" },
+    { icon:'🛒', label:'New Purchase Order', hint:'',  fn:"closeGlobalSearch();switchView('pos');setTimeout(openAddModal,60)" },
+    { icon:'📦', label:'New Shipment',       hint:'',  fn:"closeGlobalSearch();switchView('shipping');setTimeout(openAddModal,60)" },
+    { icon:'📅', label:'New Event',          hint:'',  fn:"closeGlobalSearch();switchView('calendar');setTimeout(openAddModal,60)" },
+    { icon:'📓', label:'New Field Log',      hint:'',  fn:"closeGlobalSearch();switchView('fieldlog');setTimeout(openAddModal,60)" },
+  ];
+  // Navigation actions
+  var navActions = [
+    { icon:'🏠', label:'Dashboard',     fn:"closeGlobalSearch();switchView('dashboard')" },
+    { icon:'📁', label:'Projects',      fn:"closeGlobalSearch();switchView('projects')" },
+    { icon:'✅', label:'Tasks',         fn:"closeGlobalSearch();switchView('tasks')" },
+    { icon:'📅', label:'Schedule',      fn:"closeGlobalSearch();switchView('schedule')" },
+    { icon:'🗓', label:'Calendar',      fn:"closeGlobalSearch();switchView('calendar')" },
+    { icon:'🛒', label:'Purchase Orders', fn:"closeGlobalSearch();switchView('pos')" },
+    { icon:'📦', label:'Shipping',      fn:"closeGlobalSearch();switchView('shipping')" },
+    { icon:'📓', label:'Field Log',     fn:"closeGlobalSearch();switchView('fieldlog')" },
+    { icon:'🔲', label:'Systainer',     fn:"closeGlobalSearch();switchView('systainer')" },
+    { icon:'⏱',  label:'Time Tracker',  fn:"closeGlobalSearch();switchView('timekeeping')" },
+    { icon:'🔢', label:'DMX Calculator',fn:"closeGlobalSearch();switchView('dmxcalc')" },
+    { icon:'⚙️', label:'Settings',      fn:"closeGlobalSearch();switchView('settings')" },
   ];
   // Recently viewed (from localStorage)
   var rv = [];
   try { rv = JSON.parse(localStorage.getItem('fop_recently_viewed') || '[]'); } catch(e) {}
 
-  var html = '<div style="padding:6px 12px 4px;font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:0.8px;text-transform:uppercase">Quick Actions</div>';
-  html += actions.map(function(a){
-    return '<div class="sr-item" onclick="'+a.fn+'" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;cursor:pointer;transition:background 0.1s">'
-      +'<span style="font-size:16px;width:22px;text-align:center">'+a.icon+'</span>'
-      +'<span style="font-size:14px;color:#c8d8f0">'+a.label+'</span>'
+  function cmdRow(fn, iconHtml, label, rightHtml) {
+    return '<div class="cp-cmd-row" onclick="'+fn+'" style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;cursor:pointer;transition:background 0.12s" onmouseover="this.style.background=\'rgba(255,255,255,0.07)\'" onmouseout="this.style.background=\'\'">'
+      +'<span style="font-size:15px;width:22px;text-align:center;flex-shrink:0">'+iconHtml+'</span>'
+      +'<span style="font-size:13px;color:#c8d8f0;flex:1">'+label+'</span>'
+      +(rightHtml?'<span style="font-size:10px;color:#4a5e7a;background:rgba(255,255,255,0.07);border-radius:4px;padding:1px 6px;font-family:monospace">'+rightHtml+'</span>':'')
       +'</div>';
-  }).join('');
+  }
+
+  var html = '<div style="padding:6px 12px 3px;font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase">Create</div>';
+  html += createActions.map(function(a){ return cmdRow(a.fn, a.icon, a.label, a.hint); }).join('');
+  html += '<div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 10px"></div>';
+  html += '<div style="padding:4px 12px 3px;font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase">Go to</div>';
+  html += navActions.map(function(a){ return cmdRow(a.fn, a.icon, a.label, ''); }).join('');
 
   if (rv.length) {
-    html += '<div style="padding:8px 12px 4px;font-size:11px;font-weight:700;color:#4a5e7a;letter-spacing:0.8px;text-transform:uppercase;margin-top:4px;border-top:1px solid rgba(255,255,255,0.06)">Recently Viewed</div>';
+    html += '<div style="height:1px;background:rgba(255,255,255,0.07);margin:6px 10px"></div>';
+    html += '<div style="padding:4px 12px 3px;font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase">Recently Viewed</div>';
     html += rv.slice(0,5).map(function(item){
-      return '<div class="sr-item" onclick="closeGlobalSearch();switchView(\''+item.view+'\');setTimeout(function(){openDetail && openDetail(\''+item.col+'\',\''+item.id+'\');},120)" style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;cursor:pointer;transition:background 0.1s">'
-        +'<span style="font-size:14px;width:22px;text-align:center">'+( item.view==='tasks'?'✅':item.view==='projects'?'📁':item.view==='pos'?'🛒':'📦')+'</span>'
-        +'<div><div style="font-size:13px;color:#c8d8f0">'+escH(item.title||'Item')+'</div><div style="font-size:11px;color:#4a5e7a">'+item.view+'</div></div>'
-        +'</div>';
+      var ico = item.col==='tasks'?'✅':item.col==='projects'?'📁':item.col==='pos'?'🛒':item.col==='shipping'?'📦':'📄';
+      return cmdRow("closeGlobalSearch();switchView('"+item.view+"');setTimeout(function(){openDetail&&openDetail('"+item.col+"','"+item.id+"');},120)", ico, escH(item.title||'Item'), item.col);
     }).join('');
   }
 
@@ -17016,8 +17515,8 @@ function renderSystainer() {
     +'</div>'
     +tooltipHtml;
   _sysAttachTooltips();
-
   _sysAttachEvents();
+  _sysUpdateLowStockBadge();
 }
 
 function _sysAttachEvents() {
@@ -17210,16 +17709,27 @@ function _sysLibDatalist() {
 
 // ── Items popup ──────────────────────────────────────────────
 function _sysItemRowHtml(item, binId, i) {
-  return '<div class="sys-item-row">'
+  var qty = parseInt(item.qty) || 0;
+  var minQty = item.minQty !== undefined ? parseInt(item.minQty) : null;
+  var isLow = minQty !== null && qty <= minQty;
+  var qtyColor = isLow ? '#f97316' : (qty > 0 ? 'var(--text)' : 'var(--text-muted)');
+  return '<div class="sys-item-row" style="'+(isLow?'border-left:2px solid #f97316;padding-left:6px;margin-left:-8px;':'')+'align-items:center">'
     +'<div style="flex:1;min-width:0">'
-    +'<div class="sys-item-name">'+escH(item.name)+'</div>'
+    +'<div class="sys-item-name" style="display:flex;align-items:center;gap:6px">'+escH(item.name)
+    +(isLow?'<span style="font-size:9px;background:#f97316;color:#fff;border-radius:4px;padding:1px 5px;font-weight:700;letter-spacing:0.04em">LOW</span>':'')
+    +'</div>'
     +((item.notes||item.url)?'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">'
       +(item.notes?escH(item.notes):'')
       +(item.url&&item.notes?' · ':'')
       +(item.url?'<a href="'+escH(item.url)+'" target="_blank" style="color:var(--accent);text-decoration:none;word-break:break-all">'+escH(item.url.replace(/^https?:\/\//,'').slice(0,40))+'</a>':'')
       +'</div>':'')
+    +(minQty!==null?'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Min: '+minQty+'</div>':'')
     +'</div>'
-    +(item.qty?'<div class="sys-item-qty">×'+escH(item.qty)+'</div>':'')
+    +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+    +'<button onclick="_sysCheckOut(\''+binId+'\','+i+')" title="Check out (-1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0">−</button>'
+    +'<div class="sys-item-qty" style="color:'+qtyColor+';min-width:28px;text-align:center">'+qty+'</div>'
+    +'<button onclick="_sysCheckIn(\''+binId+'\','+i+')" title="Check in (+1)" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text);width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0">+</button>'
+    +'</div>'
     +'<button onclick="_sysDel(\''+binId+'\','+i+')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 8px;font-size:16px;opacity:0.5;flex-shrink:0">×</button>'
     +'</div>';
 }
@@ -17257,7 +17767,8 @@ function _sysOpenItems(binId) {
     +'<div style="font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Add Item</div>'
     +'<div class="sys-add-row" style="flex-wrap:wrap;gap:6px">'
     +'<input id="sys-ni-name" placeholder="Item name…" list="sys-item-lib" style="flex:1;min-width:120px" autocomplete="off">'
-    +'<input id="sys-ni-qty" placeholder="Qty" style="width:60px;text-align:center">'
+    +'<input id="sys-ni-qty" placeholder="Qty" type="number" min="0" style="width:60px;text-align:center">'
+    +'<input id="sys-ni-minqty" placeholder="Min" type="number" min="0" title="Low-stock alert threshold" style="width:50px;text-align:center">'
     +'</div>'
     +'<div class="sys-add-row" style="margin-top:6px;flex-wrap:wrap;gap:6px">'
     +'<input id="sys-ni-notes" placeholder="Notes" style="flex:1;min-width:120px">'
@@ -17337,23 +17848,77 @@ function _sysSetColor(binId, color) {
 }
 function _sysAddItem(binId) {
   var nameEl=document.getElementById('sys-ni-name'), qtyEl=document.getElementById('sys-ni-qty'),
+      minQtyEl=document.getElementById('sys-ni-minqty'),
       notesEl=document.getElementById('sys-ni-notes'), urlEl=document.getElementById('sys-ni-url');
   var name=(nameEl?nameEl.value.trim():'');
   if (!name) return;
   var qty=(qtyEl?qtyEl.value.trim():''), notes=(notesEl?notesEl.value.trim():''), url=(urlEl?urlEl.value.trim():'');
+  var minQtyRaw = minQtyEl ? minQtyEl.value.trim() : '';
+  var newItem = { id:'si-'+Date.now(), name:name, qty:qty, notes:notes, url:url };
+  if (minQtyRaw !== '') newItem.minQty = parseInt(minQtyRaw) || 0;
   var d = _getSysData();
   var cas = d.cases[_sysActiveCase];
   var b = cas.bins.find(function(x){ return x.id===binId; });
   if (!b) return;
   if (!b.items) b.items=[];
-  b.items.push({ id:'si-'+Date.now(), name:name, qty:qty, notes:notes, url:url });
+  b.items.push(newItem);
   _saveSysData(d);
   _sysLibAdd(name, notes, url); // save to library
   if (nameEl) { nameEl.value=''; nameEl.focus(); }
   if (qtyEl) qtyEl.value='';
+  if (minQtyEl) minQtyEl.value='';
   if (notesEl) notesEl.value='';
   if (urlEl) urlEl.value='';
   _sysRefreshItemsList(binId);
+  _sysUpdateLowStockBadge();
+}
+function _sysCheckIn(binId, idx) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b||!b.items||!b.items[idx]) return;
+  var item = b.items[idx];
+  item.qty = String((parseInt(item.qty)||0) + 1);
+  _saveSysData(d);
+  _sysRefreshItemsList(binId);
+  _sysUpdateLowStockBadge();
+}
+function _sysCheckOut(binId, idx) {
+  var d = _getSysData();
+  var cas = d.cases[_sysActiveCase];
+  var b = cas.bins.find(function(x){ return x.id===binId; });
+  if (!b||!b.items||!b.items[idx]) return;
+  var item = b.items[idx];
+  var cur = parseInt(item.qty)||0;
+  if (cur <= 0) { toast('Already at 0'); return; }
+  item.qty = String(cur - 1);
+  _saveSysData(d);
+  _sysRefreshItemsList(binId);
+  _sysUpdateLowStockBadge();
+  // Low-stock toast
+  var minQty = item.minQty !== undefined ? parseInt(item.minQty) : null;
+  if (minQty !== null && parseInt(item.qty) <= minQty) {
+    toast('\u26a0\ufe0f Low stock: ' + item.name + ' (' + item.qty + ' left)');
+  }
+}
+function _sysUpdateLowStockBadge() {
+  var badge = document.getElementById('sys-lowstock-badge');
+  var count = 0;
+  var d = _getSysData();
+  (d.cases||[]).forEach(function(cas) {
+    (cas.bins||[]).forEach(function(b) {
+      (b.items||[]).forEach(function(item) {
+        if (item.minQty !== undefined && (parseInt(item.qty)||0) <= parseInt(item.minQty)) count++;
+      });
+    });
+  });
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 function _sysDel(binId, idx) {
   var d = _getSysData();
@@ -17363,6 +17928,7 @@ function _sysDel(binId, idx) {
   b.items.splice(idx,1);
   _saveSysData(d);
   _sysRefreshItemsList(binId);
+  _sysUpdateLowStockBadge();
 }
 function _sysRemoveBin(binId) {
   if (!confirm('Remove this bin and all its contents?')) return;
