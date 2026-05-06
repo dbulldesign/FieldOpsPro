@@ -18272,40 +18272,57 @@ var _dmxMode = 'd2p';
 })();
 
 // ═══════════════════════════════════════════════════
-//  LED TAPE CALCULATOR
+//  LED TAPE CALCULATOR  (v2 — Projects + Power Supplies)
 // ═══════════════════════════════════════════════════
 (function() {
-  var SK = 'fop_led_fixtures';
-  var DEFAULTS = [
-    { id:'ld1', manufacturer:'Generic', partNumber:'60 LED/m — standard density', cutIncrement:1.9685, cutUnit:'in' },
-    { id:'ld2', manufacturer:'Generic', partNumber:'30 LED/m — low density',      cutIncrement:3.937,  cutUnit:'in' },
-    { id:'ld3', manufacturer:'Generic', partNumber:'120 LED/m — high density',    cutIncrement:0.9843, cutUnit:'in' }
+  // ── Storage ──────────────────────────────────────────────────
+  var SK_FX  = 'fop_led_fixtures';
+  var SK_PSU = 'fop_led_psu';
+  var SK_PRJ = 'fop_led_projects';
+
+  var DEFAULTS_FX = [
+    { id:'ld1', manufacturer:'Generic', partNumber:'60 LED/m — standard density', cutIncrement:1.9685, cutUnit:'in', wattsPerFt:3.2 },
+    { id:'ld2', manufacturer:'Generic', partNumber:'30 LED/m — low density',      cutIncrement:3.937,  cutUnit:'in', wattsPerFt:1.5 },
+    { id:'ld3', manufacturer:'Generic', partNumber:'120 LED/m — high density',    cutIncrement:0.9843, cutUnit:'in', wattsPerFt:6.4 }
   ];
+
+  // ── State ─────────────────────────────────────────────────────
   var S = {
-    tab:'calc', fixtures:[], selectedId:'',
-    manualIncrement:'', manualUnit:'in',
-    inputVal:'', results:null,
-    formMfr:'', formPart:'', formIncrement:'', formUnit:'in', formError:'',
-    editingId:null
+    tab:'calc',
+    fixtures:[], psu:[], projects:[],
+    // Calculator
+    selectedId:'', manualIncrement:'', manualUnit:'in', inputVal:'', results:null,
+    // Fixture form
+    fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxErr:'', fxEditId:null,
+    // PSU form
+    psuMfr:'', psuPart:'', psuWatts:'', psuErr:'', psuEditId:null,
+    // Projects
+    activeProjId:null,
+    runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'' },
+    runEditId:null, runFormErr:'',
+    projPsuId:'',
+    // Save-to-project overlay
+    stp:{ open:false, projId:'', newProjName:'', qty:'1', label:'', description:'', lengthIn:null, fixtureId:'' }
   };
-  function loadFixtures() {
-    try {
-      var raw = localStorage.getItem(SK);
-      if (raw) { var d=JSON.parse(raw); if(d&&d.length) S.fixtures=d; else S.fixtures=DEFAULTS.slice(); }
-      else S.fixtures=DEFAULTS.slice();
-    } catch(e) { S.fixtures=DEFAULTS.slice(); }
+
+  // ── Persist ───────────────────────────────────────────────────
+  function saveFx()  { try { localStorage.setItem(SK_FX,  JSON.stringify(S.fixtures)); } catch(e){} }
+  function savePsu() { try { localStorage.setItem(SK_PSU, JSON.stringify(S.psu));      } catch(e){} }
+  function saveProj(){ try { localStorage.setItem(SK_PRJ, JSON.stringify(S.projects)); } catch(e){} }
+
+  function load() {
+    try { var r=JSON.parse(localStorage.getItem(SK_FX)||'null');  S.fixtures = (r&&r.length)?r:DEFAULTS_FX.slice(); } catch(e){ S.fixtures=DEFAULTS_FX.slice(); }
+    try { S.psu      = JSON.parse(localStorage.getItem(SK_PSU)||'[]'); } catch(e){ S.psu=[]; }
+    try { S.projects = JSON.parse(localStorage.getItem(SK_PRJ)||'[]'); } catch(e){ S.projects=[]; }
   }
-  function persist() {
-    try { localStorage.setItem(SK, JSON.stringify(S.fixtures)); } catch(e) {}
-  }
-  function toIn(v,u) { return u==='ft'?v*12:u==='mm'?v/25.4:v; }
-  function parsLen(str) {
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function toIn(v,u){ return u==='ft'?v*12:u==='mm'?v/25.4:v; }
+  function parsLen(str){
     if(!str||!str.trim()) return null;
     str=str.trim(); var m;
-    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?$/i);
-    if(m) return {val:+m[1]*12+ +m[2]};
-    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s*(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?$/i);
-    if(m&&m[2]) return {val:+m[1]*12+ +m[2]};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?$/i); if(m) return {val:+m[1]*12+ +m[2]};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s*(\d+(?:\.\d+)?)\s*(?:in|inch|")?$/i); if(m&&m[2]) return {val:+m[1]*12+ +m[2]};
     m=str.match(/^(\d+(?:\.\d+)?)\s*mm$/i); if(m) return {val:+m[1]/25.4};
     m=str.match(/^(\d+(?:\.\d+)?)\s*cm$/i); if(m) return {val:+m[1]/2.54};
     m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')$/i); if(m) return {val:+m[1]*12};
@@ -18313,30 +18330,34 @@ var _dmxMode = 'd2p';
     m=str.match(/^(\d+(?:\.\d+)?)$/); if(m) return {val:+m[1]};
     return null;
   }
-  function fmtIn(inches) {
-    var ft=Math.floor(inches/12), inch=inches-ft*12, mm=inches*25.4;
+  function fmtIn(inches){
+    var ft=Math.floor(inches/12), inch=inches-ft*12;
     return {
-      ftIn: ft>0 ? ft+'′ '+inch.toFixed(3)+'″' : inch.toFixed(3)+'″',
+      ftIn:  ft>0 ? ft+'′ '+inch.toFixed(3)+'″' : inch.toFixed(3)+'″',
       inches: inches.toFixed(4)+'″',
-      mm: mm.toFixed(1)+' mm'
+      mm:    (inches*25.4).toFixed(1)+' mm'
     };
   }
-  function mkDiff(res,inp) {
+  function mkDiff(res,inp){
     var d=res-inp, a=Math.abs(d);
-    if(a<0.001) return {label:'exact match', cls:'lc-dbadge-exact'};
+    if(a<0.001) return {label:'exact match',cls:'lc-dbadge-exact'};
     var f=fmtIn(a), s=d>0?'+':'−';
     return {label:s+f.mm+' / '+s+f.inches, cls:d>0?'lc-dbadge-over':'lc-dbadge-under'};
   }
-  function getInc() {
-    if(S.selectedId) {
-      var f=S.fixtures.find(function(x){return x.id===S.selectedId;});
-      if(f) return toIn(f.cutIncrement,f.cutUnit);
-    }
-    var v=parseFloat(S.manualIncrement);
-    if(!isNaN(v)&&v>0) return toIn(v,S.manualUnit);
+  function getInc(){
+    if(S.selectedId){ var f=S.fixtures.find(function(x){return x.id===S.selectedId;}); if(f) return toIn(f.cutIncrement,f.cutUnit); }
+    var v=parseFloat(S.manualIncrement); if(!isNaN(v)&&v>0) return toIn(v,S.manualUnit);
     return null;
   }
-  function mkCard(data,inp,label,feat) {
+  function fxShort(f){ return f ? escH(f.manufacturer)+' · '+escH(f.partNumber) : '—'; }
+  function psuShort(p){ return p ? escH(p.manufacturer)+' · '+escH(p.partNumber)+' · '+p.outputWatts+'W' : ''; }
+  function fxOpts(selId){
+    return '<option value="">— No fixture —</option>'
+      +S.fixtures.map(function(f){ return '<option value="'+f.id+'"'+(f.id===selId?' selected':'')+'>'+fxShort(f)+(f.wattsPerFt?' ('+f.wattsPerFt+' W/ft)':'')+'</option>'; }).join('');
+  }
+
+  // ── Calculator tab ────────────────────────────────────────────
+  function mkCard(data,inp,label,feat){
     var d=mkDiff(data.inches,inp);
     return '<div class="lc-rcard'+(feat?' lc-feat':'')+'">'
       +'<div class="lc-rlabel">'+label+'</div>'
@@ -18347,215 +18368,448 @@ var _dmxMode = 'd2p';
       +'<span class="lc-dbadge '+d.cls+'">'+escH(d.label)+'</span>'
       +'</div>';
   }
-  function doCalc() {
-    var p=parsLen(S.inputVal);
-    if(!p||p.val<=0){S.results=null;patchResults();return;}
-    var inc=getInc();
-    if(!inc||inc<=0){S.results=null;patchResults();return;}
-    var nearest=Math.max(1,Math.round(p.val/inc));
-    function mk(n){var l=n*inc;return {segments:n,inches:l,display:fmtIn(l)};}
-    S.results={inp:p.val,inc:inc,below:mk(Math.max(1,nearest-1)),closest:mk(nearest),above:mk(nearest+1)};
+  function doCalc(){
+    var p=parsLen(S.inputVal); if(!p||p.val<=0){S.results=null;patchResults();return;}
+    var inc=getInc(); if(!inc||inc<=0){S.results=null;patchResults();return;}
+    var n=Math.max(1,Math.round(p.val/inc));
+    function mk(x){var l=x*inc;return {segments:x,inches:l,display:fmtIn(l)};}
+    S.results={inp:p.val,inc:inc,below:mk(Math.max(1,n-1)),closest:mk(n),above:mk(n+1)};
     patchResults();
   }
-  function patchResults() {
-    var el=document.getElementById('lc-ra');
-    if(!el) return;
+  function patchResults(){
+    var el=document.getElementById('lc-ra'); if(!el) return;
     if(!S.results){el.innerHTML='';return;}
     var r=S.results;
-    el.innerHTML='<div class="lc-rgrid">'
+    el.innerHTML='<div class="lc-rgrid" style="margin-bottom:12px">'
       +mkCard(r.below,r.inp,'one fewer cut',false)
       +mkCard(r.closest,r.inp,'closest match',true)
       +mkCard(r.above,r.inp,'one more cut',false)
-      +'</div>';
+      +'</div>'
+      +'<button class="lc-btn" style="width:100%" id="lc-stp-open-btn">→ Save to Project</button>';
+    var btn=document.getElementById('lc-stp-open-btn');
+    if(btn) btn.addEventListener('click',function(){
+      S.stp={open:true,projId:S.projects.length?S.projects[0].id:'',newProjName:'',qty:'1',label:'',description:'',lengthIn:r.closest.inches,fixtureId:S.selectedId};
+      _ledRender();
+    });
   }
-  function patchHint() {
-    var el=document.getElementById('lc-lh');
-    if(!el) return;
+  function patchHint(){
+    var el=document.getElementById('lc-lh'); if(!el) return;
     if(!S.inputVal){el.innerHTML='';return;}
     var p=parsLen(S.inputVal);
-    if(p){
-      var f=fmtIn(p.val);
-      el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+'</span>';
-    } else {
-      el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 6.5ft</span>';
-    }
+    if(p){ var f=fmtIn(p.val); el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+'</span>'; }
+    else  el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 6.5ft</span>';
   }
-  function doSave() {
-    var v=parseFloat(S.formIncrement);
-    if(!S.formMfr.trim()||!S.formPart.trim()) {
-      S.formError='Manufacturer and part number are required.';
-      var e=document.getElementById('lc-ferr'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.formError)+'</p>'; return;
-    }
-    if(isNaN(v)||v<=0) {
-      S.formError='Enter a valid cut increment greater than 0.';
-      var e2=document.getElementById('lc-ferr'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.formError)+'</p>'; return;
-    }
-    if(S.editingId) {
-      S.fixtures=S.fixtures.map(function(f){
-        return f.id===S.editingId
-          ? {id:f.id,manufacturer:S.formMfr.trim(),partNumber:S.formPart.trim(),cutIncrement:v,cutUnit:S.formUnit}
-          : f;
-      });
-      S.editingId=null;
-    } else {
-      S.fixtures.push({id:'lf'+Date.now(),manufacturer:S.formMfr.trim(),partNumber:S.formPart.trim(),cutIncrement:v,cutUnit:S.formUnit});
-    }
-    S.formMfr=''; S.formPart=''; S.formIncrement=''; S.formUnit='in'; S.formError='';
-    persist(); _ledRender();
-  }
-  function doEdit(id) {
-    var f=S.fixtures.find(function(x){return x.id===id;});
-    if(!f) return;
-    S.editingId=id; S.tab='manage';
-    S.formMfr=f.manufacturer; S.formPart=f.partNumber;
-    S.formIncrement=String(f.cutIncrement); S.formUnit=f.cutUnit; S.formError='';
-    _ledRender();
-  }
-  function doCancel() {
-    S.editingId=null; S.formMfr=''; S.formPart=''; S.formIncrement=''; S.formUnit='in'; S.formError='';
-    _ledRender();
-  }
-  function doDelete(id) {
-    if(!confirm('Remove this fixture?')) return;
-    S.fixtures=S.fixtures.filter(function(f){return f.id!==id;});
-    if(S.selectedId===id) S.selectedId='';
-    if(S.editingId===id) S.editingId=null;
-    persist(); _ledRender();
-  }
-  function fxLabel(f) { return escH(f.manufacturer)+' · '+escH(f.partNumber)+' · '+f.cutIncrement+f.cutUnit+'/cut'; }
-
-  function calcTabHTML() {
-    var sel=S.fixtures.find(function(f){return f.id===S.selectedId;});
-    var incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
-    var opts='<option value="">— select a fixture —</option>';
-    S.fixtures.forEach(function(f){
-      opts+='<option value="'+f.id+'"'+(f.id===S.selectedId?' selected':'')+'>'+fxLabel(f)+'</option>';
-    });
+  function calcTabHTML(){
+    var sel=S.fixtures.find(function(f){return f.id===S.selectedId;}), incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
+    var selOpts='<option value="">— select a fixture —</option>'
+      +S.fixtures.map(function(f){ return '<option value="'+f.id+'"'+(f.id===S.selectedId?' selected':'')+'>'+fxShort(f)+(f.wattsPerFt?' · '+f.wattsPerFt+' W/ft':'')+(f.cutIncrement?' · '+f.cutIncrement+f.cutUnit+'/cut':'')+'</option>'; }).join('');
     return '<div class="lc-section">'
       +'<div class="lc-stitle">Fixture / cut increment</div>'
-      +'<div class="lc-field" style="margin-bottom:8px">'
-        +'<span class="lc-lbl">Saved fixture</span>'
-        +'<select class="lc-select" id="lc-fx-sel">'+opts+'</select>'
-      +'</div>'
-      +(sel?'<div class="lc-spill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m14.5 9.5-5 5M9.5 9.5l5 5"/></svg>Cut every <strong>'+sel.cutIncrement+' '+sel.cutUnit+'</strong>&nbsp;·&nbsp;'+escH(incFmt.mm)+'&nbsp;·&nbsp;'+escH(incFmt.inches)+'</div>':'')
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Saved fixture</span><select class="lc-select" id="lc-fx-sel">'+selOpts+'</select></div>'
+      +(sel&&incFmt?'<div class="lc-spill">Cut every <strong>'+sel.cutIncrement+' '+sel.cutUnit+'</strong> · '+escH(incFmt.mm)+' · '+escH(incFmt.inches)+(sel.wattsPerFt?' · <strong>'+sel.wattsPerFt+' W/ft</strong>':'')+'</div>':'')
       +'<div class="lc-or">or enter manually</div>'
       +'<div class="lc-g2">'
-        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span>'
-          +'<input class="lc-input" id="lc-mi" type="text" inputmode="decimal" placeholder="e.g. 1.9685"'+(sel?' disabled style="opacity:.45"':'')+' value="'+escH(S.manualIncrement)+'"></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Unit</span>'
-          +'<select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'>'+
-            '<option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option>'+
-            '<option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option>'+
-            '<option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option>'+
-          '</select></div>'
-      +'</div>'
-      +'</div>'
-      +'<div class="lc-section">'
-      +'<div class="lc-stitle">Desired length</div>'
+        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-mi" type="text" inputmode="decimal" placeholder="e.g. 1.9685"'+(sel?' disabled style="opacity:.45"':'')+' value="'+escH(S.manualIncrement)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'><option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+      +'</div></div>'
+      +'<div class="lc-section"><div class="lc-stitle">Desired length</div>'
       +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 6ft 3in · 84in · 1800mm · 6.5ft" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
       +'<div class="lc-hint" id="lc-lh"></div>'
-      +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate cut lengths</button>'
+      +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate</button>'
       +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
-      +'</div>'
-      +'<div id="lc-ra"></div>';
+      +'</div><div id="lc-ra"></div>';
   }
 
-  function manageTabHTML() {
-    var isEd=!!S.editingId;
-    var et=isEd?S.fixtures.find(function(f){return f.id===S.editingId;}):null;
-    var fixtureRows='';
-    if(!S.fixtures.length) {
-      fixtureRows='<div class="lc-empty">No fixtures saved yet. Add one above.</div>';
+  // ── Projects tab ──────────────────────────────────────────────
+  function projectsTabHTML(){
+    var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      +'<span style="font-size:13px;color:var(--text-muted)">'+S.projects.length+' project'+(S.projects.length!==1?'s':'')+'</span>'
+      +'<button class="lc-btn lc-btn-primary lc-btn-sm" id="lc-new-proj-btn">+ New Project</button>'
+      +'</div>';
+    if(!S.projects.length){
+      html+='<div class="lc-section lc-empty">No projects yet. Create one, or use “Save to Project” after a calculation.</div>';
     } else {
-      S.fixtures.forEach(function(f){
-        var inc=toIn(f.cutIncrement,f.cutUnit), isAct=S.editingId===f.id;
-        fixtureRows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
-          +'<div style="flex:1;min-width:0">'
-            +'<div class="lc-fname">'+escH(f.manufacturer)+'</div>'
-            +'<div class="lc-fdetail">'+escH(f.partNumber)+'</div>'
-            +'<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
-              +'<span class="lc-badge">'+f.cutIncrement+' '+f.cutUnit+'/cut</span>'
-              +'<span class="lc-badge">'+(inc*25.4).toFixed(2)+' mm</span>'
-              +'<span class="lc-badge">'+inc.toFixed(4)+'″</span>'
-            +'</div>'
+      S.projects.forEach(function(proj){
+        var isOpen=S.activeProjId===proj.id;
+        var totalW=0, allHaveWpf=true;
+        proj.runs.forEach(function(r){
+          var fx=S.fixtures.find(function(f){return f.id===r.fixtureId;});
+          if(fx&&fx.wattsPerFt){ totalW+=(r.lengthIn/12)*(parseFloat(fx.wattsPerFt)||0)*(parseInt(r.qty)||1); }
+          else allHaveWpf=false;
+        });
+        html+='<div class="lc-section" style="padding:0;margin-bottom:10px;overflow:hidden">'
+          +'<div id="lc-ph-'+proj.id+'" style="display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer">'
+            +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:'+(isOpen?'rotate(90deg)':'rotate(0deg)')+';transition:transform 0.15s;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
+            +'<span style="font-size:14px;font-weight:700;color:var(--text);flex:1">'+escH(proj.name)+'</span>'
+            +(proj.runs.length&&totalW?'<span style="font-size:11px;color:var(--text-muted)">'+totalW.toFixed(1)+'W total</span>':'')
+            +'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">'+proj.runs.length+' run'+(proj.runs.length!==1?'s':'')+'</span>'
+            +'<button class="lc-btn lc-btn-sm" style="color:#ef4444;border-color:#ef4444;flex-shrink:0" data-del-proj="'+proj.id+'">✕</button>'
           +'</div>'
-          +'<div style="display:flex;gap:6px">'
-            +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-edit-btn" data-fxid="'+f.id+'" title="Edit" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
-            +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-del-btn" data-fxid="'+f.id+'" title="Delete" style="color:#ef4444;border-color:#ef4444">✕</button>'
-          +'</div>'
+          +(isOpen?projDetailHTML(proj):'')
           +'</div>';
       });
     }
-    return '<div class="lc-section">'
-      +'<div class="lc-stitle"><span>'+(isEd?'Edit fixture':'Add fixture')+'</span>'
-        +(isEd?'<button class="lc-btn lc-btn-sm" id="lc-cancel-top">Cancel</button>':'')
-      +'</div>'
-      +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
-      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span>'
-        +'<input class="lc-input" id="lc-fm" type="text" placeholder="e.g. Diode LED" value="'+escH(S.formMfr)+'"></div>'
-      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span>'
-        +'<input class="lc-input" id="lc-fp" type="text" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.formPart)+'"></div>'
-      +'<div class="lc-g2" style="margin-bottom:8px">'
-        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span>'
-          +'<input class="lc-input" id="lc-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.formIncrement)+'"></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Unit</span>'
-          +'<select class="lc-select" id="lc-fu-sel">'
-            +'<option value="in"'+(S.formUnit==='in'?' selected':'')+'>in</option>'
-            +'<option value="ft"'+(S.formUnit==='ft'?' selected':'')+'>ft</option>'
-            +'<option value="mm"'+(S.formUnit==='mm'?' selected':'')+'>mm</option>'
-          +'</select></div>'
-      +'</div>'
-      +'<div id="lc-ferr">'+(S.formError?'<p class="lc-errmsg">'+escH(S.formError)+'</p>':'')+'</div>'
-      +'<div class="lc-row">'
-        +'<button class="lc-btn lc-btn-primary" id="lc-btn-save" style="flex:1">'+(isEd?'Update fixture':'Save fixture')+'</button>'
-        +(isEd?'<button class="lc-btn" id="lc-btn-cancel">Cancel</button>':'')
-      +'</div>'
-      +'</div>'
-      +'<div class="lc-section">'
-        +'<div class="lc-stitle">Saved fixtures ('+S.fixtures.length+')</div>'
-        +fixtureRows
-      +'</div>';
+    return html;
   }
 
-  function bindEl(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn);}
+  function projDetailHTML(proj){
+    // Runs table
+    var runsHtml='';
+    if(proj.runs.length){
+      runsHtml='<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">'
+        +'<thead><tr style="border-bottom:1px solid var(--border)">'
+          +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Label</th>'
+          +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Fixture</th>'
+          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Length</th>'
+          +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Qty</th>'
+          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Watts</th>'
+          +'<th style="padding:5px 6px;width:58px"></th>'
+        +'</tr></thead><tbody>';
+      proj.runs.forEach(function(run){
+        var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+        var qty=parseInt(run.qty)||1;
+        var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+        var wattsTotal=wpf?(run.lengthIn/12)*wpf*qty:null;
+        runsHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
+          +'<td style="padding:8px 6px;color:var(--text)">'+(run.label?escH(run.label):'—')+(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-top:1px">'+escH(run.description)+'</div>':'')+'</td>'
+          +'<td style="padding:8px 6px;color:var(--text-muted);font-size:12px">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text);white-space:nowrap">'+escH(fmtIn(run.lengthIn).ftIn)+'</td>'
+          +'<td style="padding:8px 6px;text-align:center;color:var(--text)">×'+qty+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wattsTotal!==null?wattsTotal.toFixed(1)+'W':'—')+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;white-space:nowrap">'
+            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:3px">✏</button>'
+            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-del-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Remove" style="color:#ef4444;border-color:#ef4444">✕</button>'
+          +'</td></tr>';
+      });
+      runsHtml+='</tbody></table>';
+    } else {
+      runsHtml='<p style="font-size:13px;color:var(--text-muted);padding:8px 0 14px">No runs yet — add one below.</p>';
+    }
 
-  function setupListeners() {
-    document.querySelectorAll('.lc-tab').forEach(function(t){
-      t.addEventListener('click',function(){S.tab=this.getAttribute('data-lctab');_ledRender();});
+    // Add / edit run form
+    var rf=S.runForm;
+    var isEditRun=!!S.runEditId;
+    var runFormHtml='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">'
+      +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">'+(isEditRun?'Edit Run':'Add Run')+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-rf-label" placeholder="e.g. Under cabinet" value="'+escH(rf.label)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Fixture</span><select class="lc-select" id="lc-rf-fx">'+fxOpts(rf.fixtureId)+'</select></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 72px;gap:8px;margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Length (84in · 7ft · 7ft 3in · 1800mm)</span><input class="lc-input" id="lc-rf-len" placeholder="e.g. 84in or 7ft 3in" value="'+escH(rf.lengthStr)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-rf-qty" type="number" min="1" value="'+escH(rf.qty)+'"></div>'
+      +'</div>'
+      +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Description (optional)</span><input class="lc-input" id="lc-rf-desc" placeholder="Notes…" value="'+escH(rf.description)+'"></div>'
+      +(S.runFormErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.runFormErr)+'</p>':'')
+      +'<div class="lc-row">'
+        +'<button class="lc-btn lc-btn-primary" id="lc-rf-save" data-proj-id="'+proj.id+'" style="flex:1">'+(isEditRun?'Update Run':'Add Run')+'</button>'
+        +(isEditRun?'<button class="lc-btn" id="lc-rf-cancel">Cancel</button>':'')
+      +'</div></div>';
+
+    // Power supply calculation
+    var psHtml='';
+    if(proj.runs.length){
+      var psuOpts='<option value="">— Select power supply —</option>'
+        +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===S.projPsuId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('');
+      psHtml='<div style="border-top:1px solid var(--border);padding:16px 16px 14px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Power Supply Calculation</div>'
+        +'<div class="lc-field" style="margin-bottom:12px"><span class="lc-lbl">Power supply / LED driver</span>'
+          +'<select class="lc-select" id="lc-proj-psu-sel">'+psuOpts+'</select>'
+          +(!S.psu.length?'<span style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">Save power supplies in the <strong>Power Supplies</strong> tab first</span>':'')
+        +'</div>';
+      var selPsu=S.projPsuId?S.psu.find(function(p){return p.id===S.projPsuId;}):null;
+      if(selPsu){
+        var psW=parseFloat(selPsu.outputWatts)||0;
+        var grandTotalW=0, grandTotalPS=0;
+        var psRows='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
+          +'<thead><tr style="border-bottom:1px solid var(--border)">'
+            +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Run</th>'
+            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">W/strip</th>'
+            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Total W</th>'
+            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Strips/PS</th>'
+            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em">PS Needed</th>'
+          +'</tr></thead><tbody>';
+        proj.runs.forEach(function(run){
+          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+          var qty=parseInt(run.qty)||1;
+          var wPerStrip=wpf?(run.lengthIn/12)*wpf:null;
+          var totalRunW=wPerStrip?wPerStrip*qty:null;
+          var stripsPerPs=(wPerStrip&&psW&&wPerStrip>0)?Math.floor(psW/wPerStrip):null;
+          var psNeeded=(stripsPerPs!==null)?Math.ceil(qty/Math.max(1,stripsPerPs)):null;
+          if(totalRunW) grandTotalW+=totalRunW;
+          if(psNeeded)  grandTotalPS+=psNeeded;
+          psRows+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
+            +'<td style="padding:7px 6px;color:var(--text)">'+(run.label?escH(run.label):'Run')+(qty>1?' ×'+qty:'')+'</td>'
+            +'<td style="padding:7px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wPerStrip!==null?wPerStrip.toFixed(1)+'W':'—')+'</td>'
+            +'<td style="padding:7px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(totalRunW!==null?totalRunW.toFixed(1)+'W':'—')+'</td>'
+            +'<td style="padding:7px 6px;text-align:right;color:var(--text-muted)">'+(stripsPerPs!==null?(stripsPerPs<1?'<1':stripsPerPs):'—')+'</td>'
+            +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--accent)">'+(psNeeded!==null?psNeeded:'—')+'</td>'
+            +'</tr>';
+        });
+        psRows+='</tbody></table>';
+        psHtml+=psRows
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+          +['<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div></div>',
+             '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Output</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psW+'<span style="font-size:12px">W</span></div></div>',
+             '<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">PS Needed</div><div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div></div>'
+          ].join('')
+          +'</div>'
+          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Strips/PS = ⌊PS watts ÷ watts per single strip⌋ · PS needed per group = ⌈qty ÷ strips per PS⌉</p>';
+      }
+      psHtml+='</div>';
+    }
+
+    return '<div style="padding:0 16px 16px">'+runsHtml+runFormHtml+'</div>'+psHtml;
+  }
+
+  // ── Fixtures tab ──────────────────────────────────────────────
+  function fixturesTabHTML(){
+    var isEd=!!S.fxEditId, et=isEd?S.fixtures.find(function(f){return f.id===S.fxEditId;}):null;
+    var rows='';
+    if(!S.fixtures.length){ rows='<div class="lc-empty">No fixtures saved yet.</div>'; }
+    else S.fixtures.forEach(function(f){
+      var inc=toIn(f.cutIncrement,f.cutUnit), isAct=S.fxEditId===f.id;
+      rows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="lc-fname">'+escH(f.manufacturer)+'</div><div class="lc-fdetail">'+escH(f.partNumber)+'</div>'
+          +'<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
+            +'<span class="lc-badge">'+f.cutIncrement+' '+f.cutUnit+'/cut</span>'
+            +'<span class="lc-badge">'+(inc*25.4).toFixed(2)+' mm</span>'
+            +(f.wattsPerFt?'<span class="lc-badge" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">'+f.wattsPerFt+' W/ft</span>':'')
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-edit-btn" data-fxid="'+f.id+'" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-del-btn" data-fxid="'+f.id+'" style="color:#ef4444;border-color:#ef4444">✕</button>'
+        +'</div></div>';
     });
+    return '<div class="lc-section">'
+      +'<div class="lc-stitle"><span>'+(isEd?'Edit fixture':'Add fixture')+'</span>'+(isEd?'<button class="lc-btn lc-btn-sm" id="lc-cancel-top">Cancel</button>':'')+'</div>'
+      +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-fm" type="text" placeholder="e.g. Diode LED" value="'+escH(S.fxMfr)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span><input class="lc-input" id="lc-fp" type="text" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.fxPart)+'"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 80px 100px;gap:8px;margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.fxInc)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-fu"><option value="in"'+(S.fxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.fxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.fxUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Watts / ft</span><input class="lc-input" id="lc-fwpf" type="number" min="0" step="0.1" placeholder="e.g. 3.2" value="'+escH(S.fxWpf)+'"></div>'
+      +'</div>'
+      +'<div id="lc-ferr">'+(S.fxErr?'<p class="lc-errmsg">'+escH(S.fxErr)+'</p>':'')+'</div>'
+      +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-btn-save" style="flex:1">'+(isEd?'Update':'Save fixture')+'</button>'+(isEd?'<button class="lc-btn" id="lc-btn-cancel">Cancel</button>':'')+'</div>'
+      +'</div>'
+      +'<div class="lc-section"><div class="lc-stitle">Saved fixtures ('+S.fixtures.length+')</div>'+rows+'</div>';
+  }
+
+  // ── Power Supplies tab ────────────────────────────────────────
+  function psuTabHTML(){
+    var isEd=!!S.psuEditId, et=isEd?S.psu.find(function(p){return p.id===S.psuEditId;}):null;
+    var rows='';
+    if(!S.psu.length){ rows='<div class="lc-empty">No power supplies saved yet.</div>'; }
+    else S.psu.forEach(function(p){
+      var isAct=S.psuEditId===p.id;
+      rows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="lc-fname">'+escH(p.manufacturer)+'</div><div class="lc-fdetail">'+escH(p.partNumber)+'</div>'
+          +'<div style="margin-top:4px"><span class="lc-badge" style="color:#34d399;border-color:rgba(52,211,153,0.3)">'+p.outputWatts+' W output</span></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-psu-edit" data-psuid="'+p.id+'" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-psu-del" data-psuid="'+p.id+'" style="color:#ef4444;border-color:#ef4444">✕</button>'
+        +'</div></div>';
+    });
+    return '<div class="lc-section">'
+      +'<div class="lc-stitle"><span>'+(isEd?'Edit power supply':'Add power supply / LED driver')+'</span>'+(isEd?'<button class="lc-btn lc-btn-sm" id="lc-psu-ctop">Cancel</button>':'')+'</div>'
+      +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-psu-mfr" type="text" placeholder="e.g. Mean Well" value="'+escH(S.psuMfr)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-psu-part" type="text" placeholder="e.g. HLG-100H-24B" value="'+escH(S.psuPart)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-psu-watts" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.psuWatts)+'"></div>'
+      +'<div id="lc-psu-err">'+(S.psuErr?'<p class="lc-errmsg">'+escH(S.psuErr)+'</p>':'')+'</div>'
+      +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-psu-save" style="flex:1">'+(isEd?'Update':'Save power supply')+'</button>'+(isEd?'<button class="lc-btn" id="lc-psu-cancel">Cancel</button>':'')+'</div>'
+      +'</div>'
+      +'<div class="lc-section"><div class="lc-stitle">Saved power supplies ('+S.psu.length+')</div>'+rows+'</div>';
+  }
+
+  // ── Save-to-project overlay ───────────────────────────────────
+  function stpHTML(){
+    var st=S.stp, f=fmtIn(st.lengthIn||0);
+    var pOpts='<option value="">— New project —</option>'
+      +S.projects.map(function(p){return '<option value="'+p.id+'"'+(p.id===st.projId?' selected':'')+'>'+escH(p.name)+'</option>';}).join('');
+    return '<div style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px">'
+      +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:440px;width:100%">'
+      +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">Save to Project</div>'
+      +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Closest match: <strong style="color:var(--text)">'+escH(f.ftIn)+'</strong> · '+escH(f.mm)+'</div>'
+      +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Project</span><select class="lc-select" id="lc-stp-proj">'+pOpts+'</select></div>'
+      +(st.projId===''?'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">New project name</span><input class="lc-input" id="lc-stp-newproj" placeholder="e.g. Kitchen Remodel" value="'+escH(st.newProjName)+'"></div>':'')
+      +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Fixture</span><select class="lc-select" id="lc-stp-fx">'+fxOpts(st.fixtureId)+'</select></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 80px;gap:8px;margin-bottom:10px">'
+        +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-stp-label" placeholder="e.g. Under cabinet" value="'+escH(st.label)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-stp-qty" type="number" min="1" value="'+escH(st.qty)+'"></div>'
+      +'</div>'
+      +'<div class="lc-field" style="margin-bottom:14px"><span class="lc-lbl">Description (optional)</span><input class="lc-input" id="lc-stp-desc" placeholder="Notes…" value="'+escH(st.description)+'"></div>'
+      +'<div class="lc-row"><button class="lc-btn lc-btn-primary" style="flex:1" id="lc-stp-save">Save to Project</button><button class="lc-btn" id="lc-stp-cancel">Cancel</button></div>'
+      +'</div></div>';
+  }
+
+  // ── Actions ───────────────────────────────────────────────────
+  function doSaveFx(){
+    var v=parseFloat(S.fxInc);
+    if(!S.fxMfr.trim()||!S.fxPart.trim()){ S.fxErr='Manufacturer and part number are required.'; var e=document.getElementById('lc-ferr'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.fxErr)+'</p>'; return; }
+    if(isNaN(v)||v<=0){ S.fxErr='Enter a valid cut increment greater than 0.'; var e2=document.getElementById('lc-ferr'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.fxErr)+'</p>'; return; }
+    var wpf=parseFloat(S.fxWpf)||null;
+    var obj={manufacturer:S.fxMfr.trim(),partNumber:S.fxPart.trim(),cutIncrement:v,cutUnit:S.fxUnit,wattsPerFt:wpf};
+    if(S.fxEditId){ obj.id=S.fxEditId; S.fixtures=S.fixtures.map(function(f){return f.id===S.fxEditId?obj:f;}); S.fxEditId=null; }
+    else { obj.id='lf'+Date.now(); S.fixtures.push(obj); }
+    S.fxMfr=''; S.fxPart=''; S.fxInc=''; S.fxUnit='in'; S.fxWpf=''; S.fxErr='';
+    saveFx(); _ledRender();
+  }
+  function doEditFx(id){ var f=S.fixtures.find(function(x){return x.id===id;}); if(!f) return; S.fxEditId=id; S.tab='fixtures'; S.fxMfr=f.manufacturer; S.fxPart=f.partNumber; S.fxInc=String(f.cutIncrement); S.fxUnit=f.cutUnit; S.fxWpf=f.wattsPerFt?String(f.wattsPerFt):''; S.fxErr=''; _ledRender(); }
+  function doCancelFx(){ S.fxEditId=null; S.fxMfr=''; S.fxPart=''; S.fxInc=''; S.fxUnit='in'; S.fxWpf=''; S.fxErr=''; _ledRender(); }
+  function doDeleteFx(id){ if(!confirm('Remove this fixture?')) return; S.fixtures=S.fixtures.filter(function(f){return f.id!==id;}); if(S.selectedId===id) S.selectedId=''; if(S.fxEditId===id) S.fxEditId=null; saveFx(); _ledRender(); }
+
+  function doSavePsu(){
+    var w=parseFloat(S.psuWatts);
+    if(!S.psuMfr.trim()||!S.psuPart.trim()){ S.psuErr='Manufacturer and part number are required.'; var e=document.getElementById('lc-psu-err'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.psuErr)+'</p>'; return; }
+    if(isNaN(w)||w<=0){ S.psuErr='Enter a valid output wattage.'; var e2=document.getElementById('lc-psu-err'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.psuErr)+'</p>'; return; }
+    var obj={manufacturer:S.psuMfr.trim(),partNumber:S.psuPart.trim(),outputWatts:w};
+    if(S.psuEditId){ obj.id=S.psuEditId; S.psu=S.psu.map(function(p){return p.id===S.psuEditId?obj:p;}); S.psuEditId=null; }
+    else { obj.id='ps'+Date.now(); S.psu.push(obj); }
+    S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuErr='';
+    savePsu(); _ledRender();
+  }
+  function doEditPsu(id){ var p=S.psu.find(function(x){return x.id===id;}); if(!p) return; S.psuEditId=id; S.tab='psu'; S.psuMfr=p.manufacturer; S.psuPart=p.partNumber; S.psuWatts=String(p.outputWatts); S.psuErr=''; _ledRender(); }
+  function doCancelPsu(){ S.psuEditId=null; S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuErr=''; _ledRender(); }
+  function doDeletePsu(id){ if(!confirm('Remove this power supply?')) return; S.psu=S.psu.filter(function(p){return p.id!==id;}); if(S.projPsuId===id) S.projPsuId=''; savePsu(); _ledRender(); }
+
+  function doNewProject(name){ if(!name||!name.trim()) return; var proj={id:'lp'+Date.now(),name:name.trim(),runs:[]}; S.projects.push(proj); S.activeProjId=proj.id; saveProj(); _ledRender(); }
+  function doDeleteProj(id){ if(!confirm('Remove this project and all its runs?')) return; S.projects=S.projects.filter(function(p){return p.id!==id;}); if(S.activeProjId===id) S.activeProjId=null; saveProj(); _ledRender(); }
+  function doToggleProj(id){ S.activeProjId=(S.activeProjId===id?null:id); S.runEditId=null; S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:''}; S.runFormErr=''; _ledRender(); }
+
+  function doSaveRun(projId){
+    var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+    var rf=S.runForm, p=parsLen(rf.lengthStr);
+    if(!p||p.val<=0){ S.runFormErr='Enter a valid length (e.g. 84in, 7ft, 7ft 3in, 1800mm)'; _ledRender(); return; }
+    var qty=Math.max(1,parseInt(rf.qty)||1);
+    var run={label:rf.label,fixtureId:rf.fixtureId,lengthIn:p.val,qty:qty,description:rf.description};
+    if(S.runEditId){ run.id=S.runEditId; proj.runs=proj.runs.map(function(r){return r.id===S.runEditId?run:r;}); S.runEditId=null; }
+    else { run.id='lr'+Date.now(); proj.runs.push(run); }
+    S.runForm={fixtureId:rf.fixtureId,lengthStr:'',qty:'1',label:'',description:''}; S.runFormErr='';
+    saveProj(); _ledRender();
+  }
+  function doEditRun(projId,runId){
+    var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+    var run=proj.runs.find(function(r){return r.id===runId;}); if(!run) return;
+    S.runEditId=runId; S.activeProjId=projId;
+    S.runForm={fixtureId:run.fixtureId,lengthStr:run.lengthIn.toFixed(4)+'in',qty:String(run.qty),label:run.label||'',description:run.description||''};
+    S.runFormErr=''; _ledRender();
+  }
+  function doDeleteRun(projId,runId){
+    var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+    proj.runs=proj.runs.filter(function(r){return r.id!==runId;});
+    saveProj(); _ledRender();
+  }
+
+  function doSaveToProject(){
+    var st=S.stp, projId=st.projId;
+    if(!projId){
+      if(!st.newProjName.trim()){ toast('Enter a project name'); return; }
+      var np={id:'lp'+Date.now(),name:st.newProjName.trim(),runs:[]}; S.projects.push(np); projId=np.id;
+    }
+    var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+    proj.runs.push({id:'lr'+Date.now(),label:st.label,fixtureId:st.fixtureId,lengthIn:st.lengthIn,qty:Math.max(1,parseInt(st.qty)||1),description:st.description});
+    S.stp.open=false; S.tab='projects'; S.activeProjId=projId;
+    saveProj(); _ledRender(); toast('Saved to "'+proj.name+'"');
+  }
+
+  // ── Event wiring ──────────────────────────────────────────────
+  function bindEl(id,ev,fn){ var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
+
+  function setupListeners(){
+    document.querySelectorAll('.lc-tab').forEach(function(t){
+      t.addEventListener('click',function(){ S.tab=this.getAttribute('data-lctab'); _ledRender(); });
+    });
+
     if(S.tab==='calc'){
       var li=document.getElementById('lc-li');
-      if(li){
-        li.addEventListener('input',function(){S.inputVal=this.value;S.results=null;patchHint();patchResults();});
-        li.addEventListener('keydown',function(e){if(e.key==='Enter')doCalc();});
-      }
-      var mi=document.getElementById('lc-mi');
-      if(mi) mi.addEventListener('input',function(){S.manualIncrement=this.value;});
+      if(li){ li.addEventListener('input',function(){S.inputVal=this.value;S.results=null;patchHint();patchResults();}); li.addEventListener('keydown',function(e){if(e.key==='Enter')doCalc();}); }
+      var mi=document.getElementById('lc-mi'); if(mi) mi.addEventListener('input',function(){S.manualIncrement=this.value;});
       bindEl('lc-fx-sel','change',function(){S.selectedId=this.value;S.results=null;_ledRender();});
       bindEl('lc-mu-sel','change',function(){S.manualUnit=this.value;});
       bindEl('lc-btn-calc','click',doCalc);
       patchHint(); patchResults();
     }
-    if(S.tab==='manage'){
-      var fm=document.getElementById('lc-fm'); if(fm) fm.addEventListener('input',function(){S.formMfr=this.value;});
-      var fp=document.getElementById('lc-fp'); if(fp) fp.addEventListener('input',function(){S.formPart=this.value;});
-      var fi=document.getElementById('lc-fi'); if(fi) fi.addEventListener('input',function(){S.formIncrement=this.value;});
-      bindEl('lc-fu-sel','change',function(){S.formUnit=this.value;});
-      bindEl('lc-btn-save','click',doSave);
-      bindEl('lc-btn-cancel','click',doCancel);
-      bindEl('lc-cancel-top','click',doCancel);
-      document.querySelectorAll('.lc-edit-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){doEdit(this.getAttribute('data-fxid'));});
+
+    if(S.tab==='fixtures'){
+      var fm=document.getElementById('lc-fm'); if(fm) fm.addEventListener('input',function(){S.fxMfr=this.value;});
+      var fp=document.getElementById('lc-fp'); if(fp) fp.addEventListener('input',function(){S.fxPart=this.value;});
+      var fi=document.getElementById('lc-fi'); if(fi) fi.addEventListener('input',function(){S.fxInc=this.value;});
+      var fw=document.getElementById('lc-fwpf'); if(fw) fw.addEventListener('input',function(){S.fxWpf=this.value;});
+      bindEl('lc-fu','change',function(){S.fxUnit=this.value;});
+      bindEl('lc-btn-save','click',doSaveFx);
+      bindEl('lc-btn-cancel','click',doCancelFx);
+      bindEl('lc-cancel-top','click',doCancelFx);
+      document.querySelectorAll('.lc-edit-btn').forEach(function(b){ b.addEventListener('click',function(){doEditFx(this.getAttribute('data-fxid'));}); });
+      document.querySelectorAll('.lc-del-btn').forEach(function(b){ b.addEventListener('click',function(){doDeleteFx(this.getAttribute('data-fxid'));}); });
+    }
+
+    if(S.tab==='psu'){
+      var pm=document.getElementById('lc-psu-mfr'); if(pm) pm.addEventListener('input',function(){S.psuMfr=this.value;});
+      var pp=document.getElementById('lc-psu-part'); if(pp) pp.addEventListener('input',function(){S.psuPart=this.value;});
+      var pw=document.getElementById('lc-psu-watts'); if(pw) pw.addEventListener('input',function(){S.psuWatts=this.value;});
+      bindEl('lc-psu-save','click',doSavePsu);
+      bindEl('lc-psu-cancel','click',doCancelPsu);
+      bindEl('lc-psu-ctop','click',doCancelPsu);
+      document.querySelectorAll('.lc-psu-edit').forEach(function(b){ b.addEventListener('click',function(){doEditPsu(this.getAttribute('data-psuid'));}); });
+      document.querySelectorAll('.lc-psu-del').forEach(function(b){ b.addEventListener('click',function(){doDeletePsu(this.getAttribute('data-psuid'));}); });
+    }
+
+    if(S.tab==='projects'){
+      bindEl('lc-new-proj-btn','click',function(){ var n=prompt('Project name:'); if(n) doNewProject(n); });
+      S.projects.forEach(function(proj){
+        var hdr=document.getElementById('lc-ph-'+proj.id);
+        if(hdr) hdr.addEventListener('click',function(e){ if(!e.target.closest('[data-del-proj]')) doToggleProj(proj.id); });
       });
-      document.querySelectorAll('.lc-del-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){doDelete(this.getAttribute('data-fxid'));});
+      document.querySelectorAll('[data-del-proj]').forEach(function(b){ b.addEventListener('click',function(e){e.stopPropagation();doDeleteProj(this.getAttribute('data-del-proj'));}); });
+      // Active project run form
+      if(S.activeProjId){
+        var rfl=document.getElementById('lc-rf-label');  if(rfl)  rfl.addEventListener('input',function(){S.runForm.label=this.value;});
+        var rffx=document.getElementById('lc-rf-fx');    if(rffx) rffx.addEventListener('change',function(){S.runForm.fixtureId=this.value;});
+        var rflen=document.getElementById('lc-rf-len');  if(rflen) rflen.addEventListener('input',function(){S.runForm.lengthStr=this.value;});
+        var rfqty=document.getElementById('lc-rf-qty');  if(rfqty) rfqty.addEventListener('input',function(){S.runForm.qty=this.value;});
+        var rfd=document.getElementById('lc-rf-desc');   if(rfd)  rfd.addEventListener('input',function(){S.runForm.description=this.value;});
+        var rfsave=document.getElementById('lc-rf-save'); if(rfsave) rfsave.addEventListener('click',function(){doSaveRun(this.getAttribute('data-proj-id'));});
+        bindEl('lc-rf-cancel','click',function(){S.runEditId=null;S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:''};S.runFormErr='';_ledRender();});
+        bindEl('lc-proj-psu-sel','change',function(){S.projPsuId=this.value;_ledRender();});
+        document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(){doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
+        document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(){doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
+      }
+    }
+
+    // Save-to-project overlay
+    if(S.stp.open){
+      bindEl('lc-stp-proj','change',function(){
+        var l=document.getElementById('lc-stp-label'),q=document.getElementById('lc-stp-qty'),d=document.getElementById('lc-stp-desc'),n=document.getElementById('lc-stp-newproj'),fx=document.getElementById('lc-stp-fx');
+        S.stp.projId=this.value;
+        if(l)l.value&&(S.stp.label=l.value); if(q)S.stp.qty=q.value; if(d)S.stp.description=d.value; if(n)S.stp.newProjName=n.value; if(fx)S.stp.fixtureId=fx.value;
+        _ledRender();
       });
+      var stpN=document.getElementById('lc-stp-newproj');   if(stpN) stpN.addEventListener('input',function(){S.stp.newProjName=this.value;});
+      var stpFx=document.getElementById('lc-stp-fx');       if(stpFx) stpFx.addEventListener('change',function(){S.stp.fixtureId=this.value;});
+      var stpL=document.getElementById('lc-stp-label');     if(stpL) stpL.addEventListener('input',function(){S.stp.label=this.value;});
+      var stpQ=document.getElementById('lc-stp-qty');       if(stpQ) stpQ.addEventListener('input',function(){S.stp.qty=this.value;});
+      var stpD=document.getElementById('lc-stp-desc');      if(stpD) stpD.addEventListener('input',function(){S.stp.description=this.value;});
+      bindEl('lc-stp-save','click',doSaveToProject);
+      bindEl('lc-stp-cancel','click',function(){S.stp.open=false;_ledRender();});
     }
   }
 
-  window._ledRender = function() {
-    var root=document.getElementById('led-root');
-    if(!root) return;
+  // ── Main render ───────────────────────────────────────────────
+  window._ledRender = function(){
+    var root=document.getElementById('led-root'); if(!root) return;
+    var bodyHtml='';
+    if(S.tab==='calc') bodyHtml=calcTabHTML();
+    else if(S.tab==='projects') bodyHtml=projectsTabHTML();
+    else if(S.tab==='fixtures') bodyHtml=fixturesTabHTML();
+    else if(S.tab==='psu') bodyHtml=psuTabHTML();
     root.innerHTML=
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">'
         +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>'
@@ -18563,13 +18817,16 @@ var _dmxMode = 'd2p';
       +'</div>'
       +'<div class="lc-tabs">'
         +'<button class="lc-tab'+(S.tab==='calc'?' active':'')+'" data-lctab="calc">Calculator</button>'
-        +'<button class="lc-tab'+(S.tab==='manage'?' active':'')+'" data-lctab="manage">Manage Fixtures</button>'
+        +'<button class="lc-tab'+(S.tab==='projects'?' active':'')+'" data-lctab="projects">Projects'+(S.projects.length?' ('+S.projects.length+')':'')+'</button>'
+        +'<button class="lc-tab'+(S.tab==='fixtures'?' active':'')+'" data-lctab="fixtures">Fixtures</button>'
+        +'<button class="lc-tab'+(S.tab==='psu'?' active':'')+'" data-lctab="psu">Power Supplies</button>'
       +'</div>'
-      +(S.tab==='calc'?calcTabHTML():manageTabHTML());
+      +bodyHtml
+      +(S.stp.open?stpHTML():'');
     setupListeners();
   };
 
-  loadFixtures();
+  load();
 })();
 
 function _dmxSwitchMode(m) {
