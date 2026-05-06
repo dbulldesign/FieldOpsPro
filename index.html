@@ -1625,6 +1625,62 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after { content: '↕'; 
 .dmx-preset-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); border-color: rgba(255,255,255,0.2); }
 [data-theme="light"] .dmx-preset-btn:hover { background: #e6e6e4; color: #111; }
 
+/* ── LED Tape Calculator ─────────────────────────────────────── */
+#view-ledcalc { padding: 0; }
+.lc-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+.lc-stitle { font-size: 11px; font-weight: 600; letter-spacing: .07em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+.lc-field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.lc-lbl { font-size: 12px; color: var(--text-muted); }
+.lc-input, .lc-select { width: 100%; height: 38px; padding: 0 10px; font-size: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; font-family: Helvetica Neue, Helvetica, Arial, sans-serif; -webkit-appearance: none; }
+.lc-input:focus, .lc-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(79,142,247,0.15); }
+[data-theme="light"] .lc-input, [data-theme="light"] .lc-select { background: #fff; }
+.lc-input-lg { height: 44px; font-size: 15px; }
+.lc-btn { height: 38px; padding: 0 16px; font-size: 14px; font-weight: 600; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: rgba(255,255,255,0.06); color: var(--text); white-space: nowrap; font-family: Helvetica Neue, Helvetica, Arial, sans-serif; transition: background 0.12s; }
+.lc-btn:hover { background: rgba(255,255,255,0.1); }
+.lc-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.lc-btn-primary:hover { background: var(--accent-dark, #3b74d4); }
+.lc-btn-sm { height: 30px; padding: 0 10px; font-size: 12px; }
+.lc-btn-icon { height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+[data-theme="light"] .lc-btn { background: #f8fafc; border-color: rgba(0,0,0,0.15); color: #1e293b; }
+[data-theme="light"] .lc-btn:hover { background: #e9eef5; }
+.lc-or { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 11px; color: var(--text-muted); }
+.lc-or::before, .lc-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.lc-g2 { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
+.lc-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.lc-hint { font-size: 11px; margin-top: 5px; min-height: 16px; }
+.lc-hint-ok { color: #34d399; }
+.lc-hint-err { color: var(--text-muted); }
+.lc-spill { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.2); font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.lc-spill strong { color: var(--text); font-weight: 600; }
+.lc-rgrid { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 10px; }
+.lc-rcard { border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px; text-align: center; background: rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; }
+.lc-rcard.lc-feat { background: var(--surface); border: 2px solid var(--accent); }
+[data-theme="light"] .lc-rcard { background: #f8fafc; }
+[data-theme="light"] .lc-rcard.lc-feat { background: #fff; }
+.lc-rlabel { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+.lc-rftin { font-size: 20px; font-weight: 600; color: var(--text); font-family: monospace; line-height: 1.2; word-break: break-all; }
+.lc-rsub { font-size: 11px; color: var(--text-muted); font-family: monospace; margin-top: 3px; }
+.lc-rsegs { font-size: 12px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); width: 100%; }
+.lc-rsegs strong { color: var(--text); font-weight: 600; }
+.lc-dbadge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 99px; margin-top: 6px; font-weight: 600; }
+.lc-dbadge-exact { background: rgba(52,211,153,0.15); color: #34d399; }
+.lc-dbadge-over { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.lc-dbadge-under { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.lc-frow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.lc-frow:last-child { border-bottom: none; }
+.lc-frow-editing { background: rgba(79,142,247,0.07); border-radius: 8px; padding: 10px; margin: 2px -4px; border-bottom: none; }
+.lc-fname { font-size: 14px; font-weight: 600; color: var(--text); }
+.lc-fdetail { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-muted); font-family: monospace; }
+[data-theme="light"] .lc-badge { background: #f1f5f9; }
+.lc-errmsg { font-size: 12px; color: #ef4444; margin-top: 6px; }
+.lc-edit-banner { font-size: 12px; color: #4f8ef7; margin-bottom: 12px; padding: 8px 10px; background: rgba(79,142,247,0.08); border-radius: 8px; display: flex; align-items: center; gap: 6px; }
+.lc-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 13px; }
+.lc-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.lc-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.12s, border-color 0.12s; }
+.lc-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.lc-tab:hover:not(.active) { color: var(--text); }
+
 /* ── Systainer ─────────────────────────────────────────────── */
 .sys-wrap { max-width: 960px; }
 .sys-case-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
@@ -3764,6 +3820,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
           DMX Calculator
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('ledcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
+          LED Tape Calculator
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -4533,6 +4593,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="dmx-presets-label">Common levels</div>
       <div class="dmx-presets" id="dmx-presets"></div>
     </div>
+  </div>
+
+  <!-- ═══ LED TAPE CALCULATOR ═══ -->
+  <div class="view" id="view-ledcalc">
+    <div id="led-root" style="max-width:600px;padding:24px 24px 40px"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -6979,7 +7044,8 @@ var viewTitles = {
   dashboard: 'Dashboard', projects: 'Projects', tasks: 'Tasks', calendar: 'Calendar & Events',
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
   timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer',
-  dmxcalc: 'DMX Calculator'
+  dmxcalc: 'DMX Calculator',
+  ledcalc: 'LED Tape Calculator'
 };
 
 function switchView(v) {
@@ -11943,6 +12009,7 @@ function renderAll() {
   if (cv === 'timekeeping') renderTimeLog();
   if (cv === 'schedule')    renderSchedule();
   if (cv === 'systainer')   renderSystainer();
+  if (cv === 'ledcalc')    _ledRender();
   updateTabBadges();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
@@ -15458,6 +15525,7 @@ function showSearchHistory() {
     { icon:'🔲', label:'Systainer',     fn:"closeGlobalSearch();switchView('systainer')" },
     { icon:'⏱',  label:'Time Tracker',  fn:"closeGlobalSearch();switchView('timekeeping')" },
     { icon:'🔢', label:'DMX Calculator',fn:"closeGlobalSearch();switchView('dmxcalc')" },
+    { icon:'💡', label:'LED Tape Calculator',fn:"closeGlobalSearch();switchView('ledcalc')" },
     { icon:'⚙️', label:'Settings',      fn:"closeGlobalSearch();switchView('settings')" },
   ];
   // Recently viewed (from localStorage)
@@ -18201,6 +18269,307 @@ var _dmxMode = 'd2p';
   } else {
     setTimeout(buildPresets, 200);
   }
+})();
+
+// ═══════════════════════════════════════════════════
+//  LED TAPE CALCULATOR
+// ═══════════════════════════════════════════════════
+(function() {
+  var SK = 'fop_led_fixtures';
+  var DEFAULTS = [
+    { id:'ld1', manufacturer:'Generic', partNumber:'60 LED/m — standard density', cutIncrement:1.9685, cutUnit:'in' },
+    { id:'ld2', manufacturer:'Generic', partNumber:'30 LED/m — low density',      cutIncrement:3.937,  cutUnit:'in' },
+    { id:'ld3', manufacturer:'Generic', partNumber:'120 LED/m — high density',    cutIncrement:0.9843, cutUnit:'in' }
+  ];
+  var S = {
+    tab:'calc', fixtures:[], selectedId:'',
+    manualIncrement:'', manualUnit:'in',
+    inputVal:'', results:null,
+    formMfr:'', formPart:'', formIncrement:'', formUnit:'in', formError:'',
+    editingId:null
+  };
+  function loadFixtures() {
+    try {
+      var raw = localStorage.getItem(SK);
+      if (raw) { var d=JSON.parse(raw); if(d&&d.length) S.fixtures=d; else S.fixtures=DEFAULTS.slice(); }
+      else S.fixtures=DEFAULTS.slice();
+    } catch(e) { S.fixtures=DEFAULTS.slice(); }
+  }
+  function persist() {
+    try { localStorage.setItem(SK, JSON.stringify(S.fixtures)); } catch(e) {}
+  }
+  function toIn(v,u) { return u==='ft'?v*12:u==='mm'?v/25.4:v; }
+  function parsLen(str) {
+    if(!str||!str.trim()) return null;
+    str=str.trim(); var m;
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?$/i);
+    if(m) return {val:+m[1]*12+ +m[2]};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s*(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?$/i);
+    if(m&&m[2]) return {val:+m[1]*12+ +m[2]};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*mm$/i); if(m) return {val:+m[1]/25.4};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*cm$/i); if(m) return {val:+m[1]/2.54};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')$/i); if(m) return {val:+m[1]*12};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")$/i); if(m) return {val:+m[1]};
+    m=str.match(/^(\d+(?:\.\d+)?)$/); if(m) return {val:+m[1]};
+    return null;
+  }
+  function fmtIn(inches) {
+    var ft=Math.floor(inches/12), inch=inches-ft*12, mm=inches*25.4;
+    return {
+      ftIn: ft>0 ? ft+'′ '+inch.toFixed(3)+'″' : inch.toFixed(3)+'″',
+      inches: inches.toFixed(4)+'″',
+      mm: mm.toFixed(1)+' mm'
+    };
+  }
+  function mkDiff(res,inp) {
+    var d=res-inp, a=Math.abs(d);
+    if(a<0.001) return {label:'exact match', cls:'lc-dbadge-exact'};
+    var f=fmtIn(a), s=d>0?'+':'−';
+    return {label:s+f.mm+' / '+s+f.inches, cls:d>0?'lc-dbadge-over':'lc-dbadge-under'};
+  }
+  function getInc() {
+    if(S.selectedId) {
+      var f=S.fixtures.find(function(x){return x.id===S.selectedId;});
+      if(f) return toIn(f.cutIncrement,f.cutUnit);
+    }
+    var v=parseFloat(S.manualIncrement);
+    if(!isNaN(v)&&v>0) return toIn(v,S.manualUnit);
+    return null;
+  }
+  function mkCard(data,inp,label,feat) {
+    var d=mkDiff(data.inches,inp);
+    return '<div class="lc-rcard'+(feat?' lc-feat':'')+'">'
+      +'<div class="lc-rlabel">'+label+'</div>'
+      +'<div class="lc-rftin">'+escH(data.display.ftIn)+'</div>'
+      +'<div class="lc-rsub">'+escH(data.display.mm)+'</div>'
+      +'<div class="lc-rsub">'+escH(data.display.inches)+'</div>'
+      +'<div class="lc-rsegs"><strong>'+data.segments+'</strong> segment'+(data.segments!==1?'s':'')+'</div>'
+      +'<span class="lc-dbadge '+d.cls+'">'+escH(d.label)+'</span>'
+      +'</div>';
+  }
+  function doCalc() {
+    var p=parsLen(S.inputVal);
+    if(!p||p.val<=0){S.results=null;patchResults();return;}
+    var inc=getInc();
+    if(!inc||inc<=0){S.results=null;patchResults();return;}
+    var nearest=Math.max(1,Math.round(p.val/inc));
+    function mk(n){var l=n*inc;return {segments:n,inches:l,display:fmtIn(l)};}
+    S.results={inp:p.val,inc:inc,below:mk(Math.max(1,nearest-1)),closest:mk(nearest),above:mk(nearest+1)};
+    patchResults();
+  }
+  function patchResults() {
+    var el=document.getElementById('lc-ra');
+    if(!el) return;
+    if(!S.results){el.innerHTML='';return;}
+    var r=S.results;
+    el.innerHTML='<div class="lc-rgrid">'
+      +mkCard(r.below,r.inp,'one fewer cut',false)
+      +mkCard(r.closest,r.inp,'closest match',true)
+      +mkCard(r.above,r.inp,'one more cut',false)
+      +'</div>';
+  }
+  function patchHint() {
+    var el=document.getElementById('lc-lh');
+    if(!el) return;
+    if(!S.inputVal){el.innerHTML='';return;}
+    var p=parsLen(S.inputVal);
+    if(p){
+      var f=fmtIn(p.val);
+      el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+'</span>';
+    } else {
+      el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 6.5ft</span>';
+    }
+  }
+  function doSave() {
+    var v=parseFloat(S.formIncrement);
+    if(!S.formMfr.trim()||!S.formPart.trim()) {
+      S.formError='Manufacturer and part number are required.';
+      var e=document.getElementById('lc-ferr'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.formError)+'</p>'; return;
+    }
+    if(isNaN(v)||v<=0) {
+      S.formError='Enter a valid cut increment greater than 0.';
+      var e2=document.getElementById('lc-ferr'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.formError)+'</p>'; return;
+    }
+    if(S.editingId) {
+      S.fixtures=S.fixtures.map(function(f){
+        return f.id===S.editingId
+          ? {id:f.id,manufacturer:S.formMfr.trim(),partNumber:S.formPart.trim(),cutIncrement:v,cutUnit:S.formUnit}
+          : f;
+      });
+      S.editingId=null;
+    } else {
+      S.fixtures.push({id:'lf'+Date.now(),manufacturer:S.formMfr.trim(),partNumber:S.formPart.trim(),cutIncrement:v,cutUnit:S.formUnit});
+    }
+    S.formMfr=''; S.formPart=''; S.formIncrement=''; S.formUnit='in'; S.formError='';
+    persist(); _ledRender();
+  }
+  function doEdit(id) {
+    var f=S.fixtures.find(function(x){return x.id===id;});
+    if(!f) return;
+    S.editingId=id; S.tab='manage';
+    S.formMfr=f.manufacturer; S.formPart=f.partNumber;
+    S.formIncrement=String(f.cutIncrement); S.formUnit=f.cutUnit; S.formError='';
+    _ledRender();
+  }
+  function doCancel() {
+    S.editingId=null; S.formMfr=''; S.formPart=''; S.formIncrement=''; S.formUnit='in'; S.formError='';
+    _ledRender();
+  }
+  function doDelete(id) {
+    if(!confirm('Remove this fixture?')) return;
+    S.fixtures=S.fixtures.filter(function(f){return f.id!==id;});
+    if(S.selectedId===id) S.selectedId='';
+    if(S.editingId===id) S.editingId=null;
+    persist(); _ledRender();
+  }
+  function fxLabel(f) { return escH(f.manufacturer)+' · '+escH(f.partNumber)+' · '+f.cutIncrement+f.cutUnit+'/cut'; }
+
+  function calcTabHTML() {
+    var sel=S.fixtures.find(function(f){return f.id===S.selectedId;});
+    var incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
+    var opts='<option value="">— select a fixture —</option>';
+    S.fixtures.forEach(function(f){
+      opts+='<option value="'+f.id+'"'+(f.id===S.selectedId?' selected':'')+'>'+fxLabel(f)+'</option>';
+    });
+    return '<div class="lc-section">'
+      +'<div class="lc-stitle">Fixture / cut increment</div>'
+      +'<div class="lc-field" style="margin-bottom:8px">'
+        +'<span class="lc-lbl">Saved fixture</span>'
+        +'<select class="lc-select" id="lc-fx-sel">'+opts+'</select>'
+      +'</div>'
+      +(sel?'<div class="lc-spill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m14.5 9.5-5 5M9.5 9.5l5 5"/></svg>Cut every <strong>'+sel.cutIncrement+' '+sel.cutUnit+'</strong>&nbsp;·&nbsp;'+escH(incFmt.mm)+'&nbsp;·&nbsp;'+escH(incFmt.inches)+'</div>':'')
+      +'<div class="lc-or">or enter manually</div>'
+      +'<div class="lc-g2">'
+        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span>'
+          +'<input class="lc-input" id="lc-mi" type="text" inputmode="decimal" placeholder="e.g. 1.9685"'+(sel?' disabled style="opacity:.45"':'')+' value="'+escH(S.manualIncrement)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span>'
+          +'<select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'>'+
+            '<option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option>'+
+            '<option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option>'+
+            '<option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option>'+
+          '</select></div>'
+      +'</div>'
+      +'</div>'
+      +'<div class="lc-section">'
+      +'<div class="lc-stitle">Desired length</div>'
+      +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 6ft 3in · 84in · 1800mm · 6.5ft" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
+      +'<div class="lc-hint" id="lc-lh"></div>'
+      +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate cut lengths</button>'
+      +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
+      +'</div>'
+      +'<div id="lc-ra"></div>';
+  }
+
+  function manageTabHTML() {
+    var isEd=!!S.editingId;
+    var et=isEd?S.fixtures.find(function(f){return f.id===S.editingId;}):null;
+    var fixtureRows='';
+    if(!S.fixtures.length) {
+      fixtureRows='<div class="lc-empty">No fixtures saved yet. Add one above.</div>';
+    } else {
+      S.fixtures.forEach(function(f){
+        var inc=toIn(f.cutIncrement,f.cutUnit), isAct=S.editingId===f.id;
+        fixtureRows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div class="lc-fname">'+escH(f.manufacturer)+'</div>'
+            +'<div class="lc-fdetail">'+escH(f.partNumber)+'</div>'
+            +'<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
+              +'<span class="lc-badge">'+f.cutIncrement+' '+f.cutUnit+'/cut</span>'
+              +'<span class="lc-badge">'+(inc*25.4).toFixed(2)+' mm</span>'
+              +'<span class="lc-badge">'+inc.toFixed(4)+'″</span>'
+            +'</div>'
+          +'</div>'
+          +'<div style="display:flex;gap:6px">'
+            +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-edit-btn" data-fxid="'+f.id+'" title="Edit" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
+            +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-del-btn" data-fxid="'+f.id+'" title="Delete" style="color:#ef4444;border-color:#ef4444">✕</button>'
+          +'</div>'
+          +'</div>';
+      });
+    }
+    return '<div class="lc-section">'
+      +'<div class="lc-stitle"><span>'+(isEd?'Edit fixture':'Add fixture')+'</span>'
+        +(isEd?'<button class="lc-btn lc-btn-sm" id="lc-cancel-top">Cancel</button>':'')
+      +'</div>'
+      +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span>'
+        +'<input class="lc-input" id="lc-fm" type="text" placeholder="e.g. Diode LED" value="'+escH(S.formMfr)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span>'
+        +'<input class="lc-input" id="lc-fp" type="text" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.formPart)+'"></div>'
+      +'<div class="lc-g2" style="margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Cut increment</span>'
+          +'<input class="lc-input" id="lc-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.formIncrement)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span>'
+          +'<select class="lc-select" id="lc-fu-sel">'
+            +'<option value="in"'+(S.formUnit==='in'?' selected':'')+'>in</option>'
+            +'<option value="ft"'+(S.formUnit==='ft'?' selected':'')+'>ft</option>'
+            +'<option value="mm"'+(S.formUnit==='mm'?' selected':'')+'>mm</option>'
+          +'</select></div>'
+      +'</div>'
+      +'<div id="lc-ferr">'+(S.formError?'<p class="lc-errmsg">'+escH(S.formError)+'</p>':'')+'</div>'
+      +'<div class="lc-row">'
+        +'<button class="lc-btn lc-btn-primary" id="lc-btn-save" style="flex:1">'+(isEd?'Update fixture':'Save fixture')+'</button>'
+        +(isEd?'<button class="lc-btn" id="lc-btn-cancel">Cancel</button>':'')
+      +'</div>'
+      +'</div>'
+      +'<div class="lc-section">'
+        +'<div class="lc-stitle">Saved fixtures ('+S.fixtures.length+')</div>'
+        +fixtureRows
+      +'</div>';
+  }
+
+  function bindEl(id,ev,fn){var el=document.getElementById(id);if(el)el.addEventListener(ev,fn);}
+
+  function setupListeners() {
+    document.querySelectorAll('.lc-tab').forEach(function(t){
+      t.addEventListener('click',function(){S.tab=this.getAttribute('data-lctab');_ledRender();});
+    });
+    if(S.tab==='calc'){
+      var li=document.getElementById('lc-li');
+      if(li){
+        li.addEventListener('input',function(){S.inputVal=this.value;S.results=null;patchHint();patchResults();});
+        li.addEventListener('keydown',function(e){if(e.key==='Enter')doCalc();});
+      }
+      var mi=document.getElementById('lc-mi');
+      if(mi) mi.addEventListener('input',function(){S.manualIncrement=this.value;});
+      bindEl('lc-fx-sel','change',function(){S.selectedId=this.value;S.results=null;_ledRender();});
+      bindEl('lc-mu-sel','change',function(){S.manualUnit=this.value;});
+      bindEl('lc-btn-calc','click',doCalc);
+      patchHint(); patchResults();
+    }
+    if(S.tab==='manage'){
+      var fm=document.getElementById('lc-fm'); if(fm) fm.addEventListener('input',function(){S.formMfr=this.value;});
+      var fp=document.getElementById('lc-fp'); if(fp) fp.addEventListener('input',function(){S.formPart=this.value;});
+      var fi=document.getElementById('lc-fi'); if(fi) fi.addEventListener('input',function(){S.formIncrement=this.value;});
+      bindEl('lc-fu-sel','change',function(){S.formUnit=this.value;});
+      bindEl('lc-btn-save','click',doSave);
+      bindEl('lc-btn-cancel','click',doCancel);
+      bindEl('lc-cancel-top','click',doCancel);
+      document.querySelectorAll('.lc-edit-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){doEdit(this.getAttribute('data-fxid'));});
+      });
+      document.querySelectorAll('.lc-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){doDelete(this.getAttribute('data-fxid'));});
+      });
+    }
+  }
+
+  window._ledRender = function() {
+    var root=document.getElementById('led-root');
+    if(!root) return;
+    root.innerHTML=
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">'
+        +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>'
+        +'<span style="font-size:16px;font-weight:700;color:var(--text)">LED Tape Calculator</span>'
+      +'</div>'
+      +'<div class="lc-tabs">'
+        +'<button class="lc-tab'+(S.tab==='calc'?' active':'')+'" data-lctab="calc">Calculator</button>'
+        +'<button class="lc-tab'+(S.tab==='manage'?' active':'')+'" data-lctab="manage">Manage Fixtures</button>'
+      +'</div>'
+      +(S.tab==='calc'?calcTabHTML():manageTabHTML());
+    setupListeners();
+  };
+
+  loadFixtures();
 })();
 
 function _dmxSwitchMode(m) {
