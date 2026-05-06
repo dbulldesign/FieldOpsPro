@@ -18306,7 +18306,7 @@ var _dmxMode = 'd2p';
     // Calculator
     selectedId:'', manualIncrement:'', manualUnit:'in', inputVal:'', results:null,
     // Mini calculator (persistent across tabs)
-    mcExpr:'', mcResult:null, mcErr:'',
+    mcExpr:'', mcResult:null, mcErr:'', mcLenVal:null,
     // Quick-add fixture inline on calc tab
     qaFx:false, qaFxMfr:'', qaFxPart:'', qaFxInc:'', qaFxUnit:'in', qaFxWpf:'', qaFxErr:'',
     // Quick-add PSU inline on calc tab
@@ -18350,8 +18350,10 @@ var _dmxMode = 'd2p';
     return null;
   }
   function parsLenExpr(str){
-    var direct=parsLen(str); if(direct) return direct;
     if(!str||!str.trim()) return null;
+    // Normalize smart/curly quotes to ASCII so 8'/2 works on Mac/mobile too
+    str=str.replace(/[‘’ʼ]/g,"'").replace(/[“”]/g,'"');
+    var direct=parsLen(str); if(direct) return direct;
     // Convert length tokens to raw inches, then evaluate as math
     var expr=str.trim();
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?/gi,function(m,f,i){return String(+f*12+ +i);});
@@ -18359,7 +18361,8 @@ var _dmxMode = 'd2p';
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")/gi,function(m,v){return v;});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*mm/gi,function(m,v){return String(+v/25.4);});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*cm/gi,function(m,v){return String(+v/2.54);});
-    if(!/^[\d\s\.\+\-\*\/\(\)]+$/.test(expr)) return null;
+    expr=expr.trim();
+    if(!expr||!/^[\d\s\.\+\-\*\/\(\)]+$/.test(expr)) return null;
     try{
       var result=Function('"use strict";return ('+expr+')')();
       if(!isFinite(result)||result<=0) return null;
@@ -18484,21 +18487,39 @@ var _dmxMode = 'd2p';
 
   function miniCalcHTML(){
     var hasResult=S.mcResult!==null&&S.mcResult!==undefined;
+    var isLen=S.mcLenVal!==null&&S.mcLenVal!==undefined;
+    var resultHtml='';
+    if(hasResult){
+      if(isLen){
+        var lf=fmtIn(S.mcLenVal);
+        resultHtml='<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">'
+            +'<span style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)" id="lc-mc-val">'+escH(lf.ftIn)+'</span>'
+            +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" data-copy-val="'+escH(lf.ftIn)+'" style="flex-shrink:0">Copy ft+in</button>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            +'<span style="font-size:11px;color:var(--text-muted);font-family:monospace">'+escH(lf.inches)+'</span>'
+            +'<span style="font-size:11px;color:var(--text-muted);font-family:monospace">'+escH(lf.mm)+'</span>'
+            +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy-in" data-copy-val="'+escH(S.mcLenVal.toFixed(4)+'in')+'" style="font-size:10px;height:22px;padding:0 8px;margin-left:auto">Copy as inches</button>'
+          +'</div>'
+        +'</div>';
+      } else {
+        resultHtml='<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+          +'<span style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)" id="lc-mc-val">'+escH(String(S.mcResult))+'</span>'
+          +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" style="flex-shrink:0">Copy</button>'
+          +'</div>';
+      }
+    }
     return '<div class="lc-section" style="margin-top:16px">'
       +'<div class="lc-stitle" style="display:flex;align-items:center;gap:8px">'
         +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="12" y1="6" x2="12" y2="18"/></svg>'
         +'Calculator'
       +'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:6px">'
-        +'<input class="lc-input" id="lc-mc-expr" type="text" inputmode="decimal" placeholder="e.g. 7*12 + 3.5  or  (84+96)/2" autocomplete="off" spellcheck="false" style="flex:1;font-family:monospace" value="'+escH(S.mcExpr)+'">'
+        +'<input class="lc-input" id="lc-mc-expr" type="text" placeholder="7*12+3 · (84+96)/2 · 17.5\'\/2 · 8ft*3" autocomplete="off" spellcheck="false" style="flex:1;font-family:monospace" value="'+escH(S.mcExpr)+'">'
         +'<button class="lc-btn lc-btn-primary" id="lc-mc-go" style="flex-shrink:0">=</button>'
       +'</div>'
-      +(hasResult
-        ?'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-          +'<span style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)" id="lc-mc-val">'+escH(String(S.mcResult))+'</span>'
-          +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" style="flex-shrink:0">Copy</button>'
-          +'</div>'
-        :'')
+      +resultHtml
       +(S.mcErr?'<div style="font-size:12px;color:#ef4444;margin-top:4px">'+escH(S.mcErr)+'</div>':'')
       +'</div>';
   }
@@ -18543,7 +18564,8 @@ var _dmxMode = 'd2p';
         +'<thead><tr style="border-bottom:1px solid var(--border)">'
           +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Label</th>'
           +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Fixture</th>'
-          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Length</th>'
+          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Inches</th>'
+          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Ft + In</th>'
           +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Qty</th>'
           +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Watts</th>'
           +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Leaders</th>'
@@ -18555,10 +18577,12 @@ var _dmxMode = 'd2p';
         var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
         var wattsTotal=wpf?(run.lengthIn/12)*wpf*qty:null;
         var leaders=run.leaders||'1';
+        var lenFmt=fmtIn(run.lengthIn);
         runsHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
           +'<td style="padding:8px 6px;color:var(--text)">'+(run.label?escH(run.label):'—')+(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-top:1px">'+escH(run.description)+'</div>':'')+'</td>'
           +'<td style="padding:8px 6px;color:var(--text-muted);font-size:12px">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text);white-space:nowrap">'+escH(fmtIn(run.lengthIn).ftIn)+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text-muted);font-size:12px;white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
           +'<td style="padding:8px 6px;text-align:center;color:var(--text)">×'+qty+'</td>'
           +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wattsTotal!==null?wattsTotal.toFixed(1)+'W':'—')+'</td>'
           +'<td style="padding:8px 6px;text-align:center;color:var(--text-muted);font-size:12px">'+leaders+'</td>'
@@ -19095,10 +19119,18 @@ var _dmxMode = 'd2p';
       var mcExpr=document.getElementById('lc-mc-expr');
       var mcGo=document.getElementById('lc-mc-go');
       var mcCopy=document.getElementById('lc-mc-copy');
+      function doCopy(txt){ navigator.clipboard.writeText(txt).then(function(){toast('Copied: '+txt);}).catch(function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied: '+txt);}); }
       function runMiniCalc(){
         var expr=(mcExpr?mcExpr.value:'').trim();
         S.mcExpr=expr;
-        if(!expr){ S.mcResult=null; S.mcErr=''; _ledRender(); return; }
+        if(!expr){ S.mcResult=null; S.mcLenVal=null; S.mcErr=''; _ledRender(); return; }
+        // If the expression contains length units, use parsLenExpr
+        if(/(ft|feet|foot|inch|inches|mm|cm|'|")/.test(expr)){
+          var lp=parsLenExpr(expr);
+          if(lp&&lp.val>0){ S.mcResult=fmtIn(lp.val).ftIn; S.mcLenVal=lp.val; S.mcErr=''; _ledRender(); return; }
+          S.mcResult=null; S.mcLenVal=null; S.mcErr='Could not parse length expression'; _ledRender(); return;
+        }
+        S.mcLenVal=null;
         try{
           if(!/^[\d\s\.\+\-\*\/\(\)%]+$/.test(expr)) throw new Error('Only numbers and + − × ÷ ( ) % allowed');
           var result=Function('"use strict";return ('+expr+')')();
@@ -19114,12 +19146,13 @@ var _dmxMode = 'd2p';
         mcExpr.addEventListener('keydown',function(e){ if(e.key==='Enter') runMiniCalc(); });
       }
       if(mcGo) mcGo.addEventListener('click',runMiniCalc);
-      if(mcCopy) mcCopy.addEventListener('click',function(){
+      // Copy buttons — use data-copy-val attribute so both ft+in and inches buttons work
+      document.querySelectorAll('[data-copy-val]').forEach(function(b){
+        b.addEventListener('click',function(){ doCopy(this.getAttribute('data-copy-val')); });
+      });
+      if(mcCopy&&!mcCopy.hasAttribute('data-copy-val')) mcCopy.addEventListener('click',function(){
         if(S.mcResult===null||S.mcResult===undefined) return;
-        var txt=String(S.mcResult);
-        navigator.clipboard.writeText(txt).then(function(){toast('Copied: '+txt);}).catch(function(){
-          var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Copied: '+txt);
-        });
+        doCopy(String(S.mcResult));
       });
     })();
 
