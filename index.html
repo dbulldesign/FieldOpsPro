@@ -18305,6 +18305,10 @@ var _dmxMode = 'd2p';
     fixtures:[], psu:[], projects:[],
     // Calculator
     selectedId:'', manualIncrement:'', manualUnit:'in', inputVal:'', results:null,
+    // Quick-add fixture inline on calc tab
+    qaFx:false, qaFxMfr:'', qaFxPart:'', qaFxInc:'', qaFxUnit:'in', qaFxWpf:'', qaFxErr:'',
+    // Quick-add PSU inline on calc tab
+    qaPsu:false, qaPsuMfr:'', qaPsuPart:'', qaPsuWatts:'', qaPsuBuffer:'', qaPsuLimit:'', qaPsuErr:'',
     // Fixture form
     fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxErr:'', fxEditId:null,
     // PSU form
@@ -18421,10 +18425,30 @@ var _dmxMode = 'd2p';
   function calcTabHTML(){
     var sel=S.fixtures.find(function(f){return f.id===S.selectedId;}), incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
     var selOpts='<option value="">— select a fixture —</option>'
-      +S.fixtures.map(function(f){ return '<option value="'+f.id+'"'+(f.id===S.selectedId?' selected':'')+'>'+fxShort(f)+(f.wattsPerFt?' · '+f.wattsPerFt+' W/ft':'')+(f.cutIncrement?' · '+f.cutIncrement+f.cutUnit+'/cut':'')+'</option>'; }).join('');
+      +S.fixtures.map(function(f){ return '<option value="'+f.id+'"'+(f.id===S.selectedId?' selected':'')+'>'+fxShort(f)+(f.wattsPerFt?' · '+f.wattsPerFt+' W/ft':'')+(f.cutIncrement?' · '+f.cutIncrement+f.cutUnit+'/cut':'')+'</option>'; }).join('')
+      +'<option value="__add__">+ Add new fixture…</option>';
+
+    // Quick-add fixture panel
+    var qaFxHtml='';
+    if(S.qaFx){
+      qaFxHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-top:10px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Fixture</div>'
+        +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-fm" placeholder="e.g. Diode LED" value="'+escH(S.qaFxMfr)+'"></div>'
+        +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span><input class="lc-input" id="lc-qa-fp" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.qaFxPart)+'"></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 80px 100px;gap:8px;margin-bottom:8px">'
+          +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-qa-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.qaFxInc)+'"></div>'
+          +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-qa-fu"><option value="in"'+(S.qaFxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.qaFxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.qaFxUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+          +'<div class="lc-field"><span class="lc-lbl">Watts/ft</span><input class="lc-input" id="lc-qa-fwpf" type="number" min="0" step="0.1" placeholder="e.g. 3.2" value="'+escH(S.qaFxWpf)+'"></div>'
+        +'</div>'
+        +(S.qaFxErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaFxErr)+'</p>':'')
+        +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-fx-save" style="flex:1">Save Fixture</button><button class="lc-btn" id="lc-qa-fx-cancel">Cancel</button></div>'
+        +'</div>';
+    }
+
     return '<div class="lc-section">'
       +'<div class="lc-stitle">Fixture / cut increment</div>'
       +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Saved fixture</span><select class="lc-select" id="lc-fx-sel">'+selOpts+'</select></div>'
+      +qaFxHtml
       +(sel&&incFmt?'<div class="lc-spill">Cut every <strong>'+sel.cutIncrement+' '+sel.cutUnit+'</strong> · '+escH(incFmt.mm)+' · '+escH(incFmt.inches)+(sel.wattsPerFt?' · <strong>'+sel.wattsPerFt+' W/ft</strong>':'')+'</div>':'')
       +'<div class="lc-or">or enter manually</div>'
       +'<div class="lc-g2">'
@@ -18436,7 +18460,26 @@ var _dmxMode = 'd2p';
       +'<div class="lc-hint" id="lc-lh"></div>'
       +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate</button>'
       +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
-      +'</div><div id="lc-ra"></div>';
+      +'</div><div id="lc-ra"></div>'
+      +miniCalcHTML();
+  }
+
+  function miniCalcHTML(){
+    return '<div class="lc-section" style="margin-top:16px">'
+      +'<div class="lc-stitle" style="display:flex;align-items:center;gap:8px">'
+        +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="12" y1="6" x2="12" y2="18"/></svg>'
+        +'Calculator'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:6px">'
+        +'<input class="lc-input" id="lc-mc-expr" type="text" inputmode="decimal" placeholder="e.g. 7*12 + 3.5  or  (84+96)/2" autocomplete="off" spellcheck="false" style="flex:1;font-family:monospace">'
+        +'<button class="lc-btn lc-btn-primary" id="lc-mc-go" style="flex-shrink:0">=</button>'
+      +'</div>'
+      +'<div id="lc-mc-result" style="display:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+        +'<span id="lc-mc-val" style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)"></span>'
+        +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" style="flex-shrink:0">Copy</button>'
+      +'</div>'
+      +'<div id="lc-mc-err" style="display:none;font-size:12px;color:#ef4444;margin-top:4px"></div>'
+      +'</div>';
   }
 
   // ── Projects tab ──────────────────────────────────────────────
@@ -18529,13 +18572,33 @@ var _dmxMode = 'd2p';
     var psHtml='';
     if(proj.runs.length){
       var psuOpts='<option value="">— Select power supply —</option>'
-        +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===S.projPsuId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('');
+        +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===S.projPsuId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
+        +'<option value="__addpsu__">+ Add new power supply…</option>';
+
+      // Quick-add PSU panel
+      var qaPsuHtml='';
+      if(S.qaPsu){
+        qaPsuHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-top:10px;margin-bottom:4px">'
+          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Power Supply</div>'
+          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
+          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
+          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+            +'<div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div>'
+            +'<div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div>'
+          +'</div>'
+          +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
+          +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
+          +'</div>';
+      }
+
       psHtml='<div style="border-top:1px solid var(--border);padding:16px 16px 14px">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Power Supply Calculation</div>'
-        +'<div class="lc-field" style="margin-bottom:12px"><span class="lc-lbl">Power supply / LED driver</span>'
+        +'<div class="lc-field" style="margin-bottom:4px"><span class="lc-lbl">Power supply / LED driver</span>'
           +'<select class="lc-select" id="lc-proj-psu-sel">'+psuOpts+'</select>'
-          +(!S.psu.length?'<span style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block">Save power supplies in the <strong>Power Supplies</strong> tab first</span>':'')
-        +'</div>';
+        +'</div>'
+        +qaPsuHtml
+        +((!S.psu.length&&!S.qaPsu)?'<span style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:8px;display:block">No power supplies yet — use the dropdown to add one</span>':'<div style="margin-bottom:8px"></div>');
       var selPsu=S.projPsuId?S.psu.find(function(p){return p.id===S.projPsuId;}):null;
       if(selPsu){
         var psRated=parseFloat(selPsu.outputWatts)||0;
@@ -18809,9 +18872,70 @@ var _dmxMode = 'd2p';
       var li=document.getElementById('lc-li');
       if(li){ li.addEventListener('input',function(){S.inputVal=this.value;S.results=null;patchHint();patchResults();}); li.addEventListener('keydown',function(e){if(e.key==='Enter')doCalc();}); }
       var mi=document.getElementById('lc-mi'); if(mi) mi.addEventListener('input',function(){S.manualIncrement=this.value;});
-      bindEl('lc-fx-sel','change',function(){S.selectedId=this.value;S.results=null;_ledRender();});
+      bindEl('lc-fx-sel','change',function(){
+        if(this.value==='__add__'){
+          this.value=S.selectedId;
+          S.qaFx=true; S.qaFxMfr=''; S.qaFxPart=''; S.qaFxInc=''; S.qaFxUnit='in'; S.qaFxWpf=''; S.qaFxErr='';
+          _ledRender(); return;
+        }
+        S.selectedId=this.value; S.results=null; _ledRender();
+      });
       bindEl('lc-mu-sel','change',function(){S.manualUnit=this.value;});
       bindEl('lc-btn-calc','click',doCalc);
+
+      // Quick-add fixture listeners
+      if(S.qaFx){
+        var qfm=document.getElementById('lc-qa-fm'); if(qfm) qfm.addEventListener('input',function(){S.qaFxMfr=this.value;});
+        var qfp=document.getElementById('lc-qa-fp'); if(qfp) qfp.addEventListener('input',function(){S.qaFxPart=this.value;});
+        var qfi=document.getElementById('lc-qa-fi'); if(qfi) qfi.addEventListener('input',function(){S.qaFxInc=this.value;});
+        var qfw=document.getElementById('lc-qa-fwpf'); if(qfw) qfw.addEventListener('input',function(){S.qaFxWpf=this.value;});
+        bindEl('lc-qa-fu','change',function(){S.qaFxUnit=this.value;});
+        bindEl('lc-qa-fx-save','click',function(){
+          var v=parseFloat(S.qaFxInc);
+          if(!S.qaFxMfr.trim()||!S.qaFxPart.trim()){ S.qaFxErr='Manufacturer and part number are required.'; _ledRender(); return; }
+          if(isNaN(v)||v<=0){ S.qaFxErr='Enter a valid cut increment greater than 0.'; _ledRender(); return; }
+          var wpf=parseFloat(S.qaFxWpf)||null;
+          var obj={id:'lf'+Date.now(),manufacturer:S.qaFxMfr.trim(),partNumber:S.qaFxPart.trim(),cutIncrement:v,cutUnit:S.qaFxUnit,wattsPerFt:wpf};
+          S.fixtures.push(obj); S.selectedId=obj.id; S.qaFx=false; S.results=null;
+          saveFx(); _ledRender(); toast('Fixture saved');
+        });
+        bindEl('lc-qa-fx-cancel','click',function(){S.qaFx=false;_ledRender();});
+      }
+
+      // Mini calculator listeners
+      var mcExpr=document.getElementById('lc-mc-expr');
+      var mcGo=document.getElementById('lc-mc-go');
+      var mcCopy=document.getElementById('lc-mc-copy');
+      function runMiniCalc(){
+        var expr=(mcExpr?mcExpr.value:'').trim();
+        var resEl=document.getElementById('lc-mc-result');
+        var valEl=document.getElementById('lc-mc-val');
+        var errEl=document.getElementById('lc-mc-err');
+        if(!expr){if(resEl)resEl.style.display='none';if(errEl)errEl.style.display='none';return;}
+        try{
+          // Safe eval: only allow numbers, operators, parens, decimal points, spaces
+          if(!/^[\d\s\.\+\-\*\/\(\)%]+$/.test(expr)) throw new Error('Only numbers and + − × ÷ ( ) allowed');
+          var result=Function('"use strict";return ('+expr+')')();
+          if(!isFinite(result)) throw new Error('Result is not a finite number');
+          if(valEl) valEl.textContent=parseFloat(result.toFixed(8)).toString();
+          if(resEl) resEl.style.display='flex';
+          if(errEl) errEl.style.display='none';
+        }catch(e){
+          if(resEl) resEl.style.display='none';
+          if(errEl){errEl.style.display='block';errEl.textContent=e.message||'Invalid expression';}
+        }
+      }
+      if(mcExpr){ mcExpr.addEventListener('input',runMiniCalc); mcExpr.addEventListener('keydown',function(e){if(e.key==='Enter')runMiniCalc();}); }
+      if(mcGo) mcGo.addEventListener('click',runMiniCalc);
+      if(mcCopy) mcCopy.addEventListener('click',function(){
+        var v=document.getElementById('lc-mc-val');
+        if(!v||!v.textContent) return;
+        navigator.clipboard.writeText(v.textContent).then(function(){toast('Copied: '+v.textContent);}).catch(function(){
+          // Fallback
+          var ta=document.createElement('textarea'); ta.value=v.textContent; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Copied: '+v.textContent);
+        });
+      });
+
       patchHint(); patchResults();
     }
 
@@ -18857,7 +18981,33 @@ var _dmxMode = 'd2p';
         var rfd=document.getElementById('lc-rf-desc');   if(rfd)  rfd.addEventListener('input',function(){S.runForm.description=this.value;});
         var rfsave=document.getElementById('lc-rf-save'); if(rfsave) rfsave.addEventListener('click',function(){doSaveRun(this.getAttribute('data-proj-id'));});
         bindEl('lc-rf-cancel','click',function(){S.runEditId=null;S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:''};S.runFormErr='';_ledRender();});
-        bindEl('lc-proj-psu-sel','change',function(){S.projPsuId=this.value;_ledRender();});
+        bindEl('lc-proj-psu-sel','change',function(){
+          if(this.value==='__addpsu__'){
+            this.value=S.projPsuId;
+            S.qaPsu=true; S.qaPsuMfr=''; S.qaPsuPart=''; S.qaPsuWatts=''; S.qaPsuBuffer=''; S.qaPsuLimit=''; S.qaPsuErr='';
+            _ledRender(); return;
+          }
+          S.projPsuId=this.value; S.qaPsu=false; _ledRender();
+        });
+        // Quick-add PSU listeners
+        if(S.qaPsu){
+          var qapm=document.getElementById('lc-qa-pm'); if(qapm) qapm.addEventListener('input',function(){S.qaPsuMfr=this.value;});
+          var qapp=document.getElementById('lc-qa-pp'); if(qapp) qapp.addEventListener('input',function(){S.qaPsuPart=this.value;});
+          var qapw=document.getElementById('lc-qa-pw'); if(qapw) qapw.addEventListener('input',function(){S.qaPsuWatts=this.value;});
+          var qapb=document.getElementById('lc-qa-pb'); if(qapb) qapb.addEventListener('input',function(){S.qaPsuBuffer=this.value;});
+          var qapl=document.getElementById('lc-qa-pl'); if(qapl) qapl.addEventListener('input',function(){S.qaPsuLimit=this.value;});
+          bindEl('lc-qa-psu-save','click',function(){
+            var w=parseFloat(S.qaPsuWatts);
+            if(!S.qaPsuMfr.trim()||!S.qaPsuPart.trim()){ S.qaPsuErr='Manufacturer and part number are required.'; _ledRender(); return; }
+            if(isNaN(w)||w<=0){ S.qaPsuErr='Enter a valid output wattage.'; _ledRender(); return; }
+            var buf=parseFloat(S.qaPsuBuffer), lim=parseFloat(S.qaPsuLimit);
+            var obj={id:'ps'+Date.now(),manufacturer:S.qaPsuMfr.trim(),partNumber:S.qaPsuPart.trim(),outputWatts:w,
+                     bufferPct:(!isNaN(buf)&&buf>0)?buf:null,limitW:(!isNaN(lim)&&lim>0)?lim:null};
+            S.psu.push(obj); S.projPsuId=obj.id; S.qaPsu=false;
+            savePsu(); _ledRender(); toast('Power supply saved');
+          });
+          bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;_ledRender();});
+        }
         document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(){doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
         document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(){doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
       }
@@ -18895,7 +19045,7 @@ var _dmxMode = 'd2p';
         +'<span style="font-size:16px;font-weight:700;color:var(--text)">LED Tape Calculator</span>'
       +'</div>'
       +'<div class="lc-tabs">'
-        +'<button class="lc-tab'+(S.tab==='calc'?' active':'')+'" data-lctab="calc">Calculator</button>'
+        +'<button class="lc-tab'+(S.tab==='calc'?' active':'')+'" data-lctab="calc">LED Length</button>'
         +'<button class="lc-tab'+(S.tab==='projects'?' active':'')+'" data-lctab="projects">Projects'+(S.projects.length?' ('+S.projects.length+')':'')+'</button>'
         +'<button class="lc-tab'+(S.tab==='fixtures'?' active':'')+'" data-lctab="fixtures">Fixtures</button>'
         +'<button class="lc-tab'+(S.tab==='psu'?' active':'')+'" data-lctab="psu">Power Supplies</button>'
