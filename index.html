@@ -18612,82 +18612,112 @@ var _dmxMode = 'd2p';
         var psRated=parseFloat(selPsu.outputWatts)||0;
         var psEff=psuEffectiveW(selPsu);
         var hasDerate=(selPsu.bufferPct&&parseFloat(selPsu.bufferPct)>0)||(selPsu.limitW&&parseFloat(selPsu.limitW)>0);
-        var grandTotalW=0, grandTotalPS=0;
-        var psLoads=[];
-        var psRows='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
-          +'<thead><tr style="border-bottom:1px solid var(--border)">'
-            +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Run</th>'
-            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">W/strip</th>'
-            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Total W</th>'
-            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Strips/PS</th>'
-            +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em">PS Needed</th>'
-          +'</tr></thead><tbody>';
-        proj.runs.forEach(function(run){
-          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
-          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-          var qty=parseInt(run.qty)||1;
-          var wPerStrip=wpf?(run.lengthIn/12)*wpf:null;
-          var totalRunW=wPerStrip?wPerStrip*qty:null;
-          var stripsPerPs=(wPerStrip&&psEff&&wPerStrip>0)?Math.floor(psEff/wPerStrip):null;
-          var psNeeded=(stripsPerPs!==null)?Math.ceil(qty/Math.max(1,stripsPerPs)):null;
-          if(totalRunW) grandTotalW+=totalRunW;
-          if(psNeeded)  grandTotalPS+=psNeeded;
-          // Build per-PSU load entries for this run
-          if(wPerStrip&&psEff>0){
-            if(stripsPerPs<1){
-              // Each strip needs more than one PSU — each PSU is fully loaded
-              for(var si=0;si<qty;si++) psLoads.push(psEff);
-            } else {
-              var fullPs=Math.floor(qty/stripsPerPs);
-              var rem=qty%stripsPerPs;
-              for(var fi=0;fi<fullPs;fi++) psLoads.push(stripsPerPs*wPerStrip);
-              if(rem>0) psLoads.push(rem*wPerStrip);
-            }
-          }
-          psRows+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
-            +'<td style="padding:7px 6px;color:var(--text)">'+(run.label?escH(run.label):'Run')+(qty>1?' ×'+qty:'')+'</td>'
-            +'<td style="padding:7px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wPerStrip!==null?wPerStrip.toFixed(1)+'W':'—')+'</td>'
-            +'<td style="padding:7px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(totalRunW!==null?totalRunW.toFixed(1)+'W':'—')+'</td>'
-            +'<td style="padding:7px 6px;text-align:right;color:var(--text-muted)">'+(stripsPerPs!==null?(stripsPerPs<1?'<1':stripsPerPs):'—')+'</td>'
-            +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--accent)">'+(psNeeded!==null?psNeeded:'—')+'</td>'
-            +'</tr>';
-        });
-        psRows+='</tbody></table>';
 
-        // PSU load bars
-        var loadHtml='';
-        if(psLoads.length){
-          loadHtml='<div style="margin-bottom:14px">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">PSU Load</div>';
-          psLoads.forEach(function(used,i){
-            var pct=psEff>0?Math.min(100,(used/psEff)*100):0;
-            var barColor=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
-            var statusLabel=pct>=95?'NEAR LIMIT':pct>=80?'HIGH':'OK';
-            var statusColor=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
-            loadHtml+='<div style="margin-bottom:8px">'
-              +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-                +'<span style="font-size:12px;color:var(--text-muted)">PSU '+(i+1)+'</span>'
-                +'<span style="font-size:12px;font-family:monospace;color:var(--text)">'+used.toFixed(1)+'W <span style="color:var(--text-muted)">/ '+psEff.toFixed(1)+'W usable'+(hasDerate?' <span style="color:var(--text-muted);font-size:10px">('+psRated+'W rated)</span>':'')+'</span></span>'
-                +'<span style="font-size:10px;font-weight:700;color:'+statusColor+';margin-left:8px">'+statusLabel+'</span>'
-              +'</div>'
-              +'<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden">'
-                +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+barColor+';border-radius:4px;transition:width 0.3s"></div>'
-              +'</div>'
-              +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px;text-align:right">'+pct.toFixed(1)+'%</div>'
-            +'</div>';
+        // Helper: compute PSU loads for a set of runs
+        function calcGroupPsu(runs){
+          var totalW=0, psNeeded=0, loads=[];
+          runs.forEach(function(run){
+            var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+            var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+            var qty=parseInt(run.qty)||1;
+            var wps=wpf?(run.lengthIn/12)*wpf:0;
+            totalW+=wps*qty;
+            if(wps>0&&psEff>0){
+              var spp=Math.floor(psEff/wps);
+              if(spp<1){ psNeeded+=qty; for(var i=0;i<qty;i++) loads.push(wps); }
+              else { var fp=Math.floor(qty/spp),rm=qty%spp; psNeeded+=fp+(rm>0?1:0); for(var j=0;j<fp;j++) loads.push(spp*wps); if(rm>0) loads.push(rm*wps); }
+            }
           });
-          loadHtml+='</div>';
+          return {totalW:totalW,psNeeded:psNeeded,loads:loads};
         }
 
-        psHtml+=psRows
-          +loadHtml
-          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
-          +['<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div></div>',
-             '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Usable'+(hasDerate?' / Rated':'')+'</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psEff.toFixed(1)+(hasDerate?'<span style="font-size:12px;color:var(--text-muted)"> / '+psRated+'</span>':'')+'<span style="font-size:12px">W</span></div></div>',
-             '<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">PS Needed</div><div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div></div>'
-          ].join('')
+        // Build PSU load bar HTML for a list of loads
+        function loadBarsHTML(loads,psOffset){
+          var h='';
+          loads.forEach(function(used,i){
+            var pct=psEff>0?Math.min(100,(used/psEff)*100):0;
+            var bc=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
+            var sc=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
+            var sl=pct>=95?'NEAR LIMIT':pct>=80?'HIGH':'OK';
+            h+='<div style="margin-bottom:6px">'
+              +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+                +'<span style="font-size:11px;color:var(--text-muted)">PSU '+(psOffset+i+1)+'</span>'
+                +'<span style="font-size:11px;font-family:monospace;color:var(--text)">'+used.toFixed(1)+'W / '+psEff.toFixed(1)+'W'+(hasDerate?' <span style="font-size:10px;color:var(--text-muted)">('+psRated+'W rated)</span>':'')+'</span>'
+                +'<span style="font-size:10px;font-weight:700;color:'+sc+'">'+sl+'</span>'
+              +'</div>'
+              +'<div style="background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden">'
+                +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'
+              +'</div>'
+            +'</div>';
+          });
+          return h;
+        }
+
+        // Group runs by label
+        var groups=[], groupMap={};
+        proj.runs.forEach(function(run){
+          var key=run.label&&run.label.trim()?run.label.trim():'(Unlabeled)';
+          if(!groupMap[key]){ groupMap[key]=[]; groups.push(key); }
+          groupMap[key].push(run);
+        });
+
+        var grandTotalW=0, grandTotalPS=0, globalPsuOffset=0;
+        var treatmentsHtml='';
+        groups.forEach(function(lbl){
+          var gRuns=groupMap[lbl];
+          var g=calcGroupPsu(gRuns);
+          grandTotalW+=g.totalW;
+          grandTotalPS+=g.psNeeded;
+
+          // Runs summary within this group
+          var runLines=gRuns.map(function(r){
+            var fx=S.fixtures.find(function(f){return f.id===r.fixtureId;});
+            var qty=parseInt(r.qty)||1;
+            var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+            var wps=wpf?(r.lengthIn/12)*wpf:null;
+            var tw=wps?wps*qty:null;
+            return '<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted);margin-bottom:2px">'
+              +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
+              +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
+              +(tw!==null?'<span style="margin-left:auto;font-family:monospace">'+tw.toFixed(1)+'W</span>':'')
+            +'</div>';
+          }).join('');
+
+          treatmentsHtml+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+            // Header row
+            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+              +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+escH(lbl)+'</span>'
+              +'<div style="display:flex;gap:8px;align-items:center">'
+                +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
+                +'<span style="font-size:11px;background:rgba(79,142,247,0.15);color:#4f8ef7;border-radius:5px;padding:2px 7px;font-weight:700">'+g.psNeeded+' PS</span>'
+              +'</div>'
+            +'</div>'
+            // Runs list
+            +'<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)">'+runLines+'</div>'
+            // Load bars
+            +(g.loads.length?loadBarsHTML(g.loads,globalPsuOffset):'<span style="font-size:11px;color:var(--text-muted)">No wattage data — add W/ft to fixtures</span>')
+          +'</div>';
+
+          globalPsuOffset+=g.psNeeded;
+        });
+
+        psHtml+=treatmentsHtml
+          // Grand total
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">'
+          +'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div>'
+            +'<div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div>'
           +'</div>'
-          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Strips/PS = ⌊usable watts ÷ watts per strip⌋ · PS needed per group = ⌈qty ÷ strips per PS⌉'+(hasDerate?' · Usable = rated × (1 − buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
+          +'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Usable'+(hasDerate?' / Rated':'')+'</div>'
+            +'<div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psEff.toFixed(1)+(hasDerate?'<span style="font-size:12px;color:var(--text-muted)"> / '+psRated+'</span>':'')+'<span style="font-size:12px">W</span></div>'
+          +'</div>'
+          +'<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">Total PS Needed</div>'
+            +'<div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div>'
+          +'</div>'
+          +'</div>'
+          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Each treatment calculated independently · Strips/PS = ⌊usable W ÷ W per strip⌋'+(hasDerate?' · Usable = rated × (1−buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
       }
       psHtml+='</div>';
     }
