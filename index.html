@@ -18349,6 +18349,23 @@ var _dmxMode = 'd2p';
     m=str.match(/^(\d+(?:\.\d+)?)$/); if(m) return {val:+m[1]};
     return null;
   }
+  function parsLenExpr(str){
+    var direct=parsLen(str); if(direct) return direct;
+    if(!str||!str.trim()) return null;
+    // Convert length tokens to raw inches, then evaluate as math
+    var expr=str.trim();
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?/gi,function(m,f,i){return String(+f*12+ +i);});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')/gi,function(m,f){return String(+f*12);});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")/gi,function(m,v){return v;});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*mm/gi,function(m,v){return String(+v/25.4);});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*cm/gi,function(m,v){return String(+v/2.54);});
+    if(!/^[\d\s\.\+\-\*\/\(\)]+$/.test(expr)) return null;
+    try{
+      var result=Function('"use strict";return ('+expr+')')();
+      if(!isFinite(result)||result<=0) return null;
+      return {val:result,fromExpr:true};
+    }catch(e){return null;}
+  }
   function fmtIn(inches){
     var ft=Math.floor(inches/12), inch=inches-ft*12;
     return {
@@ -18394,7 +18411,7 @@ var _dmxMode = 'd2p';
       +'</div>';
   }
   function doCalc(){
-    var p=parsLen(S.inputVal); if(!p||p.val<=0){S.results=null;patchResults();return;}
+    var p=parsLenExpr(S.inputVal); if(!p||p.val<=0){S.results=null;patchResults();return;}
     var inc=getInc(); if(!inc||inc<=0){S.results=null;patchResults();return;}
     var n=Math.max(1,Math.round(p.val/inc));
     function mk(x){var l=x*inc;return {segments:x,inches:l,display:fmtIn(l)};}
@@ -18420,9 +18437,9 @@ var _dmxMode = 'd2p';
   function patchHint(){
     var el=document.getElementById('lc-lh'); if(!el) return;
     if(!S.inputVal){el.innerHTML='';return;}
-    var p=parsLen(S.inputVal);
-    if(p){ var f=fmtIn(p.val); el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+'</span>'; }
-    else  el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 6.5ft</span>';
+    var p=parsLenExpr(S.inputVal);
+    if(p){ var f=fmtIn(p.val); el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+(p.fromExpr?' <span style="font-size:10px;opacity:0.7">= '+escH(f.ftIn)+'</span>':'')+'</span>'; }
+    else  el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 8ft/2</span>';
   }
   function calcTabHTML(){
     var sel=S.fixtures.find(function(f){return f.id===S.selectedId;}), incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
@@ -18458,7 +18475,7 @@ var _dmxMode = 'd2p';
         +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'><option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option></select></div>'
       +'</div></div>'
       +'<div class="lc-section"><div class="lc-stitle">Desired length</div>'
-      +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 6ft 3in · 84in · 1800mm · 6.5ft" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
+      +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 84in · 6ft 3in · 8\'\/2 · 96in\/3" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
       +'<div class="lc-hint" id="lc-lh"></div>'
       +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate</button>'
       +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
@@ -18902,8 +18919,8 @@ var _dmxMode = 'd2p';
 
   function doSaveRun(projId){
     var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
-    var rf=S.runForm, p=parsLen(rf.lengthStr);
-    if(!p||p.val<=0){ S.runFormErr='Enter a valid length (e.g. 84in, 7ft, 7ft 3in, 1800mm)'; _ledRender(); return; }
+    var rf=S.runForm, p=parsLenExpr(rf.lengthStr);
+    if(!p||p.val<=0){ S.runFormErr='Enter a valid length (e.g. 84in, 7ft, 7ft 3in, 8ft/2)'; _ledRender(); return; }
     var qty=Math.max(1,parseInt(rf.qty)||1);
     var prevRun=S.runEditId?proj.runs.find(function(r){return r.id===S.runEditId;}):null;
     var run={label:rf.label,fixtureId:rf.fixtureId,lengthIn:p.val,qty:qty,description:rf.description,leaders:rf.leaders||'1',psuForce:prevRun?!!prevRun.psuForce:false};
