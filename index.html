@@ -6838,6 +6838,8 @@ function initFirebase(config) {
           if (!d || !d.running) return;
           // Already running the same timer on this device — don't restart
           if (_timerRunning && _timerStartMs === d.startMs) return;
+          // This timer session was already stopped or discarded on this device — don't revive it
+          if (d.startMs && _timerStoppedAt && d.startMs <= _timerStoppedAt) return;
           // Adopt the timer started on another device
           clearInterval(_timerInterval);
           _timerStartMs = d.startMs || 0;
@@ -12346,6 +12348,8 @@ var _timerRunning = false;
 var _timerStartMs = 0;   // epoch ms when started
 var _timerElapsedMs = 0; // ms accumulated before current run
 var _timerSort = 'date-desc'; // current log sort order
+// epoch ms when timer was last explicitly stopped on this device; persisted so page reloads don't forget
+var _timerStoppedAt = parseInt(localStorage.getItem('fop_timer_stopped_at') || '0') || 0;
 
 function _timerFormatHMS(ms) {
   var s = Math.floor(ms / 1000);
@@ -12447,6 +12451,8 @@ function _timerUpdateUI(running) {
 function startTimer() {
   if (_timerRunning) return;
   _timerRunning = true;
+  _timerStoppedAt = 0;
+  localStorage.removeItem('fop_timer_stopped_at');
   _timerStartMs = Date.now();
   _timerTick();
   _timerInterval = setInterval(_timerTick, 1000);
@@ -12461,7 +12467,9 @@ function stopTimer() {
   var totalMs = Math.ceil((_timerElapsedMs + (Date.now() - _timerStartMs)) / 60000) * 60000;
   _timerRunning = false;
   _timerElapsedMs = 0;
+  _timerStoppedAt = Date.now();
   localStorage.removeItem('fop_timer_active');
+  localStorage.setItem('fop_timer_stopped_at', String(_timerStoppedAt));
   if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
 
   var label = (document.getElementById('timer-label-input')||{}).value || 'Untitled';
@@ -12493,7 +12501,9 @@ function discardTimer() {
   _timerInterval = null;
   _timerRunning = false;
   _timerElapsedMs = 0;
+  _timerStoppedAt = Date.now();
   localStorage.removeItem('fop_timer_active');
+  localStorage.setItem('fop_timer_stopped_at', String(_timerStoppedAt));
   if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
   var disp = document.getElementById('timer-display');
   if (disp) disp.textContent = '00:00:00';
