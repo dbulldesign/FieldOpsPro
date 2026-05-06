@@ -18305,6 +18305,8 @@ var _dmxMode = 'd2p';
     fixtures:[], psu:[], projects:[],
     // Calculator
     selectedId:'', manualIncrement:'', manualUnit:'in', inputVal:'', results:null,
+    // Mini calculator (persistent across tabs)
+    mcExpr:'', mcResult:null, mcErr:'',
     // Quick-add fixture inline on calc tab
     qaFx:false, qaFxMfr:'', qaFxPart:'', qaFxInc:'', qaFxUnit:'in', qaFxWpf:'', qaFxErr:'',
     // Quick-add PSU inline on calc tab
@@ -18460,25 +18462,27 @@ var _dmxMode = 'd2p';
       +'<div class="lc-hint" id="lc-lh"></div>'
       +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate</button>'
       +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
-      +'</div><div id="lc-ra"></div>'
-      +miniCalcHTML();
+      +'</div><div id="lc-ra"></div>';
   }
 
   function miniCalcHTML(){
+    var hasResult=S.mcResult!==null&&S.mcResult!==undefined;
     return '<div class="lc-section" style="margin-top:16px">'
       +'<div class="lc-stitle" style="display:flex;align-items:center;gap:8px">'
         +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="12" y1="6" x2="12" y2="18"/></svg>'
         +'Calculator'
       +'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:6px">'
-        +'<input class="lc-input" id="lc-mc-expr" type="text" inputmode="decimal" placeholder="e.g. 7*12 + 3.5  or  (84+96)/2" autocomplete="off" spellcheck="false" style="flex:1;font-family:monospace">'
+        +'<input class="lc-input" id="lc-mc-expr" type="text" inputmode="decimal" placeholder="e.g. 7*12 + 3.5  or  (84+96)/2" autocomplete="off" spellcheck="false" style="flex:1;font-family:monospace" value="'+escH(S.mcExpr)+'">'
         +'<button class="lc-btn lc-btn-primary" id="lc-mc-go" style="flex-shrink:0">=</button>'
       +'</div>'
-      +'<div id="lc-mc-result" style="display:none;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-        +'<span id="lc-mc-val" style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)"></span>'
-        +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" style="flex-shrink:0">Copy</button>'
-      +'</div>'
-      +'<div id="lc-mc-err" style="display:none;font-size:12px;color:#ef4444;margin-top:4px"></div>'
+      +(hasResult
+        ?'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+          +'<span style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)" id="lc-mc-val">'+escH(String(S.mcResult))+'</span>'
+          +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" style="flex-shrink:0">Copy</button>'
+          +'</div>'
+        :'')
+      +(S.mcErr?'<div style="font-size:12px;color:#ef4444;margin-top:4px">'+escH(S.mcErr)+'</div>':'')
       +'</div>';
   }
 
@@ -18906,40 +18910,6 @@ var _dmxMode = 'd2p';
         bindEl('lc-qa-fx-cancel','click',function(){S.qaFx=false;_ledRender();});
       }
 
-      // Mini calculator listeners
-      var mcExpr=document.getElementById('lc-mc-expr');
-      var mcGo=document.getElementById('lc-mc-go');
-      var mcCopy=document.getElementById('lc-mc-copy');
-      function runMiniCalc(){
-        var expr=(mcExpr?mcExpr.value:'').trim();
-        var resEl=document.getElementById('lc-mc-result');
-        var valEl=document.getElementById('lc-mc-val');
-        var errEl=document.getElementById('lc-mc-err');
-        if(!expr){if(resEl)resEl.style.display='none';if(errEl)errEl.style.display='none';return;}
-        try{
-          // Safe eval: only allow numbers, operators, parens, decimal points, spaces
-          if(!/^[\d\s\.\+\-\*\/\(\)%]+$/.test(expr)) throw new Error('Only numbers and + − × ÷ ( ) allowed');
-          var result=Function('"use strict";return ('+expr+')')();
-          if(!isFinite(result)) throw new Error('Result is not a finite number');
-          if(valEl) valEl.textContent=parseFloat(result.toFixed(8)).toString();
-          if(resEl) resEl.style.display='flex';
-          if(errEl) errEl.style.display='none';
-        }catch(e){
-          if(resEl) resEl.style.display='none';
-          if(errEl){errEl.style.display='block';errEl.textContent=e.message||'Invalid expression';}
-        }
-      }
-      if(mcExpr){ mcExpr.addEventListener('input',runMiniCalc); mcExpr.addEventListener('keydown',function(e){if(e.key==='Enter')runMiniCalc();}); }
-      if(mcGo) mcGo.addEventListener('click',runMiniCalc);
-      if(mcCopy) mcCopy.addEventListener('click',function(){
-        var v=document.getElementById('lc-mc-val');
-        if(!v||!v.textContent) return;
-        navigator.clipboard.writeText(v.textContent).then(function(){toast('Copied: '+v.textContent);}).catch(function(){
-          // Fallback
-          var ta=document.createElement('textarea'); ta.value=v.textContent; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Copied: '+v.textContent);
-        });
-      });
-
       patchHint(); patchResults();
     }
 
@@ -19018,6 +18988,39 @@ var _dmxMode = 'd2p';
       }
     }
 
+    // Mini calculator — always wired regardless of active tab
+    (function(){
+      var mcExpr=document.getElementById('lc-mc-expr');
+      var mcGo=document.getElementById('lc-mc-go');
+      var mcCopy=document.getElementById('lc-mc-copy');
+      function runMiniCalc(){
+        var expr=(mcExpr?mcExpr.value:'').trim();
+        S.mcExpr=expr;
+        if(!expr){ S.mcResult=null; S.mcErr=''; _ledRender(); return; }
+        try{
+          if(!/^[\d\s\.\+\-\*\/\(\)%]+$/.test(expr)) throw new Error('Only numbers and + − × ÷ ( ) % allowed');
+          var result=Function('"use strict";return ('+expr+')')();
+          if(!isFinite(result)) throw new Error('Result is not a finite number');
+          S.mcResult=parseFloat(result.toFixed(8)); S.mcErr='';
+        }catch(e){
+          S.mcResult=null; S.mcErr=e.message||'Invalid expression';
+        }
+        _ledRender();
+      }
+      if(mcExpr){
+        mcExpr.addEventListener('input',function(){ S.mcExpr=this.value; });
+        mcExpr.addEventListener('keydown',function(e){ if(e.key==='Enter') runMiniCalc(); });
+      }
+      if(mcGo) mcGo.addEventListener('click',runMiniCalc);
+      if(mcCopy) mcCopy.addEventListener('click',function(){
+        if(S.mcResult===null||S.mcResult===undefined) return;
+        var txt=String(S.mcResult);
+        navigator.clipboard.writeText(txt).then(function(){toast('Copied: '+txt);}).catch(function(){
+          var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Copied: '+txt);
+        });
+      });
+    })();
+
     // Save-to-project overlay
     if(S.stp.open){
       bindEl('lc-stp-proj','change',function(){
@@ -19056,6 +19059,7 @@ var _dmxMode = 'd2p';
         +'<button class="lc-tab'+(S.tab==='psu'?' active':'')+'" data-lctab="psu">Power Supplies</button>'
       +'</div>'
       +bodyHtml
+      +miniCalcHTML()
       +(S.stp.open?stpHTML():'');
     setupListeners();
   };
