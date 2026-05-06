@@ -18298,7 +18298,7 @@ var _dmxMode = 'd2p';
     // Fixture form
     fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxErr:'', fxEditId:null,
     // PSU form
-    psuMfr:'', psuPart:'', psuWatts:'', psuErr:'', psuEditId:null,
+    psuMfr:'', psuPart:'', psuWatts:'', psuBuffer:'', psuLimit:'', psuErr:'', psuEditId:null,
     // Projects
     activeProjId:null,
     runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'' },
@@ -18354,6 +18354,12 @@ var _dmxMode = 'd2p';
   }
   function fxShort(f){ return f ? escH(f.manufacturer)+' · '+escH(f.partNumber) : '—'; }
   function psuShort(p){ return p ? escH(p.manufacturer)+' · '+escH(p.partNumber)+' · '+p.outputWatts+'W' : ''; }
+  function psuEffectiveW(p){
+    var w=parseFloat(p.outputWatts)||0;
+    if(p.bufferPct){ var b=parseFloat(p.bufferPct); if(!isNaN(b)&&b>0) w=w*(1-b/100); }
+    if(p.limitW){ var lim=parseFloat(p.limitW); if(!isNaN(lim)&&lim>0) w=Math.min(w,lim); }
+    return Math.max(0,w);
+  }
   function fxOpts(selId){
     return '<option value="">— No fixture —</option>'
       +S.fixtures.map(function(f){ return '<option value="'+f.id+'"'+(f.id===selId?' selected':'')+'>'+fxShort(f)+(f.wattsPerFt?' ('+f.wattsPerFt+' W/ft)':'')+'</option>'; }).join('');
@@ -18522,8 +18528,11 @@ var _dmxMode = 'd2p';
         +'</div>';
       var selPsu=S.projPsuId?S.psu.find(function(p){return p.id===S.projPsuId;}):null;
       if(selPsu){
-        var psW=parseFloat(selPsu.outputWatts)||0;
+        var psRated=parseFloat(selPsu.outputWatts)||0;
+        var psEff=psuEffectiveW(selPsu);
+        var hasDerate=(selPsu.bufferPct&&parseFloat(selPsu.bufferPct)>0)||(selPsu.limitW&&parseFloat(selPsu.limitW)>0);
         var grandTotalW=0, grandTotalPS=0;
+        var psLoads=[];
         var psRows='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
           +'<thead><tr style="border-bottom:1px solid var(--border)">'
             +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Run</th>'
@@ -18538,10 +18547,22 @@ var _dmxMode = 'd2p';
           var qty=parseInt(run.qty)||1;
           var wPerStrip=wpf?(run.lengthIn/12)*wpf:null;
           var totalRunW=wPerStrip?wPerStrip*qty:null;
-          var stripsPerPs=(wPerStrip&&psW&&wPerStrip>0)?Math.floor(psW/wPerStrip):null;
+          var stripsPerPs=(wPerStrip&&psEff&&wPerStrip>0)?Math.floor(psEff/wPerStrip):null;
           var psNeeded=(stripsPerPs!==null)?Math.ceil(qty/Math.max(1,stripsPerPs)):null;
           if(totalRunW) grandTotalW+=totalRunW;
           if(psNeeded)  grandTotalPS+=psNeeded;
+          // Build per-PSU load entries for this run
+          if(wPerStrip&&psEff>0){
+            if(stripsPerPs<1){
+              // Each strip needs more than one PSU — each PSU is fully loaded
+              for(var si=0;si<qty;si++) psLoads.push(psEff);
+            } else {
+              var fullPs=Math.floor(qty/stripsPerPs);
+              var rem=qty%stripsPerPs;
+              for(var fi=0;fi<fullPs;fi++) psLoads.push(stripsPerPs*wPerStrip);
+              if(rem>0) psLoads.push(rem*wPerStrip);
+            }
+          }
           psRows+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
             +'<td style="padding:7px 6px;color:var(--text)">'+(run.label?escH(run.label):'Run')+(qty>1?' ×'+qty:'')+'</td>'
             +'<td style="padding:7px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wPerStrip!==null?wPerStrip.toFixed(1)+'W':'—')+'</td>'
@@ -18551,14 +18572,41 @@ var _dmxMode = 'd2p';
             +'</tr>';
         });
         psRows+='</tbody></table>';
+
+        // PSU load bars
+        var loadHtml='';
+        if(psLoads.length){
+          loadHtml='<div style="margin-bottom:14px">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">PSU Load</div>';
+          psLoads.forEach(function(used,i){
+            var pct=psEff>0?Math.min(100,(used/psEff)*100):0;
+            var barColor=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
+            var statusLabel=pct>=95?'NEAR LIMIT':pct>=80?'HIGH':'OK';
+            var statusColor=pct>=95?'#ef4444':pct>=80?'#f59e0b':'#34d399';
+            loadHtml+='<div style="margin-bottom:8px">'
+              +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+                +'<span style="font-size:12px;color:var(--text-muted)">PSU '+(i+1)+'</span>'
+                +'<span style="font-size:12px;font-family:monospace;color:var(--text)">'+used.toFixed(1)+'W <span style="color:var(--text-muted)">/ '+psEff.toFixed(1)+'W usable'+(hasDerate?' <span style="color:var(--text-muted);font-size:10px">('+psRated+'W rated)</span>':'')+'</span></span>'
+                +'<span style="font-size:10px;font-weight:700;color:'+statusColor+';margin-left:8px">'+statusLabel+'</span>'
+              +'</div>'
+              +'<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden">'
+                +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+barColor+';border-radius:4px;transition:width 0.3s"></div>'
+              +'</div>'
+              +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px;text-align:right">'+pct.toFixed(1)+'%</div>'
+            +'</div>';
+          });
+          loadHtml+='</div>';
+        }
+
         psHtml+=psRows
+          +loadHtml
           +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
           +['<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div></div>',
-             '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Output</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psW+'<span style="font-size:12px">W</span></div></div>',
+             '<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Usable'+(hasDerate?' / Rated':'')+'</div><div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psEff.toFixed(1)+(hasDerate?'<span style="font-size:12px;color:var(--text-muted)"> / '+psRated+'</span>':'')+'<span style="font-size:12px">W</span></div></div>',
              '<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center"><div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">PS Needed</div><div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div></div>'
           ].join('')
           +'</div>'
-          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Strips/PS = ⌊PS watts ÷ watts per single strip⌋ · PS needed per group = ⌈qty ÷ strips per PS⌉</p>';
+          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Strips/PS = ⌊usable watts ÷ watts per strip⌋ · PS needed per group = ⌈qty ÷ strips per PS⌉'+(hasDerate?' · Usable = rated × (1 − buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
       }
       psHtml+='</div>';
     }
@@ -18613,7 +18661,17 @@ var _dmxMode = 'd2p';
       rows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
         +'<div style="flex:1;min-width:0">'
           +'<div class="lc-fname">'+escH(p.manufacturer)+'</div><div class="lc-fdetail">'+escH(p.partNumber)+'</div>'
-          +'<div style="margin-top:4px"><span class="lc-badge" style="color:#34d399;border-color:rgba(52,211,153,0.3)">'+p.outputWatts+' W output</span></div>'
+          +(function(){
+            var eff=psuEffectiveW(p), rated=parseFloat(p.outputWatts)||0;
+            var hasBuf=p.bufferPct&&parseFloat(p.bufferPct)>0, hasLim=p.limitW&&parseFloat(p.limitW)>0;
+            var showEff=hasBuf||hasLim;
+            return '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">'
+              +'<span class="lc-badge" style="color:#34d399;border-color:rgba(52,211,153,0.3)">'+rated+'W rated</span>'
+              +(showEff?'<span class="lc-badge" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">'+eff.toFixed(1)+'W usable</span>':'')
+              +(hasBuf?'<span class="lc-badge">'+p.bufferPct+'% buffer</span>':'')
+              +(hasLim?'<span class="lc-badge">'+p.limitW+'W cap</span>':'')
+              +'</div>';
+          })()
         +'</div>'
         +'<div style="display:flex;gap:6px">'
           +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-psu-edit" data-psuid="'+p.id+'" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
@@ -18625,7 +18683,11 @@ var _dmxMode = 'd2p';
       +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
       +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-psu-mfr" type="text" placeholder="e.g. Mean Well" value="'+escH(S.psuMfr)+'"></div>'
       +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-psu-part" type="text" placeholder="e.g. HLG-100H-24B" value="'+escH(S.psuPart)+'"></div>'
-      +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-psu-watts" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.psuWatts)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-psu-watts" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.psuWatts)+'"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+        +'<div class="lc-field"><span class="lc-lbl">Buffer / derate %</span><input class="lc-input" id="lc-psu-buffer" type="number" min="0" max="99" step="1" placeholder="e.g. 20 (optional)" value="'+escH(S.psuBuffer)+'"><span style="font-size:10px;color:var(--text-muted);margin-top:3px;display:block">Reduces usable wattage by this %</span></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Hard watt limit (W)</span><input class="lc-input" id="lc-psu-limit" type="number" min="0" step="0.1" placeholder="e.g. 80 (optional)" value="'+escH(S.psuLimit)+'"><span style="font-size:10px;color:var(--text-muted);margin-top:3px;display:block">Never load above this, regardless of %</span></div>'
+      +'</div>'
       +'<div id="lc-psu-err">'+(S.psuErr?'<p class="lc-errmsg">'+escH(S.psuErr)+'</p>':'')+'</div>'
       +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-psu-save" style="flex:1">'+(isEd?'Update':'Save power supply')+'</button>'+(isEd?'<button class="lc-btn" id="lc-psu-cancel">Cancel</button>':'')+'</div>'
       +'</div>'
@@ -18673,14 +18735,16 @@ var _dmxMode = 'd2p';
     var w=parseFloat(S.psuWatts);
     if(!S.psuMfr.trim()||!S.psuPart.trim()){ S.psuErr='Manufacturer and part number are required.'; var e=document.getElementById('lc-psu-err'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.psuErr)+'</p>'; return; }
     if(isNaN(w)||w<=0){ S.psuErr='Enter a valid output wattage.'; var e2=document.getElementById('lc-psu-err'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.psuErr)+'</p>'; return; }
-    var obj={manufacturer:S.psuMfr.trim(),partNumber:S.psuPart.trim(),outputWatts:w};
+    var buf=parseFloat(S.psuBuffer), lim=parseFloat(S.psuLimit);
+    var obj={manufacturer:S.psuMfr.trim(),partNumber:S.psuPart.trim(),outputWatts:w,
+             bufferPct:(!isNaN(buf)&&buf>0)?buf:null,limitW:(!isNaN(lim)&&lim>0)?lim:null};
     if(S.psuEditId){ obj.id=S.psuEditId; S.psu=S.psu.map(function(p){return p.id===S.psuEditId?obj:p;}); S.psuEditId=null; }
     else { obj.id='ps'+Date.now(); S.psu.push(obj); }
-    S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuErr='';
+    S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuBuffer=''; S.psuLimit=''; S.psuErr='';
     savePsu(); _ledRender();
   }
-  function doEditPsu(id){ var p=S.psu.find(function(x){return x.id===id;}); if(!p) return; S.psuEditId=id; S.tab='psu'; S.psuMfr=p.manufacturer; S.psuPart=p.partNumber; S.psuWatts=String(p.outputWatts); S.psuErr=''; _ledRender(); }
-  function doCancelPsu(){ S.psuEditId=null; S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuErr=''; _ledRender(); }
+  function doEditPsu(id){ var p=S.psu.find(function(x){return x.id===id;}); if(!p) return; S.psuEditId=id; S.tab='psu'; S.psuMfr=p.manufacturer; S.psuPart=p.partNumber; S.psuWatts=String(p.outputWatts); S.psuBuffer=p.bufferPct!=null?String(p.bufferPct):''; S.psuLimit=p.limitW!=null?String(p.limitW):''; S.psuErr=''; _ledRender(); }
+  function doCancelPsu(){ S.psuEditId=null; S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuBuffer=''; S.psuLimit=''; S.psuErr=''; _ledRender(); }
   function doDeletePsu(id){ if(!confirm('Remove this power supply?')) return; S.psu=S.psu.filter(function(p){return p.id!==id;}); if(S.projPsuId===id) S.projPsuId=''; savePsu(); _ledRender(); }
 
   function doNewProject(name){ if(!name||!name.trim()) return; var proj={id:'lp'+Date.now(),name:name.trim(),runs:[]}; S.projects.push(proj); S.activeProjId=proj.id; saveProj(); _ledRender(); }
@@ -18758,6 +18822,8 @@ var _dmxMode = 'd2p';
       var pm=document.getElementById('lc-psu-mfr'); if(pm) pm.addEventListener('input',function(){S.psuMfr=this.value;});
       var pp=document.getElementById('lc-psu-part'); if(pp) pp.addEventListener('input',function(){S.psuPart=this.value;});
       var pw=document.getElementById('lc-psu-watts'); if(pw) pw.addEventListener('input',function(){S.psuWatts=this.value;});
+      var pb=document.getElementById('lc-psu-buffer'); if(pb) pb.addEventListener('input',function(){S.psuBuffer=this.value;});
+      var pl=document.getElementById('lc-psu-limit'); if(pl) pl.addEventListener('input',function(){S.psuLimit=this.value;});
       bindEl('lc-psu-save','click',doSavePsu);
       bindEl('lc-psu-cancel','click',doCancelPsu);
       bindEl('lc-psu-ctop','click',doCancelPsu);
