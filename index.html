@@ -18315,7 +18315,7 @@ var _dmxMode = 'd2p';
     psuMfr:'', psuPart:'', psuWatts:'', psuBuffer:'', psuLimit:'', psuErr:'', psuEditId:null,
     // Projects
     activeProjId:null,
-    runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'' },
+    runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'', leaders:'1' },
     runEditId:null, runFormErr:'',
     projPsuId:'',
     // Save-to-project overlay
@@ -18525,6 +18525,7 @@ var _dmxMode = 'd2p';
           +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Length</th>'
           +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Qty</th>'
           +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Watts</th>'
+          +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Leaders</th>'
           +'<th style="padding:5px 6px;width:58px"></th>'
         +'</tr></thead><tbody>';
       proj.runs.forEach(function(run){
@@ -18532,12 +18533,14 @@ var _dmxMode = 'd2p';
         var qty=parseInt(run.qty)||1;
         var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
         var wattsTotal=wpf?(run.lengthIn/12)*wpf*qty:null;
+        var leaders=run.leaders||'1';
         runsHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
           +'<td style="padding:8px 6px;color:var(--text)">'+(run.label?escH(run.label):'—')+(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-top:1px">'+escH(run.description)+'</div>':'')+'</td>'
           +'<td style="padding:8px 6px;color:var(--text-muted);font-size:12px">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
           +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text);white-space:nowrap">'+escH(fmtIn(run.lengthIn).ftIn)+'</td>'
           +'<td style="padding:8px 6px;text-align:center;color:var(--text)">×'+qty+'</td>'
           +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wattsTotal!==null?wattsTotal.toFixed(1)+'W':'—')+'</td>'
+          +'<td style="padding:8px 6px;text-align:center;color:var(--text-muted);font-size:12px">'+leaders+'</td>'
           +'<td style="padding:8px 6px;text-align:right;white-space:nowrap">'
             +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:3px">✏</button>'
             +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-del-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Remove" style="color:#ef4444;border-color:#ef4444">✕</button>'
@@ -18557,9 +18560,10 @@ var _dmxMode = 'd2p';
         +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-rf-label" placeholder="e.g. Under cabinet" value="'+escH(rf.label)+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Fixture</span><select class="lc-select" id="lc-rf-fx">'+fxOpts(rf.fixtureId)+'</select></div>'
       +'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 72px;gap:8px;margin-bottom:8px">'
+      +'<div style="display:grid;grid-template-columns:1fr 72px 90px;gap:8px;margin-bottom:8px">'
         +'<div class="lc-field"><span class="lc-lbl">Length (84in · 7ft · 7ft 3in · 1800mm)</span><input class="lc-input" id="lc-rf-len" placeholder="e.g. 84in or 7ft 3in" value="'+escH(rf.lengthStr)+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-rf-qty" type="number" min="1" value="'+escH(rf.qty)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Leaders</span><select class="lc-select" id="lc-rf-leaders"><option value="1"'+(rf.leaders==='1'?' selected':'')+'>1 leader</option><option value="2"'+(rf.leaders==='2'?' selected':'')+'>2 leaders</option></select></div>'
       +'</div>'
       +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Description (optional)</span><input class="lc-input" id="lc-rf-desc" placeholder="Notes…" value="'+escH(rf.description)+'"></div>'
       +(S.runFormErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.runFormErr)+'</p>':'')
@@ -18822,24 +18826,24 @@ var _dmxMode = 'd2p';
 
   function doNewProject(name){ if(!name||!name.trim()) return; var proj={id:'lp'+Date.now(),name:name.trim(),runs:[]}; S.projects.push(proj); S.activeProjId=proj.id; saveProj(); _ledRender(); }
   function doDeleteProj(id){ if(!confirm('Remove this project and all its runs?')) return; S.projects=S.projects.filter(function(p){return p.id!==id;}); if(S.activeProjId===id) S.activeProjId=null; saveProj(); _ledRender(); }
-  function doToggleProj(id){ S.activeProjId=(S.activeProjId===id?null:id); S.runEditId=null; S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:''}; S.runFormErr=''; _ledRender(); }
+  function doToggleProj(id){ S.activeProjId=(S.activeProjId===id?null:id); S.runEditId=null; S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:'',leaders:'1'}; S.runFormErr=''; _ledRender(); }
 
   function doSaveRun(projId){
     var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
     var rf=S.runForm, p=parsLen(rf.lengthStr);
     if(!p||p.val<=0){ S.runFormErr='Enter a valid length (e.g. 84in, 7ft, 7ft 3in, 1800mm)'; _ledRender(); return; }
     var qty=Math.max(1,parseInt(rf.qty)||1);
-    var run={label:rf.label,fixtureId:rf.fixtureId,lengthIn:p.val,qty:qty,description:rf.description};
+    var run={label:rf.label,fixtureId:rf.fixtureId,lengthIn:p.val,qty:qty,description:rf.description,leaders:rf.leaders||'1'};
     if(S.runEditId){ run.id=S.runEditId; proj.runs=proj.runs.map(function(r){return r.id===S.runEditId?run:r;}); S.runEditId=null; }
     else { run.id='lr'+Date.now(); proj.runs.push(run); }
-    S.runForm={fixtureId:rf.fixtureId,lengthStr:'',qty:'1',label:'',description:''}; S.runFormErr='';
+    S.runForm={fixtureId:rf.fixtureId,lengthStr:'',qty:'1',label:'',description:'',leaders:'1'}; S.runFormErr='';
     saveProj(); _ledRender();
   }
   function doEditRun(projId,runId){
     var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
     var run=proj.runs.find(function(r){return r.id===runId;}); if(!run) return;
     S.runEditId=runId; S.activeProjId=projId;
-    S.runForm={fixtureId:run.fixtureId,lengthStr:run.lengthIn.toFixed(4)+'in',qty:String(run.qty),label:run.label||'',description:run.description||''};
+    S.runForm={fixtureId:run.fixtureId,lengthStr:run.lengthIn.toFixed(4)+'in',qty:String(run.qty),label:run.label||'',description:run.description||'',leaders:run.leaders||'1'};
     S.runFormErr=''; _ledRender();
   }
   function doDeleteRun(projId,runId){
@@ -18978,6 +18982,7 @@ var _dmxMode = 'd2p';
         var rffx=document.getElementById('lc-rf-fx');    if(rffx) rffx.addEventListener('change',function(){S.runForm.fixtureId=this.value;});
         var rflen=document.getElementById('lc-rf-len');  if(rflen) rflen.addEventListener('input',function(){S.runForm.lengthStr=this.value;});
         var rfqty=document.getElementById('lc-rf-qty');  if(rfqty) rfqty.addEventListener('input',function(){S.runForm.qty=this.value;});
+        var rfl2=document.getElementById('lc-rf-leaders'); if(rfl2) rfl2.addEventListener('change',function(){S.runForm.leaders=this.value;});
         var rfd=document.getElementById('lc-rf-desc');   if(rfd)  rfd.addEventListener('input',function(){S.runForm.description=this.value;});
         var rfsave=document.getElementById('lc-rf-save'); if(rfsave) rfsave.addEventListener('click',function(){doSaveRun(this.getAttribute('data-proj-id'));});
         bindEl('lc-rf-cancel','click',function(){S.runEditId=null;S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:''};S.runFormErr='';_ledRender();});
