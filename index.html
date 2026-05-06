@@ -7104,6 +7104,9 @@ function switchView(v) {
   if(v==='systainer') {
     renderSystainer();
   }
+  if(v==='ledcalc') {
+    if (typeof _ledRender === 'function') _ledRender();
+  }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
     window._dirtyViews[v] = false;
