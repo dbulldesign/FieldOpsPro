@@ -9378,6 +9378,44 @@ window.saveFieldLog = saveFieldLog; window.editFieldLog = editFieldLog;
 window.renderFieldLog = renderFieldLog; window.toggleFieldLogEntry = toggleFieldLogEntry;
 
 // ═══════════════════════════════════════════════════
+//  CALCULATOR HELPERS  (used by global search)
+// ═══════════════════════════════════════════════════
+function _calcTryConvert(s) {
+  var unitMap = {
+    'mm':1/25.4, 'millimeter':1/25.4, 'millimeters':1/25.4,
+    'cm':1/2.54,  'centimeter':1/2.54,  'centimeters':1/2.54,
+    'm':39.3701,  'meter':39.3701,       'meters':39.3701,
+    'in':1,       'inch':1,              'inches':1, '"':1,
+    'ft':12,      'foot':12,             'feet':12,  "'":12,
+    'yd':36,      'yard':36,             'yards':36
+  };
+  var uPat = '(mm|cm|m|in|"|ft|\'|millimeters?|centimeters?|meters?|inch(?:es)?|feet|foot|yards?|yd)';
+  var rx = new RegExp('^([\\d.]+)\\s*'+uPat+'\\s+(?:in|to|=|into|as)\\s+'+uPat+'$','i');
+  var match = s.match(rx);
+  if (!match) return null;
+  var val = parseFloat(match[1]);
+  var fromU = match[2].toLowerCase(), toU = match[3].toLowerCase();
+  var fromF = unitMap[fromU], toF = unitMap[toU];
+  if (!fromF || !toF || isNaN(val)) return null;
+  var result = (val * fromF) / toF;
+  var r = parseFloat(result.toFixed(8)).toString();
+  var toDisplay = toU === "'" ? 'ft' : toU === '"' ? 'in' : toU;
+  return { type:'convert', expr: val+' '+fromU+' → '+toDisplay, result: r+' '+toDisplay };
+}
+function _calcTryMath(s) {
+  var clean = s.replace(/\s+/g,'');
+  if (!/^[\d().\+\-\*\/\^%]+$/.test(clean)) return null;
+  if (!/\d/.test(clean) || !/[\+\-\*\/\^%]/.test(clean)) return null;
+  clean = clean.replace(/\^/g,'**');
+  try {
+    var r = Function('return ('+clean+')')();
+    if (typeof r !== 'number' || !isFinite(r)) return null;
+    var str = Number.isInteger(r) ? String(r) : parseFloat(r.toFixed(10)).toString();
+    return { type:'math', expr: s.trim(), result: str };
+  } catch(e) { return null; }
+}
+
+// ═══════════════════════════════════════════════════
 //  GLOBAL SEARCH
 // ═══════════════════════════════════════════════════
 function openGlobalSearch() {
@@ -9444,8 +9482,22 @@ function runGlobalSearch(q) {
       }
     });
   });
-  if (!results.length) { out.innerHTML = '<div style="color:#4a5e7a;font-size:13px;padding:24px;text-align:center">No results for "'+escH(q)+'"</div>'; return; }
-  var html = '';
+  // Calc / conversion
+  var calcRes = _calcTryConvert(q) || _calcTryMath(q);
+  var calcHtml = '';
+  if (calcRes) {
+    var calcIcon = calcRes.type === 'convert' ? '⇄' : '=';
+    calcHtml = '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);margin-bottom:8px">'
+      +'<span style="width:36px;height:36px;border-radius:9px;background:rgba(79,142,247,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#4f8ef7;font-size:17px;font-weight:700">'+calcIcon+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +  '<div style="font-size:11px;color:#4a5e7a;margin-bottom:3px;font-family:monospace">'+escH(calcRes.expr)+'</div>'
+      +  '<div style="font-size:22px;font-weight:700;color:#f0f4ff;font-family:monospace;letter-spacing:-0.5px">'+escH(calcRes.result)+'</div>'
+      +'</div>'
+      +'<button onclick="if(navigator.clipboard){navigator.clipboard.writeText(\''+calcRes.result.replace(/'/g,"\\'")+'\')}else{var ta=document.createElement(\'textarea\');ta.value=\''+calcRes.result.replace(/'/g,"\\'")+'\';document.body.appendChild(ta);ta.select();document.execCommand(\'copy\');document.body.removeChild(ta);}toast(\'Copied!\')" style="font-size:11px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);border-radius:6px;padding:5px 12px;cursor:pointer;flex-shrink:0;white-space:nowrap">Copy</button>'
+      +'</div>';
+  }
+  if (!results.length) { out.innerHTML = calcHtml || '<div style="color:#4a5e7a;font-size:13px;padding:24px;text-align:center">No results for "'+escH(q)+'"</div>'; return; }
+  var html = calcHtml;
   results.slice(0,30).forEach(function(r) {
     var iconColor = _sicoColors[r.col] || '#4a5e7a';
     var iconSvg = _sico[r.col] || '';
