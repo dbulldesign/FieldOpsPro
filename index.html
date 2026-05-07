@@ -18311,7 +18311,7 @@ var _dmxMode = 'd2p';
     // Quick-add fixture inline on calc tab
     qaFx:false, qaFxMfr:'', qaFxPart:'', qaFxInc:'', qaFxUnit:'in', qaFxWpf:'', qaFxErr:'',
     // Quick-add PSU inline on calc tab
-    qaPsu:false, qaPsuMfr:'', qaPsuPart:'', qaPsuWatts:'', qaPsuBuffer:'', qaPsuLimit:'', qaPsuErr:'',
+    qaPsu:false, qaPsuMfr:'', qaPsuPart:'', qaPsuWatts:'', qaPsuBuffer:'', qaPsuLimit:'', qaPsuErr:'', qaPsuZone:'',
     // Fixture form
     fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxMaxLen:'', fxMaxLenUnit:'ft', fxErr:'', fxEditId:null,
     // PSU form
@@ -18624,15 +18624,70 @@ var _dmxMode = 'd2p';
     // Power supply calculation
     var psHtml='';
     if(proj.runs.length){
-      var psuOpts='<option value="">— Select power supply —</option>'
-        +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===S.projPsuId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
-        +'<option value="__addpsu__">+ Add new power supply…</option>';
+      if(!proj.psuOverrides) proj.psuOverrides={};
+      if(!proj.psuByZone) proj.psuByZone={};
+
+      // Helper: build PSU option list for a dropdown
+      function zonePsuOpts(selId){
+        return '<option value="">— Select PSU —</option>'
+          +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===selId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
+          +'<option value="__addpsu__">+ Add new power supply…</option>';
+      }
+
+      // Helper: compute PSU loads for a set of runs against a given PSU effective wattage
+      function calcGroupPsu(runs,zPsEff){
+        var totalW=0, psNeeded=0, loads=[];
+        runs.forEach(function(run){
+          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+          var qty=parseInt(run.qty)||1;
+          var wps=wpf?(run.lengthIn/12)*wpf:0;
+          totalW+=wps*qty;
+          if(wps>0&&zPsEff>0){
+            var spp=Math.floor(zPsEff/wps);
+            if(spp<1){
+              psNeeded+=qty;
+              for(var i=0;i<qty;i++) loads.push({w:wps,over:true});
+            } else {
+              var fp=Math.floor(qty/spp),rm=qty%spp;
+              psNeeded+=fp+(rm>0?1:0);
+              for(var j=0;j<fp;j++) loads.push({w:spp*wps,over:false});
+              if(rm>0) loads.push({w:rm*wps,over:false});
+            }
+          }
+        });
+        return {totalW:totalW,psNeeded:psNeeded,loads:loads};
+      }
+
+      // Helper: render load bars for a zone's PSU
+      function loadBarsHTML(loads,psOffset,zPsEff,zPsRated,zHasDerate){
+        var h='';
+        loads.forEach(function(entry,i){
+          var used=entry.w, isOver=entry.over;
+          var rawPct=zPsEff>0?(used/zPsEff)*100:0;
+          var barPct=Math.min(100,rawPct);
+          var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+          var sc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+          var sl=isOver?'OVER SPEC':rawPct>=95?'NEAR LIMIT':rawPct>=80?'HIGH':'OK';
+          h+='<div style="margin-bottom:6px">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+              +'<span style="font-size:11px;color:var(--text-muted)">PSU '+(psOffset+i+1)+'</span>'
+              +'<span style="font-size:11px;font-family:monospace;color:'+(isOver?'#f97316':'var(--text)')+'">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W'+(zHasDerate?' <span style="font-size:10px;color:var(--text-muted)">('+zPsRated+'W rated)</span>':'')+'</span>'
+              +'<span style="font-size:10px;font-weight:700;color:'+sc+'">'+sl+(isOver?' ('+rawPct.toFixed(0)+'%)':'')+'</span>'
+            +'</div>'
+            +'<div style="background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden">'
+              +'<div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'
+            +'</div>'
+          +'</div>';
+        });
+        return h;
+      }
 
       // Quick-add PSU panel
       var qaPsuHtml='';
       if(S.qaPsu){
-        qaPsuHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-top:10px;margin-bottom:4px">'
-          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Power Supply</div>'
+        qaPsuHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-bottom:12px">'
+          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Power Supply'+(S.qaPsuZone?' <span style="font-weight:400;color:var(--text-muted)">for Zone '+escH(S.qaPsuZone)+'</span>':'')+'</div>'
           +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
           +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
           +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
@@ -18645,178 +18700,118 @@ var _dmxMode = 'd2p';
           +'</div>';
       }
 
+      // Group runs by zone
+      var groups=[], groupMap={};
+      proj.runs.forEach(function(run){
+        var key=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
+        if(!groupMap[key]){ groupMap[key]=[]; groups.push(key); }
+        groupMap[key].push(run);
+      });
+      groups.sort(function(a,b){
+        if(a==='(No Zone)') return 1; if(b==='(No Zone)') return -1;
+        var na=parseFloat(a), nb=parseFloat(b);
+        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+        return a.localeCompare(b);
+      });
+
+      var grandTotalW=0, grandTotalPS=0, globalPsuOffset=0;
+      var treatmentsHtml='';
+      groups.forEach(function(zoneKey){
+        var gRuns=groupMap[zoneKey];
+
+        // Resolve this zone's PSU
+        var zonePsuId=proj.psuByZone[zoneKey]||'';
+        var zonePsu=zonePsuId?S.psu.find(function(p){return p.id===zonePsuId;}):null;
+        var zPsEff=zonePsu?psuEffectiveW(zonePsu):0;
+        var zPsRated=zonePsu?(parseFloat(zonePsu.outputWatts)||0):0;
+        var zHasDerate=zonePsu?((zonePsu.bufferPct&&parseFloat(zonePsu.bufferPct)>0)||(zonePsu.limitW&&parseFloat(zonePsu.limitW)>0)):false;
+
+        var g=calcGroupPsu(gRuns,zPsEff);
+        grandTotalW+=g.totalW;
+        var calcPS=g.psNeeded;
+        var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
+        var displayPS=manualPS!==null?manualPS:calcPS;
+        grandTotalPS+=displayPS;
+
+        // Runs list
+        var runLines=gRuns.map(function(r){
+          var fx=S.fixtures.find(function(f){return f.id===r.fixtureId;});
+          var qty=parseInt(r.qty)||1;
+          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+          var wps=wpf?(r.lengthIn/12)*wpf:null;
+          var tw=wps?wps*qty:null;
+          var over=wps&&zPsEff>0&&wps>zPsEff;
+          var forced=!!r.psuForce;
+          var overHtml='';
+          if(over){
+            overHtml='<div style="margin-top:5px;padding:6px 8px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
+              +'<span style="font-size:10px;color:#f97316;font-weight:700">⚠ '+wps.toFixed(1)+'W/strip exceeds PSU usable capacity ('+zPsEff.toFixed(1)+'W)</span>'
+              +'<div style="display:flex;gap:4px;margin-left:auto">'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:10px;'+(forced?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;'+(!forced?'background:rgba(255,255,255,0.06);color:var(--text)':'')+'">Need extra PSU</button>'
+              +'</div>'
+            +'</div>';
+          }
+          return '<div style="margin-bottom:'+(over?'8px':'2px')+'">'
+            +'<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted)">'
+              +(r.label?'<span style="font-size:10px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 5px;color:var(--text-muted)">'+escH(r.label)+'</span>':'')
+              +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
+              +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
+              +(tw!==null?'<span style="margin-left:auto;font-family:monospace;color:'+(over?'#f97316':'inherit')+'">'+tw.toFixed(1)+'W'+(over?' ⚠':'')+'</span>':'')
+            +'</div>'
+            +overHtml
+          +'</div>';
+        }).join('');
+
+        // Editable PS count badge
+        var isOverridden=manualPS!==null;
+        var psuBadge='<div style="display:flex;align-items:center;gap:3px;background:rgba(79,142,247,0.15);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
+          +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Edit PS count" style="width:34px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
+          +'<span style="font-size:11px;color:#4f8ef7;font-weight:700"> PS</span>'
+        +'</div>'
+        +(isOverridden?'<span style="font-size:10px;color:var(--text-muted)">calc: '+calcPS+'</span>':'');
+
+        // PSU selector for this zone
+        var psuSelRow='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)">'
+          +'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0">Power Supply:</span>'
+          +'<select class="lc-select" style="height:32px;font-size:12px;flex:1" data-zone-psu-sel="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
+          +(zonePsu?'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">'+zPsEff.toFixed(1)+'W usable'+(zHasDerate?' / '+zPsRated+'W rated':'')+'</span>':'')
+        +'</div>';
+
+        treatmentsHtml+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+(zoneKey==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zoneKey))+'</span>'
+            +'<div style="display:flex;gap:6px;align-items:center">'
+              +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
+              +psuBadge
+            +'</div>'
+          +'</div>'
+          +psuSelRow
+          +'<div style="margin-bottom:'+(g.loads.length&&zonePsu?'10px':'0')+'">'+runLines+'</div>'
+          +(g.loads.length&&zonePsu?loadBarsHTML(g.loads,globalPsuOffset,zPsEff,zPsRated,zHasDerate):'')
+          +(!zonePsu?'<p style="font-size:11px;color:var(--text-muted);margin-top:6px;margin-bottom:0">Select a power supply above to see load calculations</p>':'')
+        +'</div>';
+
+        globalPsuOffset+=displayPS;
+      });
+
       psHtml='<div style="border-top:1px solid var(--border);padding:16px 16px 14px">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Power Supply Calculation</div>'
-        +'<div class="lc-field" style="margin-bottom:4px"><span class="lc-lbl">Power supply / LED driver</span>'
-          +'<select class="lc-select" id="lc-proj-psu-sel">'+psuOpts+'</select>'
-        +'</div>'
+        +(!S.psu.length&&!S.qaPsu?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">No power supplies saved yet — use a zone dropdown to add one</div>':'')
         +qaPsuHtml
-        +((!S.psu.length&&!S.qaPsu)?'<span style="font-size:11px;color:var(--text-muted);margin-top:4px;margin-bottom:8px;display:block">No power supplies yet — use the dropdown to add one</span>':'<div style="margin-bottom:8px"></div>');
-      var selPsu=S.projPsuId?S.psu.find(function(p){return p.id===S.projPsuId;}):null;
-      if(selPsu){
-        var psRated=parseFloat(selPsu.outputWatts)||0;
-        var psEff=psuEffectiveW(selPsu);
-        var hasDerate=(selPsu.bufferPct&&parseFloat(selPsu.bufferPct)>0)||(selPsu.limitW&&parseFloat(selPsu.limitW)>0);
-
-        // Helper: compute PSU loads for a set of runs
-        // run.psuForce=true means "use this PSU even if over rated — 1 strip per PSU at actual watts"
-        function calcGroupPsu(runs){
-          var totalW=0, psNeeded=0, loads=[];
-          runs.forEach(function(run){
-            var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
-            var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-            var qty=parseInt(run.qty)||1;
-            var wps=wpf?(run.lengthIn/12)*wpf:0;
-            totalW+=wps*qty;
-            if(wps>0&&psEff>0){
-              var spp=Math.floor(psEff/wps);
-              if(spp<1){
-                if(run.psuForce){
-                  // User confirmed: 1 strip per PSU at over-capacity
-                  psNeeded+=qty;
-                  for(var i=0;i<qty;i++) loads.push({w:wps,over:true});
-                } else {
-                  // Default: flag as needing separate PSU per strip
-                  psNeeded+=qty;
-                  for(var i=0;i<qty;i++) loads.push({w:wps,over:true});
-                }
-              } else {
-                var fp=Math.floor(qty/spp),rm=qty%spp;
-                psNeeded+=fp+(rm>0?1:0);
-                for(var j=0;j<fp;j++) loads.push({w:spp*wps,over:false});
-                if(rm>0) loads.push({w:rm*wps,over:false});
-              }
-            }
-          });
-          return {totalW:totalW,psNeeded:psNeeded,loads:loads};
-        }
-
-        // Build PSU load bar HTML for a list of loads
-        function loadBarsHTML(loads,psOffset){
-          var h='';
-          loads.forEach(function(entry,i){
-            var used=entry.w, isOver=entry.over;
-            var rawPct=psEff>0?(used/psEff)*100:0;
-            var barPct=Math.min(100,rawPct);
-            var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-            var sc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-            var sl=isOver?'OVER SPEC':rawPct>=95?'NEAR LIMIT':rawPct>=80?'HIGH':'OK';
-            h+='<div style="margin-bottom:6px">'
-              +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
-                +'<span style="font-size:11px;color:var(--text-muted)">PSU '+(psOffset+i+1)+'</span>'
-                +'<span style="font-size:11px;font-family:monospace;color:'+(isOver?'#f97316':'var(--text)')+'">'+used.toFixed(1)+'W / '+psEff.toFixed(1)+'W'+(hasDerate?' <span style="font-size:10px;color:var(--text-muted)">('+psRated+'W rated)</span>':'')+'</span>'
-                +'<span style="font-size:10px;font-weight:700;color:'+sc+'">'+sl+(isOver?' ('+rawPct.toFixed(0)+'%)':'')+'</span>'
-              +'</div>'
-              +'<div style="background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden">'
-                +'<div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'
-              +'</div>'
-            +'</div>';
-          });
-          return h;
-        }
-
-        // Group runs by zone
-        if(!proj.psuOverrides) proj.psuOverrides={};
-        var groups=[], groupMap={};
-        proj.runs.forEach(function(run){
-          var key=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
-          if(!groupMap[key]){ groupMap[key]=[]; groups.push(key); }
-          groupMap[key].push(run);
-        });
-        // Sort: numeric zones first in order, then alpha, then (No Zone) last
-        groups.sort(function(a,b){
-          if(a==='(No Zone)') return 1; if(b==='(No Zone)') return -1;
-          var na=parseFloat(a), nb=parseFloat(b);
-          if(!isNaN(na)&&!isNaN(nb)) return na-nb;
-          return a.localeCompare(b);
-        });
-
-        var grandTotalW=0, grandTotalPS=0, globalPsuOffset=0;
-        var treatmentsHtml='';
-        groups.forEach(function(zoneKey){
-          var gRuns=groupMap[zoneKey];
-          var g=calcGroupPsu(gRuns);
-          grandTotalW+=g.totalW;
-          var calcPS=g.psNeeded;
-          var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
-          var displayPS=manualPS!==null?manualPS:calcPS;
-          grandTotalPS+=displayPS;
-
-          // Runs summary within this group
-          var runLines=gRuns.map(function(r){
-            var fx=S.fixtures.find(function(f){return f.id===r.fixtureId;});
-            var qty=parseInt(r.qty)||1;
-            var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-            var wps=wpf?(r.lengthIn/12)*wpf:null;
-            var tw=wps?wps*qty:null;
-            var over=wps&&psEff>0&&wps>psEff;
-            var forced=!!r.psuForce;
-            var overHtml='';
-            if(over){
-              overHtml='<div style="margin-top:5px;padding:6px 8px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
-                +'<span style="font-size:10px;color:#f97316;font-weight:700">⚠ '+wps.toFixed(1)+'W/strip exceeds PSU usable capacity ('+psEff.toFixed(1)+'W)</span>'
-                +'<div style="display:flex;gap:4px;margin-left:auto">'
-                  +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:10px;'+(forced?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
-                  +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;'+(!forced?'background:rgba(255,255,255,0.06);color:var(--text)':'')+'">Need extra PSU</button>'
-                +'</div>'
-              +'</div>';
-            }
-            return '<div style="margin-bottom:'+(over?'8px':'2px')+'">'
-              +'<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted)">'
-                +(r.label?'<span style="font-size:10px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 5px;color:var(--text-muted)">'+escH(r.label)+'</span>':'')
-                +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
-                +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
-                +(tw!==null?'<span style="margin-left:auto;font-family:monospace;color:'+(over?'#f97316':'inherit')+'">'+tw.toFixed(1)+'W'+(over?' ⚠':'')+'</span>':'')
-              +'</div>'
-              +overHtml
-            +'</div>';
-          }).join('');
-
-          // Editable PSU count badge
-          var isOverridden=manualPS!==null;
-          var psuBadge='<div style="display:flex;align-items:center;gap:3px;background:rgba(79,142,247,0.15);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
-            +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Edit PS count (leave blank to use calculated value)" style="width:34px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
-            +'<span style="font-size:11px;color:#4f8ef7;font-weight:700"> PS</span>'
-          +'</div>'
-          +(isOverridden?'<span style="font-size:10px;color:var(--text-muted)" title="Calculated: '+calcPS+'">calc: '+calcPS+'</span>':'');
-
-          treatmentsHtml+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
-            // Header row
-            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-              +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+(zoneKey==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zoneKey))+'</span>'
-              +'<div style="display:flex;gap:6px;align-items:center">'
-                +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
-                +psuBadge
-              +'</div>'
-            +'</div>'
-            // Runs list
-            +'<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)">'+runLines+'</div>'
-            // Load bars
-            +(g.loads.length?loadBarsHTML(g.loads,globalPsuOffset):'<span style="font-size:11px;color:var(--text-muted)">No wattage data — add W/ft to fixtures</span>')
-          +'</div>';
-
-          globalPsuOffset+=displayPS;
-        });
-
-        psHtml+=treatmentsHtml
-          // Grand total
-          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">'
+        +treatmentsHtml
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">'
           +'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
             +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div>'
             +'<div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div>'
-          +'</div>'
-          +'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">PS Usable'+(hasDerate?' / Rated':'')+'</div>'
-            +'<div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+psEff.toFixed(1)+(hasDerate?'<span style="font-size:12px;color:var(--text-muted)"> / '+psRated+'</span>':'')+'<span style="font-size:12px">W</span></div>'
           +'</div>'
           +'<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center">'
             +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">Total PS Needed</div>'
             +'<div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div>'
           +'</div>'
-          +'</div>'
-          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Grouped by zone · Click the PS number to override · Strips/PS = ⌊usable W ÷ W per strip⌋'+(hasDerate?' · Usable = rated × (1−buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
-      }
-      psHtml+='</div>';
+        +'</div>'
+        +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Each zone has its own PSU · Click the PS number to override the count · Strips/PS = ⌊usable W ÷ W per strip⌋</p>'
+      +'</div>';
     }
 
     return '<div style="padding:0 16px 16px">'+runsHtml+runFormHtml+'</div>'+psHtml;
@@ -19095,13 +19090,22 @@ var _dmxMode = 'd2p';
         var rfd=document.getElementById('lc-rf-desc');   if(rfd)  rfd.addEventListener('input',function(){S.runForm.description=this.value;});
         var rfsave=document.getElementById('lc-rf-save'); if(rfsave) rfsave.addEventListener('click',function(){doSaveRun(this.getAttribute('data-proj-id'));});
         bindEl('lc-rf-cancel','click',function(){S.runEditId=null;S.runForm={fixtureId:'',lengthStr:'',qty:'1',label:'',description:'',leaders:'1',zone:''};S.runFormErr='';_ledRender();});
-        bindEl('lc-proj-psu-sel','change',function(){
-          if(this.value==='__addpsu__'){
-            this.value=S.projPsuId;
-            S.qaPsu=true; S.qaPsuMfr=''; S.qaPsuPart=''; S.qaPsuWatts=''; S.qaPsuBuffer=''; S.qaPsuLimit=''; S.qaPsuErr='';
-            _ledRender(); return;
-          }
-          S.projPsuId=this.value; S.qaPsu=false; _ledRender();
+        // Per-zone PSU selectors
+        document.querySelectorAll('[data-zone-psu-sel]').forEach(function(sel){
+          sel.addEventListener('change',function(){
+            var zoneKey=this.getAttribute('data-zone-psu-sel');
+            var projId=this.getAttribute('data-proj-id');
+            var proj=S.projects.find(function(p){return p.id===projId;});
+            if(!proj) return;
+            if(!proj.psuByZone) proj.psuByZone={};
+            if(this.value==='__addpsu__'){
+              this.value=proj.psuByZone[zoneKey]||'';
+              S.qaPsu=true; S.qaPsuZone=zoneKey; S.qaPsuMfr=''; S.qaPsuPart=''; S.qaPsuWatts=''; S.qaPsuBuffer=''; S.qaPsuLimit=''; S.qaPsuErr='';
+              _ledRender(); return;
+            }
+            proj.psuByZone[zoneKey]=this.value; S.qaPsu=false; S.qaPsuZone='';
+            saveProj(); _ledRender();
+          });
         });
         // Quick-add PSU listeners
         if(S.qaPsu){
@@ -19117,10 +19121,16 @@ var _dmxMode = 'd2p';
             var buf=parseFloat(S.qaPsuBuffer), lim=parseFloat(S.qaPsuLimit);
             var obj={id:'ps'+Date.now(),manufacturer:S.qaPsuMfr.trim(),partNumber:S.qaPsuPart.trim(),outputWatts:w,
                      bufferPct:(!isNaN(buf)&&buf>0)?buf:null,limitW:(!isNaN(lim)&&lim>0)?lim:null};
-            S.psu.push(obj); S.projPsuId=obj.id; S.qaPsu=false;
-            savePsu(); _ledRender(); toast('Power supply saved');
+            S.psu.push(obj);
+            // Assign new PSU to the zone that triggered quick-add
+            if(S.qaPsuZone){
+              var activeProj=S.projects.find(function(p){return p.id===S.projOpen;});
+              if(activeProj){ if(!activeProj.psuByZone) activeProj.psuByZone={}; activeProj.psuByZone[S.qaPsuZone]=obj.id; }
+            }
+            S.qaPsu=false; S.qaPsuZone='';
+            savePsu(); saveProj(); _ledRender(); toast('Power supply saved');
           });
-          bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;_ledRender();});
+          bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;S.qaPsuZone='';_ledRender();});
         }
         document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(){doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
         document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(){doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
