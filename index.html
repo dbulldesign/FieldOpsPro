@@ -18715,21 +18715,32 @@ var _dmxMode = 'd2p';
           return h;
         }
 
-        // Group runs by label
+        // Group runs by zone
+        if(!proj.psuOverrides) proj.psuOverrides={};
         var groups=[], groupMap={};
         proj.runs.forEach(function(run){
-          var key=run.label&&run.label.trim()?run.label.trim():'(Unlabeled)';
+          var key=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
           if(!groupMap[key]){ groupMap[key]=[]; groups.push(key); }
           groupMap[key].push(run);
+        });
+        // Sort: numeric zones first in order, then alpha, then (No Zone) last
+        groups.sort(function(a,b){
+          if(a==='(No Zone)') return 1; if(b==='(No Zone)') return -1;
+          var na=parseFloat(a), nb=parseFloat(b);
+          if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+          return a.localeCompare(b);
         });
 
         var grandTotalW=0, grandTotalPS=0, globalPsuOffset=0;
         var treatmentsHtml='';
-        groups.forEach(function(lbl){
-          var gRuns=groupMap[lbl];
+        groups.forEach(function(zoneKey){
+          var gRuns=groupMap[zoneKey];
           var g=calcGroupPsu(gRuns);
           grandTotalW+=g.totalW;
-          grandTotalPS+=g.psNeeded;
+          var calcPS=g.psNeeded;
+          var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
+          var displayPS=manualPS!==null?manualPS:calcPS;
+          grandTotalPS+=displayPS;
 
           // Runs summary within this group
           var runLines=gRuns.map(function(r){
@@ -18752,6 +18763,7 @@ var _dmxMode = 'd2p';
             }
             return '<div style="margin-bottom:'+(over?'8px':'2px')+'">'
               +'<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted)">'
+                +(r.label?'<span style="font-size:10px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 5px;color:var(--text-muted)">'+escH(r.label)+'</span>':'')
                 +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
                 +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
                 +(tw!==null?'<span style="margin-left:auto;font-family:monospace;color:'+(over?'#f97316':'inherit')+'">'+tw.toFixed(1)+'W'+(over?' ⚠':'')+'</span>':'')
@@ -18760,13 +18772,21 @@ var _dmxMode = 'd2p';
             +'</div>';
           }).join('');
 
+          // Editable PSU count badge
+          var isOverridden=manualPS!==null;
+          var psuBadge='<div style="display:flex;align-items:center;gap:3px;background:rgba(79,142,247,0.15);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
+            +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Edit PS count (leave blank to use calculated value)" style="width:34px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
+            +'<span style="font-size:11px;color:#4f8ef7;font-weight:700"> PS</span>'
+          +'</div>'
+          +(isOverridden?'<span style="font-size:10px;color:var(--text-muted)" title="Calculated: '+calcPS+'">calc: '+calcPS+'</span>':'');
+
           treatmentsHtml+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
             // Header row
             +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-              +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+escH(lbl)+'</span>'
-              +'<div style="display:flex;gap:8px;align-items:center">'
+              +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+(zoneKey==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zoneKey))+'</span>'
+              +'<div style="display:flex;gap:6px;align-items:center">'
                 +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
-                +'<span style="font-size:11px;background:rgba(79,142,247,0.15);color:#4f8ef7;border-radius:5px;padding:2px 7px;font-weight:700">'+g.psNeeded+' PS</span>'
+                +psuBadge
               +'</div>'
             +'</div>'
             // Runs list
@@ -18775,7 +18795,7 @@ var _dmxMode = 'd2p';
             +(g.loads.length?loadBarsHTML(g.loads,globalPsuOffset):'<span style="font-size:11px;color:var(--text-muted)">No wattage data — add W/ft to fixtures</span>')
           +'</div>';
 
-          globalPsuOffset+=g.psNeeded;
+          globalPsuOffset+=displayPS;
         });
 
         psHtml+=treatmentsHtml
@@ -18794,7 +18814,7 @@ var _dmxMode = 'd2p';
             +'<div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div>'
           +'</div>'
           +'</div>'
-          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Each treatment calculated independently · Strips/PS = ⌊usable W ÷ W per strip⌋'+(hasDerate?' · Usable = rated × (1−buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
+          +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Grouped by zone · Click the PS number to override · Strips/PS = ⌊usable W ÷ W per strip⌋'+(hasDerate?' · Usable = rated × (1−buffer%)'+((selPsu.limitW&&parseFloat(selPsu.limitW)>0)?' capped at '+selPsu.limitW+'W':''):'')+'</p>';
       }
       psHtml+='</div>';
     }
@@ -19115,6 +19135,21 @@ var _dmxMode = 'd2p';
             r.psuForce=force;
             saveProj(); _ledRender();
           });
+        });
+        // Per-zone PSU count override inputs
+        document.querySelectorAll('[data-zone-psu]').forEach(function(inp){
+          inp.addEventListener('change',function(){
+            var zoneKey=this.getAttribute('data-zone-psu');
+            var projId=this.getAttribute('data-proj-id');
+            var p=S.projects.find(function(x){return x.id===projId;}); if(!p) return;
+            if(!p.psuOverrides) p.psuOverrides={};
+            var val=parseInt(this.value);
+            if(!isNaN(val)&&val>=0) p.psuOverrides[zoneKey]=val;
+            else delete p.psuOverrides[zoneKey];
+            saveProj(); _ledRender();
+          });
+          // Prevent accidental form submission on Enter
+          inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){this.blur();} });
         });
       }
     }
