@@ -12668,7 +12668,13 @@ function saveTimeEdit(id) {
   var project = (document.getElementById('te-proj-'+id)||{}).value||'';
   var ms = (h*3600 + m*60)*1000;
   if (ms <= 0) { toast('Duration must be greater than zero'); return; }
-  updateItem('timelog', id, { durationMs: ms, label: label||'Untitled', project: project });
+  // Merge on top of the full existing entry so no fields (stoppedAt, createdAt, taskId) are lost
+  var existing = (state.timelog||[]).find(function(e){ return e.id===id; });
+  var fullUpdate = _merge({}, existing||{}, { durationMs: ms, label: label||'Untitled', project: project });
+  if (!fullUpdate.createdAt) fullUpdate.createdAt = fullUpdate.stoppedAt || new Date().toISOString();
+  updateItem('timelog', id, fullUpdate);
+  // Re-read from localStorage so state is authoritative before render
+  if (!db) state.timelog = LOCAL.get('timelog');
   renderTimeLog();
   toast('Entry updated');
 }
@@ -18434,7 +18440,7 @@ var _dmxMode = 'd2p';
       +'<button class="lc-btn" style="width:100%" id="lc-stp-open-btn">→ Save to Project</button>';
     var btn=document.getElementById('lc-stp-open-btn');
     if(btn) btn.addEventListener('click',function(){
-      S.stp={open:true,projId:S.projects.length?S.projects[0].id:'',newProjName:'',qty:'1',label:'',description:'',lengthIn:r.closest.inches,fixtureId:S.selectedId};
+      S.stp={open:true,projId:S.projects.length?S.projects[0].id:'',newProjName:'',qty:'1',label:'',description:'',zone:'',lengthIn:r.closest.inches,fixtureId:S.selectedId};
       _ledRender();
     });
   }
@@ -18634,9 +18640,10 @@ var _dmxMode = 'd2p';
           +'<option value="__addpsu__">+ Add new power supply…</option>';
       }
 
-      // Helper: compute PSU loads for a set of runs against a given PSU effective wattage
-      function calcGroupPsu(runs,zPsEff){
-        var totalW=0, psNeeded=0, loads=[];
+      // Helper: compute PSU loads for a set of runs against a given PSU effective wattage.
+      // overrideCount (optional): if set, redistribute all run units evenly across that many PSUs.
+      function calcGroupPsu(runs,zPsEff,overrideCount){
+        var totalW=0, psNeeded=0, defaultLoads=[], runUnits=[];
         runs.forEach(function(run){
           var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
           var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
@@ -18647,16 +18654,29 @@ var _dmxMode = 'd2p';
             var spp=Math.floor(zPsEff/wps);
             if(spp<1){
               psNeeded+=qty;
-              for(var i=0;i<qty;i++) loads.push({w:wps,over:true});
+              for(var i=0;i<qty;i++){ defaultLoads.push({w:wps,over:true}); runUnits.push(wps); }
             } else {
               var fp=Math.floor(qty/spp),rm=qty%spp;
               psNeeded+=fp+(rm>0?1:0);
-              for(var j=0;j<fp;j++) loads.push({w:spp*wps,over:false});
-              if(rm>0) loads.push({w:rm*wps,over:false});
+              for(var j=0;j<fp;j++) defaultLoads.push({w:spp*wps,over:false});
+              if(rm>0) defaultLoads.push({w:rm*wps,over:false});
+              for(var k=0;k<qty;k++) runUnits.push(wps);
             }
           }
         });
-        return {totalW:totalW,psNeeded:psNeeded,loads:loads};
+        if(overrideCount!==null&&overrideCount!==undefined&&overrideCount>0&&runUnits.length>0&&zPsEff>0){
+          // Redistribute all run units across overrideCount PSUs using least-loaded-first
+          var numPS=overrideCount;
+          var psuW=[];
+          for(var ii=0;ii<numPS;ii++) psuW.push(0);
+          runUnits.slice().sort(function(a,b){return b-a;}).forEach(function(w){
+            var minIdx=0;
+            for(var jj=1;jj<numPS;jj++){if(psuW[jj]<psuW[minIdx])minIdx=jj;}
+            psuW[minIdx]+=w;
+          });
+          return {totalW:totalW,psNeeded:psNeeded,loads:psuW.map(function(w){return{w:w,over:w>zPsEff};})};
+        }
+        return {totalW:totalW,psNeeded:psNeeded,loads:defaultLoads};
       }
 
       // Helper: render load bars for a zone's PSU
@@ -18726,10 +18746,10 @@ var _dmxMode = 'd2p';
         var zPsRated=zonePsu?(parseFloat(zonePsu.outputWatts)||0):0;
         var zHasDerate=zonePsu?((zonePsu.bufferPct&&parseFloat(zonePsu.bufferPct)>0)||(zonePsu.limitW&&parseFloat(zonePsu.limitW)>0)):false;
 
-        var g=calcGroupPsu(gRuns,zPsEff);
+        var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
+        var g=calcGroupPsu(gRuns,zPsEff,manualPS);
         grandTotalW+=g.totalW;
         var calcPS=g.psNeeded;
-        var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
         var displayPS=manualPS!==null?manualPS:calcPS;
         grandTotalPS+=displayPS;
 
@@ -18752,11 +18772,14 @@ var _dmxMode = 'd2p';
               +'</div>'
             +'</div>';
           }
+          var totalFt=(r.lengthIn*qty/12);
+          var totalFtStr=totalFt%1===0?totalFt+'\'':totalFt.toFixed(1)+'\'';
           return '<div style="margin-bottom:'+(over?'8px':'2px')+'">'
             +'<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted)">'
               +(r.label?'<span style="font-size:10px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 5px;color:var(--text-muted)">'+escH(r.label)+'</span>':'')
               +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
               +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
+              +'<span style="color:var(--text-muted);font-family:monospace">'+totalFtStr+' total</span>'
               +(tw!==null?'<span style="margin-left:auto;font-family:monospace;color:'+(over?'#f97316':'inherit')+'">'+tw.toFixed(1)+'W'+(over?' ⚠':'')+'</span>':'')
             +'</div>'
             +overHtml
@@ -18914,8 +18937,9 @@ var _dmxMode = 'd2p';
       +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Project</span><select class="lc-select" id="lc-stp-proj">'+pOpts+'</select></div>'
       +(st.projId===''?'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">New project name</span><input class="lc-input" id="lc-stp-newproj" placeholder="e.g. Kitchen Remodel" value="'+escH(st.newProjName)+'"></div>':'')
       +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Fixture</span><select class="lc-select" id="lc-stp-fx">'+fxOpts(st.fixtureId)+'</select></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 80px;gap:8px;margin-bottom:10px">'
+      +'<div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;margin-bottom:10px">'
         +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-stp-label" placeholder="e.g. Under cabinet" value="'+escH(st.label)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Zone</span><input class="lc-input" id="lc-stp-zone" placeholder="e.g. 1" value="'+escH(st.zone||'')+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-stp-qty" type="number" min="1" value="'+escH(st.qty)+'"></div>'
       +'</div>'
       +'<div class="lc-field" style="margin-bottom:14px"><span class="lc-lbl">Description (optional)</span><input class="lc-input" id="lc-stp-desc" placeholder="Notes…" value="'+escH(st.description)+'"></div>'
@@ -18994,7 +19018,7 @@ var _dmxMode = 'd2p';
       var np={id:'lp'+Date.now(),name:st.newProjName.trim(),runs:[]}; S.projects.push(np); projId=np.id;
     }
     var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
-    proj.runs.push({id:'lr'+Date.now(),label:st.label,fixtureId:st.fixtureId,lengthIn:st.lengthIn,qty:Math.max(1,parseInt(st.qty)||1),description:st.description});
+    proj.runs.push({id:'lr'+Date.now(),label:st.label,fixtureId:st.fixtureId,lengthIn:st.lengthIn,qty:Math.max(1,parseInt(st.qty)||1),description:st.description,zone:st.zone||'',leaders:'1',psuForce:false});
     S.stp.open=false; S.tab='projects'; S.activeProjId=projId;
     saveProj(); _ledRender(); toast('Saved to "'+proj.name+'"');
   }
@@ -19219,6 +19243,7 @@ var _dmxMode = 'd2p';
       var stpL=document.getElementById('lc-stp-label');     if(stpL) stpL.addEventListener('input',function(){S.stp.label=this.value;});
       var stpQ=document.getElementById('lc-stp-qty');       if(stpQ) stpQ.addEventListener('input',function(){S.stp.qty=this.value;});
       var stpD=document.getElementById('lc-stp-desc');      if(stpD) stpD.addEventListener('input',function(){S.stp.description=this.value;});
+      var stpZ=document.getElementById('lc-stp-zone');      if(stpZ) stpZ.addEventListener('input',function(){S.stp.zone=this.value;});
       bindEl('lc-stp-save','click',doSaveToProject);
       bindEl('lc-stp-cancel','click',function(){S.stp.open=false;_ledRender();});
     }
