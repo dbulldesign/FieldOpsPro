@@ -3829,6 +3829,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 12c0-2.76 1.12-5.26 2.93-7.07A9.97 9.97 0 0 1 22 12"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity="0.4"/></svg>
           Color Calculator
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('dipcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/><line x1="7" y1="10" x2="7" y2="14" stroke-width="3"/><line x1="17" y1="10" x2="17" y2="14" stroke-width="3"/></svg>
+          DIP Switch Calc
+        </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('voltcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Voltage Drop Calc
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -4608,6 +4616,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ COLOR CALCULATOR ═══ -->
   <div class="view" id="view-colorcalc">
     <div id="cc-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ VOLTAGE DROP CALCULATOR ═══ -->
+  <div class="view" id="view-voltcalc">
+    <div id="vd-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ DIP SWITCH CALCULATOR ═══ -->
+  <div class="view" id="view-dipcalc">
+    <div id="dip-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7058,7 +7076,9 @@ var viewTitles = {
   timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer',
   dmxcalc: 'DMX Calculator',
   ledcalc: 'LED Tape Calculator',
-  colorcalc: 'Color Calculator'
+  colorcalc: 'Color Calculator',
+  dipcalc: 'DIP Switch Calculator',
+  voltcalc: 'Voltage Drop Calculator'
 };
 
 function switchView(v) {
@@ -7122,6 +7142,12 @@ function switchView(v) {
   }
   if(v==='colorcalc') {
     if (typeof _ccRender === 'function') _ccRender();
+  }
+  if(v==='dipcalc') {
+    if (typeof _dipRender === 'function') _dipRender();
+  }
+  if(v==='voltcalc') {
+    if (typeof _vdRender === 'function') _vdRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -19414,52 +19440,57 @@ window._dmxCalcP2D    = _dmxCalcP2D;
 // ═══════════════════════════════════════════════
 //  COLOR CALCULATOR
 // ═══════════════════════════════════════════════
-var _cc = { r:255, g:147, b:41, fixture:'rgbw', optimizeW:true, bits:8, mode:'rgb', cct:3200 };
+var _cc = { r:255, g:147, b:41, w:0, c:0, m:42, y:84, k:0, cct:3200, fixture:'rgbw', optimizeW:true, bits:8, mode:'rgb' };
 
 function _cctToRgb(k) {
   var t=k/100, r, g, b;
-  if (t<=66) {
+  if(t<=66){
     r=255;
-    g=Math.round(Math.max(0,Math.min(255, 99.4708025861*Math.log(t)-161.1195681661)));
-    b=t<=19?0:Math.round(Math.max(0,Math.min(255, 138.5177312231*Math.log(t-10)-305.0447927307)));
+    g=Math.round(Math.max(0,Math.min(255,99.4708025861*Math.log(t)-161.1195681661)));
+    b=t<=19?0:Math.round(Math.max(0,Math.min(255,138.5177312231*Math.log(t-10)-305.0447927307)));
   } else {
-    r=Math.round(Math.max(0,Math.min(255, 329.698727446*Math.pow(t-60,-0.1332047592))));
-    g=Math.round(Math.max(0,Math.min(255, 288.1221695283*Math.pow(t-60,-0.0755148492))));
+    r=Math.round(Math.max(0,Math.min(255,329.698727446*Math.pow(t-60,-0.1332047592))));
+    g=Math.round(Math.max(0,Math.min(255,288.1221695283*Math.pow(t-60,-0.0755148492))));
     b=255;
   }
   return {r:r,g:g,b:b};
 }
-
-function _ccChannels() {
-  var r=_cc.r, g=_cc.g, b=_cc.b, opt=_cc.optimizeW;
-  switch(_cc.fixture) {
-    case 'rgb':
-      return [{n:'R',v:r,c:'#ef4444'},{n:'G',v:g,c:'#22c55e'},{n:'B',v:b,c:'#3b82f6'}];
-    case 'rgbw': {
-      var w=opt?Math.min(r,g,b):0;
-      return [{n:'R',v:r-w,c:'#ef4444'},{n:'G',v:g-w,c:'#22c55e'},{n:'B',v:b-w,c:'#3b82f6'},{n:'W',v:w,c:'#94a3b8'}];
-    }
-    case 'rgbwa': {
-      var w=opt?Math.min(r,g,b):0;
-      var r2=r-w,g2=g-w,b2=b-w;
+function _ccRgbToCmyk() {
+  var r=_cc.r/255,g=_cc.g/255,b=_cc.b/255,k=1-Math.max(r,g,b);
+  if(k>=1){_cc.c=0;_cc.m=0;_cc.y=0;_cc.k=100;return;}
+  _cc.c=Math.round((1-r-k)/(1-k)*100);
+  _cc.m=Math.round((1-g-k)/(1-k)*100);
+  _cc.y=Math.round((1-b-k)/(1-k)*100);
+  _cc.k=Math.round(k*100);
+}
+function _ccCmykToRgb() {
+  var c=_cc.c/100,m=_cc.m/100,y=_cc.y/100,k=_cc.k/100;
+  _cc.r=Math.round(255*(1-c)*(1-k));
+  _cc.g=Math.round(255*(1-m)*(1-k));
+  _cc.b=Math.round(255*(1-y)*(1-k));
+}
+function _ccEffRgb() {
+  var w=_cc.w||0;
+  return {
+    r:Math.min(255,Math.round(_cc.r+(255-_cc.r)*w/255)),
+    g:Math.min(255,Math.round(_cc.g+(255-_cc.g)*w/255)),
+    b:Math.min(255,Math.round(_cc.b+(255-_cc.b)*w/255))
+  };
+}
+function _ccChannelsFrom(r,g,b) {
+  var opt=_cc.optimizeW;
+  switch(_cc.fixture){
+    case 'rgb': return [{n:'R',v:r,c:'#ef4444'},{n:'G',v:g,c:'#22c55e'},{n:'B',v:b,c:'#3b82f6'}];
+    case 'rgbw':{var w=opt?Math.min(r,g,b):0;return [{n:'R',v:r-w,c:'#ef4444'},{n:'G',v:g-w,c:'#22c55e'},{n:'B',v:b-w,c:'#3b82f6'},{n:'W',v:w,c:'#94a3b8'}];}
+    case 'rgbwa':{
+      var w=opt?Math.min(r,g,b):0,r2=r-w,g2=g-w,b2=b-w;
       var am=opt?Math.max(0,Math.min(255,Math.round(Math.min(r2,g2>0?g2*(255/175):0)*(b2>0?1-b2/255:1)))):0;
-      return [
-        {n:'R',v:Math.max(0,Math.round(r2-am)),c:'#ef4444'},
-        {n:'G',v:Math.max(0,Math.round(g2-am*(175/255))),c:'#22c55e'},
-        {n:'B',v:b2,c:'#3b82f6'},
-        {n:'W',v:w,c:'#94a3b8'},
-        {n:'A',v:am,c:'#f97316'}
-      ];
+      return [{n:'R',v:Math.max(0,Math.round(r2-am)),c:'#ef4444'},{n:'G',v:Math.max(0,Math.round(g2-am*(175/255))),c:'#22c55e'},{n:'B',v:b2,c:'#3b82f6'},{n:'W',v:w,c:'#94a3b8'},{n:'A',v:am,c:'#f97316'}];
     }
-    case 'rgbww': {
-      var w=opt?Math.min(r,g,b):0;
-      var r2=r-w,g2=g-w,b2=b-w;
-      var tot=r2+g2+b2, warmth=tot>0?(r2-b2)/tot:0;
+    case 'rgbww':{
+      var w=opt?Math.min(r,g,b):0,r2=r-w,g2=g-w,b2=b-w,tot=r2+g2+b2,warmth=tot>0?(r2-b2)/tot:0;
       var ww=Math.round(w*Math.max(0,Math.min(1,0.5+warmth*0.5)));
-      return [
-        {n:'R',v:r2,c:'#ef4444'},{n:'G',v:g2,c:'#22c55e'},{n:'B',v:b2,c:'#3b82f6'},
-        {n:'WW',v:ww,c:'#fbbf24'},{n:'CW',v:w-ww,c:'#bae6fd'}
-      ];
+      return [{n:'R',v:r2,c:'#ef4444'},{n:'G',v:g2,c:'#22c55e'},{n:'B',v:b2,c:'#3b82f6'},{n:'WW',v:ww,c:'#fbbf24'},{n:'CW',v:w-ww,c:'#bae6fd'}];
     }
     default: return [];
   }
@@ -19472,11 +19503,11 @@ function _ccFromHex(hex) {
   _cc.r=parseInt(hex.substring(0,2),16);
   _cc.g=parseInt(hex.substring(2,4),16);
   _cc.b=parseInt(hex.substring(4,6),16);
-  _ccRender();
+  _ccUpdate();
 }
 
 function _ccCopyAll() {
-  var ch=_ccChannels();
+  var eff=_ccEffRgb(), ch=_ccChannelsFrom(eff.r,eff.g,eff.b);
   var lines=ch.map(function(c){
     if(_cc.bits===16){var v16=c.v*257;return c.n+': '+c.v+' (coarse:'+Math.floor(v16/256)+', fine:'+v16%256+')';}
     return c.n+': '+c.v;
@@ -19487,23 +19518,17 @@ function _ccCopyAll() {
   toast('Copied!');
 }
 
-function _ccRender() {
-  var root=document.getElementById('cc-root');
-  if(!root) return;
-  var r=_cc.r, g=_cc.g, b=_cc.b;
-  var hex='#'+[r,g,b].map(function(v){return ('0'+v.toString(16)).slice(-2);}).join('');
-  var ch=_ccChannels();
-  var cols16='80px 70px 70px 70px', cols8='80px 80px 80px';
-  var cols=_cc.bits===16?cols16:cols8;
-  var hdrLabels=_cc.bits===16?['Channel','8-bit','Coarse','Fine']:['Channel','Value','%'];
-  var hdr=hdrLabels.map(function(l){return '<span style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:0.5px;text-transform:uppercase">'+l+'</span>';}).join('');
-  var rows=ch.map(function(c){
+function _ccRenderTable() {
+  var tbl=document.getElementById('cc-table'); if(!tbl) return;
+  var eff=_ccEffRgb(), ch=_ccChannelsFrom(eff.r,eff.g,eff.b);
+  var cols=_cc.bits===16?'80px 70px 70px 70px':'80px 80px 80px';
+  tbl.innerHTML=ch.map(function(c){
     var pct=(c.v/255*100).toFixed(1), bar=Math.round(c.v/255*100);
     var v16=c.v*257, coarse=Math.floor(v16/256), fine=v16%256;
     return '<div style="display:grid;grid-template-columns:'+cols+';align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04)">'
       +'<div style="display:flex;align-items:center;gap:7px">'
       +  '<span style="width:8px;height:8px;border-radius:2px;background:'+c.c+';flex-shrink:0"></span>'
-      +  '<span style="font-size:12px;font-weight:700;color:#f0f4ff;min-width:22px">'+c.n+'</span>'
+      +  '<span style="font-size:12px;font-weight:700;color:#f0f4ff;min-width:24px">'+c.n+'</span>'
       +  '<div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;max-width:60px"><div style="height:100%;width:'+bar+'%;background:'+c.c+';border-radius:2px"></div></div>'
       +'</div>'
       +'<span style="font-size:13px;font-weight:600;color:#f0f4ff;font-family:monospace">'+c.v+'</span>'
@@ -19514,94 +19539,430 @@ function _ccRender() {
       )
       +'</div>';
   }).join('');
-  var rgbInputs='';
-  [['R','r','#ef4444'],['G','g','#22c55e'],['B','b','#3b82f6']].forEach(function(ci){
-    var val=_cc[ci[1]];
-    rgbInputs+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
-      +'<span style="width:12px;font-size:11px;font-weight:700;color:'+ci[2]+';flex-shrink:0">'+ci[0]+'</span>'
-      +'<input type="range" min="0" max="255" value="'+val+'" oninput="_cc.'+ci[1]+'=parseInt(this.value);_ccRender()" style="flex:1;accent-color:'+ci[2]+';cursor:pointer">'
-      +'<input type="number" min="0" max="255" value="'+val+'" oninput="_cc.'+ci[1]+'=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccRender()" style="width:46px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:12px;text-align:center;outline:none;-moz-appearance:textfield">'
-      +'</div>';
+}
+
+// Partial update — keeps sliders interactive by NOT rebuilding their DOM
+function _ccUpdate() {
+  var eff=_ccEffRgb();
+  var hex='#'+[_cc.r,_cc.g,_cc.b].map(function(v){return ('0'+v.toString(16)).slice(-2);}).join('');
+  var sw=document.getElementById('cc-swatch'); if(sw) sw.style.background='rgb('+eff.r+','+eff.g+','+eff.b+')';
+  var cp=document.getElementById('cc-colorpick'); if(cp&&document.activeElement!==cp) cp.value=hex;
+  var hi=document.getElementById('cc-hex'); if(hi&&document.activeElement!==hi) hi.value=hex;
+  ['r','g','b'].forEach(function(k){
+    var s=document.getElementById('cc-'+k+'-s'); if(s&&document.activeElement!==s) s.value=_cc[k];
+    var n=document.getElementById('cc-'+k+'-n'); if(n&&document.activeElement!==n) n.value=_cc[k];
   });
-  var cctInput='<div style="margin-bottom:4px">'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-    +'<span style="font-size:11px;color:#4a5e7a;width:12px;flex-shrink:0">K</span>'
-    +'<div style="flex:1;position:relative;height:28px;display:flex;align-items:center">'
-    +'<div style="position:absolute;left:0;right:0;height:6px;border-radius:3px;background:linear-gradient(to right,#f97316,#fde68a,#f9fafb,#bae6fd);pointer-events:none"></div>'
-    +'<input type="range" min="1000" max="10000" step="100" value="'+_cc.cct+'" oninput="_cc.cct=parseInt(this.value);var _rgb=_cctToRgb(_cc.cct);_cc.r=_rgb.r;_cc.g=_rgb.g;_cc.b=_rgb.b;_ccRender()" style="position:relative;width:100%;background:transparent;appearance:none;-webkit-appearance:none;height:20px;cursor:pointer">'
-    +'</div>'
-    +'<input type="number" min="1000" max="10000" step="100" value="'+_cc.cct+'" oninput="_cc.cct=Math.max(1000,Math.min(10000,parseInt(this.value)||4000));var _rgb=_cctToRgb(_cc.cct);_cc.r=_rgb.r;_cc.g=_rgb.g;_cc.b=_rgb.b;_ccRender()" style="width:60px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:12px;text-align:center;outline:none;-moz-appearance:textfield">'
-    +'<span style="font-size:11px;color:#4a5e7a">K</span>'
-    +'</div>'
-    +'<div style="display:flex;justify-content:space-between;padding:0 2px;margin-bottom:12px">'
-    +'<span style="font-size:10px;color:#f97316">1000K</span>'
-    +'<span style="font-size:10px;color:#94a3b8">Warm ← → Cool</span>'
-    +'<span style="font-size:10px;color:#bae6fd">10000K</span>'
-    +'</div>'
-    +'</div>';
+  var ws=document.getElementById('cc-w-s'); if(ws&&document.activeElement!==ws) ws.value=_cc.w;
+  var wn=document.getElementById('cc-w-n'); if(wn&&document.activeElement!==wn) wn.value=_cc.w;
+  var cs=document.getElementById('cc-cct-s'); if(cs&&document.activeElement!==cs) cs.value=_cc.cct;
+  var cn=document.getElementById('cc-cct-n'); if(cn&&document.activeElement!==cn) cn.value=_cc.cct;
+  if(_cc.mode!=='cmyk') {
+    _ccRgbToCmyk();
+    ['c','m','y','k'].forEach(function(k){
+      var s=document.getElementById('cc-'+k+'-s'); if(s&&document.activeElement!==s) s.value=_cc[k];
+      var n=document.getElementById('cc-'+k+'-n'); if(n&&document.activeElement!==n) n.value=_cc[k];
+    });
+  }
+  _ccRenderTable();
+}
+
+function _ccRender() {
+  var root=document.getElementById('cc-root'); if(!root) return;
+  _ccRgbToCmyk();
+  var r=_cc.r,g=_cc.g,b=_cc.b,eff=_ccEffRgb();
+  var hex='#'+[r,g,b].map(function(v){return ('0'+v.toString(16)).slice(-2);}).join('');
   var fixtures=[['rgb','RGB'],['rgbw','RGBW'],['rgbwa','RGBWA'],['rgbww','RGBWW']];
+  var modes=[['rgb','RGB / Hex'],['cct','CCT / Kelvin'],['cmyk','CMYK']];
+  var cols=_cc.bits===16?'80px 70px 70px 70px':'80px 80px 80px';
+  var hdrLabels=_cc.bits===16?['Channel','8-bit','Coarse','Fine']:['Channel','Value','%'];
+  var hdr=hdrLabels.map(function(l){return '<span style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:0.5px;text-transform:uppercase">'+l+'</span>';}).join('');
+
+  // Shared slider row — uses _ccUpdate (not _ccRender) so drags work without DOM rebuild
+  function sRow(id,label,val,min,max,accent,handler) {
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<span style="width:16px;font-size:12px;font-weight:700;color:'+accent+';flex-shrink:0;text-align:center">'+label+'</span>'
+      +'<input type="range" id="cc-'+id+'-s" min="'+min+'" max="'+max+'" value="'+val+'" oninput="'+handler+'" style="flex:1;accent-color:'+accent+';cursor:pointer;height:22px;touch-action:none">'
+      +'<input type="number" id="cc-'+id+'-n" min="'+min+'" max="'+max+'" value="'+val+'" oninput="'+handler+'" style="width:52px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:5px 6px;color:#f0f4ff;font-size:14px;font-weight:600;text-align:center;outline:none;-moz-appearance:textfield">'
+      +'</div>';
+  }
+
+  // Input section per mode
+  var inputHtml='';
+  if(_cc.mode==='rgb') {
+    inputHtml=
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">'
+      +'<input type="color" id="cc-colorpick" value="'+hex+'" oninput="_ccFromHex(this.value)" style="width:52px;height:52px;border:none;cursor:pointer;border-radius:8px;padding:2px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);flex-shrink:0">'
+      +'<div style="flex:1"><label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:4px">Hex</label>'
+      +'<input type="text" id="cc-hex" value="'+hex+'" oninput="_ccFromHex(this.value)" maxlength="7" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#f0f4ff;font-size:15px;font-family:monospace;outline:none;box-sizing:border-box">'
+      +'</div></div>'
+      +sRow('r','R',r,0,255,'#ef4444','_cc.r=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccUpdate()')
+      +sRow('g','G',g,0,255,'#22c55e','_cc.g=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccUpdate()')
+      +sRow('b','B',b,0,255,'#3b82f6','_cc.b=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccUpdate()');
+  } else if(_cc.mode==='cct') {
+    inputHtml=
+      '<div style="margin-bottom:14px">'
+      +'<div style="height:8px;border-radius:4px;background:linear-gradient(to right,#f97316,#fde68a,#f9fafb,#bae6fd);margin-bottom:10px"></div>'
+      +sRow('cct','K',_cc.cct,1000,10000,'#fbbf24','_cc.cct=Math.max(1000,Math.min(10000,parseInt(this.value)||3200));var _t=_cctToRgb(_cc.cct);_cc.r=_t.r;_cc.g=_t.g;_cc.b=_t.b;_ccUpdate()')
+      +'<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:-4px">'
+      +'<span style="color:#f97316">1000K Warm</span><span style="color:#bae6fd">10000K Cool</span>'
+      +'</div></div>';
+  } else {
+    inputHtml=
+      sRow('c','C',_cc.c,0,100,'#06b6d4','_cc.c=Math.max(0,Math.min(100,parseInt(this.value)||0));_ccCmykToRgb();_ccUpdate()')
+      +sRow('m','M',_cc.m,0,100,'#ec4899','_cc.m=Math.max(0,Math.min(100,parseInt(this.value)||0));_ccCmykToRgb();_ccUpdate()')
+      +sRow('y','Y',_cc.y,0,100,'#eab308','_cc.y=Math.max(0,Math.min(100,parseInt(this.value)||0));_ccCmykToRgb();_ccUpdate()')
+      +sRow('k','K',_cc.k,0,100,'#94a3b8','_cc.k=Math.max(0,Math.min(100,parseInt(this.value)||0));_ccCmykToRgb();_ccUpdate()');
+  }
+
   root.innerHTML=
     '<div style="max-width:520px;margin:0 auto;padding:24px 16px 40px">'
     +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Color Calculator</h2>'
     +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 18px">DMX channel values for RGB LED fixtures</p>'
-    // Color swatch
-    +'<div style="height:72px;border-radius:12px;background:rgb('+r+','+g+','+b+');margin-bottom:18px;border:1px solid rgba(255,255,255,0.1)"></div>'
-    // Input mode tabs
+    +'<div id="cc-swatch" style="height:72px;border-radius:12px;background:rgb('+eff.r+','+eff.g+','+eff.b+');margin-bottom:18px;border:1px solid rgba(255,255,255,0.1)"></div>'
+    // Mode tabs
     +'<div style="display:flex;margin-bottom:14px;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px">'
-    +'<button onclick="_cc.mode=\'rgb\';_ccRender()" style="flex:1;padding:6px 0;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;'
-    +(_cc.mode==='rgb'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">RGB / Hex</button>'
-    +'<button onclick="_cc.mode=\'cct\';_ccRender()" style="flex:1;padding:6px 0;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;'
-    +(_cc.mode==='cct'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">CCT / Kelvin</button>'
+    +modes.map(function(m){
+      var a=_cc.mode===m[0];
+      return '<button onclick="_cc.mode=\''+m[0]+'\';_ccRender()" style="flex:1;padding:6px 0;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;'+(a?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">'+m[1]+'</button>';
+    }).join('')
     +'</div>'
-    // Color inputs
-    +(_cc.mode==='rgb'
-      ?'<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">'
-       +'<input type="color" value="'+hex+'" oninput="_ccFromHex(this.value)" style="width:48px;height:48px;border:none;cursor:pointer;border-radius:8px;padding:2px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);flex-shrink:0">'
-       +'<div style="flex:1">'
-       +'<label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:4px">Hex</label>'
-       +'<input type="text" value="'+hex+'" oninput="_ccFromHex(this.value)" maxlength="7" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#f0f4ff;font-size:14px;font-family:monospace;outline:none;box-sizing:border-box">'
-       +'</div></div>'
-       +rgbInputs
-      :cctInput
-    )
+    +inputHtml
+    // White mix — always visible
+    +'<div style="margin-bottom:14px;padding:10px 12px 6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">White Mix</div>'
+    +sRow('w','W',_cc.w,0,255,'#e2e8f0','_cc.w=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccUpdate()')
+    +'<p style="font-size:10px;color:#4a5e7a;margin:2px 0 4px">Blend white into color — affects swatch and DMX output</p>'
+    +'</div>'
     // Fixture type
     +'<div style="margin-bottom:14px">'
     +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:7px">Fixture Type</div>'
     +'<div style="display:flex;gap:5px">'
     +fixtures.map(function(f){
       var a=_cc.fixture===f[0];
-      return '<button onclick="_cc.fixture=\''+f[0]+'\';_ccRender()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;flex:1;'
-        +'border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';'
-        +'background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';'
-        +'color:'+(a?'#4f8ef7':'#8da0c0')+'">'+f[1]+'</button>';
+      return '<button onclick="_cc.fixture=\''+f[0]+'\';_ccRender()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;flex:1;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#4f8ef7':'#8da0c0')+'">'+f[1]+'</button>';
     }).join('')
     +'</div></div>'
-    // Options
     +'<div style="display:flex;gap:16px;margin-bottom:18px;align-items:center">'
-    +(_cc.fixture!=='rgb'
-      ?'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0">'
-       +'<input type="checkbox" '+(_cc.optimizeW?'checked':'')+' onchange="_cc.optimizeW=this.checked;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> Optimize Whites</label>'
-      :''
-    )
-    +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0">'
-    +'<input type="checkbox" '+(_cc.bits===16?'checked':'')+' onchange="_cc.bits=this.checked?16:8;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> 16-bit output</label>'
+    +(_cc.fixture!=='rgb'?'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0"><input type="checkbox" '+(_cc.optimizeW?'checked':'')+' onchange="_cc.optimizeW=this.checked;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> Optimize Whites</label>':'')
+    +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0"><input type="checkbox" '+(_cc.bits===16?'checked':'')+' onchange="_cc.bits=this.checked?16:8;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> 16-bit output</label>'
     +'</div>'
-    // DMX output table
     +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">'
     +'<span style="font-size:12px;font-weight:700;color:#f0f4ff">DMX Output</span>'
     +'<button onclick="_ccCopyAll()" style="font-size:11px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);border-radius:6px;padding:4px 10px;cursor:pointer">Copy All</button>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:'+cols+';align-items:center;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">'+hdr+'</div>'
-    +rows
+    +'<div id="cc-table"></div>'
+    +'</div>'
+    +'</div>';
+  _ccRenderTable();
+}
+
+window._ccRender     = _ccRender;
+window._ccUpdate     = _ccUpdate;
+window._ccFromHex    = _ccFromHex;
+window._ccCopyAll    = _ccCopyAll;
+window._cctToRgb     = _cctToRgb;
+window._ccCmykToRgb  = _ccCmykToRgb;
+
+// ═══════════════════════════════════════════════
+//  VOLTAGE DROP CALCULATOR
+// ═══════════════════════════════════════════════
+var _vd = { voltage:24, mode:'watts', watts:72, amps:3, length:25, unit:'ft', lengthType:'oneway', material:'copper', gaugeMode:'awg', awg:'14', mm2:'2.5' };
+
+var _vdAwg = [
+  {awg:'6',mm2:13.30},{awg:'8',mm2:8.37},{awg:'10',mm2:5.26},
+  {awg:'12',mm2:3.31},{awg:'14',mm2:2.08},{awg:'16',mm2:1.31},
+  {awg:'18',mm2:0.823},{awg:'20',mm2:0.518}
+];
+var _vdMm2 = [0.5,0.75,1.0,1.5,2.5,4.0,6.0,10.0,16.0];
+
+function _vdGetArea() {
+  if(_vd.gaugeMode==='awg'){var d=_vdAwg.find(function(x){return x.awg===_vd.awg;});return d?d.mm2:2.08;}
+  return parseFloat(_vd.mm2)||2.5;
+}
+function _vdCompute() {
+  var V=parseFloat(_vd.voltage)||24;
+  var I=_vd.mode==='watts'?(parseFloat(_vd.watts)||0)/(V||1):(parseFloat(_vd.amps)||0);
+  var L=parseFloat(_vd.length)||0;
+  var L_m=_vd.unit==='ft'?L*0.3048:L;
+  if(_vd.lengthType==='total') L_m/=2;
+  var rho=_vd.material==='copper'?0.01724:0.0282;
+  var A=_vdGetArea();
+  var vDrop=A>0?(rho*2*L_m*I)/A:0;
+  var dropPct=V>0?(vDrop/V)*100:0;
+  return {V:V,I:I,L_m:L_m,rho:rho,A:A,vDrop:vDrop,dropPct:dropPct,vAtLoad:V-vDrop};
+}
+function _vdMaxRun(pct,V,I,rho,A) {
+  if(I<=0||A<=0||V<=0) return '—';
+  var maxL_m=(V*pct/100*A)/(rho*2*I);
+  return _vd.unit==='ft'?(maxL_m/0.3048).toFixed(0)+' ft':maxL_m.toFixed(1)+' m';
+}
+function _vdMinGauge(pct,V,I,L_m,rho) {
+  if(I<=0||L_m<=0) return '—';
+  var thresh=V*pct/100;
+  if(_vd.gaugeMode==='awg'){
+    for(var i=_vdAwg.length-1;i>=0;i--){
+      if((rho*2*L_m*I)/_vdAwg[i].mm2<=thresh) return 'AWG '+_vdAwg[i].awg;
+    }
+    return '< AWG 6';
+  } else {
+    for(var j=0;j<_vdMm2.length;j++){
+      if((rho*2*L_m*I)/_vdMm2[j]<=thresh) return _vdMm2[j]+' mm²';
+    }
+    return '> 16 mm²';
+  }
+}
+function _vdMetric(label,value,valColor) {
+  return '<div style="background:rgba(255,255,255,0.04);border-radius:7px;padding:8px 10px">'
+    +'<div style="font-size:10px;color:#4a5e7a;margin-bottom:3px">'+label+'</div>'
+    +'<div style="font-size:16px;font-weight:700;color:'+valColor+';font-family:monospace">'+value+'</div>'
+    +'</div>';
+}
+function _vdResultsHtml() {
+  var c=_vdCompute();
+  if(c.I<=0||c.L_m<=0) return '<div style="padding:20px;text-align:center;color:#4a5e7a;font-size:13px">Enter load and cable length to see results</div>';
+  var pct=c.dropPct;
+  var status,sColor,sBg;
+  if(pct<2)       {status='Excellent';sColor='#22c55e';sBg='rgba(34,197,94,0.08)';}
+  else if(pct<3)  {status='Good';     sColor='#4ade80';sBg='rgba(74,222,128,0.08)';}
+  else if(pct<5)  {status='Warning';  sColor='#f59e0b';sBg='rgba(245,158,11,0.08)';}
+  else            {status='Critical'; sColor='#ef4444';sBg='rgba(239,68,68,0.08)';}
+  var barColor=pct<3?'#22c55e':pct<5?'#f59e0b':'#ef4444';
+  var html=
+    '<div style="background:'+sBg+';border:1px solid rgba('+sColor.slice(1).match(/../g).map(function(h){return parseInt(h,16);}).join(',')+',0.3);border-radius:10px;padding:16px 18px;margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    +'<span style="font-size:12px;font-weight:700;color:#f0f4ff">Results</span>'
+    +'<span style="font-size:11px;font-weight:700;color:'+sColor+';background:'+sBg+';border:1px solid '+sColor+';padding:3px 10px;border-radius:5px">'+status+'</span>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">'
+    +_vdMetric('Voltage Drop',c.vDrop.toFixed(2)+' V',pct>=5?'#ef4444':pct>=3?'#f59e0b':'#f0f4ff')
+    +_vdMetric('Drop %',pct.toFixed(2)+'%',pct>=5?'#ef4444':pct>=3?'#f59e0b':'#f0f4ff')
+    +_vdMetric('At Fixture',c.vAtLoad.toFixed(2)+' V','#f0f4ff')
+    +'</div>'
+    +'<div style="height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;position:relative">'
+    +'<div style="position:absolute;left:0;top:0;bottom:0;width:60%;background:rgba(34,197,94,0.3)"></div>'
+    +'<div style="position:absolute;left:60%;top:0;bottom:0;width:40%;background:rgba(245,158,11,0.3)"></div>'
+    +'<div style="position:absolute;left:0;top:0;height:100%;width:'+Math.min(100,pct/5*100).toFixed(1)+'%;background:'+barColor+';border-radius:4px;transition:width 0.2s"></div>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px">'
+    +'<span style="color:#22c55e">0%</span><span style="color:#f59e0b">3%</span><span style="color:#ef4444">5%+</span>'
+    +'</div></div>'
+    // Max run
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;margin-bottom:12px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px">Max Run (current wire)</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+    +[2,3,5].map(function(p){
+      var mx=_vdMaxRun(p,c.V,c.I,c.rho,c.A);
+      var col=p===2?'#22c55e':p===3?'#4ade80':'#f59e0b';
+      return '<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.03);border-radius:7px">'
+        +'<div style="font-size:10px;color:'+col+';font-weight:700;margin-bottom:4px">< '+p+'%</div>'
+        +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;font-family:monospace">'+mx+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div></div>'
+    // Min wire
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px">Minimum Wire for This Run</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+    +[2,3,5].map(function(p){
+      var g=_vdMinGauge(p,c.V,c.I,c.L_m,c.rho);
+      var col=p===2?'#22c55e':p===3?'#4ade80':'#f59e0b';
+      return '<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.03);border-radius:7px">'
+        +'<div style="font-size:10px;color:'+col+';font-weight:700;margin-bottom:4px">< '+p+'%</div>'
+        +'<div style="font-size:12px;font-weight:700;color:#f0f4ff;font-family:monospace">'+g+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div></div>'
+    +(c.V<=24&&pct>2?'<div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:11px;color:#fbbf24">⚠ DC LED systems at '+c.V+'V are sensitive to drop — above 2% can cause visible dimming or color shift across a run.</div>':'');
+  return html;
+}
+function _vdReadInputs() {
+  var li=document.getElementById('vd-length'); if(li) _vd.length=parseFloat(li.value)||0;
+  var wi=document.getElementById('vd-load');
+  if(wi){if(_vd.mode==='watts')_vd.watts=parseFloat(wi.value)||0;else _vd.amps=parseFloat(wi.value)||0;}
+  var gi=document.getElementById('vd-gauge');
+  if(gi){if(_vd.gaugeMode==='awg')_vd.awg=gi.value;else _vd.mm2=gi.value;}
+}
+function _vdUpdateResults() {
+  _vdReadInputs();
+  var res=document.getElementById('vd-results'); if(res) res.innerHTML=_vdResultsHtml();
+}
+function _vdRender() {
+  var root=document.getElementById('vd-root'); if(!root) return;
+  var vPresets=[12,24,48,120,277,208];
+  var gaugeOpts=(_vd.gaugeMode==='awg'
+    ?_vdAwg.map(function(d){return '<option value="'+d.awg+'"'+(d.awg===_vd.awg?' selected':'')+'>AWG '+d.awg+' ('+d.mm2+' mm²)</option>';})
+    :_vdMm2.map(function(v){return '<option value="'+v+'"'+(String(v)===_vd.mm2?' selected':'')+'>'+v+' mm²</option>';})
+  ).join('');
+  function tb(label,active,onclick) {
+    return '<button onclick="'+onclick+'" style="padding:3px 10px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:600;'+(active?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">'+label+'</button>';
+  }
+  var c=_vdCompute();
+  root.innerHTML=
+    '<div style="max-width:560px;margin:0 auto;padding:24px 16px 40px">'
+    +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Voltage Drop Calculator</h2>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 20px">Architectural LED lighting — DC low-voltage and line voltage systems</p>'
+    // Supply voltage
+    +'<div style="margin-bottom:16px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:7px">Supply Voltage</div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'
+    +vPresets.map(function(v){
+      var a=_vd.voltage===v;
+      return '<button onclick="_vd.voltage='+v+';_vdRender()" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#4f8ef7':'#8da0c0')+'">'+v+'V</button>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:11px;color:#4a5e7a">Custom:</span>'
+    +'<input type="number" id="vd-v-input" min="1" max="1000" value="'+_vd.voltage+'" oninput="_vd.voltage=parseFloat(this.value)||24;_vdUpdateResults()" style="width:80px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 8px;color:#f0f4ff;font-size:13px;outline:none;-moz-appearance:textfield">'
+    +'<span style="font-size:11px;color:#4a5e7a">V</span>'
+    +'</div></div>'
+    // Load
+    +'<div style="margin-bottom:16px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a">Load</div>'
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">'
+    +tb('Watts',_vd.mode==='watts',"_vd.mode='watts';_vdRender()")
+    +tb('Amps',_vd.mode==='amps',"_vd.mode='amps';_vdRender()")
+    +'</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<input type="number" id="vd-load" min="0" step="any" value="'+(_vd.mode==='watts'?_vd.watts:_vd.amps)+'" oninput="_vdUpdateResults()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#f0f4ff;font-size:18px;font-weight:600;outline:none;-moz-appearance:textfield;box-sizing:border-box">'
+    +'<span style="font-size:16px;font-weight:700;color:#4a5e7a;width:24px">'+(_vd.mode==='watts'?'W':'A')+'</span>'
+    +'</div>'
+    +(_vd.mode==='watts'&&c.I>0?'<div style="font-size:11px;color:#4a5e7a;margin-top:5px">= '+c.I.toFixed(3)+' A at '+_vd.voltage+'V</div>':'')
+    +'</div>'
+    // Cable run
+    +'<div style="margin-bottom:16px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:7px">Cable Run</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'
+    +'<input type="number" id="vd-length" min="0" step="any" value="'+_vd.length+'" oninput="_vdUpdateResults()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#f0f4ff;font-size:18px;font-weight:600;outline:none;-moz-appearance:textfield;box-sizing:border-box">'
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:7px;padding:3px">'
+    +tb('ft',_vd.unit==='ft',"_vd.unit='ft';_vdRender()")
+    +tb('m',_vd.unit==='m',"_vd.unit='m';_vdRender()")
+    +'</div></div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<button onclick="_vd.lengthType=\'oneway\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.lengthType==='oneway'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.lengthType==='oneway'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.lengthType==='oneway'?'#4f8ef7':'#8da0c0')+'">One-way (×2 for total)</button>'
+    +'<button onclick="_vd.lengthType=\'total\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.lengthType==='total'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.lengthType==='total'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.lengthType==='total'?'#4f8ef7':'#8da0c0')+'">Total wire length</button>'
+    +'</div></div>'
+    // Wire
+    +'<div style="margin-bottom:20px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a">Wire</div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">'
+    +tb('Copper',_vd.material==='copper',"_vd.material='copper';_vdRender()")
+    +tb('Aluminum',_vd.material==='aluminum',"_vd.material='aluminum';_vdRender()")
+    +'</div>'
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">'
+    +tb('AWG',_vd.gaugeMode==='awg',"_vd.gaugeMode='awg';_vdRender()")
+    +tb('mm²',_vd.gaugeMode==='mm2',"_vd.gaugeMode='mm2';_vdRender()")
+    +'</div></div></div>'
+    +'<select id="vd-gauge" onchange="_vd.'+(_vd.gaugeMode==='awg'?'awg':'mm2')+'=this.value;_vdUpdateResults()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#f0f4ff;font-size:14px;font-weight:600;outline:none;cursor:pointer">'
+    +gaugeOpts
+    +'</select></div>'
+    // Results
+    +'<div id="vd-results">'+_vdResultsHtml()+'</div>'
+    +'</div>';
+}
+
+window._vdRender        = _vdRender;
+window._vdUpdateResults = _vdUpdateResults;
+
+// ═══════════════════════════════════════════════
+//  DIP SWITCH CALCULATOR
+// ═══════════════════════════════════════════════
+var _dip = { addr: 1 };
+
+function _dipSet(v) {
+  _dip.addr = Math.max(1, Math.min(512, parseInt(v) || 1));
+  _dipRender();
+}
+
+function _dipToggle(bitVal) {
+  // DIP convention: switch values 1,2,4...256 sum to address-1
+  var dipVal = (_dip.addr - 1) ^ bitVal;
+  _dip.addr = Math.max(1, Math.min(512, dipVal + 1));
+  _dipRender();
+}
+
+function _dipRender() {
+  var root = document.getElementById('dip-root');
+  if (!root) return;
+  var addr = _dip.addr;
+  var dipVal = addr - 1; // bit pattern (0-511)
+  var swVals = [1,2,4,8,16,32,64,128,256];
+
+  // Build visual switches
+  var switchesHtml = swVals.map(function(v) {
+    var on = (dipVal & v) !== 0;
+    return '<div onclick="_dipToggle('+v+')" title="'+(on?'ON — click to turn OFF':'OFF — click to turn ON')+'" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      // Housing
+      +'<div style="width:30px;height:58px;background:#0c1520;border:1px solid rgba(255,255,255,'+(on?'0.25':'0.1')+');border-radius:4px;position:relative;overflow:hidden;box-shadow:'+(on?'0 0 8px rgba(79,142,247,0.3)':'none')+';transition:border-color 0.1s,box-shadow 0.1s">'
+      // ON label
+      +'<span style="position:absolute;top:3px;left:0;right:0;text-align:center;font-size:7px;font-weight:800;letter-spacing:0.5px;color:'+(on?'#4f8ef7':'#2d3f52')+'">ON</span>'
+      // Slider paddle
+      +'<div style="position:absolute;left:4px;right:4px;height:24px;border-radius:3px;background:'+(on?'#4f8ef7':'#1e2d3d')+';border:1px solid '+(on?'rgba(79,142,247,0.7)':'rgba(255,255,255,0.06)')+';'+(on?'top:14px':'top:30px')+';transition:top 0.1s,background 0.1s"></div>'
+      +'</div>'
+      // Value label
+      +'<span style="font-size:10px;font-weight:700;color:'+(on?'#4f8ef7':'#4a5e7a')+';transition:color 0.1s">'+v+'</span>'
+      +'</div>';
+  }).join('');
+
+  // Binary string (MSB→LSB, 9 digits)
+  var binStr = '';
+  for (var i = 8; i >= 0; i--) binStr += (dipVal >> i) & 1;
+
+  // Hex
+  var hexStr = '0x' + dipVal.toString(16).toUpperCase().padStart(3,'0');
+
+  // Presets (common DMX start addresses)
+  var presets = [1,2,3,4,5,6,7,8,9,10,13,17,25,33,49,57,65,89,100,121,128,151,177,201,217,251,257,301,321,401,445,489,501,512];
+
+  root.innerHTML =
+    '<div style="max-width:560px;margin:0 auto;padding:24px 16px 40px">'
+    +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">DIP Switch Calculator</h2>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 20px">Convert DMX address ↔ DIP switch positions &nbsp;·&nbsp; Switch values sum to address − 1</p>'
+    // Address input
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">'
+    +'<div style="flex:1">'
+    +'<label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:6px">DMX Address (1 – 512)</label>'
+    +'<input type="number" min="1" max="512" value="'+addr+'" oninput="_dipSet(this.value)" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:#f0f4ff;font-size:20px;font-weight:700;font-family:monospace;outline:none;box-sizing:border-box;-moz-appearance:textfield">'
+    +'</div>'
+    +'<div style="text-align:center;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:4px">DIP Value</div>'
+    +'<div style="font-size:20px;font-weight:700;color:#f0f4ff;font-family:monospace">'+dipVal+'</div>'
+    +'<div style="font-size:11px;color:#4a5e7a;font-family:monospace">'+hexStr+'</div>'
+    +'</div>'
+    +'</div>'
+    // DIP switch visual
+    +'<div style="background:#0f1923;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 20px 12px;margin-bottom:16px">'
+    +'<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#2d3f52;margin-bottom:10px">DIP SWITCH ARRAY</div>'
+    +'<div style="display:flex;justify-content:space-between;gap:4px">'
+    +switchesHtml
+    +'</div>'
+    +'</div>'
+    // Binary display
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px">'
+    +'<span style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;flex-shrink:0">Binary</span>'
+    +'<span style="font-size:16px;font-weight:700;font-family:monospace;color:#f0f4ff;letter-spacing:4px">'+binStr+'</span>'
+    +'<span style="font-size:10px;color:#4a5e7a;margin-left:auto;flex-shrink:0">MSB → LSB</span>'
+    +'</div>'
+    // Presets
+    +'<div style="margin-bottom:8px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">Quick Addresses</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:5px">'
+    +presets.map(function(p){
+      var active=p===addr;
+      return '<button onclick="_dipSet('+p+')" style="padding:4px 9px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid '+(active?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(active?'#4f8ef7':'#8da0c0')+'">'+p+'</button>';
+    }).join('')
+    +'</div>'
     +'</div>'
     +'</div>';
 }
 
-window._ccRender   = _ccRender;
-window._ccFromHex  = _ccFromHex;
-window._ccCopyAll  = _ccCopyAll;
-window._cctToRgb   = _cctToRgb;
+window._dipRender = _dipRender;
+window._dipToggle = _dipToggle;
+window._dipSet    = _dipSet;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
