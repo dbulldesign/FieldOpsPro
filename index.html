@@ -3825,6 +3825,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>
           LED Tape Calculator
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('colorcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 12c0-2.76 1.12-5.26 2.93-7.07A9.97 9.97 0 0 1 22 12"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity="0.4"/></svg>
+          Color Calculator
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -4599,6 +4603,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ LED TAPE CALCULATOR ═══ -->
   <div class="view" id="view-ledcalc">
     <div id="led-root" style="width:100%;max-width:100%;padding:24px 24px 40px;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ COLOR CALCULATOR ═══ -->
+  <div class="view" id="view-colorcalc">
+    <div id="cc-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7048,7 +7057,8 @@ var viewTitles = {
   pos: 'Purchase Orders', shipping: 'Shipping', troubleshoot: 'Troubleshoot DB', settings: 'Sync Setup',
   timekeeping: 'Time Tracker', schedule: 'Schedule', systainer: 'Systainer',
   dmxcalc: 'DMX Calculator',
-  ledcalc: 'LED Tape Calculator'
+  ledcalc: 'LED Tape Calculator',
+  colorcalc: 'Color Calculator'
 };
 
 function switchView(v) {
@@ -7109,6 +7119,9 @@ function switchView(v) {
   }
   if(v==='ledcalc') {
     if (typeof _ledRender === 'function') _ledRender();
+  }
+  if(v==='colorcalc') {
+    if (typeof _ccRender === 'function') _ccRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -19397,6 +19410,198 @@ window._dmxSyncSlider = _dmxSyncSlider;
 window._dmxSyncNum    = _dmxSyncNum;
 window._dmxCalcD2P    = _dmxCalcD2P;
 window._dmxCalcP2D    = _dmxCalcP2D;
+
+// ═══════════════════════════════════════════════
+//  COLOR CALCULATOR
+// ═══════════════════════════════════════════════
+var _cc = { r:255, g:147, b:41, fixture:'rgbw', optimizeW:true, bits:8, mode:'rgb', cct:3200 };
+
+function _cctToRgb(k) {
+  var t=k/100, r, g, b;
+  if (t<=66) {
+    r=255;
+    g=Math.round(Math.max(0,Math.min(255, 99.4708025861*Math.log(t)-161.1195681661)));
+    b=t<=19?0:Math.round(Math.max(0,Math.min(255, 138.5177312231*Math.log(t-10)-305.0447927307)));
+  } else {
+    r=Math.round(Math.max(0,Math.min(255, 329.698727446*Math.pow(t-60,-0.1332047592))));
+    g=Math.round(Math.max(0,Math.min(255, 288.1221695283*Math.pow(t-60,-0.0755148492))));
+    b=255;
+  }
+  return {r:r,g:g,b:b};
+}
+
+function _ccChannels() {
+  var r=_cc.r, g=_cc.g, b=_cc.b, opt=_cc.optimizeW;
+  switch(_cc.fixture) {
+    case 'rgb':
+      return [{n:'R',v:r,c:'#ef4444'},{n:'G',v:g,c:'#22c55e'},{n:'B',v:b,c:'#3b82f6'}];
+    case 'rgbw': {
+      var w=opt?Math.min(r,g,b):0;
+      return [{n:'R',v:r-w,c:'#ef4444'},{n:'G',v:g-w,c:'#22c55e'},{n:'B',v:b-w,c:'#3b82f6'},{n:'W',v:w,c:'#94a3b8'}];
+    }
+    case 'rgbwa': {
+      var w=opt?Math.min(r,g,b):0;
+      var r2=r-w,g2=g-w,b2=b-w;
+      var am=opt?Math.max(0,Math.min(255,Math.round(Math.min(r2,g2>0?g2*(255/175):0)*(b2>0?1-b2/255:1)))):0;
+      return [
+        {n:'R',v:Math.max(0,Math.round(r2-am)),c:'#ef4444'},
+        {n:'G',v:Math.max(0,Math.round(g2-am*(175/255))),c:'#22c55e'},
+        {n:'B',v:b2,c:'#3b82f6'},
+        {n:'W',v:w,c:'#94a3b8'},
+        {n:'A',v:am,c:'#f97316'}
+      ];
+    }
+    case 'rgbww': {
+      var w=opt?Math.min(r,g,b):0;
+      var r2=r-w,g2=g-w,b2=b-w;
+      var tot=r2+g2+b2, warmth=tot>0?(r2-b2)/tot:0;
+      var ww=Math.round(w*Math.max(0,Math.min(1,0.5+warmth*0.5)));
+      return [
+        {n:'R',v:r2,c:'#ef4444'},{n:'G',v:g2,c:'#22c55e'},{n:'B',v:b2,c:'#3b82f6'},
+        {n:'WW',v:ww,c:'#fbbf24'},{n:'CW',v:w-ww,c:'#bae6fd'}
+      ];
+    }
+    default: return [];
+  }
+}
+
+function _ccFromHex(hex) {
+  hex=(hex||'').replace('#','');
+  if(hex.length===3) hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  if(hex.length!==6||!/^[0-9a-fA-F]{6}$/.test(hex)) return;
+  _cc.r=parseInt(hex.substring(0,2),16);
+  _cc.g=parseInt(hex.substring(2,4),16);
+  _cc.b=parseInt(hex.substring(4,6),16);
+  _ccRender();
+}
+
+function _ccCopyAll() {
+  var ch=_ccChannels();
+  var lines=ch.map(function(c){
+    if(_cc.bits===16){var v16=c.v*257;return c.n+': '+c.v+' (coarse:'+Math.floor(v16/256)+', fine:'+v16%256+')';}
+    return c.n+': '+c.v;
+  });
+  var text=lines.join('\n');
+  if(navigator.clipboard){navigator.clipboard.writeText(text);}
+  else{var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+  toast('Copied!');
+}
+
+function _ccRender() {
+  var root=document.getElementById('cc-root');
+  if(!root) return;
+  var r=_cc.r, g=_cc.g, b=_cc.b;
+  var hex='#'+[r,g,b].map(function(v){return ('0'+v.toString(16)).slice(-2);}).join('');
+  var ch=_ccChannels();
+  var cols16='80px 70px 70px 70px', cols8='80px 80px 80px';
+  var cols=_cc.bits===16?cols16:cols8;
+  var hdrLabels=_cc.bits===16?['Channel','8-bit','Coarse','Fine']:['Channel','Value','%'];
+  var hdr=hdrLabels.map(function(l){return '<span style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:0.5px;text-transform:uppercase">'+l+'</span>';}).join('');
+  var rows=ch.map(function(c){
+    var pct=(c.v/255*100).toFixed(1), bar=Math.round(c.v/255*100);
+    var v16=c.v*257, coarse=Math.floor(v16/256), fine=v16%256;
+    return '<div style="display:grid;grid-template-columns:'+cols+';align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04)">'
+      +'<div style="display:flex;align-items:center;gap:7px">'
+      +  '<span style="width:8px;height:8px;border-radius:2px;background:'+c.c+';flex-shrink:0"></span>'
+      +  '<span style="font-size:12px;font-weight:700;color:#f0f4ff;min-width:22px">'+c.n+'</span>'
+      +  '<div style="flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;max-width:60px"><div style="height:100%;width:'+bar+'%;background:'+c.c+';border-radius:2px"></div></div>'
+      +'</div>'
+      +'<span style="font-size:13px;font-weight:600;color:#f0f4ff;font-family:monospace">'+c.v+'</span>'
+      +(_cc.bits===16
+        ?'<span style="font-size:13px;font-weight:600;color:#f0f4ff;font-family:monospace">'+coarse+'</span>'
+         +'<span style="font-size:12px;color:#4a5e7a;font-family:monospace">'+fine+'</span>'
+        :'<span style="font-size:12px;color:#4a5e7a;font-family:monospace">'+pct+'%</span>'
+      )
+      +'</div>';
+  }).join('');
+  var rgbInputs='';
+  [['R','r','#ef4444'],['G','g','#22c55e'],['B','b','#3b82f6']].forEach(function(ci){
+    var val=_cc[ci[1]];
+    rgbInputs+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<span style="width:12px;font-size:11px;font-weight:700;color:'+ci[2]+';flex-shrink:0">'+ci[0]+'</span>'
+      +'<input type="range" min="0" max="255" value="'+val+'" oninput="_cc.'+ci[1]+'=parseInt(this.value);_ccRender()" style="flex:1;accent-color:'+ci[2]+';cursor:pointer">'
+      +'<input type="number" min="0" max="255" value="'+val+'" oninput="_cc.'+ci[1]+'=Math.max(0,Math.min(255,parseInt(this.value)||0));_ccRender()" style="width:46px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:12px;text-align:center;outline:none;-moz-appearance:textfield">'
+      +'</div>';
+  });
+  var cctInput='<div style="margin-bottom:4px">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+    +'<span style="font-size:11px;color:#4a5e7a;width:12px;flex-shrink:0">K</span>'
+    +'<div style="flex:1;position:relative;height:28px;display:flex;align-items:center">'
+    +'<div style="position:absolute;left:0;right:0;height:6px;border-radius:3px;background:linear-gradient(to right,#f97316,#fde68a,#f9fafb,#bae6fd);pointer-events:none"></div>'
+    +'<input type="range" min="1000" max="10000" step="100" value="'+_cc.cct+'" oninput="_cc.cct=parseInt(this.value);var _rgb=_cctToRgb(_cc.cct);_cc.r=_rgb.r;_cc.g=_rgb.g;_cc.b=_rgb.b;_ccRender()" style="position:relative;width:100%;background:transparent;appearance:none;-webkit-appearance:none;height:20px;cursor:pointer">'
+    +'</div>'
+    +'<input type="number" min="1000" max="10000" step="100" value="'+_cc.cct+'" oninput="_cc.cct=Math.max(1000,Math.min(10000,parseInt(this.value)||4000));var _rgb=_cctToRgb(_cc.cct);_cc.r=_rgb.r;_cc.g=_rgb.g;_cc.b=_rgb.b;_ccRender()" style="width:60px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:12px;text-align:center;outline:none;-moz-appearance:textfield">'
+    +'<span style="font-size:11px;color:#4a5e7a">K</span>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;padding:0 2px;margin-bottom:12px">'
+    +'<span style="font-size:10px;color:#f97316">1000K</span>'
+    +'<span style="font-size:10px;color:#94a3b8">Warm ← → Cool</span>'
+    +'<span style="font-size:10px;color:#bae6fd">10000K</span>'
+    +'</div>'
+    +'</div>';
+  var fixtures=[['rgb','RGB'],['rgbw','RGBW'],['rgbwa','RGBWA'],['rgbww','RGBWW']];
+  root.innerHTML=
+    '<div style="max-width:520px;margin:0 auto;padding:24px 16px 40px">'
+    +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Color Calculator</h2>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 18px">DMX channel values for RGB LED fixtures</p>'
+    // Color swatch
+    +'<div style="height:72px;border-radius:12px;background:rgb('+r+','+g+','+b+');margin-bottom:18px;border:1px solid rgba(255,255,255,0.1)"></div>'
+    // Input mode tabs
+    +'<div style="display:flex;margin-bottom:14px;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px">'
+    +'<button onclick="_cc.mode=\'rgb\';_ccRender()" style="flex:1;padding:6px 0;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;'
+    +(_cc.mode==='rgb'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">RGB / Hex</button>'
+    +'<button onclick="_cc.mode=\'cct\';_ccRender()" style="flex:1;padding:6px 0;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:600;'
+    +(_cc.mode==='cct'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">CCT / Kelvin</button>'
+    +'</div>'
+    // Color inputs
+    +(_cc.mode==='rgb'
+      ?'<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">'
+       +'<input type="color" value="'+hex+'" oninput="_ccFromHex(this.value)" style="width:48px;height:48px;border:none;cursor:pointer;border-radius:8px;padding:2px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);flex-shrink:0">'
+       +'<div style="flex:1">'
+       +'<label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:4px">Hex</label>'
+       +'<input type="text" value="'+hex+'" oninput="_ccFromHex(this.value)" maxlength="7" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:7px 10px;color:#f0f4ff;font-size:14px;font-family:monospace;outline:none;box-sizing:border-box">'
+       +'</div></div>'
+       +rgbInputs
+      :cctInput
+    )
+    // Fixture type
+    +'<div style="margin-bottom:14px">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:7px">Fixture Type</div>'
+    +'<div style="display:flex;gap:5px">'
+    +fixtures.map(function(f){
+      var a=_cc.fixture===f[0];
+      return '<button onclick="_cc.fixture=\''+f[0]+'\';_ccRender()" style="padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;flex:1;'
+        +'border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';'
+        +'background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';'
+        +'color:'+(a?'#4f8ef7':'#8da0c0')+'">'+f[1]+'</button>';
+    }).join('')
+    +'</div></div>'
+    // Options
+    +'<div style="display:flex;gap:16px;margin-bottom:18px;align-items:center">'
+    +(_cc.fixture!=='rgb'
+      ?'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0">'
+       +'<input type="checkbox" '+(_cc.optimizeW?'checked':'')+' onchange="_cc.optimizeW=this.checked;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> Optimize Whites</label>'
+      :''
+    )
+    +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#8da0c0">'
+    +'<input type="checkbox" '+(_cc.bits===16?'checked':'')+' onchange="_cc.bits=this.checked?16:8;_ccRender()" style="accent-color:#4f8ef7;width:14px;height:14px"> 16-bit output</label>'
+    +'</div>'
+    // DMX output table
+    +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">'
+    +'<span style="font-size:12px;font-weight:700;color:#f0f4ff">DMX Output</span>'
+    +'<button onclick="_ccCopyAll()" style="font-size:11px;font-weight:600;color:#4f8ef7;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);border-radius:6px;padding:4px 10px;cursor:pointer">Copy All</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:'+cols+';align-items:center;padding:7px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">'+hdr+'</div>'
+    +rows
+    +'</div>'
+    +'</div>';
+}
+
+window._ccRender   = _ccRender;
+window._ccFromHex  = _ccFromHex;
+window._ccCopyAll  = _ccCopyAll;
+window._cctToRgb   = _cctToRgb;
 
 // ═══════════════════════════════════════════════
 //  BARCODE / QR SCANNER
