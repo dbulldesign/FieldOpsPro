@@ -18768,17 +18768,18 @@ var _dmxMode = 'd2p';
             }
           }
         });
-        if(overrideCount!==null&&overrideCount!==undefined&&overrideCount>0&&runUnits.length>0&&zPsEff>0){
-          // Redistribute all run units across overrideCount PSUs using least-loaded-first
+        if(overrideCount!==null&&overrideCount!==undefined&&overrideCount>0&&zPsEff>0){
           var numPS=overrideCount;
-          var psuW=[];
-          for(var ii=0;ii<numPS;ii++) psuW.push(0);
-          runUnits.slice().sort(function(a,b){return b-a;}).forEach(function(w){
-            var minIdx=0;
-            for(var jj=1;jj<numPS;jj++){if(psuW[jj]<psuW[minIdx])minIdx=jj;}
-            psuW[minIdx]+=w;
-          });
-          return {totalW:totalW,psNeeded:psNeeded,loads:psuW.map(function(w){return{w:w,over:w>zPsEff};})};
+          var loadEach=totalW/numPS;
+          var ovLoads=[];
+          for(var ii=0;ii<numPS;ii++) ovLoads.push({w:loadEach,over:loadEach>zPsEff});
+          return {totalW:totalW,psNeeded:psNeeded,loads:ovLoads};
+        }
+        if(psNeeded>1&&totalW>0&&zPsEff>0){
+          var evenLoad=totalW/psNeeded;
+          var evLoads=[];
+          for(var ei=0;ei<psNeeded;ei++) evLoads.push({w:evenLoad,over:evenLoad>zPsEff});
+          return {totalW:totalW,psNeeded:psNeeded,loads:evLoads};
         }
         return {totalW:totalW,psNeeded:psNeeded,loads:defaultLoads};
       }
