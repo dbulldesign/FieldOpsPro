@@ -20024,17 +20024,17 @@ function _wrRender() {
   }
 
   // ── CC Series SVG ──────────────────────────────────────────────────────
-  var ccSvg = '<svg viewBox="0 0 450 145" style="width:100%;min-width:260px;display:block" font-family="system-ui,sans-serif">'
+  var ccSvg = '<svg viewBox="0 0 500 145" style="width:100%;min-width:260px;display:block" font-family="system-ui,sans-serif">'
     + '<defs>'
     + '<marker id="wr-fwd" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#4f8ef7"/></marker>'
     + '<marker id="wr-ret" markerWidth="7" markerHeight="5" refX="0" refY="2.5" orient="auto"><polygon points="7 0,0 2.5,7 5" fill="#ef4444"/></marker>'
     + '<filter id="wr-glo" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
     + '</defs>'
-    // Wires (behind components)
-    + '<line x1="80" y1="52" x2="108" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
-    + '<line x1="174" y1="52" x2="192" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
-    + '<line x1="258" y1="52" x2="276" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
-    + '<polyline points="342,52 370,52 370,118 42,118 42,96" stroke="#ef4444" stroke-width="2.5" fill="none" marker-end="url(#wr-ret)"/>'
+    // Wires (behind components) — 50px gap between each box
+    + '<line x1="80" y1="52" x2="130" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
+    + '<line x1="196" y1="52" x2="246" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
+    + '<line x1="312" y1="52" x2="362" y2="52" stroke="#4f8ef7" stroke-width="2.5" marker-end="url(#wr-fwd)"/>'
+    + '<polyline points="428,52 460,52 460,118 42,118 42,96" stroke="#ef4444" stroke-width="2.5" fill="none" marker-end="url(#wr-ret)"/>'
     // Driver (hoverable)
     + '<g onmouseenter="_wrT(event,\'cc_drv\')" onmouseleave="_wrHideTip()" style="cursor:pointer">'
     + '<rect x="4" y="38" width="76" height="58" rx="6" fill="#0a1828" stroke="#4f8ef7" stroke-width="1.5"/>'
@@ -20046,33 +20046,33 @@ function _wrRender() {
     + '<text x="77" y="91" fill="#ef4444" font-size="13" font-weight="700">−</text>'
     // LED 1 (hoverable)
     + '<g onmouseenter="_wrT(event,\'cc_f1\')" onmouseleave="_wrHideTip()" style="cursor:pointer">'
-    + '<rect x="108" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
-    + '<text x="115" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="164" y="54" fill="#4f8ef7" font-size="9" font-weight="700">−</text>'
-    + '<polygon points="127,58 127,72 139,65" fill="#fbbf24" opacity="0.8"/><line x1="139" y1="58" x2="139" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
-    + '<line x1="141" y1="56" x2="146" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="141" y1="62" x2="147" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
-    + '<text x="155" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 1</text><text x="141" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
+    + '<rect x="130" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
+    + '<text x="137" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="186" y="54" fill="#4f8ef7" font-size="9" font-weight="700">−</text>'
+    + '<polygon points="149,58 149,72 161,65" fill="#fbbf24" opacity="0.8"/><line x1="161" y1="58" x2="161" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
+    + '<line x1="163" y1="56" x2="168" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="163" y1="62" x2="169" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
+    + '<text x="177" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 1</text><text x="163" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
     + '</g>'
     // LED 2 (hoverable)
     + '<g onmouseenter="_wrT(event,\'cc_f2\')" onmouseleave="_wrHideTip()" style="cursor:pointer">'
-    + '<rect x="192" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
-    + '<text x="199" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="248" y="54" fill="#4f8ef7" font-size="9" font-weight="700">−</text>'
-    + '<polygon points="211,58 211,72 223,65" fill="#fbbf24" opacity="0.8"/><line x1="223" y1="58" x2="223" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
-    + '<line x1="225" y1="56" x2="230" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="225" y1="62" x2="231" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
-    + '<text x="239" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 2</text><text x="225" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
+    + '<rect x="246" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
+    + '<text x="253" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="302" y="54" fill="#4f8ef7" font-size="9" font-weight="700">−</text>'
+    + '<polygon points="265,58 265,72 277,65" fill="#fbbf24" opacity="0.8"/><line x1="277" y1="58" x2="277" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
+    + '<line x1="279" y1="56" x2="284" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="279" y1="62" x2="285" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
+    + '<text x="293" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 2</text><text x="279" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
     + '</g>'
     // LED 3 (hoverable)
     + '<g onmouseenter="_wrT(event,\'cc_f3\')" onmouseleave="_wrHideTip()" style="cursor:pointer">'
-    + '<rect x="276" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
-    + '<text x="283" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="332" y="54" fill="#ef4444" font-size="9" font-weight="700">−</text>'
-    + '<polygon points="295,58 295,72 307,65" fill="#fbbf24" opacity="0.8"/><line x1="307" y1="58" x2="307" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
-    + '<line x1="309" y1="56" x2="314" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="309" y1="62" x2="315" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
-    + '<text x="323" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 3</text><text x="309" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
+    + '<rect x="362" y="38" width="66" height="58" rx="5" fill="#070f1c" stroke="#1e3050" stroke-width="1.5"/>'
+    + '<text x="369" y="54" fill="#4f8ef7" font-size="9" font-weight="700">+</text><text x="418" y="54" fill="#ef4444" font-size="9" font-weight="700">−</text>'
+    + '<polygon points="381,58 381,72 393,65" fill="#fbbf24" opacity="0.8"/><line x1="393" y1="58" x2="393" y2="72" stroke="#fbbf24" stroke-width="1.8"/>'
+    + '<line x1="395" y1="56" x2="400" y2="51" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/><line x1="395" y1="62" x2="401" y2="58" stroke="#fbbf24" stroke-width="1.2" opacity="0.7"/>'
+    + '<text x="409" y="75" text-anchor="middle" fill="#4a6070" font-size="8.5" font-weight="700">LED 3</text><text x="395" y="88" text-anchor="middle" fill="#2a4058" font-size="7">Vf ≈ 36V</text>'
     + '</g>'
-    + '<text x="196" y="133" text-anchor="middle" fill="#1e3040" font-size="8.5">Driver output: Vf1 + Vf2 + Vf3 = 108V · same current through every fixture</text>'
+    + '<text x="250" y="133" text-anchor="middle" fill="#1e3040" font-size="8.5">Driver output: Vf1 + Vf2 + Vf3 = 108V · same current through every fixture</text>'
     // Animated current particles
-    + '<circle r="4" fill="#4f8ef7" opacity="0.9" filter="url(#wr-glo)"><animateMotion dur="4s" repeatCount="indefinite" begin="0s" path="M80,52 L342,52 L370,52 L370,118 L42,118 L42,52 L80,52"/></circle>'
-    + '<circle r="3.5" fill="#4f8ef7" opacity="0.65" filter="url(#wr-glo)"><animateMotion dur="4s" repeatCount="indefinite" begin="-1.33s" path="M80,52 L342,52 L370,52 L370,118 L42,118 L42,52 L80,52"/></circle>'
-    + '<circle r="3" fill="#4f8ef7" opacity="0.4"><animateMotion dur="4s" repeatCount="indefinite" begin="-2.67s" path="M80,52 L342,52 L370,52 L370,118 L42,118 L42,52 L80,52"/></circle>'
+    + '<circle r="4" fill="#4f8ef7" opacity="0.9" filter="url(#wr-glo)"><animateMotion dur="4s" repeatCount="indefinite" begin="0s" path="M80,52 L428,52 L460,52 L460,118 L42,118 L42,52 L80,52"/></circle>'
+    + '<circle r="3.5" fill="#4f8ef7" opacity="0.65" filter="url(#wr-glo)"><animateMotion dur="4s" repeatCount="indefinite" begin="-1.33s" path="M80,52 L428,52 L460,52 L460,118 L42,118 L42,52 L80,52"/></circle>'
+    + '<circle r="3" fill="#4f8ef7" opacity="0.4"><animateMotion dur="4s" repeatCount="indefinite" begin="-2.67s" path="M80,52 L428,52 L460,52 L460,118 L42,118 L42,52 L80,52"/></circle>'
     + '</svg>';
   _wrSvgs.cc = ccSvg;
 
