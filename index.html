@@ -18403,6 +18403,7 @@ var _dmxMode = 'd2p';
   var SK_FX  = 'fop_led_fixtures';
   var SK_PSU = 'fop_led_psu';
   var SK_PRJ = 'fop_led_projects';
+  var SK_CH  = 'fop_led_channels';
 
   var DEFAULTS_FX = [
     { id:'ld1', manufacturer:'Generic', partNumber:'60 LED/m — standard density', cutIncrement:1.9685, cutUnit:'in', wattsPerFt:3.2 },
@@ -18413,7 +18414,7 @@ var _dmxMode = 'd2p';
   // ── State ─────────────────────────────────────────────────────
   var S = {
     tab:'calc',
-    fixtures:[], psu:[], projects:[],
+    fixtures:[], psu:[], channels:[], projects:[],
     // Calculator
     selectedId:'', manualIncrement:'', manualUnit:'in', inputVal:'', results:null,
     // Mini calculator (persistent across tabs)
@@ -18426,6 +18427,10 @@ var _dmxMode = 'd2p';
     fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxMaxLen:'', fxMaxLenUnit:'ft', fxErr:'', fxEditId:null,
     // PSU form
     psuMfr:'', psuPart:'', psuWatts:'', psuBuffer:'', psuLimit:'', psuErr:'', psuEditId:null,
+    // Channel form
+    chMfr:'', chPart:'', chLenStr:'', chEndCaps:'2', chClipsSpacing:'18', chErr:'', chEditId:null,
+    // Quick-add channel (from project zone)
+    qaCh:false, qaChMfr:'', qaChPart:'', qaChLenStr:'', qaChEndCaps:'2', qaChClipsSpacing:'18', qaChErr:'', qaChZone:'', qaChProjId:'',
     // Projects
     activeProjId:null,
     runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'', leaders:'1', zone:'' },
@@ -18438,11 +18443,13 @@ var _dmxMode = 'd2p';
   // ── Persist ───────────────────────────────────────────────────
   function saveFx()  { try { localStorage.setItem(SK_FX,  JSON.stringify(S.fixtures)); } catch(e){} }
   function savePsu() { try { localStorage.setItem(SK_PSU, JSON.stringify(S.psu));      } catch(e){} }
+  function saveCh()  { try { localStorage.setItem(SK_CH,  JSON.stringify(S.channels)); } catch(e){} }
   function saveProj(){ try { localStorage.setItem(SK_PRJ, JSON.stringify(S.projects)); } catch(e){} }
 
   function load() {
     try { var r=JSON.parse(localStorage.getItem(SK_FX)||'null');  S.fixtures = (r&&r.length)?r:DEFAULTS_FX.slice(); } catch(e){ S.fixtures=DEFAULTS_FX.slice(); }
     try { S.psu      = JSON.parse(localStorage.getItem(SK_PSU)||'[]'); } catch(e){ S.psu=[]; }
+    try { S.channels = JSON.parse(localStorage.getItem(SK_CH)||'[]');  } catch(e){ S.channels=[]; }
     try { S.projects = JSON.parse(localStorage.getItem(SK_PRJ)||'[]'); } catch(e){ S.projects=[]; }
   }
 
@@ -18467,6 +18474,8 @@ var _dmxMode = 'd2p';
     var direct=parsLen(str); if(direct) return direct;
     // Convert length tokens to raw inches, then evaluate as math
     var expr=str.trim();
+    // Handle ft'in" or ftXin with explicit inch unit first (0 or more spaces between)
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s*(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")/gi,function(m,f,i){return String(+f*12+ +i);});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s+(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")?/gi,function(m,f,i){return String(+f*12+ +i);});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')/gi,function(m,f){return String(+f*12);});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")/gi,function(m,v){return v;});
@@ -18720,7 +18729,7 @@ var _dmxMode = 'd2p';
         +'<div class="lc-field"><span class="lc-lbl">Zone</span><input class="lc-input" id="lc-rf-zone" placeholder="e.g. 1" value="'+escH(rf.zone)+'"></div>'
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 72px 90px;gap:8px;margin-bottom:8px">'
-        +'<div class="lc-field"><span class="lc-lbl">Length (84in · 7ft · 7ft 3in · 1800mm)</span><input class="lc-input" id="lc-rf-len" placeholder="e.g. 84in or 7ft 3in" value="'+escH(rf.lengthStr)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Length <span style="font-weight:400;color:var(--text-muted)">(math ok: 17\'5\"/2)</span></span><input class="lc-input" id="lc-rf-len" placeholder="84in · 7ft 3in · 17\'5\"/2 · 8ft*3" autocomplete="off" spellcheck="false" value="'+escH(rf.lengthStr)+'"><div id="lc-rf-len-prev" style="font-size:10px;color:#4f8ef7;margin-top:3px;min-height:14px;font-family:monospace"></div></div>'
         +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-rf-qty" type="number" min="1" value="'+escH(rf.qty)+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Leaders</span><select class="lc-select" id="lc-rf-leaders"><option value="1"'+(rf.leaders==='1'?' selected':'')+'>1 leader</option><option value="2"'+(rf.leaders==='2'?' selected':'')+'>2 leaders</option></select></div>'
       +'</div>'
@@ -18742,6 +18751,12 @@ var _dmxMode = 'd2p';
         return '<option value="">— Select PSU —</option>'
           +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===selId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
           +'<option value="__addpsu__">+ Add new power supply…</option>';
+      }
+      // Helper: build channel option list for a dropdown
+      function zoneChOpts(selId){
+        return '<option value="">— No Channel —</option>'
+          +S.channels.map(function(c){return '<option value="'+c.id+'"'+(c.id===selId?' selected':'')+'>'+escH(c.manufacturer)+' '+escH(c.partNumber)+' ('+fmtIn(c.lengthIn||0).ftIn+'/pc)</option>';}).join('')
+          +'<option value="__addch__">+ Add new channel…</option>';
       }
 
       // Helper: compute PSU loads for a set of runs against a given PSU effective wattage.
@@ -18853,6 +18868,24 @@ var _dmxMode = 'd2p';
 
         var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
         var g=calcGroupPsu(gRuns,zPsEff,manualPS);
+
+        // Channel calc for this zone
+        var zoneChId=proj.channelByZone?(proj.channelByZone[zoneKey]||''):'';
+        var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
+        var manualChQty=proj.channelQtyOverrides&&proj.channelQtyOverrides[zoneKey]!==undefined?parseInt(proj.channelQtyOverrides[zoneKey]):null;
+        var totalChPieces=0, totalChEndCaps=0, totalChClips=0;
+        if(zoneCh){
+          gRuns.forEach(function(run){
+            var qty=parseInt(run.qty)||1;
+            var pieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+            totalChPieces+=pieces*qty;
+            totalChEndCaps+=(parseFloat(zoneCh.endCapsPerRun)||2)*qty;
+            var spacing=parseFloat(zoneCh.clipsSpacingIn)||0;
+            if(spacing>0) totalChClips+=Math.ceil(run.lengthIn/spacing)*qty;
+          });
+        }
+        var displayChQty=manualChQty!==null?manualChQty:totalChPieces;
+        var isChOverridden=manualChQty!==null;
         grandTotalW+=g.totalW;
         var calcPS=g.psNeeded;
         var displayPS=manualPS!==null?manualPS:calcPS;
@@ -18918,6 +18951,45 @@ var _dmxMode = 'd2p';
           +'<div style="margin-bottom:'+(g.loads.length&&zonePsu?'10px':'0')+'">'+runLines+'</div>'
           +(g.loads.length&&zonePsu?loadBarsHTML(g.loads,globalPsuOffset,zPsEff,zPsRated,zHasDerate):'')
           +(!zonePsu?'<p style="font-size:11px;color:var(--text-muted);margin-top:6px;margin-bottom:0">Select a power supply above to see load calculations</p>':'')
+          // Channel selector row
+          +(function(){
+            var qaChHtml='';
+            if(S.qaCh&&S.qaChZone===zoneKey&&S.qaChProjId===proj.id){
+              qaChHtml='<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:14px;margin-top:8px">'
+                +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:10px">New LED Channel</div>'
+                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
+                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
+                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
+                +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+                  +'<div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div>'
+                  +'<div class="lc-field"><span class="lc-lbl">Clip spacing (in)</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" value="'+escH(S.qaChClipsSpacing)+'"></div>'
+                +'</div>'
+                +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
+                +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
+              +'</div>';
+            }
+            var chSummaryHtml='';
+            if(zoneCh){
+              chSummaryHtml='<div style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">'
+                +'<div style="display:flex;align-items:center;gap:3px;background:rgba(167,139,250,0.15);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
+                  +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:34px;font-size:11px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
+                  +'<span style="font-size:11px;color:#a78bfa;font-weight:700"> pcs</span>'
+                +'</div>'
+                +(isChOverridden?'<span style="font-size:10px;color:var(--text-muted)">calc: '+totalChPieces+'</span>':'')
+                +(totalChEndCaps>0?'<span style="font-size:11px;color:var(--text-muted)">· '+totalChEndCaps+' end caps</span>':'')
+                +(totalChClips>0?'<span style="font-size:11px;color:var(--text-muted)">· '+totalChClips+' clips</span>':'')
+              +'</div>';
+            }
+            return '<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:10px;padding-top:10px">'
+              +'<div style="display:flex;align-items:center;gap:8px">'
+                +'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0">LED Channel:</span>'
+                +'<select class="lc-select" style="height:32px;font-size:12px;flex:1" data-zone-ch-sel="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
+                +(zoneCh?'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
+              +'</div>'
+              +chSummaryHtml
+              +qaChHtml
+            +'</div>';
+          })()
         +'</div>';
 
         globalPsuOffset+=displayPS;
@@ -19030,6 +19102,44 @@ var _dmxMode = 'd2p';
       +'<div class="lc-section"><div class="lc-stitle">Saved power supplies ('+S.psu.length+')</div>'+rows+'</div>';
   }
 
+  // ── LED Channel tab ───────────────────────────────────────────
+  function channelTabHTML(){
+    var isEd=!!S.chEditId, et=isEd?S.channels.find(function(c){return c.id===S.chEditId;}):null;
+    var rows='';
+    if(!S.channels.length){ rows='<div class="lc-empty">No LED channels saved yet.</div>'; }
+    else S.channels.forEach(function(c){
+      var isAct=S.chEditId===c.id;
+      var chLen=fmtIn(c.lengthIn||0);
+      rows+='<div class="lc-frow'+(isAct?' lc-frow-editing':'')+'">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="lc-fname">'+escH(c.manufacturer)+'</div><div class="lc-fdetail">'+escH(c.partNumber)+'</div>'
+          +'<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">'
+            +'<span class="lc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">'+chLen.ftIn+' / piece</span>'
+            +'<span class="lc-badge">'+(parseFloat(c.endCapsPerRun)||2)+' end caps / run</span>'
+            +((parseFloat(c.clipsSpacingIn)>0)?'<span class="lc-badge">clip every '+c.clipsSpacingIn+'″</span>':'')
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-ch-edit" data-chid="'+c.id+'" style="'+(isAct?'color:#4f8ef7;border-color:#4f8ef7':'')+'">✏</button>'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon lc-ch-del" data-chid="'+c.id+'" style="color:#ef4444;border-color:#ef4444">✕</button>'
+        +'</div></div>';
+    });
+    return '<div class="lc-section">'
+      +'<div class="lc-stitle"><span>'+(isEd?'Edit LED channel':'Add LED channel')+'</span>'+(isEd?'<button class="lc-btn lc-btn-sm" id="lc-ch-ctop">Cancel</button>':'')+'</div>'
+      +(isEd&&et?'<div class="lc-edit-banner">✏ Editing: <strong>'+escH(et.manufacturer)+' · '+escH(et.partNumber)+'</strong></div>':'')
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-ch-mfr" type="text" placeholder="e.g. SloanLED" value="'+escH(S.chMfr)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-ch-part" type="text" placeholder="e.g. V-SLIM-120" value="'+escH(S.chPart)+'"></div>'
+      +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-ch-len" type="text" placeholder="e.g. 4ft · 48in · 1200mm" autocomplete="off" value="'+escH(S.chLenStr)+'"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+        +'<div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-ch-ec" type="number" min="0" step="1" placeholder="2" value="'+escH(S.chEndCaps)+'"><span style="font-size:10px;color:var(--text-muted);margin-top:3px;display:block">End caps needed per individual run</span></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Clip spacing (in)</span><input class="lc-input" id="lc-ch-cs" type="number" min="0" step="0.5" placeholder="18 (0 = none)" value="'+escH(S.chClipsSpacing)+'"><span style="font-size:10px;color:var(--text-muted);margin-top:3px;display:block">Inches between mounting clips (0 to skip)</span></div>'
+      +'</div>'
+      +'<div id="lc-ch-err">'+(S.chErr?'<p class="lc-errmsg">'+escH(S.chErr)+'</p>':'')+'</div>'
+      +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-ch-save" style="flex:1">'+(isEd?'Update':'Save channel')+'</button>'+(isEd?'<button class="lc-btn" id="lc-ch-cancel">Cancel</button>':'')+'</div>'
+      +'</div>'
+      +'<div class="lc-section"><div class="lc-stitle">Saved LED channels ('+S.channels.length+')</div>'+rows+'</div>';
+  }
+
   // ── Save-to-project overlay ───────────────────────────────────
   function stpHTML(){
     var st=S.stp, f=fmtIn(st.lengthIn||0);
@@ -19084,6 +19194,21 @@ var _dmxMode = 'd2p';
   function doEditPsu(id){ var p=S.psu.find(function(x){return x.id===id;}); if(!p) return; S.psuEditId=id; S.tab='psu'; S.psuMfr=p.manufacturer; S.psuPart=p.partNumber; S.psuWatts=String(p.outputWatts); S.psuBuffer=p.bufferPct!=null?String(p.bufferPct):''; S.psuLimit=p.limitW!=null?String(p.limitW):''; S.psuErr=''; _ledRender(); }
   function doCancelPsu(){ S.psuEditId=null; S.psuMfr=''; S.psuPart=''; S.psuWatts=''; S.psuBuffer=''; S.psuLimit=''; S.psuErr=''; _ledRender(); }
   function doDeletePsu(id){ if(!confirm('Remove this power supply?')) return; S.psu=S.psu.filter(function(p){return p.id!==id;}); if(S.projPsuId===id) S.projPsuId=''; savePsu(); _ledRender(); }
+
+  function doSaveCh(){
+    var lenParsed=parsLenExpr(S.chLenStr);
+    if(!S.chMfr.trim()||!S.chPart.trim()){ S.chErr='Manufacturer and part number are required.'; var e=document.getElementById('lc-ch-err'); if(e) e.innerHTML='<p class="lc-errmsg">'+escH(S.chErr)+'</p>'; return; }
+    if(!lenParsed||lenParsed.val<=0){ S.chErr='Enter a valid piece length (e.g. 48in, 4ft, 1200mm).'; var e2=document.getElementById('lc-ch-err'); if(e2) e2.innerHTML='<p class="lc-errmsg">'+escH(S.chErr)+'</p>'; return; }
+    var ec=parseFloat(S.chEndCaps), cs=parseFloat(S.chClipsSpacing);
+    var obj={manufacturer:S.chMfr.trim(),partNumber:S.chPart.trim(),lengthIn:lenParsed.val,endCapsPerRun:(!isNaN(ec)&&ec>=0)?ec:2,clipsSpacingIn:(!isNaN(cs)&&cs>=0)?cs:0};
+    if(S.chEditId){ obj.id=S.chEditId; S.channels=S.channels.map(function(c){return c.id===S.chEditId?obj:c;}); S.chEditId=null; }
+    else { obj.id='ch'+Date.now(); S.channels.push(obj); }
+    S.chMfr=''; S.chPart=''; S.chLenStr=''; S.chEndCaps='2'; S.chClipsSpacing='18'; S.chErr='';
+    saveCh(); _ledRender();
+  }
+  function doEditCh(id){ var c=S.channels.find(function(x){return x.id===id;}); if(!c) return; S.chEditId=id; S.tab='channel'; S.chMfr=c.manufacturer; S.chPart=c.partNumber; S.chLenStr=fmtIn(c.lengthIn||0).ftIn; S.chEndCaps=String(c.endCapsPerRun!=null?c.endCapsPerRun:2); S.chClipsSpacing=String(c.clipsSpacingIn||0); S.chErr=''; _ledRender(); }
+  function doCancelCh(){ S.chEditId=null; S.chMfr=''; S.chPart=''; S.chLenStr=''; S.chEndCaps='2'; S.chClipsSpacing='18'; S.chErr=''; _ledRender(); }
+  function doDeleteCh(id){ if(!confirm('Remove this channel?')) return; S.channels=S.channels.filter(function(c){return c.id!==id;}); saveCh(); _ledRender(); }
 
   function doNewProject(name){ if(!name||!name.trim()) return; var proj={id:'lp'+Date.now(),name:name.trim(),runs:[]}; S.projects.push(proj); S.activeProjId=proj.id; saveProj(); _ledRender(); }
   function doDeleteProj(id){ if(!confirm('Remove this project and all its runs?')) return; S.projects=S.projects.filter(function(p){return p.id!==id;}); if(S.activeProjId===id) S.activeProjId=null; saveProj(); _ledRender(); }
@@ -19201,6 +19326,19 @@ var _dmxMode = 'd2p';
       document.querySelectorAll('.lc-psu-del').forEach(function(b){ b.addEventListener('click',function(){doDeletePsu(this.getAttribute('data-psuid'));}); });
     }
 
+    if(S.tab==='channel'){
+      var cm=document.getElementById('lc-ch-mfr'); if(cm) cm.addEventListener('input',function(){S.chMfr=this.value;});
+      var cpt=document.getElementById('lc-ch-part'); if(cpt) cpt.addEventListener('input',function(){S.chPart=this.value;});
+      var cln=document.getElementById('lc-ch-len'); if(cln) cln.addEventListener('input',function(){S.chLenStr=this.value;});
+      var cec=document.getElementById('lc-ch-ec'); if(cec) cec.addEventListener('input',function(){S.chEndCaps=this.value;});
+      var ccs=document.getElementById('lc-ch-cs'); if(ccs) ccs.addEventListener('input',function(){S.chClipsSpacing=this.value;});
+      bindEl('lc-ch-save','click',doSaveCh);
+      bindEl('lc-ch-cancel','click',doCancelCh);
+      bindEl('lc-ch-ctop','click',doCancelCh);
+      document.querySelectorAll('.lc-ch-edit').forEach(function(b){ b.addEventListener('click',function(){doEditCh(this.getAttribute('data-chid'));}); });
+      document.querySelectorAll('.lc-ch-del').forEach(function(b){ b.addEventListener('click',function(){doDeleteCh(this.getAttribute('data-chid'));}); });
+    }
+
     if(S.tab==='projects'){
       bindEl('lc-new-proj-btn','click',function(){ var n=prompt('Project name:'); if(n) doNewProject(n); });
       S.projects.forEach(function(proj){
@@ -19212,7 +19350,20 @@ var _dmxMode = 'd2p';
       if(S.activeProjId){
         var rfl=document.getElementById('lc-rf-label');  if(rfl)  rfl.addEventListener('input',function(){S.runForm.label=this.value;});
         var rffx=document.getElementById('lc-rf-fx');    if(rffx) rffx.addEventListener('change',function(){S.runForm.fixtureId=this.value;});
-        var rflen=document.getElementById('lc-rf-len');  if(rflen) rflen.addEventListener('input',function(){S.runForm.lengthStr=this.value;});
+        var rflen=document.getElementById('lc-rf-len');
+        if(rflen) rflen.addEventListener('input',function(){
+          S.runForm.lengthStr=this.value;
+          var prev=document.getElementById('lc-rf-len-prev');
+          if(prev){
+            var p=parsLenExpr(this.value);
+            if(p&&p.val>0){
+              var f=fmtIn(p.val);
+              prev.textContent='= '+f.ftIn+' · '+f.inches+' · '+f.mm;
+            } else {
+              prev.textContent='';
+            }
+          }
+        });
         var rfqty=document.getElementById('lc-rf-qty');  if(rfqty) rfqty.addEventListener('input',function(){S.runForm.qty=this.value;});
         var rfl2=document.getElementById('lc-rf-leaders'); if(rfl2) rfl2.addEventListener('change',function(){S.runForm.leaders=this.value;});
         var rfz=document.getElementById('lc-rf-zone');   if(rfz)  rfz.addEventListener('input',function(){S.runForm.zone=this.value;});
@@ -19261,6 +19412,59 @@ var _dmxMode = 'd2p';
           });
           bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;S.qaPsuZone='';_ledRender();});
         }
+        // Per-zone channel selectors
+        document.querySelectorAll('[data-zone-ch-sel]').forEach(function(sel){
+          sel.addEventListener('change',function(){
+            var zoneKey=this.getAttribute('data-zone-ch-sel');
+            var projId=this.getAttribute('data-proj-id');
+            var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+            if(!proj.channelByZone) proj.channelByZone={};
+            if(this.value==='__addch__'){
+              this.value=proj.channelByZone[zoneKey]||'';
+              S.qaCh=true; S.qaChZone=zoneKey; S.qaChProjId=projId;
+              S.qaChMfr=''; S.qaChPart=''; S.qaChLenStr=''; S.qaChEndCaps='2'; S.qaChClipsSpacing='18'; S.qaChErr='';
+              _ledRender(); return;
+            }
+            proj.channelByZone[zoneKey]=this.value; S.qaCh=false; S.qaChZone=''; S.qaChProjId='';
+            saveProj(); _ledRender();
+          });
+        });
+        // Quick-add channel listeners
+        if(S.qaCh){
+          var qacm=document.getElementById('lc-qa-cm'); if(qacm) qacm.addEventListener('input',function(){S.qaChMfr=this.value;});
+          var qacp=document.getElementById('lc-qa-cp'); if(qacp) qacp.addEventListener('input',function(){S.qaChPart=this.value;});
+          var qacl=document.getElementById('lc-qa-cl'); if(qacl) qacl.addEventListener('input',function(){S.qaChLenStr=this.value;});
+          var qace=document.getElementById('lc-qa-ce'); if(qace) qace.addEventListener('input',function(){S.qaChEndCaps=this.value;});
+          var qacc=document.getElementById('lc-qa-cc'); if(qacc) qacc.addEventListener('input',function(){S.qaChClipsSpacing=this.value;});
+          bindEl('lc-qa-ch-save','click',function(){
+            var lenParsed=parsLenExpr(S.qaChLenStr);
+            if(!S.qaChMfr.trim()||!S.qaChPart.trim()){ S.qaChErr='Manufacturer and part number are required.'; _ledRender(); return; }
+            if(!lenParsed||lenParsed.val<=0){ S.qaChErr='Enter a valid piece length.'; _ledRender(); return; }
+            var ec=parseFloat(S.qaChEndCaps), cs=parseFloat(S.qaChClipsSpacing);
+            var obj={id:'ch'+Date.now(),manufacturer:S.qaChMfr.trim(),partNumber:S.qaChPart.trim(),lengthIn:lenParsed.val,
+                     endCapsPerRun:(!isNaN(ec)&&ec>=0)?ec:2,clipsSpacingIn:(!isNaN(cs)&&cs>=0)?cs:0};
+            S.channels.push(obj);
+            var activeProj=S.projects.find(function(p){return p.id===S.qaChProjId;});
+            if(activeProj){ if(!activeProj.channelByZone) activeProj.channelByZone={}; activeProj.channelByZone[S.qaChZone]=obj.id; }
+            S.qaCh=false; S.qaChZone=''; S.qaChProjId='';
+            saveCh(); saveProj(); _ledRender(); toast('Channel saved');
+          });
+          bindEl('lc-qa-ch-cancel','click',function(){S.qaCh=false;S.qaChZone='';S.qaChProjId='';_ledRender();});
+        }
+        // Per-zone channel piece count override
+        document.querySelectorAll('[data-zone-ch]').forEach(function(inp){
+          inp.addEventListener('change',function(){
+            var zoneKey=this.getAttribute('data-zone-ch');
+            var projId=this.getAttribute('data-proj-id');
+            var p=S.projects.find(function(x){return x.id===projId;}); if(!p) return;
+            if(!p.channelQtyOverrides) p.channelQtyOverrides={};
+            var val=parseInt(this.value);
+            if(!isNaN(val)&&val>=0) p.channelQtyOverrides[zoneKey]=val;
+            else delete p.channelQtyOverrides[zoneKey];
+            saveProj(); _ledRender();
+          });
+          inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){this.blur();} });
+        });
         document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(){doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
         document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(){doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
         // PSU over-capacity force toggles
@@ -19321,7 +19525,7 @@ var _dmxMode = 'd2p';
         _ledRender();
       }
       if(mcExpr){
-        mcExpr.addEventListener('input',function(){ S.mcExpr=this.value; });
+        mcExpr.addEventListener('input',function(){ S.mcExpr=this.value; runMiniCalc(); });
         mcExpr.addEventListener('keydown',function(e){ if(e.key==='Enter') runMiniCalc(); });
       }
       if(mcGo) mcGo.addEventListener('click',runMiniCalc);
@@ -19362,6 +19566,7 @@ var _dmxMode = 'd2p';
     else if(S.tab==='projects') bodyHtml=projectsTabHTML();
     else if(S.tab==='fixtures') bodyHtml=fixturesTabHTML();
     else if(S.tab==='psu') bodyHtml=psuTabHTML();
+    else if(S.tab==='channel') bodyHtml=channelTabHTML();
     root.innerHTML=
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">'
         +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>'
@@ -19372,6 +19577,7 @@ var _dmxMode = 'd2p';
         +'<button class="lc-tab'+(S.tab==='projects'?' active':'')+'" data-lctab="projects">Projects'+(S.projects.length?' ('+S.projects.length+')':'')+'</button>'
         +'<button class="lc-tab'+(S.tab==='fixtures'?' active':'')+'" data-lctab="fixtures">Fixtures</button>'
         +'<button class="lc-tab'+(S.tab==='psu'?' active':'')+'" data-lctab="psu">Power Supplies</button>'
+        +'<button class="lc-tab'+(S.tab==='channel'?' active':'')+'" data-lctab="channel">LED Channel'+(S.channels.length?' ('+S.channels.length+')':'')+'</button>'
       +'</div>'
       +bodyHtml
       +miniCalcHTML()
