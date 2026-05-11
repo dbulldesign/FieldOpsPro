@@ -18454,7 +18454,7 @@ var _dmxMode = 'd2p';
   }
 
   // ── Helpers ───────────────────────────────────────────────────
-  function toIn(v,u){ return u==='ft'?v*12:u==='mm'?v/25.4:v; }
+  function toIn(v,u){ return u==='ft'?v*12:u==='mm'?v/25.4:u==='m'?v*1000/25.4:v; }
   function parsLen(str){
     if(!str||!str.trim()) return null;
     str=str.trim(); var m;
@@ -18462,6 +18462,8 @@ var _dmxMode = 'd2p';
     m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\s*(\d+(?:\.\d+)?)\s*(?:in|inch|")?$/i); if(m&&m[2]) return {val:+m[1]*12+ +m[2]};
     m=str.match(/^(\d+(?:\.\d+)?)\s*mm$/i); if(m) return {val:+m[1]/25.4};
     m=str.match(/^(\d+(?:\.\d+)?)\s*cm$/i); if(m) return {val:+m[1]/2.54};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*(?:meters?|metres?)$/i); if(m) return {val:+m[1]*1000/25.4};
+    m=str.match(/^(\d+(?:\.\d+)?)\s*m$/i); if(m) return {val:+m[1]*1000/25.4};
     m=str.match(/^(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')$/i); if(m) return {val:+m[1]*12};
     m=str.match(/^(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")$/i); if(m) return {val:+m[1]};
     m=str.match(/^(\d+(?:\.\d+)?)$/); if(m) return {val:+m[1]};
@@ -18481,6 +18483,8 @@ var _dmxMode = 'd2p';
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:in|inch|inches|")/gi,function(m,v){return v;});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*mm/gi,function(m,v){return String(+v/25.4);});
     expr=expr.replace(/(\d+(?:\.\d+)?)\s*cm/gi,function(m,v){return String(+v/2.54);});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*(?:meters?|metres?)\b/gi,function(m,v){return String(+v*1000/25.4);});
+    expr=expr.replace(/(\d+(?:\.\d+)?)\s*m(?!m)\b/gi,function(m,v){return String(+v*1000/25.4);});
     expr=expr.trim();
     if(!expr||!/^[\d\s\.\+\-\*\/\(\)]+$/.test(expr)) return null;
     try{
@@ -18494,7 +18498,8 @@ var _dmxMode = 'd2p';
     return {
       ftIn:  ft>0 ? ft+'′ '+inch.toFixed(3)+'″' : inch.toFixed(3)+'″',
       inches: inches.toFixed(4)+'″',
-      mm:    (inches*25.4).toFixed(1)+' mm'
+      mm:    (inches*25.4).toFixed(1)+' mm',
+      m:     (inches*25.4/1000).toFixed(3)+' m'
     };
   }
   function mkDiff(res,inp){
@@ -18527,6 +18532,7 @@ var _dmxMode = 'd2p';
     return '<div class="lc-rcard'+(feat?' lc-feat':'')+'">'
       +'<div class="lc-rlabel">'+label+'</div>'
       +'<div class="lc-rftin">'+escH(data.display.ftIn)+'</div>'
+      +'<div class="lc-rsub">'+escH(data.display.m)+'</div>'
       +'<div class="lc-rsub">'+escH(data.display.mm)+'</div>'
       +'<div class="lc-rsub">'+escH(data.display.inches)+'</div>'
       +'<div class="lc-rsegs"><strong>'+data.segments+'</strong> segment'+(data.segments!==1?'s':'')+'</div>'
@@ -18561,8 +18567,8 @@ var _dmxMode = 'd2p';
     var el=document.getElementById('lc-lh'); if(!el) return;
     if(!S.inputVal){el.innerHTML='';return;}
     var p=parsLenExpr(S.inputVal);
-    if(p){ var f=fmtIn(p.val); el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.mm)+' · '+escH(f.inches)+(p.fromExpr?' <span style="font-size:10px;opacity:0.7">= '+escH(f.ftIn)+'</span>':'')+'</span>'; }
-    else  el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 6ft 3in · 8ft/2</span>';
+    if(p){ var f=fmtIn(p.val); el.innerHTML='<span class="lc-hint-ok">✓ '+escH(f.ftIn)+' · '+escH(f.m)+' · '+escH(f.mm)+' · '+escH(f.inches)+(p.fromExpr?' <span style="font-size:10px;opacity:0.7">= '+escH(f.ftIn)+'</span>':'')+'</span>'; }
+    else  el.innerHTML='<span class="lc-hint-err">Try: 7ft · 21in · 63mm · 2.1m · 6ft 3in · 8ft/2</span>';
   }
   function calcTabHTML(){
     var sel=S.fixtures.find(function(f){return f.id===S.selectedId;}), incIn=getInc(), incFmt=incIn?fmtIn(incIn):null;
@@ -18579,7 +18585,7 @@ var _dmxMode = 'd2p';
         +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span><input class="lc-input" id="lc-qa-fp" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.qaFxPart)+'"></div>'
         +'<div style="display:grid;grid-template-columns:1fr 80px 100px;gap:8px;margin-bottom:8px">'
           +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-qa-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.qaFxInc)+'"></div>'
-          +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-qa-fu"><option value="in"'+(S.qaFxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.qaFxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.qaFxUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+          +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-qa-fu"><option value="in"'+(S.qaFxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.qaFxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.qaFxUnit==='mm'?' selected':'')+'>mm</option><option value="m"'+(S.qaFxUnit==='m'?' selected':'')+'>m</option></select></div>'
           +'<div class="lc-field"><span class="lc-lbl">Watts/ft</span><input class="lc-input" id="lc-qa-fwpf" type="number" min="0" step="0.1" placeholder="e.g. 3.2" value="'+escH(S.qaFxWpf)+'"></div>'
         +'</div>'
         +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Color temp / type <span style="font-weight:400;color:var(--text-muted)">(optional)</span></span><input class="lc-input" id="lc-qa-fct" type="text" list="lc-fct-list" placeholder="e.g. 3000K · RGBW · 1800-2700K Warm Dim" autocomplete="off" value="'+escH(S.qaFxCct)+'"></div>'
@@ -18596,10 +18602,10 @@ var _dmxMode = 'd2p';
       +'<div class="lc-or">or enter manually</div>'
       +'<div class="lc-g2">'
         +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-mi" type="text" inputmode="decimal" placeholder="e.g. 1.9685"'+(sel?' disabled style="opacity:.45"':'')+' value="'+escH(S.manualIncrement)+'"></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'><option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-mu-sel"'+(sel?' disabled style="opacity:.45"':'')+'><option value="in"'+(S.manualUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.manualUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.manualUnit==='mm'?' selected':'')+'>mm</option><option value="m"'+(S.manualUnit==='m'?' selected':'')+'>m</option></select></div>'
       +'</div></div>'
       +'<div class="lc-section"><div class="lc-stitle">Desired length</div>'
-      +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 84in · 6ft 3in · 8\'\/2 · 96in\/3" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
+      +'<input class="lc-input lc-input-lg" id="lc-li" type="text" inputmode="decimal" placeholder="7ft · 84in · 2.1m · 6ft 3in · 8\'\/2" autocomplete="off" spellcheck="false" value="'+escH(S.inputVal)+'">'
       +'<div class="lc-hint" id="lc-lh"></div>'
       +'<button class="lc-btn lc-btn-primary" id="lc-btn-calc" style="width:100%;margin-top:12px">Calculate</button>'
       +(!incIn?'<p style="font-size:12px;color:var(--text-muted);margin-top:8px;text-align:center">Select a fixture or enter a cut increment first</p>':'')
@@ -18619,6 +18625,7 @@ var _dmxMode = 'd2p';
             +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy" data-copy-val="'+escH(lf.ftIn)+'" style="flex-shrink:0">Copy ft+in</button>'
           +'</div>'
           +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            +'<span style="font-size:11px;color:var(--text-muted);font-family:monospace">'+escH(lf.m)+'</span>'
             +'<span style="font-size:11px;color:var(--text-muted);font-family:monospace">'+escH(lf.inches)+'</span>'
             +'<span style="font-size:11px;color:var(--text-muted);font-family:monospace">'+escH(lf.mm)+'</span>'
             +'<button class="lc-btn lc-btn-sm" id="lc-mc-copy-in" data-copy-val="'+escH(S.mcLenVal.toFixed(4)+'in')+'" style="font-size:10px;height:22px;padding:0 8px;margin-left:auto">Copy as inches</button>'
@@ -19050,7 +19057,7 @@ var _dmxMode = 'd2p';
       +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / description</span><input class="lc-input" id="lc-fp" type="text" placeholder="e.g. DI-12V-STR-60-WH" value="'+escH(S.fxPart)+'"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 80px 100px;gap:8px;margin-bottom:8px">'
         +'<div class="lc-field"><span class="lc-lbl">Cut increment</span><input class="lc-input" id="lc-fi" type="text" inputmode="decimal" placeholder="e.g. 1.9685" value="'+escH(S.fxInc)+'"></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-fu"><option value="in"'+(S.fxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.fxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.fxUnit==='mm'?' selected':'')+'>mm</option></select></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Unit</span><select class="lc-select" id="lc-fu"><option value="in"'+(S.fxUnit==='in'?' selected':'')+'>in</option><option value="ft"'+(S.fxUnit==='ft'?' selected':'')+'>ft</option><option value="mm"'+(S.fxUnit==='mm'?' selected':'')+'>mm</option><option value="m"'+(S.fxUnit==='m'?' selected':'')+'>m</option></select></div>'
         +'<div class="lc-field"><span class="lc-lbl">Watts / ft</span><input class="lc-input" id="lc-fwpf" type="number" min="0" step="0.1" placeholder="e.g. 3.2" value="'+escH(S.fxWpf)+'"></div>'
       +'</div>'
       +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Color temperature / type <span style="font-weight:400;color:var(--text-muted)">(optional)</span></span>'
