@@ -3880,6 +3880,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24"><path class="ni-brain" d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path pathLength="1" class="ni-circuit" d="M9 13a4.5 4.5 0 0 0 3-4"/><path class="ni-brain" d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path class="ni-brain" d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path class="ni-brain" d="M6 18a4 4 0 0 1-1.967-.516"/><path pathLength="1" class="ni-circuit" d="M12 13h4"/><path pathLength="1" class="ni-circuit" d="M12 18h6a2 2 0 0 1 2 2v1"/><path pathLength="1" class="ni-circuit" d="M12 8h8"/><path pathLength="1" class="ni-circuit" d="M16 8V5a2 2 0 0 1 2-2"/><circle class="ni-term-1" cx="16" cy="13" r=".5" fill="currentColor"/><circle class="ni-term-2" cx="18" cy="3" r=".5" fill="currentColor"/><circle class="ni-term-3" cx="20" cy="21" r=".5" fill="currentColor"/><circle class="ni-term-4" cx="9" cy="3" r=".5" fill="currentColor"/></svg>
           Troubleshoot DB
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('etcdocs')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          ETC Docs
+        </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('lutrondocs')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Lutron Docs
+        </div>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -4702,6 +4710,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ FIXTURE PHOTOMETRICS ═══ -->
   <div class="view" id="view-photometrics">
     <div id="photometrics-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ ETC SPEC LIBRARY ═══ -->
+  <div class="view" id="view-etcdocs">
+    <div id="etcdocs-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ LUTRON SPEC LIBRARY ═══ -->
+  <div class="view" id="view-lutrondocs">
+    <div id="lutrondocs-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7159,7 +7177,9 @@ var viewTitles = {
   lutronlink: 'Lutron Link Calculator',
   dmxaddrcalc: 'DMX Address Calculator',
   lutroncheck: 'Lutron Programming Checklist',
-  photometrics: 'Fixture Photometrics'
+  photometrics: 'Fixture Photometrics',
+  etcdocs: 'ETC Spec Library',
+  lutrondocs: 'Lutron Spec Library'
 };
 
 function switchView(v) {
@@ -7246,6 +7266,12 @@ function switchView(v) {
   }
   if(v==='photometrics') {
     if (typeof _photoRender === 'function') _photoRender();
+  }
+  if(v==='etcdocs') {
+    if (typeof _etcDocsRender === 'function') _etcDocsRender();
+  }
+  if(v==='lutrondocs') {
+    if (typeof _lutronDocsRender === 'function') _lutronDocsRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -21767,6 +21793,7 @@ window._llcRender = _llcRender;
   window._lcklToggle = _lcklToggle;
   window._lcklNote = _lcklNote;
   window._lcklExport = _lcklExport;
+  window._lcklSave = _lcklSave;
   window._lckl = _lckl;
 })();
 
@@ -21932,6 +21959,295 @@ window._llcRender = _llcRender;
   window._photoRender = _photoRender;
   window._photoUpdate = _photoUpdate;
   window._photo = _photo;
+})();
+
+// ═══════════════════════════════════════════════
+//  SHARED SPEC LIBRARY RENDERER
+// ═══════════════════════════════════════════════
+(function(){
+
+// ── Shared render engine used by both ETC and Lutron libraries ──
+function _specLibRender(rootId, mfr, accentColor, docs) {
+  var root = document.getElementById(rootId); if (!root) return;
+  var stateKey = '_specLib_'+rootId;
+  if (!window[stateKey]) window[stateKey] = { q:'', cat:'All' };
+  var st = window[stateKey];
+
+  var cats = ['All'].concat(docs.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; }, []));
+
+  var filtered = docs.filter(function(d){
+    var matchQ = !st.q || d.name.toLowerCase().indexOf(st.q)!==-1 || d.desc.toLowerCase().indexOf(st.q)!==-1 || d.cat.toLowerCase().indexOf(st.q)!==-1;
+    var matchC = st.cat==='All' || d.cat===st.cat;
+    return matchQ && matchC;
+  });
+
+  var catBadgeColor = {
+    'Consoles':'#4f8ef7','Console Accessory':'#6366f1','LED Fixture':'#22c55e','Ellipsoidal':'#4ade80',
+    'LED Wash':'#10b981','Dimmer Rack':'#f59e0b','Dimmer Module':'#fbbf24','Control Electronics':'#8b5cf6',
+    'Architectural Control':'#ec4899','DMX Gateway':'#06b6d4','Networking Software':'#0ea5e9',
+    'Processor':'#4f8ef7','Keypad':'#6366f1','Dimmer':'#f59e0b','Module':'#8b5cf6',
+    'Controller':'#ec4899','Hub':'#06b6d4','LED Driver':'#22c55e','Sensor':'#10b981',
+    'Shade':'#f97316','Integration':'#a78bfa','AV Interface':'#e879f9','System':'#64748b','Panel':'#0891b2'
+  };
+
+  function badge(cat) {
+    var c = catBadgeColor[cat] || '#4a5e7a';
+    return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+escH(cat)+'</span>';
+  }
+
+  function docCard(d) {
+    var isPdf = d.url.toLowerCase().indexOf('.pdf') !== -1;
+    var actionLabel = isPdf ? '⬇ Download PDF' : '↗ Open Page';
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px">'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
+      + badge(d.cat)
+      + (d.legacy ? '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(100,116,139,0.15);color:#64748b;border:1px solid rgba(100,116,139,0.25)">Legacy</span>' : '')
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:3px;line-height:1.3">'+escH(d.name)+'</div>'
+      + '<div style="font-size:11px;color:#4a5e7a;line-height:1.5">'+escH(d.desc)+'</div>'
+      + '</div>'
+      + '<a href="'+d.url+'" target="_blank" rel="noopener" style="flex-shrink:0;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba('+accentColor+',0.35);background:rgba('+accentColor+',0.1);color:#'+accentColor.split(',').map(function(x){return parseInt(x,10).toString(16).padStart(2,'0');}).join('')+';text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:5px">'+actionLabel+'</a>'
+      + '</div>';
+  }
+
+  var groupedHtml = '';
+  if (filtered.length === 0) {
+    groupedHtml = '<div style="text-align:center;padding:40px;color:#4a5e7a;font-size:13px">No documents match your search</div>';
+  } else {
+    var groups = {};
+    var groupOrder = [];
+    filtered.forEach(function(d){
+      if(!groups[d.cat]){groups[d.cat]=[];groupOrder.push(d.cat);}
+      groups[d.cat].push(d);
+    });
+    groupOrder.forEach(function(cat){
+      groupedHtml += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">'+escH(cat)+' <span style="color:#2d3f52;font-weight:600">('+groups[cat].length+')</span></div>'
+        + groups[cat].map(docCard).join('')
+        + '</div>';
+    });
+  }
+
+  root.innerHTML =
+    '<div style="max-width:760px;margin:0 auto;padding:24px 16px 40px">'
+    + '<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">'+escH(mfr)+' Spec Library</h2>'
+    + '<p style="font-size:12px;color:#4a5e7a;margin:0 0 16px">'+docs.length+' documents · spec sheets, cut sheets &amp; control docs · links open official manufacturer source</p>'
+    // Search bar
+    + '<div style="position:relative;margin-bottom:14px">'
+    + '<input type="text" id="'+rootId+'-q" placeholder="Search by name, category, or keyword…" value="'+escH(st.q)+'" oninput="window[\'_specLib_'+rootId+'\'].q=this.value.toLowerCase();_specLibRerender(\''+rootId+'\',\''+mfr+'\',\''+accentColor+'\')" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px 10px 40px;color:#f0f4ff;font-size:13px;outline:none">'
+    + '<svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    + '</div>'
+    // Category chips
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">'
+    + cats.map(function(c){
+        var a=st.cat===c;
+        return '<button onclick="window[\'_specLib_'+rootId+'\'].cat=\''+c.replace(/'/g,"\\'")+'\';;_specLibRerender(\''+rootId+'\',\''+mfr+'\',\''+accentColor+'\')" style="padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba('+accentColor+',0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba('+accentColor+',0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#e8f0ff':'#8da0c0')+';white-space:nowrap">'+escH(c)+'</button>';
+      }).join('')
+    + '</div>'
+    // Results count
+    + (st.q||st.cat!=='All' ? '<div style="font-size:11px;color:#4a5e7a;margin-bottom:14px">Showing '+filtered.length+' of '+docs.length+' documents</div>' : '')
+    // Doc groups
+    + groupedHtml
+    + '</div>';
+}
+
+function _specLibRerender(rootId, mfr, accentColor) {
+  if (rootId === 'etcdocs-root') _etcDocsRender();
+  else if (rootId === 'lutrondocs-root') _lutronDocsRender();
+}
+
+window._specLibRerender = _specLibRerender;
+
+// ═══════════════════════════════════════════════
+//  ETC SPEC LIBRARY DATA + RENDER
+// ═══════════════════════════════════════════════
+var _etcDocs = [
+  // Consoles — Eos Family
+  {name:'Eos Ti Console',cat:'Consoles',desc:'Flagship Eos Ti lighting control console — 2×21" touchscreens, 96 motorised faders, full DMX/Art-Net/sACN output.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737481191'},
+  {name:'Ion Xe Console',cat:'Consoles',desc:'Ion Xe mid-size console — 2 integral screens, 2,048 outputs, Eos family software.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737492145'},
+  {name:'Ion Xe 20 Console',cat:'Consoles',desc:'Ion Xe with 20 motorised faders — compact form factor for touring and fixed install.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737492144'},
+  {name:'Ion Xe RPU (Remote Processor Unit)',cat:'Consoles',desc:'Rack-mount remote processor unit for Ion Xe — runs full Eos software headlessly.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737492138'},
+  {name:'Element 2 Console',cat:'Consoles',desc:'Element 2 — 500 cue, 1,024-output console with 40 submasters. Entry Eos family.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737494273'},
+  {name:'Eos Apex 5 Console',cat:'Consoles',desc:'Eos Apex 5 — next-gen console with OLED fader tiles and expanded I/O.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737510498'},
+  {name:'Eos Apex 10 Console',cat:'Consoles',desc:'Eos Apex 10 — mid-size Apex platform console.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737510499'},
+  {name:'Eos Apex 20 Console',cat:'Consoles',desc:'Eos Apex 20 — flagship Apex platform console.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737510500'},
+  {name:'ColorSource 20 Console',cat:'Consoles',desc:'ColorSource 20 — 20-fader entry-level console with 1,024 DMX outputs and full color engine.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737484358'},
+  {name:'ColorSource 40 Console',cat:'Consoles',desc:'ColorSource 40 — 40-fader version of the entry-level ColorSource platform.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737484358'},
+  {name:'Eos Family Documentation Index',cat:'Consoles',desc:'Landing page for all current Eos family datasheets, user manuals, and specs.',url:'https://www.etcconnect.com/Products/Consoles/Eos-Consoles/All-Eos-Downloads/Datasheets.aspx'},
+  // Console Accessories
+  {name:'Universal Fader Wing',cat:'Console Accessory',desc:'60-fader expansion wing for any Eos family console — USB, motorised faders.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737481197'},
+  {name:'Universal Fader Wing Spec Sheet',cat:'Console Accessory',desc:'Formal specification document for the Universal Fader Wing (dimensions, power, connectivity).',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737462215'},
+  // LED Fixtures — Source Four LED
+  {name:'Source Four LED Series 3 Datasheet',cat:'LED Fixture',desc:'Source Four LED Series 3 (Lustr X8 and Daylight HD variants) — photometrics, beam angles, and specs.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737506242'},
+  {name:'Source Four LED Series 3 Spec Sheet',cat:'LED Fixture',desc:'Detailed specification sheet for the Series 3 platform including fixture dimensions and electrical data.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737513330'},
+  {name:'Source Four LED Series 3 Documentation',cat:'LED Fixture',desc:'Full documentation index — all S4 LED Series 3 downloads including IES files and installation guides.',url:'https://www.etcconnect.com/Products/Entertainment-Fixtures/Source-Four-LED-Series-3/Documentation.aspx'},
+  // Ellipsoidals — Source Four Standard
+  {name:'Source Four 10° Ellipsoidal',cat:'Ellipsoidal',desc:'Spec sheet for the Source Four 10° narrow-beam ellipsoidal (hard-edge spot fixture).',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460591'},
+  {name:'Source Four 36° Ellipsoidal',cat:'Ellipsoidal',desc:'Spec sheet for the Source Four 36° medium-beam ellipsoidal.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460423'},
+  {name:'Source Four 50° Ellipsoidal',cat:'Ellipsoidal',desc:'Spec sheet for the Source Four 50° wide-beam ellipsoidal.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460305'},
+  {name:'Source Four Zoom Ellipsoidal',cat:'Ellipsoidal',desc:'Spec sheet for the Source Four variable-beam zoom ellipsoidal.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460417'},
+  {name:'Source Four Mini LED',cat:'Ellipsoidal',desc:'Spec sheet for the Source Four Mini LED — compact LED ellipsoidal replacement for the Jr.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737484388'},
+  // LED Wash — Selador
+  {name:'Selador Classic Series Lustr Spec',cat:'LED Wash',desc:'Spec sheet for the Selador Classic Lustr LED wash luminaire with 7-colour mixing.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460389'},
+  {name:'Selador Application Sheet',cat:'LED Wash',desc:'Application sheet covering the full Selador LED wash fixture family.',url:'https://www.etcconnect.com/workarea/downloadasset.aspx?Id=10737461771'},
+  // Dimmer Racks — Sensor3
+  {name:'Sensor3 120V Power Control Modules',cat:'Dimmer Rack',desc:'Datasheet for 120V Sensor3 dimmer and relay modules — electrical and physical specs.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737515007'},
+  {name:'Sensor3 240V Power Control Modules',cat:'Dimmer Rack',desc:'Datasheet for 240V Sensor3 dimmer modules.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737515006'},
+  {name:'Sensor3 230V Power Control Modules (CE)',cat:'Dimmer Rack',desc:'Datasheet for 230V CE-rated Sensor3 dimmer modules.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737515005'},
+  {name:'Sensor3 120V Installation Enclosures (SR3)',cat:'Dimmer Rack',desc:'Datasheet for SR3 120V installation rack enclosures.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737513958'},
+  {name:'Sensor3 240V Installation Enclosures (HSR3)',cat:'Dimmer Rack',desc:'Datasheet for HSR3 240V installation rack enclosures.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737504423'},
+  {name:'Sensor3 230V Installation Enclosures (ESR3)',cat:'Dimmer Rack',desc:'Datasheet for ESR3 230V CE-rated installation racks.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737504438'},
+  {name:'Sensor3 Large Touring Rack (SP3)',cat:'Dimmer Rack',desc:'Datasheet for the large-frame Sensor3 touring dimmer rack.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460569'},
+  {name:'Sensor3 Small Touring Rack (SP3)',cat:'Dimmer Rack',desc:'Datasheet for the small-frame Sensor3 touring dimmer rack.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460024'},
+  {name:'Sensor3 Documentation Index',cat:'Dimmer Rack',desc:'Full documentation index for Sensor3 — all datasheets, specs, and installation manuals.',url:'https://www.etcconnect.com/Products/Power-Controls/Racks-and-Panels/Sensor3/Documentation.aspx'},
+  // Dimmer Modules
+  {name:'CEM3 Power Control Module — Datasheet',cat:'Dimmer Module',desc:'Datasheet for the CEM3 control electronics module used in Sensor3 racks.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737460330'},
+  {name:'CEM3 Power Control Module — Spec',cat:'Dimmer Module',desc:'Formal specification document for the CEM3 module.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737462340'},
+  {name:'PhaseAdept Auto-Sensing Dimmer Module',cat:'Dimmer Module',desc:'Datasheet for the PhaseAdept module — auto-detects load type, forward/reverse phase.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737498696'},
+  // Control Electronics — CEM+ / Unison
+  {name:'Sensor+ CEM+ Racks Spec',cat:'Control Electronics',desc:'Spec sheet for Sensor+ racks with CEM+ control electronics module.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460203',legacy:true},
+  {name:'CEM Classic Documentation Index',cat:'Control Electronics',desc:'Full documentation for the legacy CEM Classic control electronics module.',url:'https://www.etcconnect.com/Products/Legacy/Power-Controls/Sensor/CEM-Classic/Documentation.aspx',legacy:true},
+  {name:'Unison 120V Dimming Racks Spec',cat:'Control Electronics',desc:'Spec for Unison 120V dimming racks with various module configs.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460646',legacy:true},
+  {name:'Unison CE (DRd) 230V Dimming Rack',cat:'Control Electronics',desc:'Spec for CE-rated Unison DRd 230V rack enclosure.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737504440',legacy:true},
+  {name:'Unison ELV10 Reverse Phase Module',cat:'Control Electronics',desc:'Spec for the Unison ELV10 120V electronic reverse-phase dimmer module.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460393',legacy:true},
+  // Architectural Control — Paradigm
+  {name:'Paradigm Architectural Control Processor (P-ACP)',cat:'Architectural Control',desc:'Datasheet for the Paradigm ACP — central processor for fixed architectural lighting systems.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737481308'},
+  {name:'Paradigm Architectural Controls Brochure',cat:'Architectural Control',desc:'Product brochure for the full Paradigm architectural lighting control system.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737494181'},
+  {name:'Paradigm Documentation Index',cat:'Architectural Control',desc:'Full documentation index for Paradigm — datasheets, manuals, and specs.',url:'https://www.etcconnect.com/Products/Architectural-Systems/Paradigm/Control-and-Dimming/Architectural-Controls/Documentation.aspx'},
+  // Architectural Control — Mosaic
+  {name:'Mosaic Show Controller (MSC)',cat:'Architectural Control',desc:'Datasheet for the Mosaic Show Controller — standalone show and installation control processor.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737481036'},
+  {name:'Mosaic Expansion I/O Modules',cat:'Architectural Control',desc:'Spec for Mosaic expansion I/O modules — contact closures, relay outputs.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737460548'},
+  {name:'Mosaic Wall-Mount Button Station',cat:'Architectural Control',desc:'Spec for Mosaic wall-mount button station controls.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737479299'},
+  {name:'Mosaic Touchscreen Station',cat:'Architectural Control',desc:'Spec for the Mosaic touchscreen wall station.',url:'https://www.etcconnect.com/workarea/DownloadAsset.aspx?id=10737492519'},
+  {name:'Mosaic Show Controller Brochure',cat:'Architectural Control',desc:'Product brochure for the full Mosaic show controller family.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737494180'},
+  {name:'Mosaic Documentation Index',cat:'Architectural Control',desc:'Full documentation index for Mosaic controllers.',url:'https://www.etcconnect.com/Products/Architectural-Systems/Mosaic/Controllers/Show-Controller/Documentation.aspx'},
+  // DMX Gateways — Response Mk2
+  {name:'Response Mk2 — 1-Port Gateway',cat:'DMX Gateway',desc:'Datasheet for the 1-port Response Mk2 Art-Net/sACN to DMX512 gateway.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737499814'},
+  {name:'Response Mk2 — 2-Port Gateway',cat:'DMX Gateway',desc:'Datasheet for the 2-port Response Mk2 gateway.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737499813'},
+  {name:'Response Mk2 — 4-Port Gateway',cat:'DMX Gateway',desc:'Datasheet for the 4-port Response Mk2 gateway.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737499812'},
+  {name:'Response Mk2 — 8-Port Gateway',cat:'DMX Gateway',desc:'Datasheet for the 8-port Response Mk2 gateway.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737519939'},
+  {name:'Response Mk2 — DIN-Rail Gateways',cat:'DMX Gateway',desc:'Datasheet for the DIN-rail mount Response Mk2 gateway variants.',url:'https://www.etcconnect.com/WorkArea/DownloadAsset.aspx?id=10737506241'},
+  {name:'Response Mk2 Documentation Index',cat:'DMX Gateway',desc:'Full documentation index for all Response Mk2 gateway variants.',url:'https://www.etcconnect.com/Products/Networking/Response-Mk2/Documentation.aspx'},
+  // Networking
+  {name:'Net3 Concert Software — Documentation',cat:'Networking Software',desc:'Product page for Net3 Concert — ETC network configuration and management software.',url:'https://www.etcconnect.com/Products/Networking/System-Configuration/Software/Concert.aspx'},
+  {name:'Net3 Other Documentation',cat:'Networking Software',desc:'ETC documentation index for Net3 networking products.',url:'https://www.etcconnect.com/Support/Networking/Net-3/Other-Documentation.aspx'}
+];
+
+function _etcDocsRender() {
+  _specLibRender('etcdocs-root', 'ETC (Electronic Theatre Controls)', '79,142,247', _etcDocs);
+}
+window._etcDocsRender = _etcDocsRender;
+
+// ═══════════════════════════════════════════════
+//  LUTRON SPEC LIBRARY DATA + RENDER
+// ═══════════════════════════════════════════════
+var _lutronDocs = [
+  // HomeWorks QS — Processor
+  {name:'HomeWorks QS Processor (HQP6)',cat:'Processor',desc:'Spec submittal for the HomeWorks QS central processor — main QS bus controller.',url:'https://assets.lutron.com/a/documents/369-376_hwqs_processor.pdf'},
+  {name:'HomeWorks QSX Processor',cat:'Processor',desc:'Spec for QSX processor — supports Clear Connect Type X gateway and expanded RF.',url:'https://assets.lutron.com/a/documents/3691127_eng.pdf'},
+  {name:'HomeWorks QSX System Equipment Overview',cat:'System',desc:'Equipment type overview for the full HomeWorks QSX platform.',url:'https://www.lutron.com/TechnicalDocumentLibrary/Homeworks_QSX_Equipment.pdf'},
+  {name:'HomeWorks QS DIN Panels and Accessories',cat:'Panel',desc:'Spec for DIN rail panels and system accessories for HWQS.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369788_ENG.pdf'},
+  {name:'HomeWorks QS System Overview Brochure',cat:'System',desc:'Full system energy-saving overview for HomeWorks QS.',url:'https://assets.lutron.com/a/documents/3672335_EA_Homeworks_QS.pdf'},
+  // HomeWorks QS — Keypads
+  {name:'HomeWorks QS Wired Palladiom Keypad',cat:'Keypad',desc:'Spec sheet for wired Palladiom keypads — premium glass-face engraved buttons.',url:'https://assets.lutron.com/a/documents/369881_eng.pdf'},
+  {name:'HomeWorks QS Wired Palladiom Bespoke Keypads',cat:'Keypad',desc:'Spec for Palladiom bespoke/custom wired keypads with custom engraving.',url:'https://www.lutron.com/TechnicalDocumentLibrary/3691141_ENG.pdf'},
+  {name:'HomeWorks QS Wired seeTouch Architectural Keypads',cat:'Keypad',desc:'Spec for wired seeTouch architectural keypad lineup for HWQS.',url:'https://assets.lutron.com/a/documents/369353_hwqs_wired_arch.pdf'},
+  {name:'HomeWorks QS RF seeTouch Tabletop Keypads',cat:'Keypad',desc:'Spec for RF seeTouch tabletop remote keypads.',url:'https://assets.lutron.com/a/documents/369349.pdf'},
+  {name:'HomeWorks QS Wired Maestro Designer Local Controls',cat:'Keypad',desc:'Spec for wired Maestro Designer controls in the HomeWorks QS system.',url:'https://assets.lutron.com/a/documents/369700_eng.pdf'},
+  {name:'HomeWorks QS RF Plug-In Module',cat:'Module',desc:'Spec for the RF plug-in load control module for HWQS.',url:'https://assets.lutron.com/a/documents/hwqs_plug-in_module_369306.pdf'},
+  // HomeWorks Illumination (Legacy)
+  {name:'HomeWorks Illumination Technical Reference Guide',cat:'System',desc:'Comprehensive technical reference covering HWI components, wiring, and architecture.',url:'https://assets.lutron.com/a/documents/366-963h_full.pdf',legacy:true},
+  // RadioRA 3
+  {name:'RadioRA 3 Main Repeater / Processor (RR-PROC)',cat:'Processor',desc:'Spec sheet for the RadioRA 3 main processor/repeater — hub of the RA3 system.',url:'https://www.lutron.com/TechnicalDocumentLibrary/3691221_ENG.pdf'},
+  {name:'RadioRA 3 Auxiliary Repeater',cat:'Module',desc:'Spec for the wireless auxiliary repeater — extends RA3 RF range.',url:'https://assets.lutron.com/a/documents/3691073_wireless_repeater.pdf'},
+  {name:'RadioRA 3 RF Sunnata Dimmers and Switches',cat:'Dimmer',desc:'Spec for RF Sunnata in-wall dimmers and switches in the RadioRA 3 system.',url:'https://assets.lutron.com/a/documents/3691169_eng.pdf'},
+  {name:'RadioRA 3 Lamp Dimmer (Plug-In)',cat:'Dimmer',desc:'Spec for the plug-in lamp dimmer for table and floor lamps.',url:'https://assets.lutron.com/a/documents/3691313.pdf'},
+  {name:'RadioRA 3 Sunnata Keypads',cat:'Keypad',desc:'Spec for Sunnata series keypads used within the RadioRA 3 system.',url:'https://assets.lutron.com/a/documents/3691168_eng.pdf'},
+  {name:'RadioRA 3 RF Relay Module with Softswitch',cat:'Module',desc:'Spec for the RF relay switching module compatible with RadioRA 3.',url:'https://assets.lutron.com/a/documents/369769_ENG.pdf'},
+  {name:'RadioRA 3 System Architecture Diagram',cat:'System',desc:'System architecture one-line diagram for RadioRA 3.',url:'https://assets.lutron.com/a/documents/3686138_radiora3_domestic_architecture.pdf'},
+  // Caséta Wireless
+  {name:'Caséta Smart Bridge / Smart Bridge Pro',cat:'Hub',desc:'Spec for Caséta Smart Bridge and Pro hub — supports up to 75 devices.',url:'https://assets.lutron.com/a/documents/369816_Smart_Bridge_Pro_Spec.pdf'},
+  {name:'Caséta In-Wall Dimmer (PD-6WCL)',cat:'Dimmer',desc:'Spec for the standard Caséta wireless in-wall C·L dimmer.',url:'https://assets.lutron.com/a/documents/369804b_Caseta%20In-Wall%20Dimmer%20Spec.pdf'},
+  {name:'Caséta In-Wall Dimmer PRO (PD-10NXD)',cat:'Dimmer',desc:'Spec for the PRO series 10A Caséta in-wall dimmer.',url:'https://assets.lutron.com/a/documents/369919_web.pdf'},
+  {name:'Caséta Load Controls (General)',cat:'Dimmer',desc:'General spec for all Caséta wireless load control devices.',url:'https://assets.lutron.com/a/documents/369987_eng.pdf'},
+  {name:'Caséta Wireless Motion Sensor',cat:'Sensor',desc:'Spec for the Caséta wireless PIR motion and occupancy sensor.',url:'https://assets.lutron.com/a/documents/3691125_ENG.pdf'},
+  // GRAFIK Eye QS
+  {name:'GRAFIK Eye QS Wired Triac Control Unit',cat:'Controller',desc:'Spec for the wired triac preset dimming control unit with 3–8 zones.',url:'https://assets.lutron.com/a/documents/369309.pdf'},
+  {name:'GRAFIK Eye QS Wireless Control Unit',cat:'Controller',desc:'Spec for the wireless GRAFIK Eye QS control unit.',url:'https://assets.lutron.com/a/documents/369313_eng.pdf'},
+  {name:'GRAFIK Eye QS Wireless with EcoSystem',cat:'Controller',desc:'Spec for wireless GRAFIK Eye QS with EcoSystem digital ballast control.',url:'https://www.lutron.com/TechnicalDocumentLibrary/QSGRJ-xE%20Sub.pdf'},
+  {name:'GRAFIK Eye QS Wired DALI',cat:'Controller',desc:'Spec for the GRAFIK Eye QS wired DALI version.',url:'https://assets.lutron.com/a/documents/qsgr-xd%20spec%20submittal.pdf'},
+  {name:'GRAFIK Eye QS Design and Application Guide',cat:'System',desc:'Design guide covering GRAFIK Eye QS system applications and wiring.',url:'https://assets.lutron.com/a/documents/grafik%20eye%20qs%20design%20guide%20367-1338(final).pdf'},
+  // Vive
+  {name:'Vive Hub (HJS)',cat:'Hub',desc:'Spec for the Vive wireless lighting control hub — supports up to 100 devices per hub.',url:'https://assets.lutron.com/a/documents/369902_eng.pdf'},
+  {name:'Vive Integral Fixture Controls',cat:'Module',desc:'Spec for Vive integral fixture control devices.',url:'https://assets.lutron.com/a/documents/3691039.pdf'},
+  {name:'Vive PowPak CCO Module',cat:'Module',desc:'Spec for Vive PowPak contact closure output module.',url:'https://assets.lutron.com/a/documents/369909_eng.pdf'},
+  {name:'Vive PowPak Single Zone with EcoSystem',cat:'Module',desc:'Spec for Vive PowPak 0–10V/EcoSystem single zone module.',url:'https://assets.lutron.com/a/documents/3691103.pdf'},
+  {name:'Vive PowPak Relay Module with Softswitch',cat:'Module',desc:'Spec for Vive PowPak relay switching module with Softswitch.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369908_ENG.pdf'},
+  {name:'Vive PowPak Dimming Module 0–10V',cat:'Module',desc:'Spec for Vive PowPak 0–10V dimming module.',url:'https://assets.lutron.com/a/documents/369913_eng.pdf'},
+  {name:'Vive Phase Select Dim Module',cat:'Module',desc:'Spec for Vive phase-selectable dimming module.',url:'https://assets.lutron.com/a/documents/3691150.pdf'},
+  {name:'Vive Application Guide',cat:'System',desc:'Full application guide for the Vive wireless lighting system.',url:'https://assets.lutron.com/a/documents/3672673ch_vive_application_guide.pdf'},
+  {name:'Vive Design Guide',cat:'System',desc:'Design reference guide for Vive — zones, grouping, coverage, and device limits.',url:'https://www.lutron.com/TechnicalDocumentLibrary/367-2597_Vive_Design_Guide.pdf'},
+  // Quantum
+  {name:'Quantum Light Management Hub QP3',cat:'Processor',desc:'Spec for Quantum QP3 processor/hub — manages lighting across large commercial facilities.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369423.pdf'},
+  {name:'Quantum Light Management Hub QP2',cat:'Processor',desc:'Spec for the earlier Quantum QP2 hub.',url:'https://assets.lutron.com/a/documents/369375.pdf'},
+  {name:'Quantum Total Light Management Suite',cat:'System',desc:'System-level spec for the full Quantum Total Light Management suite.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369778_ENG.pdf'},
+  {name:'Quantum DIN Rail Panel',cat:'Panel',desc:'Spec for Quantum DIN rail power panel with phase-adaptive dimming modules.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369783_ENG.pdf'},
+  // Maestro
+  {name:'Maestro MA-PRO Dimmer',cat:'Dimmer',desc:'Spec for the Maestro Pro in-wall dimmer — up to 150W LED, advanced features.',url:'https://assets.lutron.com/a/documents/3691112_eng.pdf'},
+  {name:'Maestro LED+ Dimmer Sensor',cat:'Dimmer',desc:'Spec for the Maestro LED+ dimmer with integrated occupancy sensor.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369748.pdf'},
+  {name:'Maestro RF Dimmer and Switch',cat:'Dimmer',desc:'Spec for the Maestro RF wireless dimmer and switch.',url:'https://assets.lutron.com/a/documents/369904_eng.pdf'},
+  {name:'Maestro 0–10V Dimmer Sensor',cat:'Dimmer',desc:'Spec for the Maestro 0–10V dimmer sensor model.',url:'https://assets.lutron.com/a/documents/369833.pdf'},
+  // Diva
+  {name:'Diva LED+ Dimmer (C·L Gen 2)',cat:'Dimmer',desc:'Spec for the Diva LED+/C·L Gen 2 in-wall dimmer.',url:'https://assets.lutron.com/a/documents/369682.pdf'},
+  {name:'Diva 250W LED+ Dimmer',cat:'Dimmer',desc:'Spec for the Diva 250W LED+ dimmer.',url:'https://assets.lutron.com/a/documents/369810.pdf'},
+  {name:'Diva ELV Reverse Phase Dimmer',cat:'Dimmer',desc:'Spec for the Diva electronic low-voltage (ELV) reverse-phase dimmer.',url:'https://assets.lutron.com/a/documents/3691041.pdf'},
+  {name:'Diva 0–10V Controls',cat:'Dimmer',desc:'Spec for Diva 0–10V dimmer and switch controls.',url:'https://assets.lutron.com/a/documents/369147.pdf'},
+  // Nova T
+  {name:'Nova T Dimmer Controls Spec',cat:'Dimmer',desc:'Main spec submittal for the Nova T dimmer control family.',url:'https://assets.lutron.com/a/documents/novatb.pdf'},
+  {name:'Nova T Spec Guide Volume 1',cat:'Dimmer',desc:'Spec guide covering the full Nova T dimmer line with load specs and dimensions.',url:'https://assets.lutron.com/a/documents/spec%20guide%20volume%201%20novat.pdf'},
+  // Sivoia Shades
+  {name:'Sivoia QS Wireless Roller 64 Shade',cat:'Shade',desc:'Spec for Sivoia QS wireless roller motorised shade (64-series).',url:'https://assets.lutron.com/a/documents/085705.pdf'},
+  {name:'Sivoia QS Roller 150 Shade',cat:'Shade',desc:'Spec for Sivoia QS Roller 150 motorised shade.',url:'https://www.lutron.com/TechnicalDocumentLibrary/085-267.pdf'},
+  {name:'Sivoia QS Roller 225 Shade',cat:'Shade',desc:'Spec for Sivoia QS Roller 225 motorised shade.',url:'https://www.lutron.com/TechnicalDocumentLibrary/086105%20a.pdf'},
+  {name:'Sivoia QS Roller 300 LIFT Shade',cat:'Shade',desc:'Spec for Sivoia QS Roller 300 LIFT motorised shade.',url:'https://assets.lutron.com/a/documents/085286.pdf'},
+  {name:'Sivoia QS System Overview',cat:'Shade',desc:'System overview brochure for the full Sivoia QS shading solutions range.',url:'https://assets.lutron.com/a/documents/367-1374_ea.pdf'},
+  // EcoSystem LED Drivers
+  {name:'EcoSystem 5-Series LED Driver (50W)',cat:'LED Driver',desc:'Spec for EcoSystem 5-Series 50W LED driver — 0.1% dimming, digital EcoSystem protocol.',url:'https://assets.lutron.com/a/documents/369815_eng.pdf'},
+  {name:'EcoSystem 5-Series LED Driver Spec Submittal',cat:'LED Driver',desc:'Spec submittal for the EcoSystem 5-Series driver family.',url:'https://assets.lutron.com/a/documents/369823_eng.pdf'},
+  {name:'Hi-lume Premier 0.1% EcoSystem LED Driver',cat:'LED Driver',desc:'Spec for the premium Hi-lume driver — industry-leading 0.1% low-end dimming.',url:'https://assets.lutron.com/a/documents/3691077_eng.pdf'},
+  {name:'Hi-lume 1% EcoSystem LED Driver (Soft-on / Fade-to-Black)',cat:'LED Driver',desc:'Spec for Hi-lume 1% driver with soft-on and fade-to-black features.',url:'https://assets.lutron.com/a/documents/369832_eng.pdf'},
+  {name:'Hi-lume 1% EcoSystem / 3-Wire L3D Driver',cat:'LED Driver',desc:'Spec for Hi-lume 1% driver with 3-wire L3D control interface.',url:'https://assets.lutron.com/a/documents/369325_eng.pdf'},
+  {name:'EcoSystem LED Driver Overview',cat:'LED Driver',desc:'General overview spec for the EcoSystem LED driver family.',url:'https://assets.lutron.com/a/documents/369341_eng.pdf'},
+  // Energi Savr Node
+  {name:'Energi Savr Node with EcoSystem',cat:'Controller',desc:'Spec for EcoSystem-connected Energi Savr Node — digital addressable zone controller.',url:'https://assets.lutron.com/a/documents/3691211.pdf'},
+  {name:'Energi Savr Node for 0–10V with Softswitch',cat:'Controller',desc:'Spec for 0–10V Energi Savr Node — zone controller for 0–10V dimmable drivers.',url:'https://assets.lutron.com/a/documents/369-241_eng.pdf'},
+  {name:'T-Series Energi Savr Node',cat:'Controller',desc:'Spec for the T-Series Energi Savr Node zone controller.',url:'https://assets.lutron.com/a/documents/3691096.pdf'},
+  {name:'Energi Savr Node for DALI',cat:'Controller',desc:'Spec for the DALI-compatible Energi Savr Node.',url:'https://intl.lutron.com/TechnicalDocumentLibrary/ESN_DALI_369243c.pdf'},
+  // PowPak (standalone)
+  {name:'PowPak CCO Module',cat:'Module',desc:'Spec for standalone PowPak contact closure output module.',url:'https://assets.lutron.com/a/documents/369433e_eng.pdf'},
+  {name:'PowPak Relay Module with Softswitch',cat:'Module',desc:'Spec for PowPak relay module with Softswitch technology.',url:'https://assets.lutron.com/a/documents/369-428e_english.pdf'},
+  {name:'PowPak 20A Receptacle Control Relay Module',cat:'Module',desc:'Spec for the PowPak 20A receptacle switching module.',url:'https://assets.lutron.com/a/documents/369966_eng.pdf'},
+  // Integration
+  {name:'GRX-TVI Ten Volt AV Interface',cat:'AV Interface',desc:'Main spec submittal for the GRX-TVI — interfaces AV systems with Lutron via 0–10V.',url:'https://assets.lutron.com/a/documents/grx-tvi.pdf'},
+  {name:'QSE-IO Contact Closure Integration Module',cat:'Integration',desc:'Spec for the QSE-IO — provides 8 contact closure inputs/outputs for third-party integration.',url:'https://assets.lutron.com/a/documents/qse-io.pdf'},
+  {name:'QSE-IO Control Interface Spec (369640)',cat:'Integration',desc:'Product specifications for the QSE-IO module.',url:'https://www.lutron.com/TechnicalDocumentLibrary/369640_ENG.pdf'},
+  {name:'QSE-CI-NWK-E Ethernet Integration Module',cat:'Integration',desc:'Spec for the QSE-CI-NWK-E — Ethernet integration interface for HWQS.',url:'https://assets.lutron.com/a/documents/369373_qse-ci-nwk-e_eng.pdf'},
+  // Sensors
+  {name:'Radio Powr Savr Wireless Ceiling Occupancy Sensor (LRF2)',cat:'Sensor',desc:'Spec for wireless ceiling-mount occupancy/vacancy sensor — 360° PIR.',url:'https://assets.lutron.com/a/documents/369480_eng.pdf'},
+  {name:'Radio Powr Savr Wireless Wall-Mount Sensor',cat:'Sensor',desc:'Spec for wireless wall-mount occupancy/vacancy sensor.',url:'https://assets.lutron.com/a/documents/spec_sheet_369481a_eng.pdf'},
+  {name:'LOS-CDT Series Wired Occupancy Sensor',cat:'Sensor',desc:'Spec for the LOS-CDT series wired ceiling occupancy sensor.',url:'https://assets.lutron.com/a/documents/369653.pdf'},
+  {name:'LOS-CIR Series Wired Ceiling Occupancy Sensor',cat:'Sensor',desc:'Spec for the LOS-CIR series wired ceiling occupancy sensor.',url:'https://assets.lutron.com/a/documents/369655.pdf'},
+  {name:'Maestro Dual-Technology Sensor Switch',cat:'Sensor',desc:'Spec for the Maestro dual-tech (PIR + ultrasonic) sensor switch.',url:'https://assets.lutron.com/a/documents/369773_eng.pdf'},
+  {name:'Residential Sensor Specification Guide',cat:'Sensor',desc:'Comprehensive guide covering the full Lutron residential sensor lineup.',url:'https://assets.lutron.com/a/documents/3672236_Sensor_Spec_Guide.pdf'},
+  {name:'Occupancy/Vacancy Sensor Design and Application Guide',cat:'Sensor',desc:'Full design and application guide for all Lutron occupancy and vacancy sensors.',url:'https://assets.lutron.com/a/documents/3683197.pdf'}
+];
+
+function _lutronDocsRender() {
+  _specLibRender('lutrondocs-root', 'Lutron', '245,158,11', _lutronDocs);
+}
+window._lutronDocsRender = _lutronDocsRender;
+
 })();
 
   </script>
