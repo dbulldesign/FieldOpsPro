@@ -21966,16 +21966,115 @@ window._llcRender = _llcRender;
 // ═══════════════════════════════════════════════
 (function(){
 
-// ── Shared render engine used by both ETC and Lutron libraries ──
-function _specLibRender(rootId, mfr, accentColor, docs) {
+// ── Sync state helpers ────────────────────────────────────────────
+var SPEC_SEED_DATE = '2026-05-12'; // date this database was compiled
+
+function _specLibGetSync(rootId) {
+  try { return JSON.parse(localStorage.getItem('fop_spec_sync_'+rootId)||'{}'); } catch(e) { return {}; }
+}
+function _specLibSaveSync(rootId, data) {
+  try { localStorage.setItem('fop_spec_sync_'+rootId, JSON.stringify(data)); } catch(e) {} }
+function _specLibGetUserDocs(rootId) {
+  try { return JSON.parse(localStorage.getItem('fop_spec_udocs_'+rootId)||'[]'); } catch(e) { return []; }
+}
+function _specLibSaveUserDocs(rootId, docs) {
+  try { localStorage.setItem('fop_spec_udocs_'+rootId, JSON.stringify(docs)); } catch(e) {} }
+function _specLibGetOverrides(rootId) {
+  try { return JSON.parse(localStorage.getItem('fop_spec_urlover_'+rootId)||'{}'); } catch(e) { return {}; }
+}
+function _specLibSaveOverrides(rootId, data) {
+  try { localStorage.setItem('fop_spec_urlover_'+rootId, JSON.stringify(data)); } catch(e) {} }
+
+function _specLibFmtDate(iso) {
+  if (!iso) return null;
+  try { var d=new Date(iso); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e) { return iso.slice(0,10); }
+}
+function _specLibDaysAgo(iso) {
+  if (!iso) return 9999;
+  return Math.floor((Date.now()-new Date(iso).getTime())/86400000);
+}
+
+// ── Async link checker ────────────────────────────────────────────
+function _specLibCheckLinks(rootId, docs, rerender) {
+  var sync = _specLibGetSync(rootId);
+  sync.results = sync.results || {};
+  var total = docs.length;
+  var done = 0;
+  var ok = 0, fail = 0;
+
+  // Update progress bar in DOM directly (no full re-render during scan)
+  function updateProg() {
+    var bar = document.getElementById(rootId+'-chk-bar');
+    var lbl = document.getElementById(rootId+'-chk-lbl');
+    if (bar) bar.style.width = (done/total*100).toFixed(1)+'%';
+    if (lbl) lbl.textContent = 'Checking '+done+'/'+total+' · ✓ '+ok+' reachable · ✗ '+fail+' unreachable';
+  }
+
+  var BATCH = 6;
+  var idx = 0;
+
+  function nextBatch() {
+    if (idx >= docs.length) {
+      // Done
+      sync.lastSynced = new Date().toISOString();
+      _specLibSaveSync(rootId, sync);
+      rerender();
+      return;
+    }
+    var batch = docs.slice(idx, idx+BATCH);
+    idx += BATCH;
+    Promise.all(batch.map(function(d) {
+      var url = d._resolvedUrl || d.url;
+      return fetch(url, {method:'HEAD', mode:'no-cors', cache:'no-store'})
+        .then(function() {
+          // Opaque response = server responded (could be 200 or 404 — CORS hides status)
+          sync.results[url] = { status:'ok', checkedAt: new Date().toISOString() };
+          ok++;
+        })
+        .catch(function() {
+          sync.results[url] = { status:'fail', checkedAt: new Date().toISOString() };
+          fail++;
+        })
+        .then(function() {
+          done++;
+          updateProg();
+        });
+    })).then(function() {
+      setTimeout(nextBatch, 80); // small gap between batches
+    });
+  }
+
+  // Show progress UI immediately
+  var progEl = document.getElementById(rootId+'-chk-prog');
+  if (progEl) progEl.style.display = 'block';
+  var btnEl = document.getElementById(rootId+'-chk-btn');
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Checking…'; }
+
+  nextBatch();
+}
+
+// ── Shared render engine ──────────────────────────────────────────
+function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
   var root = document.getElementById(rootId); if (!root) return;
   var stateKey = '_specLib_'+rootId;
-  if (!window[stateKey]) window[stateKey] = { q:'', cat:'All' };
+  if (!window[stateKey]) window[stateKey] = { q:'', cat:'All', showAdd:false };
   var st = window[stateKey];
 
-  var cats = ['All'].concat(docs.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; }, []));
+  var sync     = _specLibGetSync(rootId);
+  var results  = sync.results || {};
+  var overrides= _specLibGetOverrides(rootId);
+  var userDocs = _specLibGetUserDocs(rootId);
 
-  var filtered = docs.filter(function(d){
+  // Resolve URLs (apply user overrides), attach _resolvedUrl + _userAdded flags
+  var allDocs = builtinDocs.map(function(d) {
+    return Object.assign({}, d, { _resolvedUrl: overrides[d.name] || d.url, _userAdded: false });
+  }).concat(userDocs.map(function(d) {
+    return Object.assign({}, d, { _resolvedUrl: d.url, _userAdded: true });
+  }));
+
+  var cats = ['All'].concat(allDocs.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; }, []));
+
+  var filtered = allDocs.filter(function(d){
     var matchQ = !st.q || d.name.toLowerCase().indexOf(st.q)!==-1 || d.desc.toLowerCase().indexOf(st.q)!==-1 || d.cat.toLowerCase().indexOf(st.q)!==-1;
     var matchC = st.cat==='All' || d.cat===st.cat;
     return matchQ && matchC;
@@ -21995,21 +22094,80 @@ function _specLibRender(rootId, mfr, accentColor, docs) {
     return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+escH(cat)+'</span>';
   }
 
-  function docCard(d) {
-    var isPdf = d.url.toLowerCase().indexOf('.pdf') !== -1;
-    var actionLabel = isPdf ? '⬇ Download PDF' : '↗ Open Page';
-    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px">'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">'
-      + badge(d.cat)
-      + (d.legacy ? '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(100,116,139,0.15);color:#64748b;border:1px solid rgba(100,116,139,0.25)">Legacy</span>' : '')
-      + '</div>'
-      + '<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:3px;line-height:1.3">'+escH(d.name)+'</div>'
-      + '<div style="font-size:11px;color:#4a5e7a;line-height:1.5">'+escH(d.desc)+'</div>'
-      + '</div>'
-      + '<a href="'+d.url+'" target="_blank" rel="noopener" style="flex-shrink:0;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba('+accentColor+',0.35);background:rgba('+accentColor+',0.1);color:#'+accentColor.split(',').map(function(x){return parseInt(x,10).toString(16).padStart(2,'0');}).join('')+';text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:5px">'+actionLabel+'</a>'
-      + '</div>';
+  function statusPill(d) {
+    var url = d._resolvedUrl;
+    var r = results[url];
+    var days = r ? _specLibDaysAgo(r.checkedAt) : null;
+    var stale = days !== null && days > 60;
+    var dot, txt, title;
+    if (!r) {
+      dot='#4a5e7a'; txt='Seeded '+SPEC_SEED_DATE; title='Not yet verified — seeded from research';
+    } else if (r.status==='fail') {
+      dot='#ef4444'; txt='Unreachable · '+_specLibFmtDate(r.checkedAt); title='Server did not respond during last check';
+    } else if (stale) {
+      dot='#f59e0b'; txt='Checked '+_specLibFmtDate(r.checkedAt)+' ('+days+'d ago)'; title='Stale — consider re-checking';
+    } else {
+      dot='#22c55e'; txt='Verified · '+_specLibFmtDate(r.checkedAt); title='Server responded at last check';
+    }
+    return '<span title="'+escH(title)+'" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#4a5e7a">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block"></span>'
+      +escH(txt)+'</span>';
   }
+
+  function editBtn(d, idx) {
+    var editKey = d._userAdded ? ('__udoc_'+idx) : d.name;
+    return '<button onclick="_specLibToggleEdit(\''+rootId+'\',\''+escH(editKey).replace(/'/g,'&apos;')+'\')" title="Edit URL" style="background:none;border:none;cursor:pointer;padding:4px;color:#4a5e7a;font-size:14px;line-height:1;flex-shrink:0">✎</button>';
+  }
+
+  var editingKey = st.editingKey || null;
+
+  function docCard(d, idx) {
+    var url = d._resolvedUrl;
+    var isPdf = url.toLowerCase().indexOf('.pdf') !== -1;
+    var actionLabel = isPdf ? '⬇ PDF' : '↗ Page';
+    var editKey = d._userAdded ? ('__udoc_'+idx) : d.name;
+    var isEditing = editingKey === editKey;
+
+    var editForm = isEditing
+      ? '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1)">'
+        +'<div style="font-size:10px;color:#4a5e7a;margin-bottom:6px;font-weight:700">Edit URL'+(d._userAdded?' · User-added doc':'')+'</div>'
+        +'<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">'
+        +'<input type="text" id="'+rootId+'-edit-url-'+idx+'" value="'+escH(url)+'" style="flex:1;min-width:180px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace">'
+        +'<button onclick="_specLibSaveUrl(\''+rootId+'\',\''+escH(editKey).replace(/'/g,'&apos;')+'\','+idx+','+d._userAdded+')" style="padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">Save &amp; Verify</button>'
+        +(d._userAdded?'<button onclick="_specLibDeleteUserDoc(\''+rootId+'\','+idx+')" style="padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.07);color:#f87171">Delete</button>':'')
+        +'<button onclick="_specLibToggleEdit(\''+rootId+'\',\'\')" style="padding:7px 10px;border-radius:7px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:none;color:#4a5e7a">Cancel</button>'
+        +'</div>'
+        +'<div style="font-size:10px;color:#4a5e7a;margin-top:6px">Current: <span style="font-family:monospace;color:#8da0c0;word-break:break-all">'+escH(url)+'</span></div>'
+        +'</div>'
+      : '';
+
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid '+(results[url]&&results[url].status==='fail'?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.08)')+';border-radius:12px;padding:14px 16px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+      +badge(d.cat)
+      +(d.legacy?'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(100,116,139,0.15);color:#64748b;border:1px solid rgba(100,116,139,0.25)">Legacy</span>':'')
+      +(d._userAdded?'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">User Added</span>':'')
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:2px;line-height:1.3">'+escH(d.name)+'</div>'
+      +'<div style="font-size:11px;color:#4a5e7a;line-height:1.5;margin-bottom:6px">'+escH(d.desc)+'</div>'
+      +statusPill(d)
+      +editForm
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
+      +'<a href="'+url+'" target="_blank" rel="noopener" style="padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba('+accentColor+',0.35);background:rgba('+accentColor+',0.1);color:#'+accentColor.split(',').map(function(x){return parseInt(x,10).toString(16).padStart(2,'0');}).join('')+';text-decoration:none;white-space:nowrap">'+actionLabel+'</a>'
+      +editBtn(d, idx)
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  // Stats for sync bar
+  var totalDocs = allDocs.length;
+  var checkedCount = allDocs.filter(function(d){return !!results[d._resolvedUrl];}).length;
+  var failCount    = allDocs.filter(function(d){var r=results[d._resolvedUrl];return r&&r.status==='fail';}).length;
+  var lastSync     = sync.lastSynced ? _specLibFmtDate(sync.lastSynced) : null;
+  var isRunning    = !!document.getElementById(rootId+'-chk-bar'); // already in DOM if running
 
   var groupedHtml = '';
   if (filtered.length === 0) {
@@ -22017,47 +22175,181 @@ function _specLibRender(rootId, mfr, accentColor, docs) {
   } else {
     var groups = {};
     var groupOrder = [];
-    filtered.forEach(function(d){
+    filtered.forEach(function(d,i){
+      // need global index for edit keys; pass all-docs index
+      var globalIdx = allDocs.indexOf(d);
       if(!groups[d.cat]){groups[d.cat]=[];groupOrder.push(d.cat);}
-      groups[d.cat].push(d);
+      groups[d.cat].push({d:d, idx:globalIdx});
     });
     groupOrder.forEach(function(cat){
       groupedHtml += '<div style="margin-bottom:22px">'
-        + '<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">'+escH(cat)+' <span style="color:#2d3f52;font-weight:600">('+groups[cat].length+')</span></div>'
-        + groups[cat].map(docCard).join('')
-        + '</div>';
+        +'<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">'+escH(cat)+' <span style="color:#2d3f52;font-weight:600">('+groups[cat].length+')</span></div>'
+        +groups[cat].map(function(item){return docCard(item.d,item.idx);}).join('')
+        +'</div>';
     });
   }
 
+  // Add document form
+  var addForm = st.showAdd
+    ? '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(79,142,247,0.2);border-radius:12px;padding:16px;margin-bottom:20px">'
+      +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:12px">Add Document</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Name</div><input type="text" id="'+rootId+'-add-name" placeholder="e.g. HomeWorks QSX Processor" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Category</div><input type="text" id="'+rootId+'-add-cat" placeholder="e.g. Processor" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Description</div><input type="text" id="'+rootId+'-add-desc" placeholder="One-line description" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div style="margin-bottom:12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">URL (PDF or page)</div><input type="url" id="'+rootId+'-add-url" placeholder="https://assets.lutron.com/a/documents/…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace"></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button onclick="_specLibAddDoc(\''+rootId+'\')" style="padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">Add Document</button>'
+      +'<button onclick="window[\'_specLib_'+rootId+'\'].showAdd=false;_specLibRerender(\''+rootId+'\')" style="padding:8px 12px;border-radius:7px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:none;color:#4a5e7a">Cancel</button>'
+      +'</div>'
+      +'</div>'
+    : '';
+
+  var syncStatusLine = lastSync
+    ? '<span style="font-size:11px;color:#4a5e7a">Last checked: <b style="color:#8da0c0">'+lastSync+'</b> · '+checkedCount+'/'+totalDocs+' verified'+(failCount?' · <span style="color:#f87171">'+failCount+' unreachable</span>':'')+'</span>'
+    : '<span style="font-size:11px;color:#4a5e7a">Seeded <b style="color:#8da0c0">'+SPEC_SEED_DATE+'</b> · never link-checked</span>';
+
   root.innerHTML =
     '<div style="max-width:760px;margin:0 auto;padding:24px 16px 40px">'
-    + '<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">'+escH(mfr)+' Spec Library</h2>'
-    + '<p style="font-size:12px;color:#4a5e7a;margin:0 0 16px">'+docs.length+' documents · spec sheets, cut sheets &amp; control docs · links open official manufacturer source</p>'
+    // Header
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">'
+    +'<div>'
+    +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">'+escH(mfr)+' Spec Library</h2>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+totalDocs+' documents · spec sheets, cut sheets &amp; control docs</p>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;flex-shrink:0">'
+    +'<button onclick="window[\'_specLib_'+rootId+'\'].showAdd=!window[\'_specLib_'+rootId+'\'].showAdd;_specLibRerender(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
+    +'<button id="'+rootId+'-chk-btn" onclick="_specLibStartCheck(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check Links</button>'
+    +'</div>'
+    +'</div>'
+    // Sync status bar
+    +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;margin-bottom:16px;flex-wrap:wrap;gap:6px">'
+    +syncStatusLine
+    +(failCount?'<span style="font-size:10px;color:#f59e0b">⚠ Unreachable links may be renamed PDFs or require a VPN to access — check manually.</span>':'')
+    +'</div>'
+    // Progress bar (hidden until check starts)
+    +'<div id="'+rootId+'-chk-prog" style="display:none;margin-bottom:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px">'
+    +'<div id="'+rootId+'-chk-lbl" style="font-size:11px;color:#4a5e7a;margin-bottom:8px">Preparing check…</div>'
+    +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div id="'+rootId+'-chk-bar" style="height:100%;border-radius:3px;background:#4f8ef7;width:0%;transition:width 0.2s"></div></div>'
+    +'</div>'
+    // Add form
+    +addForm
     // Search bar
-    + '<div style="position:relative;margin-bottom:14px">'
-    + '<input type="text" id="'+rootId+'-q" placeholder="Search by name, category, or keyword…" value="'+escH(st.q)+'" oninput="window[\'_specLib_'+rootId+'\'].q=this.value.toLowerCase();_specLibRerender(\''+rootId+'\',\''+mfr+'\',\''+accentColor+'\')" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px 10px 40px;color:#f0f4ff;font-size:13px;outline:none">'
-    + '<svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-    + '</div>'
+    +'<div style="position:relative;margin-bottom:12px">'
+    +'<input type="text" id="'+rootId+'-q" placeholder="Search by name, category, or keyword…" value="'+escH(st.q)+'" oninput="window[\'_specLib_'+rootId+'\'].q=this.value.toLowerCase();_specLibRerender(\''+rootId+'\')" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px 10px 40px;color:#f0f4ff;font-size:13px;outline:none">'
+    +'<svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    +'</div>'
     // Category chips
-    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">'
-    + cats.map(function(c){
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:18px">'
+    +cats.map(function(c){
         var a=st.cat===c;
-        return '<button onclick="window[\'_specLib_'+rootId+'\'].cat=\''+c.replace(/'/g,"\\'")+'\';;_specLibRerender(\''+rootId+'\',\''+mfr+'\',\''+accentColor+'\')" style="padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba('+accentColor+',0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba('+accentColor+',0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#e8f0ff':'#8da0c0')+';white-space:nowrap">'+escH(c)+'</button>';
+        return '<button onclick="window[\'_specLib_'+rootId+'\'].cat=\''+c.replace(/'/g,"\\'")+'\';;_specLibRerender(\''+rootId+'\')" style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba('+accentColor+',0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba('+accentColor+',0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#e8f0ff':'#8da0c0')+';white-space:nowrap">'+escH(c)+'</button>';
       }).join('')
-    + '</div>'
-    // Results count
-    + (st.q||st.cat!=='All' ? '<div style="font-size:11px;color:#4a5e7a;margin-bottom:14px">Showing '+filtered.length+' of '+docs.length+' documents</div>' : '')
-    // Doc groups
-    + groupedHtml
-    + '</div>';
+    +'</div>'
+    +(st.q||st.cat!=='All'?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:12px">Showing '+filtered.length+' of '+totalDocs+' documents</div>':'')
+    +groupedHtml
+    +'</div>';
 }
 
-function _specLibRerender(rootId, mfr, accentColor) {
+// ── UI action handlers (called from inline onclick) ───────────────
+function _specLibRerender(rootId) {
   if (rootId === 'etcdocs-root') _etcDocsRender();
   else if (rootId === 'lutrondocs-root') _lutronDocsRender();
 }
 
-window._specLibRerender = _specLibRerender;
+function _specLibStartCheck(rootId) {
+  var docs = rootId === 'etcdocs-root' ? _etcDocs : _lutronDocs;
+  var overrides = _specLibGetOverrides(rootId);
+  var userDocs  = _specLibGetUserDocs(rootId);
+  var allDocs   = docs.map(function(d){ return Object.assign({},d,{_resolvedUrl: overrides[d.name]||d.url}); })
+                      .concat(userDocs.map(function(d){ return Object.assign({},d,{_resolvedUrl:d.url}); }));
+  _specLibCheckLinks(rootId, allDocs, function(){ _specLibRerender(rootId); });
+}
+
+function _specLibToggleEdit(rootId, key) {
+  var st = window['_specLib_'+rootId] || {};
+  st.editingKey = (st.editingKey === key) ? null : key;
+  window['_specLib_'+rootId] = st;
+  _specLibRerender(rootId);
+}
+
+function _specLibSaveUrl(rootId, key, idx, isUserAdded) {
+  var input = document.getElementById(rootId+'-edit-url-'+idx);
+  var newUrl = input ? input.value.trim() : '';
+  if (!newUrl) { toast('URL cannot be empty'); return; }
+
+  var sync = _specLibGetSync(rootId);
+  sync.results = sync.results || {};
+
+  if (isUserAdded) {
+    var udocs = _specLibGetUserDocs(rootId);
+    // idx here is the index in allDocs, so subtract builtinDocs length to get udoc index
+    var builtinLen = rootId==='etcdocs-root' ? _etcDocs.length : _lutronDocs.length;
+    var udIdx = idx - builtinLen;
+    if (udocs[udIdx]) {
+      var oldUrl = udocs[udIdx].url;
+      delete sync.results[oldUrl];
+      udocs[udIdx].url = newUrl;
+      _specLibSaveUserDocs(rootId, udocs);
+    }
+  } else {
+    var overrides = _specLibGetOverrides(rootId);
+    // key is the doc name; find original URL to clear old result
+    var docs = rootId==='etcdocs-root' ? _etcDocs : _lutronDocs;
+    var orig = docs.find(function(d){return d.name===key;});
+    if (orig && orig.url !== newUrl) delete sync.results[orig.url];
+    overrides[key] = newUrl;
+    _specLibSaveOverrides(rootId, overrides);
+  }
+
+  // Mark as manually verified
+  sync.results[newUrl] = { status:'ok', checkedAt: new Date().toISOString(), manual: true };
+  _specLibSaveSync(rootId, sync);
+
+  var st = window['_specLib_'+rootId] || {};
+  st.editingKey = null;
+  window['_specLib_'+rootId] = st;
+  toast('URL saved and marked verified');
+  _specLibRerender(rootId);
+}
+
+function _specLibAddDoc(rootId) {
+  var name = (document.getElementById(rootId+'-add-name')||{}).value || '';
+  var cat  = (document.getElementById(rootId+'-add-cat')||{}).value  || '';
+  var desc = (document.getElementById(rootId+'-add-desc')||{}).value || '';
+  var url  = (document.getElementById(rootId+'-add-url')||{}).value  || '';
+  if (!name||!url) { toast('Name and URL are required'); return; }
+  var udocs = _specLibGetUserDocs(rootId);
+  udocs.push({name:name, cat:cat||'Other', desc:desc, url:url, addedAt:new Date().toISOString()});
+  _specLibSaveUserDocs(rootId, udocs);
+  var st = window['_specLib_'+rootId] || {};
+  st.showAdd = false;
+  window['_specLib_'+rootId] = st;
+  toast('Document added');
+  _specLibRerender(rootId);
+}
+
+function _specLibDeleteUserDoc(rootId, idx) {
+  var builtinLen = rootId==='etcdocs-root' ? _etcDocs.length : _lutronDocs.length;
+  var udIdx = idx - builtinLen;
+  var udocs = _specLibGetUserDocs(rootId);
+  if (udocs[udIdx] && confirm('Delete "'+udocs[udIdx].name+'"?')) {
+    udocs.splice(udIdx,1);
+    _specLibSaveUserDocs(rootId, udocs);
+    var st = window['_specLib_'+rootId] || {};
+    st.editingKey = null;
+    window['_specLib_'+rootId] = st;
+    _specLibRerender(rootId);
+  }
+}
+
+window._specLibRerender      = _specLibRerender;
+window._specLibStartCheck    = _specLibStartCheck;
+window._specLibToggleEdit    = _specLibToggleEdit;
+window._specLibSaveUrl       = _specLibSaveUrl;
+window._specLibAddDoc        = _specLibAddDoc;
+window._specLibDeleteUserDoc = _specLibDeleteUserDoc;
 
 // ═══════════════════════════════════════════════
 //  ETC SPEC LIBRARY DATA + RENDER
