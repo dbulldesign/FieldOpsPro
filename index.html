@@ -21997,6 +21997,11 @@ function _specLibGetOverrides(rootId) {
 }
 function _specLibSaveOverrides(rootId, data) {
   try { localStorage.setItem('fop_spec_urlover_'+rootId, JSON.stringify(data)); } catch(e) {} }
+function _specLibGetHidden(rootId) {
+  try { return JSON.parse(localStorage.getItem('fop_spec_hidden_'+rootId)||'[]'); } catch(e) { return []; }
+}
+function _specLibSaveHidden(rootId, arr) {
+  try { localStorage.setItem('fop_spec_hidden_'+rootId, JSON.stringify(arr)); } catch(e) {} }
 
 function _specLibFmtDate(iso) {
   if (!iso) return null;
@@ -22094,9 +22099,10 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
   var results  = sync.results || {};
   var overrides= _specLibGetOverrides(rootId);
   var userDocs = _specLibGetUserDocs(rootId);
+  var hidden   = _specLibGetHidden(rootId);
 
   // Resolve URLs (apply user overrides), attach _resolvedUrl + _userAdded flags
-  var allDocs = builtinDocs.map(function(d) {
+  var allDocs = builtinDocs.filter(function(d){ return hidden.indexOf(d.name) === -1; }).map(function(d) {
     return Object.assign({}, d, { _resolvedUrl: overrides[d.name] || d.url, _userAdded: false });
   }).concat(userDocs.map(function(d) {
     return Object.assign({}, d, { _resolvedUrl: d.url, _userAdded: true });
@@ -22164,7 +22170,10 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
         +'<div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap">'
         +'<input type="text" id="'+rootId+'-edit-url-'+idx+'" value="'+escH(url)+'" style="flex:1;min-width:180px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace">'
         +'<button onclick="_specLibSaveUrl(\''+rootId+'\',\''+escH(editKey).replace(/'/g,'&apos;')+'\','+idx+','+d._userAdded+')" style="padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">Save &amp; Verify</button>'
-        +(d._userAdded?'<button onclick="_specLibDeleteUserDoc(\''+rootId+'\','+idx+')" style="padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.07);color:#f87171">Delete</button>':'')
+        +(d._userAdded
+          ?'<button onclick="_specLibDeleteUserDoc(\''+rootId+'\','+idx+')" style="padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.07);color:#f87171">Delete</button>'
+          :'<button onclick="_specLibDeleteBuiltinDoc(\''+rootId+'\',\''+escH(d.name).replace(/'/g,'&apos;')+'\')" style="padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.07);color:#f87171">Delete</button>'
+        )
         +'<button onclick="_specLibToggleEdit(\''+rootId+'\',\'\')" style="padding:7px 10px;border-radius:7px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:none;color:#4a5e7a">Cancel</button>'
         +'</div>'
         +'<div style="font-size:10px;color:#4a5e7a;margin-top:6px">Current: <span style="font-family:monospace;color:#8da0c0;word-break:break-all">'+escH(url)+'</span></div>'
@@ -22249,6 +22258,7 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
     +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+totalDocs+' documents · spec sheets, cut sheets &amp; control docs</p>'
     +'</div>'
     +'<div style="display:flex;gap:6px;flex-shrink:0">'
+    +(hidden.length?'<button onclick="_specLibRestoreAllHidden(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#f87171">↩ Restore '+hidden.length+' hidden</button>':'')
     +'<button onclick="window[\'_specLib_'+rootId+'\'].showAdd=!window[\'_specLib_'+rootId+'\'].showAdd;_specLibRerender(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
     +'<button id="'+rootId+'-chk-btn" onclick="_specLibStartCheck(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check Links</button>'
     +'</div>'
@@ -22375,12 +22385,31 @@ function _specLibDeleteUserDoc(rootId, idx) {
   }
 }
 
-window._specLibRerender      = _specLibRerender;
-window._specLibStartCheck    = _specLibStartCheck;
-window._specLibToggleEdit    = _specLibToggleEdit;
-window._specLibSaveUrl       = _specLibSaveUrl;
-window._specLibAddDoc        = _specLibAddDoc;
-window._specLibDeleteUserDoc = _specLibDeleteUserDoc;
+function _specLibDeleteBuiltinDoc(rootId, docName) {
+  if (confirm('Hide "'+docName+'" from this library?\n\nThis can be undone with the "Restore hidden" button.')) {
+    var hidden = _specLibGetHidden(rootId);
+    if (hidden.indexOf(docName) === -1) hidden.push(docName);
+    _specLibSaveHidden(rootId, hidden);
+    var st = window['_specLib_'+rootId] || {};
+    st.editingKey = null;
+    window['_specLib_'+rootId] = st;
+    _specLibRerender(rootId);
+  }
+}
+
+function _specLibRestoreAllHidden(rootId) {
+  _specLibSaveHidden(rootId, []);
+  _specLibRerender(rootId);
+}
+
+window._specLibRerender          = _specLibRerender;
+window._specLibStartCheck        = _specLibStartCheck;
+window._specLibToggleEdit        = _specLibToggleEdit;
+window._specLibSaveUrl           = _specLibSaveUrl;
+window._specLibAddDoc            = _specLibAddDoc;
+window._specLibDeleteUserDoc     = _specLibDeleteUserDoc;
+window._specLibDeleteBuiltinDoc  = _specLibDeleteBuiltinDoc;
+window._specLibRestoreAllHidden  = _specLibRestoreAllHidden;
 
 // ═══════════════════════════════════════════════
 //  ETC SPEC LIBRARY DATA + RENDER
