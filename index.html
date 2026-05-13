@@ -22094,6 +22094,7 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
   var stateKey = '_specLib_'+rootId;
   if (!window[stateKey]) window[stateKey] = { q:'', cat:'All', showAdd:false };
   var st = window[stateKey];
+  var hadSearchFocus = document.activeElement && document.activeElement.id === rootId+'-q';
 
   var sync     = _specLibGetSync(rootId);
   var results  = sync.results || {};
@@ -22290,6 +22291,11 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
     +(st.q||st.cat!=='All'?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:12px">Showing '+filtered.length+' of '+totalDocs+' documents</div>':'')
     +groupedHtml
     +'</div>';
+
+  if (hadSearchFocus) {
+    var qEl = document.getElementById(rootId+'-q');
+    if (qEl) { qEl.focus(); var len = qEl.value.length; qEl.setSelectionRange(len, len); }
+  }
 }
 
 // ── UI action handlers (called from inline onclick) ───────────────
