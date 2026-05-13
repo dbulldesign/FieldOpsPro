@@ -123,9 +123,22 @@ width: 220px; min-width: 220px;
 background: var(--sidebar-bg) !important;
 border-right: 1px solid rgba(255,255,255,0.05);
 display: flex; flex-direction: column;
+height: 100vh;
+overflow: hidden;
 z-index: 100; transition: transform 0.3s cubic-bezier(.4,0,.2,1);
 }
+#sidebar nav {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+#sidebar nav::-webkit-scrollbar { width: 4px; }
+#sidebar nav::-webkit-scrollbar-track { background: transparent; }
+#sidebar nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
 .sidebar-logo {
+flex-shrink: 0;
 padding: 22px 18px 18px;
 border-bottom: 1px solid rgba(255,255,255,0.05);
 }
@@ -314,7 +327,8 @@ border-radius: 99px; min-width: 18px; text-align: center;
 }
 .nav-item.active .nav-badge { background: rgba(249,115,22,0.18); color: var(--orange); }
 .sidebar-footer {
-margin-top: auto; padding: 14px 10px 16px;
+flex-shrink: 0;
+padding: 14px 10px 16px;
 border-top: 1px solid rgba(255,255,255,0.05);
 }
 .sidebar-action-btn {
