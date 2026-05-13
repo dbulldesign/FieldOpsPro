@@ -19936,7 +19936,9 @@ window._ccCmykToRgb  = _ccCmykToRgb;
 // ═══════════════════════════════════════════════
 //  VOLTAGE DROP CALCULATOR
 // ═══════════════════════════════════════════════
-var _vd = { voltage:24, circuitType:'cv', mode:'watts', watts:72, amps:3, ma:700, length:25, unit:'ft', lengthType:'oneway', material:'copper', gaugeMode:'awg', awg:'14', mm2:'2.5' };
+var _vd = { voltage:24, circuitType:'cv', mode:'watts', watts:72, amps:3, ma:700, length:25, unit:'ft', lengthType:'oneway', material:'copper', gaugeMode:'awg', awg:'14', mm2:'2.5',
+  pt:{ solve:'a', w:'', v:'', a:'' }
+};
 
 var _vdAwg = [
   {awg:'6',mm2:13.30},{awg:'8',mm2:8.37},{awg:'10',mm2:5.26},
@@ -20168,11 +20170,83 @@ function _vdRender() {
     +'</select></div>'
     // Results
     +'<div id="vd-results">'+_vdResultsHtml()+'</div>'
+    +_vdPtHtml()
+    +'</div>';
+}
+
+// ── Power Calculator (P = V × I) ─────────────────────────────
+function _vdPtRead() {
+  ['w','v','a'].forEach(function(k){
+    var el=document.getElementById('vd-pt-'+k);
+    if(el && !el.readOnly) _vd.pt[k]=el.value;
+  });
+}
+function _vdPtSetSolve(s) {
+  _vdPtRead();
+  _vd.pt.solve=s;
+  _vd.pt[s]='';
+  _vdRender();
+}
+function _vdPtCalc() {
+  var p=_vd.pt, s=p.solve;
+  var w=parseFloat(p.w), v=parseFloat(p.v), a=parseFloat(p.a);
+  if(s==='a') {
+    if(!isFinite(w)||w<=0||!isFinite(v)||v<=0) return null;
+    var r=w/v; return {val:r, disp:r.toFixed(3)+' A', expr:'A = W ÷ V = '+w+' ÷ '+v+' = '+r.toFixed(3)+' A'};
+  } else if(s==='v') {
+    if(!isFinite(w)||w<=0||!isFinite(a)||a<=0) return null;
+    var r=w/a; return {val:r, disp:r.toFixed(2)+' V', expr:'V = W ÷ A = '+w+' ÷ '+a+' = '+r.toFixed(2)+' V'};
+  } else {
+    if(!isFinite(v)||v<=0||!isFinite(a)||a<=0) return null;
+    var r=v*a; return {val:r, disp:r.toFixed(1)+' W', expr:'W = V × A = '+v+' × '+a+' = '+r.toFixed(1)+' W'};
+  }
+}
+function _vdPtUpdate() {
+  _vdPtRead();
+  var r=_vdPtCalc(), s=_vd.pt.solve;
+  var fi=document.getElementById('vd-pt-'+s);
+  var fo=document.getElementById('vd-pt-formula');
+  var rv=document.getElementById('vd-pt-resval');
+  if(fi) fi.value=r?String(r.val.toFixed(s==='a'?3:s==='v'?2:1)):'';
+  if(fo) fo.textContent=r?r.expr:'';
+  if(rv) { rv.textContent=r?r.disp:''; rv.style.color=r?'#4f8ef7':'#4a5e7a'; }
+}
+function _vdPtHtml() {
+  var p=_vd.pt, s=p.solve, r=_vdPtCalc();
+  function field(k, label, unit) {
+    var isOut=s===k;
+    var val=isOut?(r?String(r.val.toFixed(k==='a'?3:k==='v'?2:1)):''):p[k];
+    return '<div style="flex:1">'
+      +'<div style="font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:'+(isOut?'#4f8ef7':'#4a5e7a')+';margin-bottom:5px">'+label+'</div>'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<input type="number" id="vd-pt-'+k+'" '+(isOut?'readonly':'oninput="_vdPtUpdate()"')+' min="0" step="any" value="'+escH(val)+'" placeholder="'+(isOut?'result':'')+'" style="flex:1;background:'+(isOut?'rgba(79,142,247,0.07)':'rgba(255,255,255,0.06)')+';border:1px solid '+(isOut?'rgba(79,142,247,0.35)':'rgba(255,255,255,0.1)')+';border-radius:8px;padding:8px 10px;color:'+(isOut?'#4f8ef7':'#f0f4ff')+';font-size:16px;font-weight:600;outline:none;box-sizing:border-box;width:100%;-moz-appearance:textfield">'
+      +'<span style="font-size:14px;font-weight:700;color:#4a5e7a;min-width:18px">'+unit+'</span>'
+      +'</div></div>';
+  }
+  return '<div style="margin-top:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px">'
+    +'<div style="font-size:14px;font-weight:700;color:#f0f4ff;margin-bottom:2px">Power Calculator</div>'
+    +'<div style="font-size:11px;color:#4a5e7a;margin-bottom:14px">Solve for any one quantity — enter the other two</div>'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#4a5e7a;margin-bottom:6px">Solve for</div>'
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:14px">'
+    +['a','v','w'].map(function(x){
+      var lbl={a:'Amps (A)',v:'Volts (V)',w:'Watts (W)'}[x];
+      return '<button onclick="_vdPtSetSolve(\''+x+'\')" style="flex:1;padding:6px 4px;border:none;cursor:pointer;border-radius:6px;font-size:11px;font-weight:700;'+(s===x?'background:rgba(79,142,247,0.2);color:#4f8ef7':'background:none;color:#4a5e7a')+'">'+lbl+'</button>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin-bottom:10px">'
+    +field('w','Watts','W')+field('v','Volts','V')+field('a','Amps','A')
+    +'</div>'
+    +'<div style="background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:11px 14px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:40px">'
+    +'<span id="vd-pt-resval" style="font-size:24px;font-weight:700;font-family:monospace;color:'+(r?'#4f8ef7':'#4a5e7a')+'">'+(r?r.disp:'—')+'</span>'
+    +'<span id="vd-pt-formula" style="font-size:11px;color:#4a5e7a;font-family:monospace">'+(r?r.expr:'')+'</span>'
+    +'</div>'
     +'</div>';
 }
 
 window._vdRender        = _vdRender;
 window._vdUpdateResults = _vdUpdateResults;
+window._vdPtSetSolve    = _vdPtSetSolve;
+window._vdPtUpdate      = _vdPtUpdate;
 
 // ═══════════════════════════════════════════════
 //  WIRING REFERENCE
