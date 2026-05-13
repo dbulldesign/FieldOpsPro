@@ -3880,17 +3880,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24"><path class="ni-brain" d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path pathLength="1" class="ni-circuit" d="M9 13a4.5 4.5 0 0 0 3-4"/><path class="ni-brain" d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path class="ni-brain" d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path class="ni-brain" d="M6 18a4 4 0 0 1-1.967-.516"/><path pathLength="1" class="ni-circuit" d="M12 13h4"/><path pathLength="1" class="ni-circuit" d="M12 18h6a2 2 0 0 1 2 2v1"/><path pathLength="1" class="ni-circuit" d="M12 8h8"/><path pathLength="1" class="ni-circuit" d="M16 8V5a2 2 0 0 1 2-2"/><circle class="ni-term-1" cx="16" cy="13" r=".5" fill="currentColor"/><circle class="ni-term-2" cx="18" cy="3" r=".5" fill="currentColor"/><circle class="ni-term-3" cx="20" cy="21" r=".5" fill="currentColor"/><circle class="ni-term-4" cx="9" cy="3" r=".5" fill="currentColor"/></svg>
           Troubleshoot DB
         </div>
-        <div class="nav-item" role="button" tabindex="0" onclick="switchView('etcdocs')">
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('specdocs')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          ETC Docs
-        </div>
-        <div class="nav-item" role="button" tabindex="0" onclick="switchView('lutrondocs')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Lutron Docs
-        </div>
-        <div class="nav-item" role="button" tabindex="0" onclick="switchView('archfixtures')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          Arch Fixtures
+          Spec Docs
         </div>
       </div>
     </nav>
@@ -4716,19 +4708,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="photometrics-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
-  <!-- ═══ ETC SPEC LIBRARY ═══ -->
-  <div class="view" id="view-etcdocs">
-    <div id="etcdocs-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
-  </div>
-
-  <!-- ═══ LUTRON SPEC LIBRARY ═══ -->
-  <div class="view" id="view-lutrondocs">
-    <div id="lutrondocs-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
-  </div>
-
-  <!-- ═══ ARCH FIXTURES & POWER SUPPLIES ═══ -->
-  <div class="view" id="view-archfixtures">
-    <div id="archfixtures-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  <!-- ═══ SPEC DOCS (ETC · Lutron · Arch Fixtures) ═══ -->
+  <div class="view" id="view-specdocs">
+    <div id="specdocs-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7277,14 +7259,8 @@ function switchView(v) {
   if(v==='photometrics') {
     if (typeof _photoRender === 'function') _photoRender();
   }
-  if(v==='etcdocs') {
-    if (typeof _etcDocsRender === 'function') _etcDocsRender();
-  }
-  if(v==='lutrondocs') {
-    if (typeof _lutronDocsRender === 'function') _lutronDocsRender();
-  }
-  if(v==='archfixtures') {
-    if (typeof _archFixturesRender === 'function') _archFixturesRender();
+  if(v==='specdocs') {
+    if (typeof _specDocsRender === 'function') _specDocsRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -22002,6 +21978,11 @@ function _specLibGetHidden(rootId) {
 }
 function _specLibSaveHidden(rootId, arr) {
   try { localStorage.setItem('fop_spec_hidden_'+rootId, JSON.stringify(arr)); } catch(e) {} }
+function _specLibGetMetaOverrides(rootId) {
+  try { return JSON.parse(localStorage.getItem('fop_spec_metaover_'+rootId)||'{}'); } catch(e) { return {}; }
+}
+function _specLibSaveMetaOverrides(rootId, data) {
+  try { localStorage.setItem('fop_spec_metaover_'+rootId, JSON.stringify(data)); } catch(e) {} }
 
 function _specLibFmtDate(iso) {
   if (!iso) return null;
@@ -22311,9 +22292,7 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
 
 // ── UI action handlers (called from inline onclick) ───────────────
 function _specLibRerender(rootId) {
-  if (rootId === 'etcdocs-root') _etcDocsRender();
-  else if (rootId === 'lutrondocs-root') _lutronDocsRender();
-  else if (rootId === 'archfixtures-root') _archFixturesRender();
+  _specDocsRender();
 }
 
 function _specLibStartCheck(rootId) {
@@ -22724,6 +22703,489 @@ function _archFixturesRender() {
   _specLibRender('archfixtures-root', 'Architectural Fixtures & Power Supplies', '16,185,129', _archFixturesDocs);
 }
 window._archFixturesRender = _archFixturesRender;
+
+// ═══════════════════════════════════════════════
+//  COMBINED SPEC DOCS RENDERER
+// ═══════════════════════════════════════════════
+
+function _specDocsSources() {
+  return [
+    {rootId:'etcdocs-root',     mfr:'ETC',           color:'79,142,247',  builtins:_etcDocs},
+    {rootId:'lutrondocs-root',  mfr:'Lutron',         color:'245,158,11', builtins:_lutronDocs},
+    {rootId:'archfixtures-root',mfr:'Arch Fixtures',  color:'16,185,129', builtins:_archFixturesDocs}
+  ];
+}
+
+function _specDocsRender() {
+  var root = document.getElementById('specdocs-root');
+  if (!root) return;
+  if (!window._specDocsState) window._specDocsState = {q:'',cat:'All',mfr:'All',showAdd:false,addMfr:'ETC',editingKey:null,checkingUrl:null};
+  var st = window._specDocsState;
+  var hadSearchFocus = document.activeElement && document.activeElement.id==='sd-q';
+  var sources = _specDocsSources();
+
+  // ── Build allDocs ─────────────────────────────────────────────────
+  var allDocs = [];
+  sources.forEach(function(src) {
+    var overrides = _specLibGetOverrides(src.rootId);
+    var metaOver  = _specLibGetMetaOverrides(src.rootId);
+    var userDocs  = _specLibGetUserDocs(src.rootId);
+    var hidden    = _specLibGetHidden(src.rootId);
+    src.builtins.filter(function(d){ return hidden.indexOf(d.name)===-1; }).forEach(function(d) {
+      var mo = metaOver[d.name] || {};
+      allDocs.push({
+        name:        mo.name || d.name,
+        cat:         mo.cat  || d.cat,
+        desc:        mo.desc || d.desc,
+        legacy:      d.legacy,
+        _rootId:     src.rootId,
+        _mfr:        src.mfr,
+        _color:      src.color,
+        _resolvedUrl:overrides[d.name] || d.url,
+        _userAdded:  false,
+        _origName:   d.name,
+        _key:        src.rootId+'::'+d.name
+      });
+    });
+    userDocs.forEach(function(d, ui) {
+      allDocs.push({
+        name:        d.name,
+        cat:         d.cat  || 'Other',
+        desc:        d.desc || '',
+        _rootId:     src.rootId,
+        _mfr:        src.mfr,
+        _color:      src.color,
+        _resolvedUrl:d.url,
+        _userAdded:  true,
+        _udIdx:      ui,
+        _key:        src.rootId+'::__udoc_'+ui
+      });
+    });
+  });
+
+  // ── Filters ───────────────────────────────────────────────────────
+  var mfrs = ['All','ETC','Lutron','Arch Fixtures'];
+  var mfrFiltered = allDocs.filter(function(d){ return st.mfr==='All'||d._mfr===st.mfr; });
+  var cats = ['All'].concat(mfrFiltered.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; },[]));
+  var filtered = mfrFiltered.filter(function(d) {
+    var matchCat = st.cat==='All' || d.cat===st.cat;
+    var matchQ   = !st.q || d.name.toLowerCase().indexOf(st.q)!==-1 || d.desc.toLowerCase().indexOf(st.q)!==-1 || d.cat.toLowerCase().indexOf(st.q)!==-1 || d._mfr.toLowerCase().indexOf(st.q)!==-1;
+    return matchCat && matchQ;
+  });
+
+  // ── Aggregate sync data ───────────────────────────────────────────
+  var allResults = {};
+  var anyLastSync = null;
+  sources.forEach(function(src) {
+    var sync = _specLibGetSync(src.rootId);
+    Object.assign(allResults, sync.results || {});
+    if (sync.lastSynced && (!anyLastSync || sync.lastSynced > anyLastSync)) anyLastSync = sync.lastSynced;
+  });
+  var checkedCount = allDocs.filter(function(d){ return !!allResults[d._resolvedUrl]; }).length;
+  var failCount    = allDocs.filter(function(d){ var r=allResults[d._resolvedUrl]; return r&&r.status==='fail'; }).length;
+
+  // ── Badge helpers ─────────────────────────────────────────────────
+  var catColors = {
+    'Consoles':'#4f8ef7','Console Accessory':'#6366f1','LED Fixture':'#22c55e','Ellipsoidal':'#4ade80',
+    'LED Wash':'#10b981','Dimmer Rack':'#f59e0b','Dimmer Module':'#fbbf24','Control Electronics':'#8b5cf6',
+    'Architectural Control':'#ec4899','DMX Gateway':'#06b6d4','Networking Software':'#0ea5e9',
+    'Processor':'#4f8ef7','Keypad':'#6366f1','Dimmer':'#f59e0b','Module':'#8b5cf6',
+    'Controller':'#ec4899','Hub':'#06b6d4','LED Driver':'#22c55e','Sensor':'#10b981',
+    'Shade':'#f97316','Integration':'#a78bfa','AV Interface':'#e879f9','System':'#64748b','Panel':'#0891b2',
+    'Linear Fixture':'#22c55e','Downlight':'#4ade80','Track Fixture':'#10b981','Power Supply':'#f59e0b',
+    'LED Engine':'#fbbf24','Driver':'#8b5cf6','Other':'#64748b'
+  };
+  function catBadge(cat) {
+    var c = catColors[cat] || '#4a5e7a';
+    return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+escH(cat)+'</span>';
+  }
+  function mfrBadge(d) {
+    var cm = {'ETC':'79,142,247','Lutron':'245,158,11','Arch Fixtures':'16,185,129'};
+    var c = cm[d._mfr] || '100,116,139';
+    return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba('+c+',0.12);color:rgb('+c+');border:1px solid rgba('+c+',0.3)">'+escH(d._mfr)+'</span>';
+  }
+  function statusPill(d) {
+    var url = d._resolvedUrl;
+    if (st.checkingUrl === url) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#4a5e7a"><span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>Checking…</span>';
+    }
+    var r = allResults[url];
+    var days = r ? _specLibDaysAgo(r.checkedAt) : null;
+    var stale = days !== null && days > 60;
+    var dot, txt, ttl;
+    if (!r)                 { dot='#4a5e7a'; txt='Seeded '+SPEC_SEED_DATE;                           ttl='Not yet verified — seeded from research'; }
+    else if(r.status==='fail'){ dot='#ef4444'; txt='Unreachable · '+_specLibFmtDate(r.checkedAt);     ttl='Server did not respond during last check'; }
+    else if(stale)          { dot='#f59e0b'; txt='Checked '+_specLibFmtDate(r.checkedAt)+' ('+days+'d ago)'; ttl='Stale — consider re-checking'; }
+    else                    { dot='#22c55e'; txt='Verified · '+_specLibFmtDate(r.checkedAt);          ttl='Server responded at last check'; }
+    return '<span title="'+escH(ttl)+'" style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#4a5e7a"><span style="width:6px;height:6px;border-radius:50%;background:'+dot+';flex-shrink:0;display:inline-block"></span>'+escH(txt)+'</span>';
+  }
+
+  // ── Edit form (expanded: name, cat, desc, url) ────────────────────
+  function editFormHtml(d) {
+    if (st.editingKey !== d._key) return '';
+    var safeKey = escH(d._key).replace(/'/g,'&apos;');
+    var editCats = cats.filter(function(c){return c!=='All';});
+    return '<div style="margin-top:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.1)">'
+      +'<div style="font-size:10px;color:#4a5e7a;margin-bottom:10px;font-weight:700">Edit Document'+(d._userAdded?' · User-added':'')+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Name</div><input id="sd-edit-name" type="text" value="'+escH(d.name)+'" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Category</div>'
+      +'<input id="sd-edit-cat" type="text" list="sd-edit-cat-list" value="'+escH(d.cat)+'" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none">'
+      +'<datalist id="sd-edit-cat-list">'+editCats.map(function(c){return '<option value="'+escH(c)+'">';}).join('')+'</datalist></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Description</div><input id="sd-edit-desc" type="text" value="'+escH(d.desc)+'" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div style="margin-bottom:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">URL</div><input id="sd-edit-url" type="text" value="'+escH(d._resolvedUrl)+'" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace"></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button onclick="_specDocsSaveDoc(\''+safeKey+'\')" style="padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">Save &amp; Verify</button>'
+      +'<button onclick="_specDocsDeleteDoc(\''+safeKey+'\')" style="padding:7px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.07);color:#f87171">Delete</button>'
+      +'<button onclick="_specDocsToggleEdit(\'\')" style="padding:7px 10px;border-radius:7px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:none;color:#4a5e7a">Cancel</button>'
+      +'</div></div>';
+  }
+
+  // ── Doc card ──────────────────────────────────────────────────────
+  function docCard(d) {
+    var url = d._resolvedUrl;
+    var safeKey = escH(d._key).replace(/'/g,'&apos;');
+    var safeUrl = escH(url).replace(/'/g,'&apos;');
+    var isPdf = url.toLowerCase().indexOf('.pdf') !== -1;
+    var accentHex = '#'+d._color.split(',').map(function(x){return parseInt(x,10).toString(16).padStart(2,'0');}).join('');
+    var isFail = allResults[url] && allResults[url].status==='fail';
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid '+(isFail?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.08)')+';border-radius:12px;padding:14px 16px;margin-bottom:8px">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+      +catBadge(d.cat)+mfrBadge(d)
+      +(d.legacy?'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(100,116,139,0.15);color:#64748b;border:1px solid rgba(100,116,139,0.25)">Legacy</span>':'')
+      +(d._userAdded?'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)">User Added</span>':'')
+      +'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:2px;line-height:1.3">'+escH(d.name)+'</div>'
+      +'<div style="font-size:11px;color:#4a5e7a;line-height:1.5;margin-bottom:6px">'+escH(d.desc)+'</div>'
+      +'<div style="display:inline-flex;align-items:center;gap:3px">'
+      +statusPill(d)
+      +'<button onclick="_specDocsCheckSingle(\''+safeUrl+'\')" title="Re-check this link" '+(st.checkingUrl===url?'disabled ':'')+'style="background:none;border:none;cursor:'+(st.checkingUrl===url?'default':'pointer')+';padding:1px 3px;color:#4a5e7a;font-size:11px;line-height:1;opacity:'+(st.checkingUrl===url?'0.25':'0.5')+'">↻</button>'
+      +'</div>'
+      +editFormHtml(d)
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
+      +'<a href="'+url+'" target="_blank" rel="noopener" style="padding:7px 10px;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:1px solid rgba('+d._color+',0.35);background:rgba('+d._color+',0.1);color:'+accentHex+'">'+( isPdf?'⬇ PDF':'↗ Page')+'</a>'
+      +'<button onclick="_specDocsToggleEdit(\''+safeKey+'\')" title="Edit" style="background:none;border:none;cursor:pointer;padding:4px;color:#4a5e7a;font-size:14px;line-height:1">✎</button>'
+      +'</div>'
+      +'</div></div>';
+  }
+
+  // ── Grouped output ────────────────────────────────────────────────
+  var groupedHtml = '';
+  if (filtered.length === 0) {
+    groupedHtml = '<div style="text-align:center;padding:40px;color:#4a5e7a;font-size:13px">No documents match your search</div>';
+  } else {
+    var groups = {}, groupOrder = [];
+    filtered.forEach(function(d) {
+      if (!groups[d.cat]) { groups[d.cat]=[]; groupOrder.push(d.cat); }
+      groups[d.cat].push(d);
+    });
+    groupOrder.forEach(function(cat) {
+      groupedHtml += '<div style="margin-bottom:22px">'
+        +'<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)">'+escH(cat)+' <span style="color:#2d3f52;font-weight:600">('+groups[cat].length+')</span></div>'
+        +groups[cat].map(docCard).join('')
+        +'</div>';
+    });
+  }
+
+  // ── Restore-hidden buttons ────────────────────────────────────────
+  var hiddenBtns = sources.map(function(src) {
+    var h = _specLibGetHidden(src.rootId);
+    return h.length ? '<button onclick="_specDocsRestoreHidden(\''+src.rootId+'\')" style="padding:5px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#f87171">↩ '+h.length+' hidden in '+escH(src.mfr)+'</button>' : '';
+  }).filter(Boolean).join('');
+
+  // ── Add doc form ──────────────────────────────────────────────────
+  var addCatOpts = cats.filter(function(c){return c!=='All';});
+  var addForm = st.showAdd
+    ? '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(79,142,247,0.2);border-radius:12px;padding:16px;margin-bottom:20px">'
+      +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:10px">Add Document</div>'
+      +'<div style="margin-bottom:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:6px">Manufacturer</div>'
+      +'<div style="display:flex;gap:6px">'
+      +['ETC','Lutron','Arch Fixtures'].map(function(m){
+          var a=st.addMfr===m;
+          return '<button onclick="window._specDocsState.addMfr=\''+m.replace(/'/g,"\\'")+'\';;_specDocsRerender()" style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#e8f0ff':'#8da0c0')+'">'+escH(m)+'</button>';
+        }).join('')
+      +'</div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Name</div><input type="text" id="sd-add-name" placeholder="Document name" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Category</div>'
+      +'<input type="text" id="sd-add-cat" list="sd-add-cat-list" placeholder="Select or type new…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none">'
+      +'<datalist id="sd-add-cat-list">'+addCatOpts.map(function(c){return '<option value="'+escH(c)+'">';}).join('')+'</datalist></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Description</div><input type="text" id="sd-add-desc" placeholder="One-line description" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div style="margin-bottom:12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">URL</div><input type="url" id="sd-add-url" placeholder="https://…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace"></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button onclick="_specDocsAddDoc()" style="padding:8px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">Add Document</button>'
+      +'<button onclick="window._specDocsState.showAdd=false;_specDocsRerender()" style="padding:8px 12px;border-radius:7px;font-size:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:none;color:#4a5e7a">Cancel</button>'
+      +'</div></div>'
+    : '';
+
+  // ── Chip helper ───────────────────────────────────────────────────
+  function chip(label, active, onclick) {
+    return '<button onclick="'+onclick+'" style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(active?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(active?'#e8f0ff':'#8da0c0')+';white-space:nowrap">'+escH(label)+'</button>';
+  }
+
+  var syncLine = anyLastSync
+    ? '<span style="font-size:11px;color:#4a5e7a">Last checked: <b style="color:#8da0c0">'+_specLibFmtDate(anyLastSync)+'</b> · '+checkedCount+'/'+allDocs.length+' verified'+(failCount?' · <span style="color:#f87171">'+failCount+' unreachable</span>':'')+'</span>'
+    : '<span style="font-size:11px;color:#4a5e7a">Seeded <b style="color:#8da0c0">'+SPEC_SEED_DATE+'</b> · never link-checked</span>';
+
+  root.innerHTML =
+    '<div style="max-width:760px;margin:0 auto;padding:24px 16px 40px">'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">'
+    +'<div><h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Spec Docs</h2>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+allDocs.length+' documents · ETC · Lutron · Arch Fixtures</p></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;align-items:center">'
+    +hiddenBtns
+    +'<button onclick="window._specDocsState.showAdd=!window._specDocsState.showAdd;_specDocsRerender()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
+    +'<button id="sd-chk-btn" onclick="_specDocsStartCheck()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check All Links</button>'
+    +'</div></div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;margin-bottom:16px;flex-wrap:wrap;gap:6px">'
+    +syncLine
+    +(failCount?'<span style="font-size:10px;color:#f59e0b">⚠ Unreachable links may be renamed PDFs or require VPN access.</span>':'')
+    +'</div>'
+    +'<div id="sd-chk-prog" style="display:none;margin-bottom:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px">'
+    +'<div id="sd-chk-lbl" style="font-size:11px;color:#4a5e7a;margin-bottom:8px">Preparing check…</div>'
+    +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div id="sd-chk-bar" style="height:100%;border-radius:3px;background:#4f8ef7;width:0%;transition:width 0.2s"></div></div>'
+    +'</div>'
+    +addForm
+    +'<div style="position:relative;margin-bottom:12px">'
+    +'<input type="text" id="sd-q" placeholder="Search name, category, manufacturer…" value="'+escH(st.q)+'" oninput="window._specDocsState.q=this.value.toLowerCase();_specDocsRerender()" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px 10px 40px;color:#f0f4ff;font-size:13px;outline:none">'
+    +'<svg style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    +'</div>'
+    +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:#4a5e7a;margin-bottom:6px;font-weight:700">Manufacturer</div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">'
+    +mfrs.map(function(m){ return chip(m, st.mfr===m, '_specDocsSetMfr(\''+m.replace(/'/g,"\\'")+'\')'); }).join('')
+    +'</div>'
+    +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:#4a5e7a;margin-bottom:6px;font-weight:700">Category</div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:18px">'
+    +cats.map(function(c){ return chip(c, st.cat===c, '_specDocsSetCat(\''+c.replace(/'/g,"\\'")+'\')'); }).join('')
+    +'</div>'
+    +(st.q||st.cat!=='All'||st.mfr!=='All'?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:12px">Showing '+filtered.length+' of '+allDocs.length+' documents</div>':'')
+    +groupedHtml
+    +'</div>';
+
+  if (hadSearchFocus) {
+    var qEl = document.getElementById('sd-q');
+    if (qEl) { qEl.focus(); var len=qEl.value.length; qEl.setSelectionRange(len,len); }
+  }
+}
+
+// ── Combined view action handlers ────────────────────────────────────
+function _specDocsRerender() { _specDocsRender(); }
+
+function _specDocsSetMfr(m) {
+  window._specDocsState.mfr = m;
+  window._specDocsState.cat = 'All';
+  _specDocsRender();
+}
+
+function _specDocsSetCat(c) {
+  window._specDocsState.cat = c;
+  _specDocsRender();
+}
+
+function _specDocsToggleEdit(key) {
+  var st = window._specDocsState;
+  st.editingKey = (st.editingKey === key) ? null : key;
+  _specDocsRender();
+}
+
+function _specDocsSaveDoc(key) {
+  var sep = key.indexOf('::');
+  var rootId  = key.substring(0, sep);
+  var docPart = key.substring(sep + 2);
+  var isUserAdded = docPart.indexOf('__udoc_') === 0;
+
+  var newName = ((document.getElementById('sd-edit-name')||{}).value||'').trim();
+  var newCat  = ((document.getElementById('sd-edit-cat') ||{}).value||'').trim();
+  var newDesc = ((document.getElementById('sd-edit-desc')||{}).value||'').trim();
+  var newUrl  = ((document.getElementById('sd-edit-url') ||{}).value||'').trim();
+  if (!newName || !newUrl) { toast('Name and URL are required'); return; }
+
+  var sync = _specLibGetSync(rootId);
+  sync.results = sync.results || {};
+
+  if (isUserAdded) {
+    var udIdx = parseInt(docPart.replace('__udoc_',''), 10);
+    var udocs = _specLibGetUserDocs(rootId);
+    if (udocs[udIdx]) {
+      var oldUrl = udocs[udIdx].url;
+      if (oldUrl !== newUrl) delete sync.results[oldUrl];
+      udocs[udIdx] = {name:newName, cat:newCat||'Other', desc:newDesc, url:newUrl, addedAt:udocs[udIdx].addedAt};
+      _specLibSaveUserDocs(rootId, udocs);
+    }
+  } else {
+    var origName = docPart;
+    var overrides = _specLibGetOverrides(rootId);
+    var builtins  = rootId==='etcdocs-root' ? _etcDocs : rootId==='lutrondocs-root' ? _lutronDocs : _archFixturesDocs;
+    var orig = builtins.filter(function(d){return d.name===origName;})[0];
+    if (orig && orig.url !== newUrl) delete sync.results[orig.url];
+    overrides[origName] = newUrl;
+    _specLibSaveOverrides(rootId, overrides);
+    var metaOver = _specLibGetMetaOverrides(rootId);
+    metaOver[origName] = {name:newName, cat:newCat||'Other', desc:newDesc};
+    _specLibSaveMetaOverrides(rootId, metaOver);
+  }
+
+  sync.results[newUrl] = {status:'ok', checkedAt:new Date().toISOString(), manual:true};
+  _specLibSaveSync(rootId, sync);
+  window._specDocsState.editingKey = null;
+  toast('Saved and marked verified');
+  _specDocsRender();
+}
+
+function _specDocsDeleteDoc(key) {
+  var sep = key.indexOf('::');
+  var rootId  = key.substring(0, sep);
+  var docPart = key.substring(sep + 2);
+  var isUserAdded = docPart.indexOf('__udoc_') === 0;
+
+  if (isUserAdded) {
+    var udIdx = parseInt(docPart.replace('__udoc_',''), 10);
+    var udocs = _specLibGetUserDocs(rootId);
+    if (udocs[udIdx] && confirm('Delete "'+udocs[udIdx].name+'"?')) {
+      udocs.splice(udIdx, 1);
+      _specLibSaveUserDocs(rootId, udocs);
+      window._specDocsState.editingKey = null;
+      _specDocsRender();
+    }
+  } else {
+    var origName = docPart;
+    var metaOver = _specLibGetMetaOverrides(rootId);
+    var displayName = (metaOver[origName]||{}).name || origName;
+    if (confirm('Hide "'+displayName+'" from Spec Docs?\n\nThis can be undone with the "Restore hidden" button.')) {
+      var hidden = _specLibGetHidden(rootId);
+      if (hidden.indexOf(origName) === -1) hidden.push(origName);
+      _specLibSaveHidden(rootId, hidden);
+      window._specDocsState.editingKey = null;
+      _specDocsRender();
+    }
+  }
+}
+
+function _specDocsRestoreHidden(rootId) {
+  _specLibSaveHidden(rootId, []);
+  _specDocsRender();
+}
+
+function _specDocsCheckSingle(url) {
+  var st = window._specDocsState;
+  if (!st || st.checkingUrl) return;
+  st.checkingUrl = url;
+  _specDocsRender();
+
+  var ownerRootId = null;
+  _specDocsSources().forEach(function(src) {
+    if (ownerRootId) return;
+    var overrides = _specLibGetOverrides(src.rootId);
+    var userDocs  = _specLibGetUserDocs(src.rootId);
+    var hidden    = _specLibGetHidden(src.rootId);
+    var found = src.builtins.some(function(d){ return (overrides[d.name]||d.url)===url && hidden.indexOf(d.name)===-1; })
+             || userDocs.some(function(d){ return d.url===url; });
+    if (found) ownerRootId = src.rootId;
+  });
+  if (!ownerRootId) ownerRootId = 'etcdocs-root';
+
+  _specLibFetchWithTimeout(url, 10000)
+    .then(function() {
+      var sync = _specLibGetSync(ownerRootId);
+      sync.results = sync.results || {};
+      sync.results[url] = {status:'ok', checkedAt:new Date().toISOString()};
+      _specLibSaveSync(ownerRootId, sync);
+    })
+    .catch(function() {
+      var sync = _specLibGetSync(ownerRootId);
+      sync.results = sync.results || {};
+      sync.results[url] = {status:'fail', checkedAt:new Date().toISOString()};
+      _specLibSaveSync(ownerRootId, sync);
+    })
+    .then(function() {
+      window._specDocsState.checkingUrl = null;
+      _specDocsRender();
+    });
+}
+
+function _specDocsStartCheck() {
+  var allForCheck = [];
+  var resultStore = {};
+  _specDocsSources().forEach(function(src) {
+    var overrides = _specLibGetOverrides(src.rootId);
+    var userDocs  = _specLibGetUserDocs(src.rootId);
+    var hidden    = _specLibGetHidden(src.rootId);
+    src.builtins.filter(function(d){ return hidden.indexOf(d.name)===-1; }).forEach(function(d) {
+      allForCheck.push({url: overrides[d.name]||d.url, rootId: src.rootId});
+    });
+    userDocs.forEach(function(d) {
+      allForCheck.push({url: d.url, rootId: src.rootId});
+    });
+  });
+
+  var total=allForCheck.length, done=0, ok=0, fail=0;
+  var progEl=document.getElementById('sd-chk-prog'), btnEl=document.getElementById('sd-chk-btn');
+  if (progEl) progEl.style.display='block';
+  if (btnEl) { btnEl.disabled=true; btnEl.textContent='Checking…'; }
+
+  function updateProg() {
+    var bar=document.getElementById('sd-chk-bar'), lbl=document.getElementById('sd-chk-lbl');
+    if (bar) bar.style.width=(total>0?(done/total*100).toFixed(1):0)+'%';
+    if (lbl) lbl.textContent='Checking '+done+'/'+total+' · ✓ '+ok+' reachable · ✗ '+fail+' unreachable';
+  }
+
+  var BATCH=4, idx=0;
+  function nextBatch() {
+    if (idx>=allForCheck.length) {
+      var byRoot={};
+      allForCheck.forEach(function(d){
+        if (!byRoot[d.rootId]) byRoot[d.rootId]=_specLibGetSync(d.rootId);
+        byRoot[d.rootId].results=byRoot[d.rootId].results||{};
+        if (resultStore[d.url]) byRoot[d.rootId].results[d.url]=resultStore[d.url];
+      });
+      Object.keys(byRoot).forEach(function(rid){ byRoot[rid].lastSynced=new Date().toISOString(); _specLibSaveSync(rid,byRoot[rid]); });
+      _specDocsRender();
+      return;
+    }
+    var batch=allForCheck.slice(idx,idx+BATCH); idx+=BATCH;
+    Promise.all(batch.map(function(d){
+      if (!d.url) { fail++; done++; updateProg(); return Promise.resolve(); }
+      return _specLibFetchWithTimeout(d.url,10000)
+        .then(function(){ resultStore[d.url]={status:'ok',checkedAt:new Date().toISOString()}; ok++; })
+        .catch(function(){ resultStore[d.url]={status:'fail',checkedAt:new Date().toISOString()}; fail++; })
+        .then(function(){ done++; updateProg(); });
+    })).then(function(){ setTimeout(nextBatch,120); }).catch(function(){ setTimeout(nextBatch,120); });
+  }
+  nextBatch();
+}
+
+function _specDocsAddDoc() {
+  var st = window._specDocsState;
+  var name = ((document.getElementById('sd-add-name')||{}).value||'').trim();
+  var cat  = ((document.getElementById('sd-add-cat') ||{}).value||'').trim();
+  var desc = ((document.getElementById('sd-add-desc')||{}).value||'').trim();
+  var url  = ((document.getElementById('sd-add-url') ||{}).value||'').trim();
+  if (!name||!url) { toast('Name and URL are required'); return; }
+  var src = _specDocsSources().filter(function(s){return s.mfr===st.addMfr;})[0] || _specDocsSources()[0];
+  var udocs = _specLibGetUserDocs(src.rootId);
+  udocs.push({name:name, cat:cat||'Other', desc:desc, url:url, addedAt:new Date().toISOString()});
+  _specLibSaveUserDocs(src.rootId, udocs);
+  st.showAdd = false;
+  toast('Document added to '+src.mfr);
+  _specDocsRender();
+}
+
+window._specDocsRender       = _specDocsRender;
+window._specDocsRerender     = _specDocsRerender;
+window._specDocsSetMfr       = _specDocsSetMfr;
+window._specDocsSetCat       = _specDocsSetCat;
+window._specDocsToggleEdit   = _specDocsToggleEdit;
+window._specDocsSaveDoc      = _specDocsSaveDoc;
+window._specDocsDeleteDoc    = _specDocsDeleteDoc;
+window._specDocsRestoreHidden= _specDocsRestoreHidden;
+window._specDocsCheckSingle  = _specDocsCheckSingle;
+window._specDocsStartCheck   = _specDocsStartCheck;
+window._specDocsAddDoc       = _specDocsAddDoc;
 
 })();
 
