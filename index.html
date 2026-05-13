@@ -22133,6 +22133,11 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
 
   function statusPill(d) {
     var url = d._resolvedUrl;
+    if (st.checkingUrl === url) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#4a5e7a">'
+        +'<span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;display:inline-block"></span>'
+        +'Checking…</span>';
+    }
     var r = results[url];
     var days = r ? _specLibDaysAgo(r.checkedAt) : null;
     var stale = days !== null && days > 60;
@@ -22191,7 +22196,10 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
       +'</div>'
       +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:2px;line-height:1.3">'+escH(d.name)+'</div>'
       +'<div style="font-size:11px;color:#4a5e7a;line-height:1.5;margin-bottom:6px">'+escH(d.desc)+'</div>'
+      +'<div style="display:inline-flex;align-items:center;gap:3px">'
       +statusPill(d)
+      +'<button onclick="_specLibCheckSingleDoc(\''+rootId+'\',\''+escH(url).replace(/'/g,'&apos;')+'\')" title="Re-check this link" '+(st.checkingUrl===url?'disabled ':'')+'style="background:none;border:none;cursor:'+(st.checkingUrl===url?'default':'pointer')+';padding:1px 3px;color:#4a5e7a;font-size:11px;line-height:1;opacity:'+(st.checkingUrl===url?'0.25':'0.5')+'">↻</button>'
+      +'</div>'
       +editForm
       +'</div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
@@ -22235,7 +22243,10 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
       +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:12px">Add Document</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
       +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Name</div><input type="text" id="'+rootId+'-add-name" placeholder="e.g. HomeWorks QSX Processor" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
-      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Category</div><input type="text" id="'+rootId+'-add-cat" placeholder="e.g. Processor" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Category</div>'
+      +'<input type="text" id="'+rootId+'-add-cat" list="'+rootId+'-cat-opts" placeholder="Select or type new…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none">'
+      +'<datalist id="'+rootId+'-cat-opts">'+cats.filter(function(c){return c!=='All';}).map(function(c){return '<option value="'+escH(c)+'">';}).join('')+'</datalist>'
+      +'</div>'
       +'</div>'
       +'<div style="margin-bottom:8px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Description</div><input type="text" id="'+rootId+'-add-desc" placeholder="One-line description" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none"></div>'
       +'<div style="margin-bottom:12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">URL (PDF or page)</div><input type="url" id="'+rootId+'-add-url" placeholder="https://assets.lutron.com/a/documents/…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 10px;color:#f0f4ff;font-size:12px;outline:none;font-family:monospace"></div>'
@@ -22391,6 +22402,33 @@ function _specLibDeleteUserDoc(rootId, idx) {
   }
 }
 
+function _specLibCheckSingleDoc(rootId, url) {
+  var st = window['_specLib_'+rootId] || {};
+  if (st.checkingUrl) return;
+  st.checkingUrl = url;
+  window['_specLib_'+rootId] = st;
+  _specLibRerender(rootId);
+  _specLibFetchWithTimeout(url, 10000)
+    .then(function() {
+      var sync = _specLibGetSync(rootId);
+      sync.results = sync.results || {};
+      sync.results[url] = { status:'ok', checkedAt: new Date().toISOString() };
+      _specLibSaveSync(rootId, sync);
+    })
+    .catch(function() {
+      var sync = _specLibGetSync(rootId);
+      sync.results = sync.results || {};
+      sync.results[url] = { status:'fail', checkedAt: new Date().toISOString() };
+      _specLibSaveSync(rootId, sync);
+    })
+    .then(function() {
+      var st2 = window['_specLib_'+rootId] || {};
+      st2.checkingUrl = null;
+      window['_specLib_'+rootId] = st2;
+      _specLibRerender(rootId);
+    });
+}
+
 function _specLibDeleteBuiltinDoc(rootId, docName) {
   if (confirm('Hide "'+docName+'" from this library?\n\nThis can be undone with the "Restore hidden" button.')) {
     var hidden = _specLibGetHidden(rootId);
@@ -22416,6 +22454,7 @@ window._specLibAddDoc            = _specLibAddDoc;
 window._specLibDeleteUserDoc     = _specLibDeleteUserDoc;
 window._specLibDeleteBuiltinDoc  = _specLibDeleteBuiltinDoc;
 window._specLibRestoreAllHidden  = _specLibRestoreAllHidden;
+window._specLibCheckSingleDoc    = _specLibCheckSingleDoc;
 
 // ═══════════════════════════════════════════════
 //  ETC SPEC LIBRARY DATA + RENDER
