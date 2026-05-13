@@ -3861,6 +3861,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="5" height="12" rx="1.5"/><rect x="9" y="6" width="5" height="12" rx="1.5"/><rect x="16" y="6" width="6" height="12" rx="1.5"/><line x1="7" y1="12" x2="9" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/></svg>
           Lutron Link Calc
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('dmxaddrcalc')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="16" y2="21"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="2" y1="15" x2="22" y2="15"/></svg>
+          DMX Addr Calculator
+        </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('lutroncheck')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Lutron Checklist
+        </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('photometrics')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="5" y1="19" x2="19" y2="19"/><line x1="12" y1="11" x2="5" y2="19"/><line x1="12" y1="11" x2="19" y2="19"/></svg>
+          Fixture Photometrics
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -3900,6 +3912,23 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   <div id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+  <!-- Offline banner -->
+  <div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#b45309;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:7px 16px;letter-spacing:0.3px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">
+    ⚡ Offline — changes queued locally <span id="offline-queue-count"></span>
+  </div>
+
+  <!-- Keyboard shortcut overlay -->
+  <div id="kb-modal" onclick="if(event.target===this)closeKbModal()" style="display:none;position:fixed;inset:0;z-index:10500;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+    <div style="background:#131f35;border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:28px 32px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.7)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:#f0f4ff">Keyboard Shortcuts</div>
+        <button onclick="closeKbModal()" style="background:none;border:none;color:#4a5e7a;font-size:20px;cursor:pointer;line-height:1;padding:0 4px">✕</button>
+      </div>
+      <div id="kb-sections"></div>
+      <div style="margin-top:16px;font-size:10px;color:#2d3f52;text-align:center">Press <kbd style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:1px 6px;font-size:10px">?</kbd> to toggle this overlay</div>
+    </div>
+  </div>
+
   <!-- MAIN -->
 
   <div id="main" role="main">
@@ -3926,6 +3955,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <span id="mobSyncLabel" style="font-size:11px;color:#64748b;white-space:nowrap">Local</span>
       </div>
       <button id="mob-global-search-btn" onclick="openGlobalSearch()" aria-label="Search" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent;display:none">🔍</button>
+      <button id="topbar-theme-btn" onclick="toggleTheme()" title="Toggle dark/light theme" aria-label="Toggle theme" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#8da0c0;font-size:16px;flex-shrink:0;line-height:1"><span id="topbar-theme-icon">🌙</span></button>
       <div class="search-wrap" style="position:relative">
         <input type="text" id="searchBar" onfocus="this.value?globalSearch(this.value):showSearchHistory()" placeholder="Search projects, tasks, POs…"
           oninput="if(!_debouncedGlobalSearch)_debouncedGlobalSearch=debounce(globalSearch,250);_debouncedGlobalSearch(this.value)"
@@ -4657,6 +4687,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ LUTRON LINK CALCULATOR ═══ -->
   <div class="view" id="view-lutronlink">
     <div id="llc-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ DMX ADDRESS CALCULATOR ═══ -->
+  <div class="view" id="view-dmxaddrcalc">
+    <div id="dmxaddr-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ LUTRON PROGRAMMING CHECKLIST ═══ -->
+  <div class="view" id="view-lutroncheck">
+    <div id="lutroncheck-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ FIXTURE PHOTOMETRICS ═══ -->
+  <div class="view" id="view-photometrics">
+    <div id="photometrics-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7111,7 +7156,10 @@ var viewTitles = {
   dipcalc: 'DIP Switch Calculator',
   voltcalc: 'Voltage Drop Calculator',
   wiringref: 'Wiring Reference',
-  lutronlink: 'Lutron Link Calculator'
+  lutronlink: 'Lutron Link Calculator',
+  dmxaddrcalc: 'DMX Address Calculator',
+  lutroncheck: 'Lutron Programming Checklist',
+  photometrics: 'Fixture Photometrics'
 };
 
 function switchView(v) {
@@ -7189,6 +7237,15 @@ function switchView(v) {
   }
   if(v==='lutronlink') {
     if (typeof _llcRender === 'function') _llcRender();
+  }
+  if(v==='dmxaddrcalc') {
+    if (typeof _dmxAddrRender === 'function') _dmxAddrRender();
+  }
+  if(v==='lutroncheck') {
+    if (typeof _lcklRender === 'function') _lcklRender();
+  }
+  if(v==='photometrics') {
+    if (typeof _photoRender === 'function') _photoRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -12979,6 +13036,8 @@ function applyTheme(theme){
   var sub=document.getElementById('theme-sub');
   if(pill) pill.classList.toggle('on',!isDark);
   if(icon) icon.textContent=isDark?'🌙':'☀️';
+  var topbarIcon=document.getElementById('topbar-theme-icon');
+  if(topbarIcon) topbarIcon.textContent=isDark?'🌙':'☀️';
   if(label) label.textContent=isDark?'Dark Mode':'Light Mode';
   if(sub) sub.textContent=isDark?'Currently using dark theme':'Currently using light theme';
 }
@@ -12988,6 +13047,77 @@ function toggleTheme() {
   localStorage.setItem('fop_theme', next);
   applyTheme(next);
 }
+
+// ── Offline detection ─────────────────────────────
+(function(){
+  function updateBanner() {
+    var b=document.getElementById('offline-banner');
+    if(!b) return;
+    var off=!navigator.onLine;
+    b.style.display=off?'block':'none';
+    if(off) {
+      var qc=document.getElementById('offline-queue-count');
+      try{var q=JSON.parse(localStorage.getItem('fop_sync_queue')||'[]');
+        if(qc) qc.textContent=q.length?'('+q.length+' queued)':'';}catch(e){}
+    }
+  }
+  window.addEventListener('offline', updateBanner);
+  window.addEventListener('online', updateBanner);
+  window.addEventListener('DOMContentLoaded', updateBanner);
+})();
+
+// ── Keyboard shortcut overlay ────────────────────
+var _kbShortcuts = [
+  { section:'Navigation', items:[
+    ['G then D','Dashboard'],['G then P','Projects'],['G then T','Tasks'],['G then C','Calendar'],
+    ['G then S','Schedule'],['G then K','Timekeeping'],['G then O','Purchase Orders']
+  ]},
+  { section:'Tools', items:[
+    ['G then L','LED Tape Calculator'],['G then V','Voltage Drop Calculator'],
+    ['G then W','Wiring Reference'],['G then X','DMX Address Calculator'],
+    ['G then M','Fixture Photometrics']
+  ]},
+  { section:'App', items:[
+    ['?','Toggle this overlay'],['T','Toggle dark/light theme'],['Ctrl+K / /','Global search'],['Esc','Close modals/panels']
+  ]}
+];
+function openKbModal() {
+  var m=document.getElementById('kb-modal'); if(!m) return;
+  var sec=document.getElementById('kb-sections');
+  if(sec) sec.innerHTML=_kbShortcuts.map(function(g){
+    return '<div style="margin-bottom:18px">'
+      +'<div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px">'+g.section+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:4px">'
+      +g.items.map(function(i){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+          +'<span style="font-size:12px;color:#8da0c0">'+i[1]+'</span>'
+          +'<kbd style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:2px 8px;font-size:10px;color:#c0d4f0;font-family:monospace;white-space:nowrap">'+i[0]+'</kbd>'
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+  m.style.display='flex';
+}
+function closeKbModal() {
+  var m=document.getElementById('kb-modal'); if(m) m.style.display='none';
+}
+(function(){
+  var _gSeq=false, _gTimer=null;
+  document.addEventListener('keydown',function(e){
+    if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')) return;
+    if(e.key==='?') { e.preventDefault(); var m=document.getElementById('kb-modal'); if(m&&m.style.display==='flex') closeKbModal(); else openKbModal(); return; }
+    if(e.key==='t'||e.key==='T') { if(!e.ctrlKey&&!e.metaKey) { toggleTheme(); return; } }
+    if(e.key==='Escape') { closeKbModal(); return; }
+    if(e.key==='g'||e.key==='G') { _gSeq=true; clearTimeout(_gTimer); _gTimer=setTimeout(function(){_gSeq=false;},1500); return; }
+    if(_gSeq) {
+      _gSeq=false; clearTimeout(_gTimer);
+      var map={d:'dashboard',p:'projects',t:'tasks',c:'calendar',s:'schedule',k:'timekeeping',o:'pos',l:'ledcalc',v:'voltcalc',w:'wiringref',x:'dmxaddrcalc',m:'photometrics'};
+      var dest=map[e.key.toLowerCase()];
+      if(dest&&typeof switchView==='function') { e.preventDefault(); switchView(dest); }
+    }
+  });
+})();
+
 function applyDensity(compact) {
   document.body.classList.toggle('density-compact', !!compact);
   var pill = document.getElementById('density-pill');
@@ -18584,7 +18714,23 @@ var _dmxMode = 'd2p';
       +mkCard(r.closest,r.inp,'closest match',true)
       +mkCard(r.above,r.inp,'one more cut',false)
       +'</div>'
-      +'<button class="lc-btn" style="width:100%" id="lc-stp-open-btn">→ Save to Project</button>';
+      +'<button class="lc-btn" style="width:100%" id="lc-stp-open-btn">→ Save to Project</button>'
+      +'<button class="lc-btn" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.05);color:#8da0c0" id="lc-export-btn">⎘ Copy Cut List</button>';
+    var exportBtn=document.getElementById('lc-export-btn');
+    if(exportBtn) exportBtn.addEventListener('click',function(){
+      var r=S.results; if(!r) return;
+      var sel=S.fixtures.find(function(f){return f.id===S.selectedId;});
+      var fx=sel?sel.name:'Fixture';
+      var lines=['Cut List — '+fx,'Generated: '+new Date().toLocaleString(),''];
+      function addCard(c,label){
+        var f=fmtIn(c.inches);
+        lines.push(label+':');
+        lines.push('  '+c.qty+' cuts × '+f.ftIn+' ('+f.mm+' / '+f.m+') = '+fmtIn(c.inches*c.qty).ftIn+' total');
+      }
+      addCard(r.below,'One fewer cut'); addCard(r.closest,'Closest match'); addCard(r.above,'One more cut');
+      lines.push(''); lines.push('Input: '+S.inputVal);
+      navigator.clipboard&&navigator.clipboard.writeText(lines.join('\n')).then(function(){toast('Cut list copied');}).catch(function(){toast('Copy failed');});
+    });
     var btn=document.getElementById('lc-stp-open-btn');
     if(btn) btn.addEventListener('click',function(){
       S.stp={open:true,projId:S.projects.length?S.projects[0].id:'',newProjName:'',qty:'1',label:'',description:'',zone:'',lengthIn:r.closest.inches,fixtureId:S.selectedId};
@@ -19965,7 +20111,8 @@ window._ccCmykToRgb  = _ccCmykToRgb;
 //  VOLTAGE DROP CALCULATOR
 // ═══════════════════════════════════════════════
 var _vd = { voltage:24, circuitType:'cv', mode:'watts', watts:72, amps:3, ma:700, length:25, unit:'ft', lengthType:'oneway', material:'copper', gaugeMode:'awg', awg:'14', mm2:'2.5',
-  pt:{ solve:'a', w:'', v:'', a:'' }
+  pt:{ solve:'a', w:'', v:'', a:'' },
+  multiMode:false, multiRuns:[{id:1,label:'Run A',watts:72,amps:3,length:25},{id:2,label:'Run B',watts:60,amps:2.5,length:40}], _nextRunId:3
 };
 
 var _vdAwg = [
@@ -20098,6 +20245,66 @@ function _vdUpdateResults() {
   _vdReadInputs();
   var res=document.getElementById('vd-results'); if(res) res.innerHTML=_vdResultsHtml();
 }
+function _vdMultiAddRun() {
+  var labels=['A','B','C','D','E','F','G','H'];
+  var idx=_vd.multiRuns.length; _vd.multiRuns.push({id:_vd._nextRunId++,label:'Run '+(labels[idx]||idx+1),watts:_vd.watts,amps:_vd.amps,length:_vd.length}); _vdRender();
+}
+function _vdMultiRemoveRun(id) { _vd.multiRuns=_vd.multiRuns.filter(function(r){return r.id!==id;}); _vdRender(); }
+function _vdMultiUpdate(id,field,val) { var r=_vd.multiRuns.find(function(r){return r.id===id;}); if(r) r[field]=parseFloat(val)||0; _vdMultiLiveUpdate(); }
+function _vdMultiLabelUpdate(id,val) { var r=_vd.multiRuns.find(function(r){return r.id===id;}); if(r) r.label=val; }
+function _vdMultiLiveUpdate() {
+  _vd.multiRuns.forEach(function(run){
+    var inp=_vd.circuitType==='cc'?run.amps:(_vd.mode==='watts'?run.watts:run.amps);
+    var I=_vd.circuitType==='cc'?run.amps:(_vd.mode==='watts'?(inp/_vd.voltage):inp);
+    var L_m=run.length*(_vd.unit==='ft'?0.3048:1)*(_vd.lengthType==='oneway'?2:1);
+    var rho=_vd.material==='copper'?1.724e-8:2.82e-8;
+    var A_mm2=parseFloat(_vd.gaugeMode==='awg'?(_vdAwg.find(function(d){return d.awg===_vd.awg;})||{mm2:2.08}).mm2:_vd.mm2);
+    var A_m2=A_mm2*1e-6;
+    var vDrop=(I>0&&L_m>0&&A_m2>0)?rho*2*L_m*I/A_m2:0;
+    var pct=_vd.voltage>0?(vDrop/_vd.voltage*100):0;
+    var resEl=document.getElementById('vd-mr-res-'+run.id);
+    if(resEl){
+      var col=pct<3?'#22c55e':pct<5?'#f59e0b':'#ef4444';
+      resEl.innerHTML='<span style="color:'+col+';font-weight:700">'+pct.toFixed(1)+'%</span> drop · '+vDrop.toFixed(2)+'V lost · '+((_vd.voltage-vDrop)>0?(_vd.voltage-vDrop).toFixed(2):0)+'V at fixture';
+    }
+  });
+}
+function _vdMultiRunsHtml() {
+  var rho=_vd.material==='copper'?1.724e-8:2.82e-8;
+  var A_mm2=parseFloat(_vd.gaugeMode==='awg'?(_vdAwg.find(function(d){return d.awg===_vd.awg;})||{mm2:2.08}).mm2:_vd.mm2);
+  var A_m2=A_mm2*1e-6;
+  var totalLoad=0;
+  var rows=_vd.multiRuns.map(function(run){
+    var loadVal=_vd.mode==='watts'?run.watts:run.amps;
+    var I=_vd.circuitType==='cc'?run.amps:(_vd.mode==='watts'?run.watts/_vd.voltage:run.amps);
+    var L_m=run.length*(_vd.unit==='ft'?0.3048:1)*(_vd.lengthType==='oneway'?2:1);
+    var vDrop=(I>0&&L_m>0&&A_m2>0)?rho*2*L_m*I/A_m2:0;
+    var pct=_vd.voltage>0?(vDrop/_vd.voltage*100):0;
+    var col=pct<3?'#22c55e':pct<5?'#f59e0b':'#ef4444';
+    totalLoad+=(_vd.mode==='watts'?run.watts:0);
+    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+      +'<input type="text" value="'+escH(run.label)+'" oninput="_vdMultiLabelUpdate('+run.id+',this.value)" style="flex:1;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.1);color:#f0f4ff;font-size:13px;font-weight:700;padding:2px 4px;outline:none">'
+      +(_vd.multiRuns.length>1?'<button onclick="_vdMultiRemoveRun('+run.id+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:0 4px;line-height:1">✕</button>':'')
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">'+(_vd.mode==='watts'?'Load (W)':'Load (A)')+'</div>'
+      +'<input type="number" value="'+loadVal+'" min="0" step="any" oninput="_vdMultiUpdate('+run.id+',\''+(_vd.mode==='watts'?'watts':'amps')+'\',this.value)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:14px;font-weight:600;outline:none;-moz-appearance:textfield"></div>'
+      +'<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Length ('+_vd.unit+')</div>'
+      +'<input type="number" value="'+run.length+'" min="0" step="any" oninput="_vdMultiUpdate('+run.id+',\'length\',this.value)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:14px;font-weight:600;outline:none;-moz-appearance:textfield"></div>'
+      +'</div>'
+      +'<div id="vd-mr-res-'+run.id+'" style="font-size:12px;color:#4a5e7a"><span style="color:'+col+';font-weight:700">'+pct.toFixed(1)+'%</span> drop · '+vDrop.toFixed(2)+'V lost · '+((_vd.voltage-vDrop)>0?(_vd.voltage-vDrop).toFixed(2):0)+'V at fixture</div>'
+      +'</div>';
+  }).join('');
+  var totalI=_vd.mode==='watts'?totalLoad/_vd.voltage:_vd.multiRuns.reduce(function(s,r){return s+r.amps;},0);
+  return '<div style="margin-top:8px">'
+    +rows
+    +'<button onclick="_vdMultiAddRun()" style="width:100%;padding:10px;border:1px dashed rgba(255,255,255,0.15);border-radius:8px;background:none;color:#4a5e7a;cursor:pointer;font-size:12px;margin-bottom:16px">+ Add Run</button>'
+    +(_vd.multiRuns.length>1&&_vd.mode==='watts'
+      ?'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:12px;color:#8da0c0">Total: <b style="color:#f0f4ff">'+totalLoad.toFixed(0)+' W</b> · <b style="color:#f0f4ff">'+totalI.toFixed(2)+' A</b> combined</div>'
+      :'')
+    +'</div>';
+}
 function _vdRender() {
   var root=document.getElementById('vd-root'); if(!root) return;
   var vPresets=[12,24,48,120,277,208];
@@ -20111,10 +20318,52 @@ function _vdRender() {
   var c=_vdCompute();
   root.innerHTML=
     '<div style="max-width:560px;margin:0 auto;padding:24px 16px 40px">'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">'
+    +'<div>'
     +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Voltage Drop Calculator</h2>'
-    +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 14px">Architectural LED lighting — DC low-voltage and line voltage systems</p>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0">Architectural LED lighting — DC low-voltage and line voltage systems</p>'
+    +'</div>'
+    +'<button onclick="_vd.multiMode=!_vd.multiMode;_vdRender()" style="flex-shrink:0;margin-left:12px;margin-top:2px;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '+(_vd.multiMode?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.12)')+';background:'+(_vd.multiMode?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.multiMode?'#4f8ef7':'#8da0c0')+'">'+(_vd.multiMode?'Single Run':'Multi-Run')+'</button>'
+    +'</div>'
+    +(_vd.multiMode
+      // ── Multi-run mode UI ──
+      ?('<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:18px">'
+        +'<button onclick="_vd.circuitType=\'cv\';_vdRender()" style="flex:1;padding:7px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(_vd.circuitType==='cv'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Constant Voltage</button>'
+        +'<button onclick="_vd.circuitType=\'cc\';_vdRender()" style="flex:1;padding:7px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(_vd.circuitType==='cc'?'background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3)':'background:none;color:#4a5e7a;border:none')+'">Constant Current (mA)</button>'
+        +'</div>'
+        +'<div style="margin-bottom:16px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:7px">Supply Voltage (shared)</div>'
+        +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'
+        +[12,24,48,120].map(function(v){var a=_vd.voltage===v;return '<button onclick="_vd.voltage='+v+';_vdRender()" style="padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#4f8ef7':'#8da0c0')+'">'+v+'V</button>';}).join('')
+        +'</div></div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a">Wire (shared across runs)</div>'
+        +'<div style="display:flex;gap:4px">'
+        +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">'
+        +'<button onclick="_vd.material=\'copper\';_vdRender()" style="padding:3px 8px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:600;'+(_vd.material==='copper'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Copper</button>'
+        +'<button onclick="_vd.material=\'aluminum\';_vdRender()" style="padding:3px 8px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:600;'+(_vd.material==='aluminum'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Alum</button>'
+        +'</div>'
+        +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">'
+        +'<button onclick="_vd.gaugeMode=\'awg\';_vdRender()" style="padding:3px 8px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:600;'+(_vd.gaugeMode==='awg'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">AWG</button>'
+        +'<button onclick="_vd.gaugeMode=\'mm2\';_vdRender()" style="padding:3px 8px;border:none;cursor:pointer;border-radius:5px;font-size:11px;font-weight:600;'+(_vd.gaugeMode==='mm2'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">mm²</button>'
+        +'</div></div></div>'
+        +'<select id="vd-gauge" onchange="_vd.'+(_vd.gaugeMode==='awg'?'awg':'mm2')+'=this.value;_vdRender()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:#f0f4ff;font-size:13px;font-weight:600;outline:none;cursor:pointer;margin-bottom:18px">'
+        +(_vd.gaugeMode==='awg'?_vdAwg.map(function(d){return '<option value="'+d.awg+'"'+(d.awg===_vd.awg?' selected':'')+'>AWG '+d.awg+' ('+d.mm2+' mm²)</option>';}).join(''):_vdMm2.map(function(v){return '<option value="'+v+'"'+(String(v)===_vd.mm2?' selected':'')+'>'+v+' mm²</option>';}).join(''))
+        +'</select>'
+        +'<div style="display:flex;gap:5px;margin-bottom:16px">'
+        +'<button onclick="_vd.unit=\'ft\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.unit==='ft'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.unit==='ft'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.unit==='ft'?'#4f8ef7':'#8da0c0')+'">ft</button>'
+        +'<button onclick="_vd.unit=\'m\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.unit==='m'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.unit==='m'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.unit==='m'?'#4f8ef7':'#8da0c0')+'">m</button>'
+        +'<button onclick="_vd.lengthType=\'oneway\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.lengthType==='oneway'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.lengthType==='oneway'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.lengthType==='oneway'?'#4f8ef7':'#8da0c0')+'">One-way (×2)</button>'
+        +'<button onclick="_vd.lengthType=\'total\';_vdRender()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(_vd.lengthType==='total'?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(_vd.lengthType==='total'?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(_vd.lengthType==='total'?'#4f8ef7':'#8da0c0')+'">Total</button>'
+        +'</div>'
+        +_vdMultiRunsHtml()
+      )
+      // ── single mode continues below ──
+      :
+    '')
+    +(_vd.multiMode?'':
     // Circuit type toggle
-    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:18px">'
+    '<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:18px">'
     +'<button onclick="_vd.circuitType=\'cv\';_vdRender()" style="flex:1;padding:7px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(_vd.circuitType==='cv'?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Constant Voltage</button>'
     +'<button onclick="_vd.circuitType=\'cc\';_vdRender()" style="flex:1;padding:7px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(_vd.circuitType==='cc'?'background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3)':'background:none;color:#4a5e7a;border:none')+'">Constant Current (mA)</button>'
     +'</div>'
@@ -20199,6 +20448,7 @@ function _vdRender() {
     // Results
     +'<div id="vd-results">'+_vdResultsHtml()+'</div>'
     +_vdPtHtml()
+    +'</div>')
     +'</div>';
 }
 
@@ -20275,6 +20525,10 @@ window._vdRender        = _vdRender;
 window._vdUpdateResults = _vdUpdateResults;
 window._vdPtSetSolve    = _vdPtSetSolve;
 window._vdPtUpdate      = _vdPtUpdate;
+window._vdMultiAddRun   = _vdMultiAddRun;
+window._vdMultiRemoveRun= _vdMultiRemoveRun;
+window._vdMultiUpdate   = _vdMultiUpdate;
+window._vdMultiLabelUpdate= _vdMultiLabelUpdate;
 
 // ═══════════════════════════════════════════════
 //  WIRING REFERENCE
@@ -20355,7 +20609,7 @@ function _wrRender() {
     return '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#4a5e7a;margin:0 0 10px">' + label + '</div>';
   }
   function card(title, desc, name, svgHtml, tableHtml) {
-    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:14px">'
+    return '<div class="wr-card" data-wr-name="'+title.toLowerCase()+'" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:14px">'
       + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
       + '<div style="font-size:13px;font-weight:700;color:#f0f4ff">' + title + '</div>'
       + '<span style="font-size:9px;color:#2d3f52;cursor:pointer" onclick="_wrOpenModal(\'' + name + '\')">⤢ expand</span>'
@@ -20635,7 +20889,11 @@ function _wrRender() {
 
   var html = '<div style="max-width:680px;margin:0 auto;padding:24px 16px 40px">'
     + '<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 3px">Wiring Reference</h2>'
-    + '<p style="font-size:12px;color:#4a5e7a;margin:0 0 22px">Standard topologies for LED power, DMX512, and Lutron QS systems · hover components for details · click diagram to expand</p>'
+    + '<p style="font-size:12px;color:#4a5e7a;margin:0 0 12px">Standard topologies for LED power, DMX512, and Lutron QS systems · hover components for details · click diagram to expand</p>'
+    + '<div style="position:relative;margin-bottom:18px">'
+    + '<input type="text" id="wr-search" placeholder="Filter diagrams…" oninput="_wrFilterCards(this.value)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 14px 9px 38px;color:#f0f4ff;font-size:13px;outline:none">'
+    + '<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4a5e7a" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    + '</div>'
 
     + sec('LED Power Wiring')
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px">'
@@ -20663,9 +20921,21 @@ function _wrRender() {
         'qs', qsSvg, qsTable
       )
 
+    + '<div id="wr-no-results" style="display:none;text-align:center;padding:32px;color:#4a5e7a;font-size:13px">No diagrams match your search</div>'
     + '</div>';
 
   root.innerHTML = html;
+}
+
+function _wrFilterCards(q) {
+  var cards=document.querySelectorAll('#wr-root .wr-card');
+  var term=(q||'').toLowerCase().trim();
+  cards.forEach(function(c){
+    var match=!term||c.dataset.wrName.indexOf(term)!==-1;
+    c.style.display=match?'':'none';
+  });
+  var noRes=document.getElementById('wr-no-results');
+  if(noRes) noRes.style.display=(term&&!Array.from(cards).some(function(c){return c.style.display!=='none';}))?'block':'none';
 }
 
 window._wrRender       = _wrRender;
@@ -20675,6 +20945,7 @@ window._wrModalEsc     = _wrModalEsc;
 window._wrTip          = _wrTip;
 window._wrHideTip      = _wrHideTip;
 window._wrT            = _wrT;
+window._wrFilterCards  = _wrFilterCards;
 
 // ═══════════════════════════════════════════════
 //  DIP SWITCH CALCULATOR
@@ -21188,6 +21459,479 @@ function _llcBindEvents() {
 
 window._llcRender = _llcRender;
 
+})();
+
+// ═══════════════════════════════════════════════
+//  DMX ADDRESS CALCULATOR
+// ═══════════════════════════════════════════════
+(function(){
+  var _dmx = {
+    universe: 1,
+    fixtures: [],
+    _nextId: 1
+  };
+
+  function _dmxSave() { try { localStorage.setItem('fop_dmxaddr', JSON.stringify(_dmx)); } catch(e){} }
+  function _dmxLoad() { try { var d=JSON.parse(localStorage.getItem('fop_dmxaddr')||'null'); if(d){_dmx.universe=d.universe||1;_dmx.fixtures=d.fixtures||[];_dmx._nextId=d._nextId||(_dmx.fixtures.reduce(function(m,f){return Math.max(m,f.id);},0)+1);} } catch(e){} }
+  _dmxLoad();
+
+  function _dmxDetectOverlaps() {
+    var fxs=_dmx.fixtures;
+    var used={};
+    fxs.forEach(function(f){ for(var c=f.start;c<f.start+f.channels;c++) { if(!used[c]) used[c]=[]; used[c].push(f.id); } });
+    var overlapping={};
+    Object.keys(used).forEach(function(ch){ if(used[ch].length>1) used[ch].forEach(function(id){ overlapping[id]=true; }); });
+    return overlapping;
+  }
+
+  function _dmxNextFree() {
+    if(!_dmx.fixtures.length) return 1;
+    var used=[];
+    _dmx.fixtures.forEach(function(f){ for(var c=f.start;c<f.start+f.channels;c++) used.push(c); });
+    used.sort(function(a,b){return a-b;});
+    var ch=1;
+    used.forEach(function(u){ if(u===ch) ch++; });
+    return Math.min(ch,513);
+  }
+
+  function _dmxAddFixture() {
+    var name=document.getElementById('dmx-new-name'); var chs=document.getElementById('dmx-new-chs'); var start=document.getElementById('dmx-new-start');
+    var n=(name&&name.value.trim())||'Fixture '+ _dmx._nextId;
+    var c=parseInt(chs&&chs.value)||1; var s=parseInt(start&&start.value)||_dmxNextFree();
+    if(s<1||s>512||c<1||s+c-1>512) { toast('Invalid channel range (1-512)'); return; }
+    _dmx.fixtures.push({id:_dmx._nextId++, name:n, start:s, channels:c}); _dmxSave(); _dmxAddrRender();
+  }
+
+  function _dmxRemoveFixture(id) { _dmx.fixtures=_dmx.fixtures.filter(function(f){return f.id!==id;}); _dmxSave(); _dmxAddrRender(); }
+
+  function _dmxUpdateFixture(id, field, val) {
+    var f=_dmx.fixtures.find(function(x){return x.id===id;}); if(!f) return;
+    if(field==='name') f.name=val; else { var n=parseInt(val)||0; if(field==='start'&&n>=1&&n<=512) f.start=n; else if(field==='channels'&&n>=1&&n<=512) f.channels=n; }
+    _dmxSave(); _dmxAddrLiveUpdate();
+  }
+
+  function _dmxAddrLiveUpdate() {
+    var overlapping=_dmxDetectOverlaps();
+    _dmx.fixtures.forEach(function(f){
+      var row=document.getElementById('dmx-row-'+f.id); if(!row) return;
+      var over=overlapping[f.id];
+      row.style.borderColor=over?'rgba(239,68,68,0.4)':'rgba(255,255,255,0.08)';
+      var tag=document.getElementById('dmx-tag-'+f.id);
+      if(tag) { tag.textContent=over?'OVERLAP':''; tag.style.display=over?'inline-block':'none'; }
+      var end=document.getElementById('dmx-end-'+f.id);
+      if(end) end.textContent=f.start+'-'+(f.start+f.channels-1);
+    });
+    var grid=document.getElementById('dmx-universe-grid'); if(!grid) return;
+    var cells=grid.querySelectorAll('[data-ch]');
+    var used={}; _dmx.fixtures.forEach(function(f){for(var c=f.start;c<f.start+f.channels;c++)used[c]=(used[c]||0)+1;});
+    cells.forEach(function(cell){
+      var ch=parseInt(cell.dataset.ch);
+      if(used[ch]>1) cell.style.background='rgba(239,68,68,0.7)';
+      else if(used[ch]===1) cell.style.background='rgba(79,142,247,0.5)';
+      else cell.style.background='rgba(255,255,255,0.05)';
+    });
+  }
+
+  function _dmxAddrRender() {
+    var root=document.getElementById('dmxaddr-root'); if(!root) return;
+    var overlapping=_dmxDetectOverlaps();
+    var used={};
+    _dmx.fixtures.forEach(function(f){for(var c=f.start;c<f.start+f.channels;c++)used[c]=(used[c]||0)+1;});
+
+    // Universe grid — 512 cells
+    var gridCells='';
+    for(var ch=1;ch<=512;ch++){
+      var u=used[ch]||0;
+      var bg=u>1?'rgba(239,68,68,0.7)':u===1?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.05)';
+      gridCells+='<div data-ch="'+ch+'" title="Ch '+ch+'" style="width:10px;height:10px;border-radius:2px;background:'+bg+';cursor:default;transition:background 0.1s"></div>';
+    }
+
+    // Fixture rows
+    var rows=_dmx.fixtures.length?_dmx.fixtures.map(function(f){
+      var over=overlapping[f.id];
+      return '<div id="dmx-row-'+f.id+'" style="background:rgba(255,255,255,0.03);border:1px solid '+(over?'rgba(239,68,68,0.4)':'rgba(255,255,255,0.08)')+';border-radius:10px;padding:12px;margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+        +'<input type="text" value="'+escH(f.name)+'" oninput="_dmxUpdateFixture('+f.id+',\'name\',this.value)" style="flex:2;min-width:100px;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.1);color:#f0f4ff;font-size:13px;font-weight:600;padding:2px 4px;outline:none">'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+        +'<span style="font-size:10px;color:#4a5e7a">Start</span>'
+        +'<input type="number" value="'+f.start+'" min="1" max="512" oninput="_dmxUpdateFixture('+f.id+',\'start\',this.value)" style="width:56px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:13px;font-weight:600;outline:none;text-align:center;-moz-appearance:textfield">'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+        +'<span style="font-size:10px;color:#4a5e7a">Chs</span>'
+        +'<input type="number" value="'+f.channels+'" min="1" max="512" oninput="_dmxUpdateFixture('+f.id+',\'channels\',this.value)" style="width:52px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 6px;color:#f0f4ff;font-size:13px;font-weight:600;outline:none;text-align:center;-moz-appearance:textfield">'
+        +'</div>'
+        +'<span id="dmx-end-'+f.id+'" style="font-size:11px;color:#4a5e7a;font-family:monospace;flex-shrink:0">'+f.start+'-'+(f.start+f.channels-1)+'</span>'
+        +'<span id="dmx-tag-'+f.id+'" style="'+(over?'display:inline-block':'display:none')+';padding:2px 7px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:4px;font-size:9px;font-weight:800;color:#f87171;letter-spacing:0.5px">OVERLAP</span>'
+        +'<button onclick="_dmxRemoveFixture('+f.id+')" style="margin-left:auto;background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:16px;padding:0 2px;line-height:1">✕</button>'
+        +'</div>'
+        +'</div>';
+    }).join('')
+    :'<div style="text-align:center;padding:24px;color:#4a5e7a;font-size:13px">No fixtures yet — add one below</div>';
+
+    var nextFree=_dmxNextFree();
+    root.innerHTML=
+      '<div style="max-width:640px;margin:0 auto;padding:24px 16px 40px">'
+      +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">DMX Address Calculator</h2>'
+      +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 20px">Build a fixture patch, detect channel overlaps, and visualise your DMX universe</p>'
+      // Universe selector
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">'
+      +'<span style="font-size:11px;color:#4a5e7a">Universe</span>'
+      +[1,2,3,4].map(function(u){var a=_dmx.universe===u;return '<button onclick="_dmx.universe='+u+';_dmxAddrRender()" style="padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#4f8ef7':'#8da0c0')+'">'+u+'</button>';}).join('')
+      +'<button onclick="_dmx.fixtures=[];_dmx._nextId=1;_dmxSave();_dmxAddrRender()" style="margin-left:auto;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:#f87171">Clear All</button>'
+      +'</div>'
+      // 512-cell grid
+      +'<div style="margin-bottom:6px;font-size:9px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a">Universe '+_dmx.universe+' — 512 channels</div>'
+      +'<div id="dmx-universe-grid" style="display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin-bottom:6px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px">'+gridCells+'</div>'
+      +'<div style="display:flex;gap:12px;margin-bottom:20px;font-size:10px;color:#4a5e7a">'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(79,142,247,0.5);vertical-align:middle;margin-right:4px"></span>Used</span>'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(239,68,68,0.7);vertical-align:middle;margin-right:4px"></span>Overlap</span>'
+      +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.05);vertical-align:middle;margin-right:4px"></span>Free</span>'
+      +'</div>'
+      // Fixture list
+      +'<div style="font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#4a5e7a;margin-bottom:10px">Fixtures</div>'
+      +rows
+      // Add fixture
+      +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-top:8px">'
+      +'<div style="font-size:11px;font-weight:700;color:#f0f4ff;margin-bottom:10px">Add Fixture</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'
+      +'<div style="flex:2;min-width:100px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Name</div>'
+      +'<input type="text" id="dmx-new-name" placeholder="e.g. Wash 1" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:13px;outline:none"></div>'
+      +'<div style="width:72px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Start Ch</div>'
+      +'<input type="number" id="dmx-new-start" min="1" max="512" value="'+nextFree+'" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 8px;color:#f0f4ff;font-size:13px;outline:none;-moz-appearance:textfield;text-align:center"></div>'
+      +'<div style="width:60px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:4px">Channels</div>'
+      +'<input type="number" id="dmx-new-chs" min="1" max="512" value="1" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 8px;color:#f0f4ff;font-size:13px;outline:none;-moz-appearance:textfield;text-align:center"></div>'
+      +'<button onclick="_dmxAddFixture()" style="padding:8px 18px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#4f8ef7;color:#fff">+ Add</button>'
+      +'</div></div>'
+      +'</div>';
+  }
+
+  window._dmxAddrRender = _dmxAddrRender;
+  window._dmxAddFixture = _dmxAddFixture;
+  window._dmxRemoveFixture = _dmxRemoveFixture;
+  window._dmxUpdateFixture = _dmxUpdateFixture;
+  window._dmxAddrLiveUpdate = _dmxAddrLiveUpdate;
+  window._dmx = _dmx;
+})();
+
+// ═══════════════════════════════════════════════
+//  LUTRON PROGRAMMING CHECKLIST
+// ═══════════════════════════════════════════════
+(function(){
+  var LCKLSYS = {
+    quantum: {
+      label: 'Quantum',
+      sections: [
+        { title: 'Site Prep', items: ['Confirm network topology and IP addressing scheme','Verify all QS links are installed and terminated','Confirm all devices powered and broadcasting on the QS bus','Label all panels and devices per the Lutron drawing package','Verify all daylight sensors are installed and calibrated'] },
+        { title: 'Programming Setup', items: ['Launch Quantum Programming Software (QPS)','Import Lutron device database for the project','Configure system time zone and NTP server','Set up user access levels and PIN codes','Create area/zone hierarchy matching architectural drawings'] },
+        { title: 'Scenes & Controls', items: ['Program all scene intensities per specification','Assign all keypads and touchscreens to correct areas','Program occupancy/vacancy sensor timeouts','Configure daylight harvesting setpoints','Set up scheduled events (time clock)','Program fade times for all scene transitions'] },
+        { title: 'Integration', items: ['Configure HVAC integration (if applicable)','Set up BACnet/IP or RS-232 integration points','Test AV system control triggers','Configure emergency lighting override sequences','Document all integration addresses and commands'] },
+        { title: 'Commissioning', items: ['Perform full system walk-through with owner','Demonstrate all scenes and control points','Test occupancy overrides and daylight response','Verify all emergency modes function correctly','Hand off programming backup and documentation'] }
+      ]
+    },
+    athena: {
+      label: 'Athena',
+      sections: [
+        { title: 'Site Prep', items: ['Confirm all HomeWorks QSX processors are powered','Verify all Athena devices visible on QS link','Confirm all RF devices are paired to processors','Label all devices per Lutron design package'] },
+        { title: 'Programming Setup', items: ['Launch HomeWorks QSX software','Create project and import device list','Configure zones and areas','Set default intensities for all circuits'] },
+        { title: 'Scenes & Keypads', items: ['Program scene levels for each keypad','Configure LED feedback for all keypad buttons','Set up shade integration scenes','Program all occupancy sensors'] },
+        { title: 'Commissioning', items: ['Complete site walk and verify all controls','Test all scenes and transitions','Document final programming and back up project file'] }
+      ]
+    },
+    radiora3: {
+      label: 'Radio RA 3',
+      sections: [
+        { title: 'Setup', items: ['Power all RA3 main repeaters and auxiliary repeaters','Confirm all devices paired to the system','Create rooms and zones in the RA3 app','Assign all devices to correct rooms'] },
+        { title: 'Programming', items: ['Configure all scene intensities','Set up smart lighting adjustments (occupancy)','Configure daylight controls if sensors present','Program scheduled events'] },
+        { title: 'Commissioning', items: ['Walk through all rooms with customer','Demonstrate app control and scenes','Export and save system backup'] }
+      ]
+    },
+    grafikeyeqs: {
+      label: 'Grafik Eye QS',
+      sections: [
+        { title: 'Wiring & Config', items: ['Confirm all GRX zones are wired correctly','Verify keypad and occupancy sensor connections','Set DIP switch scene counts and options'] },
+        { title: 'Programming', items: ['Assign intensities for all scenes','Program Energi Savr Node sensors (if present)','Set scene names via IR programmer or QS software','Configure timeclock schedules'] },
+        { title: 'Commissioning', items: ['Test all scenes from all control points','Verify occupancy and daylight response','Document final settings'] }
+      ]
+    }
+  };
+
+  var _lckl = { system:'quantum', checks:{}, notes:{} };
+
+  function _lcklKey(sys,si,ii) { return sys+'_'+si+'_'+ii; }
+
+  function _lcklToggle(sys,si,ii) {
+    var k=_lcklKey(sys,si,ii);
+    _lckl.checks[k]=!_lckl.checks[k];
+    _lcklSave();
+    var cb=document.getElementById('lckl-cb-'+si+'-'+ii);
+    if(cb){ cb.checked=_lckl.checks[k]; cb.closest('[data-row]').style.opacity=_lckl.checks[k]?'0.5':'1'; }
+    _lcklUpdateProgress(sys);
+  }
+
+  function _lcklUpdateProgress(sys) {
+    var def=LCKLSYS[sys]; if(!def) return;
+    var total=0, done=0;
+    def.sections.forEach(function(sec,si){ sec.items.forEach(function(item,ii){ total++; if(_lckl.checks[_lcklKey(sys,si,ii)]) done++; }); });
+    var pct=total?Math.round(done/total*100):0;
+    var bar=document.getElementById('lckl-prog-bar');
+    var label=document.getElementById('lckl-prog-label');
+    if(bar) bar.style.width=pct+'%';
+    if(label) label.textContent=done+' / '+total+' ('+pct+'%)';
+  }
+
+  function _lcklExport() {
+    var sys=_lckl.system, def=LCKLSYS[sys]; if(!def) return;
+    var lines=[def.label+' Programming Checklist','Generated: '+new Date().toLocaleString(),''];
+    def.sections.forEach(function(sec,si){
+      lines.push('## '+sec.title);
+      sec.items.forEach(function(item,ii){
+        var done=_lckl.checks[_lcklKey(sys,si,ii)];
+        lines.push((done?'[x] ':'[ ] ')+item);
+        var note=_lckl.notes[_lcklKey(sys,si,ii)];
+        if(note) lines.push('    Note: '+note);
+      });
+      lines.push('');
+    });
+    navigator.clipboard&&navigator.clipboard.writeText(lines.join('\n')).then(function(){toast('Checklist copied');}).catch(function(){toast('Copy failed');});
+  }
+
+  function _lcklSave() { try{ localStorage.setItem('fop_lutroncheck',JSON.stringify({checks:_lckl.checks,notes:_lckl.notes,system:_lckl.system})); }catch(e){} }
+  function _lcklLoad() { try{ var d=JSON.parse(localStorage.getItem('fop_lutroncheck')||'null'); if(d){_lckl.checks=d.checks||{};_lckl.notes=d.notes||{};_lckl.system=d.system||'quantum';} }catch(e){} }
+  _lcklLoad();
+
+  function _lcklRender() {
+    var root=document.getElementById('lutroncheck-root'); if(!root) return;
+    var sys=_lckl.system, def=LCKLSYS[sys];
+    var total=0, done=0;
+    def.sections.forEach(function(sec,si){ sec.items.forEach(function(item,ii){ total++; if(_lckl.checks[_lcklKey(sys,si,ii)]) done++; }); });
+    var pct=total?Math.round(done/total*100):0;
+    var progressColor=pct===100?'#22c55e':pct>60?'#4f8ef7':'#f59e0b';
+
+    var sectionsHtml=def.sections.map(function(sec,si){
+      var secDone=sec.items.filter(function(item,ii){return _lckl.checks[_lcklKey(sys,si,ii)];}).length;
+      return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:12px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        +'<div style="font-size:13px;font-weight:700;color:#f0f4ff">'+escH(sec.title)+'</div>'
+        +'<div style="font-size:10px;color:#4a5e7a">'+secDone+'/'+sec.items.length+'</div>'
+        +'</div>'
+        +sec.items.map(function(item,ii){
+          var k=_lcklKey(sys,si,ii);
+          var chk=_lckl.checks[k];
+          var note=_lckl.notes[k]||'';
+          return '<div data-row="1" style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);opacity:'+(chk?'0.5':'1')+'">'
+            +'<div style="display:flex;align-items:flex-start;gap:10px">'
+            +'<input type="checkbox" id="lckl-cb-'+si+'-'+ii+'" '+(chk?'checked':'')+' onchange="_lcklToggle(\''+sys+'\','+si+','+ii+')" style="margin-top:2px;width:15px;height:15px;accent-color:#4f8ef7;flex-shrink:0;cursor:pointer">'
+            +'<div style="flex:1">'
+            +'<div style="font-size:12px;color:#c0d4f0;line-height:1.5;'+(chk?'text-decoration:line-through':'')+'">'+escH(item)+'</div>'
+            +'<input type="text" value="'+escH(note)+'" placeholder="Add note…" oninput="_lcklNote(\''+sys+'\','+si+','+ii+',this.value)" style="margin-top:4px;width:100%;box-sizing:border-box;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.05);color:#4a5e7a;font-size:11px;padding:2px 0;outline:none;" onfocus="this.style.borderBottomColor=\'rgba(79,142,247,0.4)\'" onblur="this.style.borderBottomColor=\'rgba(255,255,255,0.05)\'" class="lckl-note-'+si+'-'+ii+'">'
+            +'</div>'
+            +'</div></div>';
+        }).join('')
+        +'</div>';
+    }).join('');
+
+    root.innerHTML=
+      '<div style="max-width:600px;margin:0 auto;padding:24px 16px 40px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">'
+      +'<div>'
+      +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Lutron Programming Checklist</h2>'
+      +'<p style="font-size:12px;color:#4a5e7a;margin:0">Track commissioning progress by system type</p>'
+      +'</div>'
+      +'<button onclick="_lcklExport()" style="flex-shrink:0;margin-left:12px;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">⎘ Copy</button>'
+      +'</div>'
+      // System tabs
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">'
+      +Object.keys(LCKLSYS).map(function(k){var a=k===sys;return '<button onclick="_lckl.system=\''+k+'\';_lcklSave();_lcklRender()" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#4f8ef7':'#8da0c0')+'">'+LCKLSYS[k].label+'</button>';}).join('')
+      +'</div>'
+      // Progress bar
+      +'<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px 14px;margin-bottom:20px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+      +'<span style="font-size:11px;font-weight:700;color:#f0f4ff">Progress</span>'
+      +'<span id="lckl-prog-label" style="font-size:11px;color:#4a5e7a">'+done+' / '+total+' ('+pct+'%)</span>'
+      +'</div>'
+      +'<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">'
+      +'<div id="lckl-prog-bar" style="height:100%;border-radius:3px;background:'+progressColor+';width:'+pct+'%;transition:width 0.3s"></div>'
+      +'</div></div>'
+      +sectionsHtml
+      +'<button onclick="if(confirm(\'Reset all checkboxes for '+def.label+'?\')){var pre=\''+sys+'\';Object.keys(_lckl.checks).filter(function(k){return k.startsWith(pre)}).forEach(function(k){delete _lckl.checks[k];});_lcklSave();_lcklRender();}" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.05);color:#f87171">Reset '+def.label+' Checklist</button>'
+      +'</div>';
+  }
+
+  function _lcklNote(sys,si,ii,val) {
+    var k=_lcklKey(sys,si,ii);
+    if(val) _lckl.notes[k]=val; else delete _lckl.notes[k];
+    _lcklSave();
+  }
+
+  window._lcklRender = _lcklRender;
+  window._lcklToggle = _lcklToggle;
+  window._lcklNote = _lcklNote;
+  window._lcklExport = _lcklExport;
+  window._lckl = _lckl;
+})();
+
+// ═══════════════════════════════════════════════
+//  FIXTURE PHOTOMETRICS
+// ═══════════════════════════════════════════════
+(function(){
+  var _photo = { beamAngle: 36, mountHeight: 10, unit: 'ft', lumens: 1000, cri: 90 };
+
+  function _photoCompute() {
+    var H = _photo.mountHeight;
+    var H_m = _photo.unit === 'ft' ? H * 0.3048 : H;
+    var halfAngle = _photo.beamAngle / 2 * Math.PI / 180;
+    var radius_m = H_m * Math.tan(halfAngle);
+    var diameter_m = radius_m * 2;
+    var area_m2 = Math.PI * radius_m * radius_m;
+    var area_ft2 = area_m2 * 10.7639;
+    var diameter_ft = diameter_m * 3.28084;
+    var fc = area_ft2 > 0 ? _photo.lumens / area_ft2 : 0;
+    var lux = area_m2 > 0 ? _photo.lumens / area_m2 : 0;
+    var cbm_deg = _photo.beamAngle;
+    return { radius_m: radius_m, diameter_m: diameter_m, diameter_ft: diameter_ft, area_m2: area_m2, area_ft2: area_ft2, fc: fc, lux: lux, H_m: H_m, H_ft: H_m * 3.28084, cbm_deg: cbm_deg };
+  }
+
+  function _photoBeamGrade(fc) {
+    if (fc >= 50) return { label: 'Display / Accent', color: '#4f8ef7' };
+    if (fc >= 30) return { label: 'Task Lighting', color: '#22c55e' };
+    if (fc >= 15) return { label: 'General Ambient', color: '#4ade80' };
+    if (fc >= 5)  return { label: 'Low Ambient', color: '#f59e0b' };
+    return { label: 'Decorative / Mood', color: '#8da0c0' };
+  }
+
+  function _photoSvg(c) {
+    var W = 320, H_svg = 220;
+    var fixtureY = 28, floorY = 198;
+    var svgH = floorY - fixtureY;
+    var maxRadius_svg = 130;
+    var radius_svg = Math.min(maxRadius_svg, svgH * Math.tan(_photo.beamAngle / 2 * Math.PI / 180));
+    var coneLeftX = W / 2 - radius_svg, coneRightX = W / 2 + radius_svg;
+
+    var rFmt = _photo.unit === 'ft'
+      ? c.diameter_ft.toFixed(1) + ' ft'
+      : c.diameter_m.toFixed(2) + ' m';
+    var hFmt = _photo.unit === 'ft'
+      ? c.H_ft.toFixed(1) + ' ft'
+      : c.H_m.toFixed(2) + ' m';
+
+    return '<svg viewBox="0 0 '+W+' '+H_svg+'" style="width:100%;display:block" font-family="system-ui,sans-serif">'
+      // floor
+      + '<line x1="10" y1="'+floorY+'" x2="'+(W-10)+'" y2="'+floorY+'" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>'
+      // cone fill
+      + '<polygon points="'+(W/2)+','+fixtureY+' '+coneLeftX+','+floorY+' '+coneRightX+','+floorY+'" fill="rgba(255,200,60,0.07)" stroke="rgba(255,200,60,0.3)" stroke-width="1"/>'
+      // mounting height line
+      + '<line x1="'+(W/2-5)+'" y1="'+fixtureY+'" x2="'+(W/2-5)+'" y2="'+floorY+'" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/>'
+      + '<text x="'+(W/2-10)+'" y="'+(fixtureY+(floorY-fixtureY)/2)+'" fill="#4a5e7a" font-size="9" text-anchor="end" dominant-baseline="middle">'+hFmt+'</text>'
+      // beam angle arc
+      + '<path d="M '+(W/2)+' '+fixtureY+' L '+(W/2)+' '+(fixtureY+24)+'" stroke="rgba(255,200,60,0.4)" stroke-width="1"/>'
+      + '<text x="'+(W/2+5)+'" y="'+(fixtureY+16)+'" fill="rgba(255,200,60,0.7)" font-size="9">'+c.cbm_deg+'°</text>'
+      // fixture icon
+      + '<rect x="'+(W/2-16)+'" y="'+(fixtureY-8)+'" width="32" height="10" rx="3" fill="#1a2e48" stroke="#4f8ef7" stroke-width="1.5"/>'
+      + '<line x1="'+(W/2-8)+'" y1="'+(fixtureY+2)+'" x2="'+(coneLeftX)+'" y2="'+floorY+'" stroke="rgba(255,200,60,0.4)" stroke-width="0.5" stroke-dasharray="3,2"/>'
+      + '<line x1="'+(W/2+8)+'" y1="'+(fixtureY+2)+'" x2="'+(coneRightX)+'" y2="'+floorY+'" stroke="rgba(255,200,60,0.4)" stroke-width="0.5" stroke-dasharray="3,2"/>'
+      // diameter label
+      + '<line x1="'+(coneLeftX+5)+'" y1="'+(floorY-8)+'" x2="'+(coneRightX-5)+'" y2="'+(floorY-8)+'" stroke="rgba(255,255,255,0.2)" stroke-width="1" marker-start="url(#photo-arr-l)" marker-end="url(#photo-arr-r)"/>'
+      + '<text x="'+(W/2)+'" y="'+(floorY-12)+'" fill="#8da0c0" font-size="9" text-anchor="middle">⌀ '+rFmt+'</text>'
+      + '<defs>'
+      + '<marker id="photo-arr-l" markerWidth="5" markerHeight="5" refX="5" refY="2.5" orient="auto"><polygon points="5 0, 0 2.5, 5 5" fill="rgba(255,255,255,0.3)"/></marker>'
+      + '<marker id="photo-arr-r" markerWidth="5" markerHeight="5" refX="0" refY="2.5" orient="auto"><polygon points="0 0, 5 2.5, 0 5" fill="rgba(255,255,255,0.3)"/></marker>'
+      + '</defs>'
+      +'</svg>';
+  }
+
+  function _photoUpdate() {
+    var ba=document.getElementById('photo-beam');
+    var mh=document.getElementById('photo-height');
+    var lm=document.getElementById('photo-lumens');
+    if(ba) _photo.beamAngle=parseFloat(ba.value)||36;
+    if(mh) _photo.mountHeight=parseFloat(mh.value)||10;
+    if(lm) _photo.lumens=parseFloat(lm.value)||1000;
+    var c=_photoCompute();
+    var g=_photoBeamGrade(c.fc);
+    var svgEl=document.getElementById('photo-svg'); if(svgEl) svgEl.innerHTML=_photoSvg(c);
+    var fcEl=document.getElementById('photo-fc'); if(fcEl){fcEl.textContent=c.fc.toFixed(1)+' fc';fcEl.style.color=g.color;}
+    var luxEl=document.getElementById('photo-lux'); if(luxEl) luxEl.textContent=c.lux.toFixed(0)+' lux';
+    var diaEl=document.getElementById('photo-dia'); if(diaEl) diaEl.textContent=(_photo.unit==='ft'?c.diameter_ft.toFixed(2)+' ft':c.diameter_m.toFixed(2)+' m');
+    var areaEl=document.getElementById('photo-area'); if(areaEl) areaEl.textContent=(_photo.unit==='ft'?c.area_ft2.toFixed(1)+' ft²':c.area_m2.toFixed(2)+' m²');
+    var gradeEl=document.getElementById('photo-grade'); if(gradeEl){gradeEl.textContent=g.label;gradeEl.style.color=g.color;}
+    var baLbl=document.getElementById('photo-beam-lbl'); if(baLbl) baLbl.textContent=_photo.beamAngle+'°';
+    var mhLbl=document.getElementById('photo-height-lbl'); if(mhLbl) mhLbl.textContent=_photo.mountHeight+' '+_photo.unit;
+  }
+
+  function _photoRender() {
+    var root=document.getElementById('photometrics-root'); if(!root) return;
+    var c=_photoCompute();
+    var g=_photoBeamGrade(c.fc);
+    var unitFt=_photo.unit==='ft';
+    function metricCard(id,val,label){
+      return '<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;text-align:center">'
+        +'<div style="font-size:10px;color:#4a5e7a;margin-bottom:4px">'+label+'</div>'
+        +'<div id="'+id+'" style="font-size:18px;font-weight:700;color:#f0f4ff;font-family:monospace">'+val+'</div>'
+        +'</div>';
+    }
+    root.innerHTML=
+      '<div style="max-width:560px;margin:0 auto;padding:24px 16px 40px">'
+      +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Fixture Photometrics</h2>'
+      +'<p style="font-size:12px;color:#4a5e7a;margin:0 0 20px">Calculate beam cone, footcandles, and illuminance from fixture data</p>'
+      // Unit toggle
+      +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:8px;padding:3px;margin-bottom:20px;width:fit-content">'
+      +'<button onclick="_photo.unit=\'ft\';_photoRender()" style="padding:6px 18px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(unitFt?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Imperial (ft/fc)</button>'
+      +'<button onclick="_photo.unit=\'m\';_photoRender()" style="padding:6px 18px;border:none;cursor:pointer;border-radius:6px;font-size:12px;font-weight:700;'+(!unitFt?'background:rgba(255,255,255,0.1);color:#f0f4ff':'background:none;color:#4a5e7a')+'">Metric (m/lux)</button>'
+      +'</div>'
+      // Controls
+      +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;margin-bottom:20px">'
+      // Beam angle
+      +'<div style="margin-bottom:16px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'
+      +'<div style="font-size:11px;font-weight:700;color:#f0f4ff">Beam Angle</div>'
+      +'<span id="photo-beam-lbl" style="font-size:13px;font-weight:700;color:#4f8ef7;font-family:monospace">'+_photo.beamAngle+'°</span>'
+      +'</div>'
+      +'<input type="range" id="photo-beam" min="1" max="120" step="1" value="'+_photo.beamAngle+'" oninput="_photoUpdate()" style="width:100%;accent-color:#4f8ef7">'
+      +'<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:#2d3f52"><span>1° Spot</span><span>60° Flood</span><span>120° Wide</span></div>'
+      // Common angles
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">'
+      +[7,15,25,36,50,60,90].map(function(a){var act=_photo.beamAngle===a;return '<button onclick="_photo.beamAngle='+a+';document.getElementById(\'photo-beam\').value='+a+';_photoUpdate()" style="padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(act?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(act?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(act?'#4f8ef7':'#8da0c0')+'">'+a+'°</button>';}).join('')
+      +'</div></div>'
+      // Mounting height
+      +'<div style="margin-bottom:16px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'
+      +'<div style="font-size:11px;font-weight:700;color:#f0f4ff">Mounting Height</div>'
+      +'<span id="photo-height-lbl" style="font-size:13px;font-weight:700;color:#4f8ef7;font-family:monospace">'+_photo.mountHeight+' '+_photo.unit+'</span>'
+      +'</div>'
+      +'<input type="range" id="photo-height" min="1" max="'+(unitFt?40:12)+'" step="0.5" value="'+_photo.mountHeight+'" oninput="_photoUpdate()" style="width:100%;accent-color:#4f8ef7">'
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">'
+      +(unitFt?[8,9,10,12,14,16,20]:['2.4','2.7','3','3.6','4.2','5']).map(function(h){var act=_photo.mountHeight===parseFloat(h);return '<button onclick="_photo.mountHeight='+parseFloat(h)+';document.getElementById(\'photo-height\').value='+parseFloat(h)+';_photoUpdate()" style="padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(act?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(act?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(act?'#4f8ef7':'#8da0c0')+'">'+h+(unitFt?'\'':'m')+'</button>';}).join('')
+      +'</div></div>'
+      // Lumens
+      +'<div>'
+      +'<div style="font-size:11px;font-weight:700;color:#f0f4ff;margin-bottom:8px">Fixture Lumens Output</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<input type="number" id="photo-lumens" min="1" max="100000" step="10" value="'+_photo.lumens+'" oninput="_photoUpdate()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:#f0f4ff;font-size:16px;font-weight:600;outline:none;-moz-appearance:textfield">'
+      +'<span style="font-size:14px;font-weight:700;color:#4a5e7a">lm</span>'
+      +'</div></div>'
+      +'</div>'
+      // SVG diagram
+      +'<div style="background:#060e1a;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:20px">'
+      +'<div id="photo-svg">'+_photoSvg(c)+'</div>'
+      +'</div>'
+      // Results grid
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +metricCard('photo-fc',c.fc.toFixed(1)+' fc','Footcandles at floor')
+      +metricCard('photo-lux',c.lux.toFixed(0)+' lux','Lux at floor')
+      +metricCard('photo-dia',(unitFt?c.diameter_ft.toFixed(2)+' ft':c.diameter_m.toFixed(2)+' m'),'Cone diameter')
+      +metricCard('photo-area',(unitFt?c.area_ft2.toFixed(1)+' ft²':c.area_m2.toFixed(2)+' m²'),'Illuminated area')
+      +'</div>'
+      // Grade badge
+      +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">'
+      +'<span style="font-size:11px;color:#4a5e7a">Lighting grade estimate</span>'
+      +'<span id="photo-grade" style="font-size:13px;font-weight:700;color:'+g.color+'">'+g.label+'</span>'
+      +'</div>'
+      +'</div>';
+  }
+
+  window._photoRender = _photoRender;
+  window._photoUpdate = _photoUpdate;
+  window._photo = _photo;
 })();
 
   </script>
