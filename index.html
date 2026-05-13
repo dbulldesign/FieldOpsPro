@@ -3841,6 +3841,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="4" height="8" rx="1"/><rect x="17" y="8" width="4" height="8" rx="1"/><line x1="7" y1="12" x2="11" y2="12"/><line x1="13" y1="12" x2="17" y2="12"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="3" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="21"/></svg>
           Wiring Reference
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('lutronlink')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="5" height="12" rx="1.5"/><rect x="9" y="6" width="5" height="12" rx="1.5"/><rect x="16" y="6" width="6" height="12" rx="1.5"/><line x1="7" y1="12" x2="9" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/></svg>
+          Lutron Link Calc
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -4635,6 +4639,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ DIP SWITCH CALCULATOR ═══ -->
   <div class="view" id="view-dipcalc">
     <div id="dip-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ LUTRON LINK CALCULATOR ═══ -->
+  <div class="view" id="view-lutronlink">
+    <div id="llc-root" style="width:100%;max-width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ FIELD LOG / DAILY REPORT ═══ -->
@@ -7088,7 +7097,8 @@ var viewTitles = {
   colorcalc: 'Color Calculator',
   dipcalc: 'DIP Switch Calculator',
   voltcalc: 'Voltage Drop Calculator',
-  wiringref: 'Wiring Reference'
+  wiringref: 'Wiring Reference',
+  lutronlink: 'Lutron Link Calculator'
 };
 
 function switchView(v) {
@@ -7161,6 +7171,9 @@ function switchView(v) {
   }
   if(v==='wiringref') {
     if (typeof _wrRender === 'function') _wrRender();
+  }
+  if(v==='lutronlink') {
+    if (typeof _llcRender === 'function') _llcRender();
   }
   // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
@@ -20852,6 +20865,315 @@ function closeBarcodeScanner() {
   if (overlay) overlay.style.display = 'none';
 }
 
+
+
+// ═══════════════════════════════════════════════
+//  LUTRON LINK CALCULATOR
+// ═══════════════════════════════════════════════
+(function(){
+
+var LLC_SYSTEMS = {
+  quantum:     { label:'Quantum',        type:'qs',  maxPdu:100, unit:'PDU',    linkLabel:'QS Link'  },
+  athena:      { label:'Athena',         type:'qs',  maxPdu:100, unit:'PDU',    linkLabel:'QS Link'  },
+  radiora3:    { label:'Radio Ra 3',     type:'ra3', maxPdu:100, unit:'Device', linkLabel:'Ra3 Zone' },
+  grafikeyeqs: { label:'Grafik Eye QS',  type:'qs',  maxPdu:100, unit:'PDU',    linkLabel:'QS Link'  }
+};
+
+var LLC_DEVICES_QS = [
+  { id:'qsps',   name:'QS Power Supply',           model:'QSPS-DH',         pdu:1,  cat:'Power'       },
+  { id:'dvcx',   name:'Dimmer — DVCX',             model:'DVCX-5LE',        pdu:2,  cat:'Dimmer/Relay' },
+  { id:'vcrx',   name:'Relay — VCRX',              model:'VCRX-5LE',        pdu:2,  cat:'Dimmer/Relay' },
+  { id:'hqd',    name:'HQD Dimmer',                model:'HQD-5ANF',        pdu:2,  cat:'Dimmer/Relay' },
+  { id:'grx',    name:'GRAFIK Eye QS',             model:'GRX-3506',        pdu:4,  cat:'Controller'   },
+  { id:'qsws',   name:'seeTouch QS Keypad',        model:'QSWS2-5BRL',      pdu:2,  cat:'Keypad'       },
+  { id:'gnkp',   name:'Architectural Keypad',      model:'GN-6BRL',         pdu:2,  cat:'Keypad'       },
+  { id:'pico',   name:'Pico Remote',               model:'PJ2-3BRL',        pdu:1,  cat:'Keypad'       },
+  { id:'sivoia', name:'Sivoia QS Shade',           model:'QSM-MLN',         pdu:2,  cat:'Shade'        },
+  { id:'sensor', name:'Ceiling Occupancy Sensor',  model:'LRF2-OCR2B-P',    pdu:2,  cat:'Sensor'       },
+  { id:'nwk',    name:'Network Interface',         model:'QSE-CI-NWK-E',    pdu:4,  cat:'Interface'    },
+  { id:'io',     name:'I/O Module',                model:'QSE-IO',          pdu:4,  cat:'Interface'    },
+  { id:'rs232',  name:'RS232 Interface',           model:'QSE-CI-RS232',    pdu:4,  cat:'Interface'    },
+  { id:'dali',   name:'DALI Interface',            model:'QSE-CI-DALI',     pdu:12, cat:'Interface'    },
+  { id:'v10',    name:'0-10V Interface',           model:'QSE-CI-0-10V',    pdu:4,  cat:'Interface'    },
+  { id:'eco',    name:'EcoSystem Interface',       model:'QSE-CI-ECO',      pdu:8,  cat:'Interface'    },
+  { id:'wri',    name:'Wireless Bridge',           model:'QSE-CI-WRI',      pdu:4,  cat:'Interface'    }
+];
+
+var LLC_DEVICES_RA3 = [
+  { id:'ra3_dim',   name:'Dimmer',              model:'RRD-3LD',       pdu:1, cat:'Dimmer/Switch' },
+  { id:'ra3_sw',    name:'Switch',              model:'RRD-8ANS',      pdu:1, cat:'Dimmer/Switch' },
+  { id:'ra3_fan',   name:'Fan Control',         model:'RRD-3PCL',      pdu:1, cat:'Dimmer/Switch' },
+  { id:'ra3_sun',   name:'Sunnata Touch',       model:'STCL-153ML',    pdu:1, cat:'Dimmer/Switch' },
+  { id:'ra3_kp',    name:'seeTouch Keypad',     model:'RR-SETKP-WH',   pdu:1, cat:'Keypad'        },
+  { id:'ra3_pico',  name:'Pico Remote',         model:'PJ2-3BRL',      pdu:1, cat:'Keypad'        },
+  { id:'ra3_scene', name:'Scene Controller',    model:'RRD-W7B',       pdu:1, cat:'Keypad'        },
+  { id:'ra3_occ',   name:'Occupancy Sensor',    model:'LRF3-OCR2B-P',  pdu:1, cat:'Sensor'        },
+  { id:'ra3_day',   name:'Daylight Sensor',     model:'LRFSK-OCC2',    pdu:1, cat:'Sensor'        },
+  { id:'ra3_shade', name:'Shade Motor',         model:'CSM-MLN-WH',    pdu:1, cat:'Shade'         },
+  { id:'ra3_aux',   name:'Auxiliary Repeater',  model:'RR-AUX',        pdu:1, cat:'System'        }
+];
+
+var _llcS = {
+  system: 'quantum',
+  links: [{ id:'ll1', name:'Link 1', devices:[] }],
+  nextId: 2,
+  activeLinkId: 'll1',
+  dragDevId: null
+};
+
+function _llcSys()         { return LLC_SYSTEMS[_llcS.system]; }
+function _llcDevList()     { return _llcSys().type==='ra3' ? LLC_DEVICES_RA3 : LLC_DEVICES_QS; }
+function _llcGetDev(id)    { return _llcDevList().find(function(d){return d.id===id;}); }
+function _llcLinkPdu(link) {
+  return link.devices.reduce(function(s,d){
+    var dev=_llcGetDev(d.devId); return s+(dev?dev.pdu*d.qty:0);
+  },0);
+}
+
+function _llcSetSystem(sys) {
+  _llcS.system=sys;
+  _llcS.links=[{id:'ll1', name:_llcSys().linkLabel+' 1', devices:[]}];
+  _llcS.nextId=2; _llcS.activeLinkId='ll1';
+  _llcRender();
+}
+function _llcAddLink() {
+  var n=_llcS.nextId++;
+  var id='ll'+n;
+  _llcS.links.push({id:id, name:_llcSys().linkLabel+' '+n, devices:[]});
+  _llcS.activeLinkId=id;
+  _llcRender();
+}
+function _llcDelLink(id) {
+  if(_llcS.links.length<=1) return;
+  _llcS.links=_llcS.links.filter(function(l){return l.id!==id;});
+  if(_llcS.activeLinkId===id) _llcS.activeLinkId=_llcS.links[0].id;
+  _llcRender();
+}
+function _llcAddDev(linkId, devId) {
+  var link=_llcS.links.find(function(l){return l.id===linkId;}); if(!link) return;
+  var e=link.devices.find(function(d){return d.devId===devId;});
+  if(e) e.qty++; else link.devices.push({devId:devId,qty:1});
+  _llcRender();
+}
+function _llcRmDev(linkId, devId) {
+  var link=_llcS.links.find(function(l){return l.id===linkId;}); if(!link) return;
+  link.devices=link.devices.filter(function(d){return d.devId!==devId;});
+  _llcRender();
+}
+function _llcQtyInc(linkId, devId) {
+  var link=_llcS.links.find(function(l){return l.id===linkId;}); if(!link) return;
+  var d=link.devices.find(function(d){return d.devId===devId;}); if(d) { d.qty++; _llcRender(); }
+}
+function _llcQtyDec(linkId, devId) {
+  var link=_llcS.links.find(function(l){return l.id===linkId;}); if(!link) return;
+  var d=link.devices.find(function(d){return d.devId===devId;});
+  if(!d) return;
+  if(d.qty<=1) _llcRmDev(linkId, devId);
+  else { d.qty--; _llcRender(); }
+}
+
+function _llcPduBar(used, max, unit) {
+  var pct=max>0?Math.min(100,used/max*100):0;
+  var over=used>max;
+  var col=over?'#ef4444':pct>=80?'#f59e0b':'#22c55e';
+  var bg=over?'rgba(239,68,68,0.08)':pct>=80?'rgba(245,158,11,0.06)':'rgba(34,197,94,0.06)';
+  var bd=over?'rgba(239,68,68,0.3)':pct>=80?'rgba(245,158,11,0.25)':'rgba(34,197,94,0.2)';
+  var plural=unit+'s';
+  return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:8px;padding:9px 11px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<span style="font-size:12px;font-weight:700;color:'+col+'">'+used+' / '+max+' '+plural+'</span>'
+      +(over?'<span style="font-size:10px;font-weight:700;color:#ef4444;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);border-radius:4px;padding:2px 8px">⚠ Over by '+(used-max)+'</span>':'<span style="font-size:10px;color:#4a5e7a">'+(max-used)+' remaining</span>')
+    +'</div>'
+    +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">'
+      +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+col+';border-radius:3px"></div>'
+    +'</div>'
+  +'</div>';
+}
+
+function _llcRender() {
+  var root=document.getElementById('llc-root'); if(!root) return;
+  var sys=_llcSys(), devs=_llcDevList(), max=sys.maxPdu, unit=sys.unit;
+
+  // Group palette by category
+  var cats={};
+  devs.forEach(function(d){ (cats[d.cat]=cats[d.cat]||[]).push(d); });
+  var paletteHtml='';
+  Object.keys(cats).forEach(function(cat){
+    paletteHtml+='<div style="font-size:9px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:#3a5070;margin:10px 0 4px;padding:0 2px">'+cat+'</div>';
+    cats[cat].forEach(function(d){
+      paletteHtml+=''
+        +'<div class="llc-pal-item" data-devid="'+d.id+'" draggable="true" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:7px;margin-bottom:4px;cursor:grab;user-select:none">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:11px;font-weight:600;color:#b8cce0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(d.name)+'</div>'
+            +'<div style="font-size:9px;color:#3a5070;font-family:monospace">'+escH(d.model)+'</div>'
+          +'</div>'
+          +'<div style="font-size:10px;font-weight:700;color:#4f8ef7;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.2);border-radius:4px;padding:2px 6px;flex-shrink:0;white-space:nowrap">'+d.pdu+' '+unit+'</div>'
+        +'</div>';
+    });
+  });
+
+  // Summary totals
+  var summaryHtml='';
+  var anyOver=false;
+  if(_llcS.links.length>1) {
+    _llcS.links.forEach(function(l){ if(_llcLinkPdu(l)>max) anyOver=true; });
+    summaryHtml='<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:16px">'
+      +'<div style="font-size:10px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#4a5e7a;margin-bottom:8px">System Summary</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px">'
+      +_llcS.links.map(function(l){
+        var u=_llcLinkPdu(l), over=u>max;
+        var col=over?'#ef4444':u/max>=0.8?'#f59e0b':'#22c55e';
+        return '<div style="background:rgba(255,255,255,0.03);border:1px solid '+(over?'rgba(239,68,68,0.3)':'rgba(255,255,255,0.07)')+';border-radius:7px;padding:8px 10px;text-align:center">'
+          +'<div style="font-size:10px;color:#4a5e7a;margin-bottom:3px">'+escH(l.name)+'</div>'
+          +'<div style="font-size:16px;font-weight:700;color:'+col+';font-family:monospace">'+u+'<span style="font-size:10px;color:#4a5e7a"> / '+max+'</span></div>'
+          +(over?'<div style="font-size:9px;color:#ef4444;margin-top:2px">⚠ Over</div>':'')
+        +'</div>';
+      }).join('')
+      +'</div>'
+      +(anyOver?'<div style="margin-top:10px;padding:8px 10px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:7px;font-size:11px;color:#f87171">⚠ One or more links exceed the '+max+' '+unit+' maximum. Move devices to additional links to resolve.</div>':'')
+    +'</div>';
+  }
+
+  // Links HTML
+  var linksHtml=summaryHtml;
+  _llcS.links.forEach(function(link){
+    var used=_llcLinkPdu(link), over=used>max;
+    var isActive=_llcS.activeLinkId===link.id;
+    linksHtml+=''
+      +'<div class="llc-link-zone" data-linkid="'+link.id+'" style="background:rgba(255,255,255,0.03);border:1px solid '+(isActive?'rgba(79,142,247,0.4)':'rgba(255,255,255,0.08)')+';border-radius:12px;padding:14px;margin-bottom:12px">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+          +'<button class="llc-sel-link" data-linkid="'+link.id+'" style="flex:1;text-align:left;background:none;border:none;padding:0;cursor:pointer">'
+            +'<span style="font-size:13px;font-weight:700;color:'+(isActive?'#4f8ef7':'#f0f4ff')+'">'+escH(link.name)+'</span>'
+            +(isActive?'<span style="font-size:9px;color:#4f8ef7;margin-left:6px;vertical-align:middle">● active</span>':'')
+          +'</button>'
+          +(_llcS.links.length>1?'<button class="llc-del-link" data-linkid="'+link.id+'" style="background:none;border:1px solid rgba(239,68,68,0.25);border-radius:5px;color:#ef4444;font-size:10px;cursor:pointer;padding:3px 8px;flex-shrink:0">Remove</button>':'')
+        +'</div>'
+        +_llcPduBar(used, max, unit)
+        +'<div class="llc-dev-list" style="margin-top:10px">'
+        +(link.devices.length===0
+          ?'<div class="llc-drop-hint" style="text-align:center;padding:14px 0;color:#3a5070;font-size:11px;border:1px dashed rgba(255,255,255,0.07);border-radius:8px">Drag a device here, or click a device in the palette to add to the active link</div>'
+          :link.devices.map(function(entry){
+            var dev=_llcGetDev(entry.devId); if(!dev) return '';
+            var rp=dev.pdu*entry.qty;
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:3px">'
+              +'<div style="flex:1;min-width:0">'
+                +'<div style="font-size:12px;font-weight:600;color:#b8cce0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(dev.name)+'</div>'
+                +'<div style="font-size:9px;color:#3a5070;font-family:monospace">'+escH(dev.model)+' · '+dev.pdu+' '+unit+'/ea</div>'
+              +'</div>'
+              +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+                +'<button class="llc-dec" data-linkid="'+link.id+'" data-devid="'+entry.devId+'" style="width:22px;height:22px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#c8d8f0;font-size:13px;cursor:pointer;line-height:1">−</button>'
+                +'<span style="font-size:13px;font-weight:700;color:#f0f4ff;min-width:24px;text-align:center">'+entry.qty+'</span>'
+                +'<button class="llc-inc" data-linkid="'+link.id+'" data-devid="'+entry.devId+'" style="width:22px;height:22px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:#c8d8f0;font-size:13px;cursor:pointer;line-height:1">+</button>'
+                +'<span style="font-size:11px;font-weight:700;color:#4f8ef7;min-width:40px;text-align:right">'+rp+' '+unit+'</span>'
+                +'<button class="llc-rm" data-linkid="'+link.id+'" data-devid="'+entry.devId+'" style="width:22px;height:22px;background:none;border:1px solid rgba(239,68,68,0.2);border-radius:4px;color:#ef4444;font-size:11px;cursor:pointer;line-height:1">✕</button>'
+              +'</div>'
+            +'</div>';
+          }).join('')
+        )
+        +'</div>'
+      +'</div>';
+  });
+
+  root.innerHTML=''
+    +'<div style="max-width:980px;margin:0 auto;padding:24px 16px 48px">'
+    // Header
+    +'<div style="margin-bottom:18px">'
+      +'<h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Lutron Link Calculator</h2>'
+      +'<p style="font-size:12px;color:#4a5e7a;margin:0">QS link PDU budget planner · Ra 3 device capacity planner · Verify against current Lutron specification sheets</p>'
+    +'</div>'
+    // System selector
+    +'<div style="display:flex;background:rgba(255,255,255,0.05);border-radius:10px;padding:3px;margin-bottom:22px;gap:2px">'
+    +Object.keys(LLC_SYSTEMS).map(function(k){
+      var act=_llcS.system===k;
+      return '<button class="llc-sys" data-sys="'+k+'" style="flex:1;padding:8px 4px;border:none;cursor:pointer;border-radius:8px;font-size:11px;font-weight:700;'+(act?'background:rgba(79,142,247,0.18);color:#4f8ef7;box-shadow:0 0 0 1px rgba(79,142,247,0.4)':'background:none;color:#4a5e7a')+'">'+LLC_SYSTEMS[k].label+'</button>';
+    }).join('')
+    +'</div>'
+    // Two-column layout
+    +'<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'
+      // Palette
+      +'<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px">'
+        +'<div style="font-size:10px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:#4a5e7a;margin-bottom:6px">Devices</div>'
+        +'<div style="font-size:10px;color:#3a5070;margin-bottom:8px">Click to add to active link · drag to a specific link</div>'
+        +paletteHtml
+      +'</div>'
+      // Links
+      +'<div>'
+        +linksHtml
+        +'<button class="llc-add-link" style="width:100%;padding:10px;background:none;border:1px dashed rgba(79,142,247,0.3);border-radius:10px;color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer">+ Add '+sys.linkLabel+'</button>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  _llcBindEvents();
+}
+
+function _llcBindEvents() {
+  var root=document.getElementById('llc-root'); if(!root) return;
+
+  root.querySelectorAll('.llc-sys').forEach(function(b){
+    b.addEventListener('click',function(){ _llcSetSystem(this.dataset.sys); });
+  });
+
+  var addBtn=root.querySelector('.llc-add-link');
+  if(addBtn) addBtn.addEventListener('click',_llcAddLink);
+
+  root.querySelectorAll('.llc-sel-link').forEach(function(b){
+    b.addEventListener('click',function(){ _llcS.activeLinkId=this.dataset.linkid; _llcRender(); });
+  });
+  root.querySelectorAll('.llc-del-link').forEach(function(b){
+    b.addEventListener('click',function(){ _llcDelLink(this.dataset.linkid); });
+  });
+  root.querySelectorAll('.llc-inc').forEach(function(b){
+    b.addEventListener('click',function(){ _llcQtyInc(this.dataset.linkid, this.dataset.devid); });
+  });
+  root.querySelectorAll('.llc-dec').forEach(function(b){
+    b.addEventListener('click',function(){ _llcQtyDec(this.dataset.linkid, this.dataset.devid); });
+  });
+  root.querySelectorAll('.llc-rm').forEach(function(b){
+    b.addEventListener('click',function(){ _llcRmDev(this.dataset.linkid, this.dataset.devid); });
+  });
+
+  // Palette: click → add to active link; drag → drag state
+  root.querySelectorAll('.llc-pal-item').forEach(function(el){
+    el.addEventListener('click',function(){
+      _llcAddDev(_llcS.activeLinkId, el.dataset.devid);
+    });
+    el.addEventListener('dragstart',function(e){
+      _llcS.dragDevId=el.dataset.devid;
+      e.dataTransfer.effectAllowed='copy';
+      e.dataTransfer.setData('text/plain', el.dataset.devid);
+    });
+    el.addEventListener('dragend',function(){ _llcS.dragDevId=null; });
+  });
+
+  // Drop zones
+  root.querySelectorAll('.llc-link-zone').forEach(function(zone){
+    zone.addEventListener('dragover',function(e){
+      e.preventDefault(); e.dataTransfer.dropEffect='copy';
+      zone.style.borderColor='rgba(79,142,247,0.55)';
+      zone.style.background='rgba(79,142,247,0.05)';
+    });
+    zone.addEventListener('dragleave',function(e){
+      if(!zone.contains(e.relatedTarget)){
+        var isActive=_llcS.activeLinkId===zone.dataset.linkid;
+        zone.style.borderColor=isActive?'rgba(79,142,247,0.4)':'rgba(255,255,255,0.08)';
+        zone.style.background='rgba(255,255,255,0.03)';
+      }
+    });
+    zone.addEventListener('drop',function(e){
+      e.preventDefault();
+      var isActive=_llcS.activeLinkId===zone.dataset.linkid;
+      zone.style.borderColor=isActive?'rgba(79,142,247,0.4)':'rgba(255,255,255,0.08)';
+      zone.style.background='rgba(255,255,255,0.03)';
+      var devId=_llcS.dragDevId||e.dataTransfer.getData('text/plain');
+      if(devId) _llcAddDev(zone.dataset.linkid, devId);
+    });
+  });
+}
+
+window._llcRender = _llcRender;
+
+})();
 
   </script>
 </body>
