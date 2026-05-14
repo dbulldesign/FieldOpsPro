@@ -23078,7 +23078,7 @@ function _specDocsRender() {
   var root = document.getElementById('specdocs-root');
   if (!root) return;
   if (!window._specDocsState) window._specDocsState = {};
-  var _sdDef = {q:'',cat:'All',mfr:'All',sort:'az',showAdd:false,addMfr:'ETC',editingKey:null,checkingUrl:null,showMfrMgmt:false,newMfrColor:'139,92,246'};
+  var _sdDef = {q:'',cat:'All',mfr:'All',sort:'az',linkStatus:'all',showAdd:false,addMfr:'ETC',editingKey:null,checkingUrl:null,showMfrMgmt:false,newMfrColor:'139,92,246'};
   Object.keys(_sdDef).forEach(function(k){ if (window._specDocsState[k]===undefined) window._specDocsState[k]=_sdDef[k]; });
   var st = window._specDocsState;
   var hadSearchFocus = document.activeElement && document.activeElement.id==='sd-q';
@@ -23141,17 +23141,7 @@ function _specDocsRender() {
   // ── Pins ──────────────────────────────────────────────────────────
   var pins = _specGetPins();
 
-  // ── Filters ───────────────────────────────────────────────────────
-  var mfrs = ['All'].concat(sources.map(function(s){ return s.mfr; }));
-  var mfrFiltered = allDocs.filter(function(d){ return st.mfr==='All'||d._mfr===st.mfr; });
-  var cats = ['All'].concat(mfrFiltered.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; },[]));
-  var filtered = mfrFiltered.filter(function(d) {
-    var matchCat = st.cat==='All' || d.cat===st.cat;
-    var matchQ   = !st.q || d.name.toLowerCase().indexOf(st.q)!==-1 || d.desc.toLowerCase().indexOf(st.q)!==-1 || d.cat.toLowerCase().indexOf(st.q)!==-1 || d._mfr.toLowerCase().indexOf(st.q)!==-1;
-    return matchCat && matchQ;
-  });
-
-  // ── Aggregate sync data ───────────────────────────────────────────
+  // ── Aggregate sync data (must precede filter so linkStatus can use allResults) ──
   var allResults = {};
   var anyLastSync = null;
   sources.forEach(function(src) {
@@ -23161,6 +23151,21 @@ function _specDocsRender() {
   });
   var checkedCount = allDocs.filter(function(d){ return !!allResults[d._resolvedUrl]; }).length;
   var failCount    = allDocs.filter(function(d){ var r=allResults[d._resolvedUrl]; return r&&r.status==='fail'; }).length;
+
+  // ── Filters ───────────────────────────────────────────────────────
+  var mfrs = ['All'].concat(sources.map(function(s){ return s.mfr; }));
+  var mfrFiltered = allDocs.filter(function(d){ return st.mfr==='All'||d._mfr===st.mfr; });
+  var cats = ['All'].concat(mfrFiltered.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; },[]));
+  var filtered = mfrFiltered.filter(function(d) {
+    var matchCat  = st.cat==='All' || d.cat===st.cat;
+    var matchQ    = !st.q || d.name.toLowerCase().indexOf(st.q)!==-1 || d.desc.toLowerCase().indexOf(st.q)!==-1 || d.cat.toLowerCase().indexOf(st.q)!==-1 || d._mfr.toLowerCase().indexOf(st.q)!==-1;
+    var r = allResults[d._resolvedUrl];
+    var matchLink = st.linkStatus==='all'
+      || (st.linkStatus==='fail'      && r && r.status==='fail')
+      || (st.linkStatus==='ok'        && r && r.status==='ok')
+      || (st.linkStatus==='unchecked' && !r);
+    return matchCat && matchQ && matchLink;
+  });
 
   // ── Badge helpers ─────────────────────────────────────────────────
   var catColors = {
@@ -23385,10 +23390,15 @@ function _specDocsRender() {
     +'<button onclick="window._specDocsState.showAdd=!window._specDocsState.showAdd;window._specDocsState.showMfrMgmt=false;_specDocsRerender()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
     +'<button id="sd-chk-btn" onclick="_specDocsStartCheck()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check All Links</button>'
     +'</div></div>'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;margin-bottom:16px;flex-wrap:wrap;gap:6px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;margin-bottom:'+(failCount&&st.linkStatus!=='fail'?'8':'16')+'px;flex-wrap:wrap;gap:6px">'
     +syncLine
-    +(failCount?'<span style="font-size:10px;color:#f59e0b">⚠ Unreachable links may be renamed PDFs or require VPN access.</span>':'')
     +'</div>'
+    +(failCount&&st.linkStatus!=='fail'
+      ? '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:16px;flex-wrap:wrap;gap:8px">'
+        +'<span style="font-size:12px;color:#f87171">⚠ '+failCount+' document'+(failCount!==1?'s':'')+' with unreachable links</span>'
+        +'<button onclick="window._specDocsState.linkStatus=\'fail\';_specDocsRerender()" style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#f87171">Show broken links</button>'
+        +'</div>'
+      : '')
     +'<div id="sd-chk-prog" style="display:none;margin-bottom:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px">'
     +'<div id="sd-chk-lbl" style="font-size:11px;color:#4a5e7a;margin-bottom:8px">Preparing check…</div>'
     +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div id="sd-chk-bar" style="height:100%;border-radius:3px;background:#4f8ef7;width:0%;transition:width 0.2s"></div></div>'
@@ -23412,10 +23422,25 @@ function _specDocsRender() {
     +mfrs.map(function(m){ return chip(m, st.mfr===m, '_specDocsSetMfr(\''+m.replace(/'/g,"\\'")+'\')'); }).join('')
     +'</div>'
     +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:#4a5e7a;margin-bottom:6px;font-weight:700">Category</div>'
-    +'<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:18px">'
+    +'<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:12px">'
     +cats.map(function(c){ return chip(c, st.cat===c, '_specDocsSetCat(\''+c.replace(/'/g,"\\'")+'\')'); }).join('')
     +'</div>'
-    +(st.q||st.cat!=='All'||st.mfr!=='All'?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:12px">Showing '+filtered.length+' of '+allDocs.length+' documents</div>':'')
+    +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.8px;color:#4a5e7a;margin-bottom:6px;font-weight:700">Link Status</div>'
+    +'<div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:4px;margin-bottom:18px">'
+    +[
+      {val:'all',      label:'All',          color:'79,142,247'},
+      {val:'fail',     label:'Unreachable',   color:'239,68,68',  badge:failCount||null},
+      {val:'ok',       label:'Verified',      color:'34,197,94'},
+      {val:'unchecked',label:'Not checked',   color:'100,116,139'}
+    ].map(function(s){
+      var active = st.linkStatus===s.val;
+      return '<button onclick="_specDocsSetLinkStatus(\''+s.val+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(active?'rgba('+s.color+',0.5)':'rgba(255,255,255,0.1)')+';background:'+(active?'rgba('+s.color+',0.15)':'rgba(255,255,255,0.04)')+';color:'+(active?'rgb('+s.color+')':'#8da0c0')+';white-space:nowrap">'
+        +escH(s.label)
+        +(s.badge?'<span style="background:rgba('+s.color+',0.2);color:rgb('+s.color+');border-radius:8px;padding:1px 5px;font-size:9px;font-weight:800">'+s.badge+'</span>':'')
+        +'</button>';
+    }).join('')
+    +'</div>'
+    +(st.q||st.cat!=='All'||st.mfr!=='All'||st.linkStatus!=='all'?'<div style="font-size:11px;color:#4a5e7a;margin-bottom:12px">Showing '+filtered.length+' of '+allDocs.length+' documents</div>':'')
     +pinnedHtml
     +groupedHtml
     +'</div>';
@@ -23439,6 +23464,12 @@ function _specDocsSetCat(c) {
   window._specDocsState.cat = c;
   _specDocsRender();
 }
+
+function _specDocsSetLinkStatus(v) {
+  window._specDocsState.linkStatus = v;
+  _specDocsRender();
+}
+window._specDocsSetLinkStatus = _specDocsSetLinkStatus;
 
 function _specDocsToggleEdit(key) {
   var st = window._specDocsState;
