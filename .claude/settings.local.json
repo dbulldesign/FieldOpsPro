@@ -6,7 +6,8 @@
       "Bash(npx skills:*)",
       "WebFetch(domain:itshover.com)",
       "WebSearch",
-      "WebFetch(domain:www.etcconnect.com)"
+      "WebFetch(domain:www.etcconnect.com)",
+      "WebFetch(domain:www.qtl.lighting)"
     ]
   }
 }
