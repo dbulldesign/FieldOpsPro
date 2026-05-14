@@ -22331,6 +22331,12 @@ function _specGetPins() {
 function _specSavePins(arr) {
   try { localStorage.setItem('fop_spec_pins', JSON.stringify(arr)); } catch(e) {} }
 
+function _specGetCustomMfrs() {
+  try { return JSON.parse(localStorage.getItem('fop_spec_custom_mfrs')||'[]'); } catch(e) { return []; }
+}
+function _specSaveCustomMfrs(arr) {
+  try { localStorage.setItem('fop_spec_custom_mfrs', JSON.stringify(arr)); } catch(e) {} }
+
 function _specLibFmtDate(iso) {
   if (!iso) return null;
   try { var d=new Date(iso); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e) { return iso.slice(0,10); }
@@ -23056,18 +23062,23 @@ window._archFixturesRender = _archFixturesRender;
 // ═══════════════════════════════════════════════
 
 function _specDocsSources() {
-  return [
+  var base = [
     {rootId:'etcdocs-root',     mfr:'ETC',           color:'79,142,247',  builtins:_etcDocs},
     {rootId:'lutrondocs-root',  mfr:'Lutron',         color:'245,158,11', builtins:_lutronDocs},
     {rootId:'archfixtures-root',mfr:'Arch Fixtures',  color:'16,185,129', builtins:_archFixturesDocs}
   ];
+  _specGetCustomMfrs().forEach(function(c) {
+    var slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'mfr';
+    base.push({rootId:'custmfr-'+slug+'-root', mfr:c.name, color:c.color||'100,116,139', builtins:[]});
+  });
+  return base;
 }
 
 function _specDocsRender() {
   var root = document.getElementById('specdocs-root');
   if (!root) return;
   if (!window._specDocsState) window._specDocsState = {};
-  var _sdDef = {q:'',cat:'All',mfr:'All',sort:'az',showAdd:false,addMfr:'ETC',editingKey:null,checkingUrl:null};
+  var _sdDef = {q:'',cat:'All',mfr:'All',sort:'az',showAdd:false,addMfr:'ETC',editingKey:null,checkingUrl:null,showMfrMgmt:false,newMfrColor:'139,92,246'};
   Object.keys(_sdDef).forEach(function(k){ if (window._specDocsState[k]===undefined) window._specDocsState[k]=_sdDef[k]; });
   var st = window._specDocsState;
   var hadSearchFocus = document.activeElement && document.activeElement.id==='sd-q';
@@ -23131,7 +23142,7 @@ function _specDocsRender() {
   var pins = _specGetPins();
 
   // ── Filters ───────────────────────────────────────────────────────
-  var mfrs = ['All','ETC','Lutron','Arch Fixtures'];
+  var mfrs = ['All'].concat(sources.map(function(s){ return s.mfr; }));
   var mfrFiltered = allDocs.filter(function(d){ return st.mfr==='All'||d._mfr===st.mfr; });
   var cats = ['All'].concat(mfrFiltered.reduce(function(a,d){ if(a.indexOf(d.cat)===-1) a.push(d.cat); return a; },[]));
   var filtered = mfrFiltered.filter(function(d) {
@@ -23167,7 +23178,7 @@ function _specDocsRender() {
     return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;letter-spacing:0.4px;text-transform:uppercase;background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+escH(cat)+'</span>';
   }
   function mfrBadge(d) {
-    var cm = {'ETC':'79,142,247','Lutron':'245,158,11','Arch Fixtures':'16,185,129'};
+    var cm = {}; sources.forEach(function(s){ cm[s.mfr]=s.color; });
     var c = cm[d._mfr] || '100,116,139';
     return '<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:rgba('+c+',0.12);color:rgb('+c+');border:1px solid rgba('+c+',0.3)">'+escH(d._mfr)+'</span>';
   }
@@ -23288,15 +23299,54 @@ function _specDocsRender() {
     return h.length ? '<button onclick="_specDocsRestoreHidden(\''+src.rootId+'\')" style="padding:5px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#f87171">↩ '+h.length+' hidden in '+escH(src.mfr)+'</button>' : '';
   }).filter(Boolean).join('');
 
+  // ── Manufacturer management panel ────────────────────────────────
+  var MFR_PALETTE = ['139,92,246','236,72,153','6,182,212','249,115,22','239,68,68','99,102,241','234,179,8','20,184,166','100,116,139'];
+  var mfrMgmtPanel = st.showMfrMgmt
+    ? '<div style="background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;margin-bottom:20px">'
+      +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:12px">Manage Manufacturers</div>'
+      // Add new
+      +'<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:6px">Add New Manufacturer</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">'
+      +'<input type="text" id="sd-new-mfr-name" placeholder="e.g. Chauvet, Martin, Clay Paky…" style="flex:1;min-width:140px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 10px;color:#f0f4ff;font-size:12px;outline:none">'
+      +'<div style="display:flex;gap:4px;flex-wrap:wrap">'
+      +MFR_PALETTE.map(function(c){
+          var active = st.newMfrColor===c;
+          return '<button onclick="window._specDocsState.newMfrColor=\''+c+'\';_specDocsRerender()" title="rgb('+c+')" style="width:20px;height:20px;border-radius:50%;background:rgb('+c+');border:2px solid '+(active?'#fff':'transparent')+';cursor:pointer;flex-shrink:0"></button>';
+        }).join('')
+      +'</div>'
+      +'<button onclick="_specDocsAddMfr()" style="padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4);color:#c4b5fd">+ Add</button>'
+      +'</div>'
+      // Custom mfr list
+      +(_specGetCustomMfrs().length
+        ? '<div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:6px">Custom Manufacturers</div>'
+          +_specGetCustomMfrs().map(function(c){
+              var slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'mfr';
+              var rid = 'custmfr-'+slug+'-root';
+              var docCount = _specLibGetUserDocs(rid).length;
+              return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:8px;margin-bottom:6px">'
+                +'<span style="width:10px;height:10px;border-radius:50%;background:rgb('+c.color+');flex-shrink:0;display:inline-block"></span>'
+                +'<span style="font-size:12px;font-weight:600;color:#f0f4ff;flex:1">'+escH(c.name)+'</span>'
+                +(docCount?'<span style="font-size:10px;color:#4a5e7a">'+docCount+' doc'+(docCount!==1?'s':'')+'</span>':'')
+                +'<button onclick="_specDocsDeleteMfr(\''+escH(c.name).replace(/'/g,'&apos;')+'\')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:none;color:#f87171">Delete</button>'
+                +'</div>';
+            }).join('')
+        : '<div style="font-size:11px;color:#4a5e7a">No custom manufacturers yet — add one above.</div>')
+      // Built-in note
+      +'<div style="font-size:10px;color:#4a5e7a;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">Built-in: ETC · Lutron · Arch Fixtures (cannot be removed)</div>'
+      +'</div>'
+    : '';
+
   // ── Add doc form ──────────────────────────────────────────────────
   var addCatOpts = cats.filter(function(c){return c!=='All';});
+  // Ensure addMfr is valid (may have been deleted)
+  if (sources.every(function(s){ return s.mfr!==st.addMfr; })) st.addMfr = sources[0].mfr;
   var addForm = st.showAdd
     ? '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(79,142,247,0.2);border-radius:12px;padding:16px;margin-bottom:20px">'
       +'<div style="font-size:13px;font-weight:700;color:#f0f4ff;margin-bottom:10px">Add Document</div>'
       +'<div style="margin-bottom:10px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5e7a;margin-bottom:6px">Manufacturer</div>'
-      +'<div style="display:flex;gap:6px">'
-      +['ETC','Lutron','Arch Fixtures'].map(function(m){
-          var a=st.addMfr===m;
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +sources.map(function(src){
+          var m=src.mfr; var a=st.addMfr===m;
           return '<button onclick="window._specDocsState.addMfr=\''+m.replace(/'/g,"\\'")+'\';;_specDocsRerender()" style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '+(a?'rgba(79,142,247,0.5)':'rgba(255,255,255,0.1)')+';background:'+(a?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(a?'#e8f0ff':'#8da0c0')+'">'+escH(m)+'</button>';
         }).join('')
       +'</div></div>'
@@ -23327,11 +23377,12 @@ function _specDocsRender() {
     '<div style="max-width:760px;margin:0 auto;padding:24px 16px 40px">'
     +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">'
     +'<div><h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Spec Docs</h2>'
-    +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+allDocs.length+' documents · ETC · Lutron · Arch Fixtures</p></div>'
+    +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+allDocs.length+' documents · '+sources.map(function(s){return escH(s.mfr);}).join(' · ')+'</p></div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;align-items:center">'
     +hiddenBtns
+    +'<button onclick="window._specDocsState.showMfrMgmt=!window._specDocsState.showMfrMgmt;window._specDocsState.showAdd=false;_specDocsRerender()" title="Manage manufacturers" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '+(st.showMfrMgmt?'rgba(139,92,246,0.5)':'rgba(255,255,255,0.12)')+';background:'+(st.showMfrMgmt?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.05)')+';color:'+(st.showMfrMgmt?'#c4b5fd':'#8da0c0')+'">⚙ Mfrs</button>'
     +'<button onclick="_specDocsExportCSV()" title="Export CSV" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">⬇ CSV</button>'
-    +'<button onclick="window._specDocsState.showAdd=!window._specDocsState.showAdd;_specDocsRerender()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
+    +'<button onclick="window._specDocsState.showAdd=!window._specDocsState.showAdd;window._specDocsState.showMfrMgmt=false;_specDocsRerender()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
     +'<button id="sd-chk-btn" onclick="_specDocsStartCheck()" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check All Links</button>'
     +'</div></div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:8px 12px;margin-bottom:16px;flex-wrap:wrap;gap:6px">'
@@ -23342,6 +23393,7 @@ function _specDocsRender() {
     +'<div id="sd-chk-lbl" style="font-size:11px;color:#4a5e7a;margin-bottom:8px">Preparing check…</div>'
     +'<div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden"><div id="sd-chk-bar" style="height:100%;border-radius:3px;background:#4f8ef7;width:0%;transition:width 0.2s"></div></div>'
     +'</div>'
+    +mfrMgmtPanel
     +addForm
     +'<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">'
     +'<div style="position:relative;flex:1">'
@@ -23655,6 +23707,38 @@ function _specDocsStartCheckMfr(rootId) {
   nextBatch();
 }
 
+function _specDocsAddMfr() {
+  var nameEl = document.getElementById('sd-new-mfr-name');
+  var name = (nameEl ? nameEl.value.trim() : '');
+  if (!name) { toast('Enter a manufacturer name'); return; }
+  var existing = _specDocsSources().map(function(s){ return s.mfr.toLowerCase(); });
+  if (existing.indexOf(name.toLowerCase()) !== -1) { toast('"'+name+'" already exists'); return; }
+  var color = (window._specDocsState && window._specDocsState.newMfrColor) || '100,116,139';
+  var customs = _specGetCustomMfrs();
+  customs.push({name:name, color:color});
+  _specSaveCustomMfrs(customs);
+  if (window._specDocsState) { window._specDocsState.addMfr = name; window._specDocsState.showMfrMgmt = false; }
+  toast('Manufacturer "'+name+'" added');
+  _specDocsRender();
+}
+
+function _specDocsDeleteMfr(name) {
+  var src = _specDocsSources().filter(function(s){ return s.mfr===name; })[0];
+  if (!src) return;
+  var udocs = _specLibGetUserDocs(src.rootId);
+  if (udocs.length && !confirm('Delete "'+name+'"? This will remove '+udocs.length+' document'+(udocs.length!==1?'s':'')+' stored under this manufacturer.')) return;
+  var customs = _specGetCustomMfrs().filter(function(c){ return c.name!==name; });
+  _specSaveCustomMfrs(customs);
+  try { localStorage.removeItem('fop_spec_hidden_'+src.rootId); } catch(e){}
+  try { localStorage.removeItem('fop_spec_metaover_'+src.rootId); } catch(e){}
+  try { localStorage.removeItem('fop_spec_udocs_'+src.rootId); } catch(e){}
+  try { localStorage.removeItem('fop_spec_sync_'+src.rootId); } catch(e){}
+  try { localStorage.removeItem('fop_spec_over_'+src.rootId); } catch(e){}
+  if (window._specDocsState && window._specDocsState.mfr === name) window._specDocsState.mfr = 'All';
+  toast('"'+name+'" removed');
+  _specDocsRender();
+}
+
 window._specDocsRender       = _specDocsRender;
 window._specDocsRerender     = _specDocsRerender;
 window._specDocsSetMfr       = _specDocsSetMfr;
@@ -23670,6 +23754,8 @@ window._specDocsCopyLink     = _specDocsCopyLink;
 window._specDocsTogglePin    = _specDocsTogglePin;
 window._specDocsExportCSV    = _specDocsExportCSV;
 window._specDocsStartCheckMfr= _specDocsStartCheckMfr;
+window._specDocsAddMfr       = _specDocsAddMfr;
+window._specDocsDeleteMfr    = _specDocsDeleteMfr;
 
 })();
 
