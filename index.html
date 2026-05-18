@@ -830,6 +830,7 @@ background: var(--bg) !important;
 }
 [data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
 #main > #view-ledcalc { padding: 0; }
+#main > #view-colorcam { padding: 0 !important; }
 /* -- iOS Tab Bar -- */
 #mobileNav {
 display: block !important;
@@ -4471,6 +4472,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="qt-root" style="width:100%;max-width:100%;box-sizing:border-box;height:100%;overflow-y:auto"></div>
   </div>
 
+  <!-- ═══ MOBILE TOOLS ═══ -->
+  <div class="view" id="view-mobiletools">
+    <div id="mob-tools-root" style="width:100%;max-width:100%;box-sizing:border-box;height:100%;overflow-y:auto"></div>
+  </div>
+
+  <!-- ═══ COLOR CAMERA ═══ -->
+  <div class="view" id="view-colorcam">
+    <div id="color-cam-root" style="width:100%;height:100%;display:flex;flex-direction:column"></div>
+  </div>
+
   <!-- ═══ PURCHASE ORDERS ═══ -->
   <div class="view" id="view-pos">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
@@ -5062,30 +5073,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       <span class="nav-label">Home</span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('projects')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      <span class="nav-label">Projects</span>
-    </div>
-    <div class="mobile-nav-item" onclick="switchView('schedule')" style="position:relative">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/></svg>
-      <span class="nav-label">Schedule</span>
-    </div>
-    <div class="mobile-nav-item" onclick="switchView('shipping')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      <span class="nav-label">Shipping</span>
-    </div>
-    <div class="mobile-nav-item" onclick="switchView('fieldlog')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      <span class="nav-label">Field Log</span>
+    <div class="mobile-nav-item" onclick="switchView('quicktasks')" style="position:relative">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="nav-label">Tasks</span>
     </div>
     <div class="mobile-nav-item" onclick="switchView('timekeeping')" style="position:relative">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
       <span class="nav-label">Timer</span>
       <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('settings')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span class="nav-label">Settings</span>
+    <div class="mobile-nav-item" onclick="switchView('shipping')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="nav-label">Shipping</span>
+    </div>
+    <div class="mobile-nav-item" onclick="switchView('mobiletools')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="7" height="7" rx="1.5"/><rect x="15" y="3" width="7" height="7" rx="1.5"/><rect x="2" y="14" width="7" height="7" rx="1.5"/><rect x="15" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span class="nav-label">Tools</span>
     </div>
   </div>
 </nav>
@@ -7283,10 +7286,13 @@ var viewTitles = {
   fieldlog: 'Field Log',
   punchlist: 'Punch Lists',
   mapview: 'Project Map',
-  quicktasks: 'Tasks'
+  quicktasks:   'Tasks',
+  mobiletools:  'Tools',
+  colorcam:     'Color Camera'
 };
 
 function switchView(v) {
+  if (v !== 'colorcam' && typeof _colorCamStop === 'function') _colorCamStop();
   if (v === 'tasks') {
     setTimeout(function() {
       var pf = document.getElementById('task-project-filter');
@@ -7382,9 +7388,9 @@ function switchView(v) {
   if(v==='specdocs') {
     if (typeof _specDocsRender === 'function') _specDocsRender();
   }
-  if(v==='quicktasks') {
-    if (typeof _qtRender === 'function') _qtRender();
-  }
+  if(v==='quicktasks')   { if (typeof _qtRender        === 'function') _qtRender(); }
+  if(v==='mobiletools')  { if (typeof _mobToolsRender  === 'function') _mobToolsRender(); }
+  if(v==='colorcam')     { if (typeof _colorCamRender  === 'function') _colorCamRender(); }
   if(v==='vendors') {
     if (typeof renderVendors === 'function') renderVendors();
   }
@@ -22404,13 +22410,232 @@ window._llcRender = _llcRender;
 })();
 
 // ═══════════════════════════════════════════════
+//  MOBILE TOOLS VIEW
+// ═══════════════════════════════════════════════
+function _mobToolsRender() {
+  var root = document.getElementById('mob-tools-root');
+  if (!root) return;
+  var tools = [
+    {
+      label: 'DMX Calculator',
+      sub: 'Address & universe lookup',
+      color: '#4f8ef7',
+      view: 'dmxaddrcalc',
+      icon: '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="7.01" y2="15"/><line x1="12" y1="15" x2="12.01" y2="15"/><line x1="17" y1="15" x2="17.01" y2="15"/>'
+    },
+    {
+      label: 'Color Camera',
+      sub: 'Sample color from camera',
+      color: '#10b981',
+      view: 'colorcam',
+      icon: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'
+    },
+    {
+      label: 'Wiring Reference',
+      sub: 'Cable specs & pinouts',
+      color: '#f97316',
+      view: 'wiringref',
+      icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'
+    },
+    {
+      label: 'Voltage Drop',
+      sub: 'Wire gauge calculator',
+      color: '#f59e0b',
+      view: 'voltcalc',
+      icon: '<polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'
+    }
+  ];
+  root.innerHTML = '<div style="max-width:500px;margin:0 auto;padding:24px 16px 100px">'
+    + '<h2 style="font-size:24px;font-weight:700;color:#f0f4ff;margin:0 0 6px;letter-spacing:-0.5px">Tools</h2>'
+    + '<p style="font-size:13px;color:#6e8aad;margin:0 0 22px">Lighting calculators & references</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + tools.map(function(t) {
+        return '<div onclick="switchView(\'' + t.view + '\')" '
+          + 'style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:20px 16px 18px;'
+          + 'display:flex;flex-direction:column;align-items:flex-start;gap:10px;cursor:pointer;'
+          + '-webkit-tap-highlight-color:transparent;transition:transform 0.12s,background 0.12s" '
+          + 'ontouchstart="this.style.transform=\'scale(0.95)\';this.style.background=\'rgba(255,255,255,0.07)\'" '
+          + 'ontouchend="this.style.transform=\'\';this.style.background=\'rgba(255,255,255,0.04)\'">'
+          + '<div style="width:46px;height:46px;border-radius:13px;background:' + t.color + '1a;'
+          + 'display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="' + t.color + '" stroke-width="1.9" '
+          + 'stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px">' + t.icon + '</svg>'
+          + '</div>'
+          + '<div>'
+          + '<div style="font-size:14px;font-weight:700;color:#f0f4ff;line-height:1.3">' + t.label + '</div>'
+          + '<div style="font-size:11px;color:#6e8aad;margin-top:3px;line-height:1.3">' + t.sub + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div></div>';
+}
+
+// ═══════════════════════════════════════════════
+//  COLOR CAMERA VIEW
+// ═══════════════════════════════════════════════
+var _camStream = null;
+var _camLoopId = null;
+var _camSampled = { hex: '#4F8EF7', r: 79, g: 142, b: 247 };
+
+function _colorCamRender() {
+  var root = document.getElementById('color-cam-root');
+  if (!root) return;
+
+  root.innerHTML =
+    '<div style="position:relative;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;min-height:0">'
+    // Video feed
+    + '<video id="cam-video" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>'
+    + '<canvas id="cam-canvas" style="display:none"></canvas>'
+    // Crosshair ring
+    + '<div style="position:relative;z-index:2;pointer-events:none">'
+    + '<div style="width:70px;height:70px;border-radius:50%;border:2.5px solid rgba(255,255,255,0.92);'
+    + 'box-shadow:0 0 0 1px rgba(0,0,0,0.6),inset 0 0 0 1px rgba(0,0,0,0.4);position:relative">'
+    + '<div style="position:absolute;top:50%;left:-14px;width:9px;height:1.5px;background:rgba(255,255,255,0.92);transform:translateY(-50%)"></div>'
+    + '<div style="position:absolute;top:50%;right:-14px;width:9px;height:1.5px;background:rgba(255,255,255,0.92);transform:translateY(-50%)"></div>'
+    + '<div style="position:absolute;left:50%;top:-14px;height:9px;width:1.5px;background:rgba(255,255,255,0.92);transform:translateX(-50%)"></div>'
+    + '<div style="position:absolute;left:50%;bottom:-14px;height:9px;width:1.5px;background:rgba(255,255,255,0.92);transform:translateX(-50%)"></div>'
+    + '</div></div>'
+    // Live preview dot (bottom-right of viewport)
+    + '<div id="cam-live-dot" style="position:absolute;bottom:14px;right:14px;z-index:2;'
+    + 'width:42px;height:42px;border-radius:50%;border:3px solid rgba(255,255,255,0.85);'
+    + 'background:#4f8ef7;box-shadow:0 2px 14px rgba(0,0,0,0.55)"></div>'
+    + '</div>'
+    // Bottom panel
+    + '<div style="background:rgba(13,21,38,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);'
+    + 'border-top:1px solid rgba(255,255,255,0.1);padding:16px 18px;'
+    + 'padding-bottom:calc(max(env(safe-area-inset-bottom,0px),16px) + 72px);flex-shrink:0">'
+    // Color result row
+    + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+    + '<div id="cam-swatch" style="width:54px;height:54px;border-radius:15px;background:#4f8ef7;'
+    + 'flex-shrink:0;box-shadow:0 3px 14px rgba(0,0,0,0.45);transition:background 0.2s"></div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div id="cam-hex" style="font-size:24px;font-weight:700;color:#f0f4ff;letter-spacing:1.5px;font-family:ui-monospace,monospace">#4F8EF7</div>'
+    + '<div id="cam-rgb" style="font-size:12px;color:#6e8aad;margin-top:3px;font-family:ui-monospace,monospace">R 79 · G 142 · B 247</div>'
+    + '</div>'
+    + '<button onclick="_colorCamCopy()" style="padding:10px 16px;border-radius:11px;font-size:13px;font-weight:700;'
+    + 'border:1px solid rgba(79,142,247,0.3);background:rgba(79,142,247,0.15);color:#4f8ef7;cursor:pointer;white-space:nowrap">Copy</button>'
+    + '</div>'
+    // Sample button
+    + '<button onclick="_colorCamSample()" style="width:100%;padding:15px;border-radius:15px;font-size:17px;font-weight:700;'
+    + 'border:none;background:#4f8ef7;color:#fff;cursor:pointer;letter-spacing:0.2px;'
+    + '-webkit-tap-highlight-color:transparent">Sample Color</button>'
+    + '</div>';
+
+  // Boot camera
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+    }).then(function(stream) {
+      _camStream = stream;
+      var vid = document.getElementById('cam-video');
+      if (vid) { vid.srcObject = stream; vid.play(); }
+      _colorCamLoop();
+    }).catch(function(err) {
+      var vp = root.querySelector('div');
+      if (vp) vp.innerHTML = '<div style="color:#a3b8d4;text-align:center;padding:50px 20px">'
+        + '<div style="font-size:48px;margin-bottom:14px">📷</div>'
+        + '<div style="font-size:16px;font-weight:600;color:#f0f4ff">Camera access required</div>'
+        + '<div style="font-size:13px;margin-top:8px;color:#6e8aad">' + (err.message || 'Permission denied') + '</div>'
+        + '<button onclick="switchView(\'mobiletools\')" style="margin-top:18px;padding:11px 22px;border-radius:10px;'
+        + 'border:none;background:rgba(255,255,255,0.08);color:#a3b8d4;font-size:14px;font-weight:600;cursor:pointer">← Back</button>'
+        + '</div>';
+    });
+  } else {
+    var vp2 = root.querySelector('div');
+    if (vp2) vp2.innerHTML = '<div style="color:#a3b8d4;text-align:center;padding:50px 20px">'
+      + '<div style="font-size:48px;margin-bottom:14px">📷</div>'
+      + '<div style="font-size:16px;font-weight:600;color:#f0f4ff">Camera not available</div>'
+      + '<div style="font-size:13px;margin-top:8px;color:#6e8aad">Open FieldOps Pro in Safari on your iPhone</div>'
+      + '</div>';
+  }
+}
+
+function _colorCamLoop() {
+  var vid = document.getElementById('cam-video');
+  var cvs = document.getElementById('cam-canvas');
+  var dot = document.getElementById('cam-live-dot');
+  if (!vid || !cvs || !dot || !_camStream) { _camLoopId = null; return; }
+  if (vid.readyState >= 2 && vid.videoWidth > 0) {
+    cvs.width  = vid.videoWidth;
+    cvs.height = vid.videoHeight;
+    var ctx = cvs.getContext('2d');
+    ctx.drawImage(vid, 0, 0);
+    var cx = Math.floor(cvs.width / 2);
+    var cy = Math.floor(cvs.height / 2);
+    var px = ctx.getImageData(Math.max(0,cx-6), Math.max(0,cy-6), 12, 12).data;
+    var r=0,g=0,b=0,n=0;
+    for (var i=0;i<px.length;i+=4){r+=px[i];g+=px[i+1];b+=px[i+2];n++;}
+    r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
+    dot.style.background='rgb('+r+','+g+','+b+')';
+  }
+  _camLoopId = requestAnimationFrame(_colorCamLoop);
+}
+
+function _colorCamSample() {
+  var vid = document.getElementById('cam-video');
+  var cvs = document.getElementById('cam-canvas');
+  if (!vid || !cvs || !_camStream) return;
+  cvs.width = vid.videoWidth || 1;
+  cvs.height = vid.videoHeight || 1;
+  var ctx = cvs.getContext('2d');
+  ctx.drawImage(vid, 0, 0);
+  var cx = Math.floor(cvs.width/2);
+  var cy = Math.floor(cvs.height/2);
+  var px = ctx.getImageData(Math.max(0,cx-10), Math.max(0,cy-10), 20, 20).data;
+  var r=0,g=0,b=0,n=0;
+  for(var i=0;i<px.length;i+=4){r+=px[i];g+=px[i+1];b+=px[i+2];n++;}
+  r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
+  var toH=function(x){return x.toString(16).padStart(2,'0').toUpperCase();};
+  var hex='#'+toH(r)+toH(g)+toH(b);
+  _camSampled={hex:hex,r:r,g:g,b:b};
+  var sw=document.getElementById('cam-swatch');
+  var he=document.getElementById('cam-hex');
+  var rg=document.getElementById('cam-rgb');
+  if(sw) sw.style.background=hex;
+  if(he) he.textContent=hex;
+  if(rg) rg.textContent='R '+r+' · G '+g+' · B '+b;
+  if(typeof haptic==='function') haptic('medium');
+  // Flash button feedback
+  var btn=document.querySelector('#color-cam-root button:last-child');
+  if(btn){btn.style.background='#10b981';setTimeout(function(){btn.style.background='#4f8ef7';},400);}
+}
+
+function _colorCamCopy() {
+  var he=document.getElementById('cam-hex');
+  var txt=he?he.textContent:(_camSampled?_camSampled.hex:'');
+  if(!txt) return;
+  if(navigator.clipboard){navigator.clipboard.writeText(txt);}
+  if(typeof toast==='function') toast('Copied '+txt);
+}
+
+function _colorCamStop() {
+  if(_camLoopId){cancelAnimationFrame(_camLoopId);_camLoopId=null;}
+  if(_camStream){_camStream.getTracks().forEach(function(t){t.stop();});_camStream=null;}
+}
+
+window._mobToolsRender = _mobToolsRender;
+window._colorCamRender = _colorCamRender;
+window._colorCamLoop   = _colorCamLoop;
+window._colorCamSample = _colorCamSample;
+window._colorCamCopy   = _colorCamCopy;
+window._colorCamStop   = _colorCamStop;
+
+// ═══════════════════════════════════════════════
 //  QUICK TASKS VIEW
 // ═══════════════════════════════════════════════
 function _qtRender() {
   var root = document.getElementById('qt-root'); if (!root) return;
   var projects = state.projects || [];
-  var today    = new Date().toISOString().slice(0,10);
+  var now      = new Date();
+  var today    = now.toISOString().slice(0,10);
   var tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+  var dow      = now.getDay();
+  var daysToFri  = ((5 - dow + 7) % 7) || 7;
+  var daysToMon  = ((1 - dow + 7) % 7) || 7;
+  var thisFri    = new Date(Date.now() + daysToFri  * 86400000).toISOString().slice(0,10);
+  var nextMon    = new Date(Date.now() + daysToMon  * 86400000).toISOString().slice(0,10);
+  var oneWeek    = new Date(Date.now() + 7  * 86400000).toISOString().slice(0,10);
+  var twoWeeks   = new Date(Date.now() + 14 * 86400000).toISOString().slice(0,10);
 
   var projOpts = '<option value="">— No Project —</option>'
     + projects.map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
@@ -22461,19 +22686,32 @@ function _qtRender() {
     +'<button onclick="switchView(\'tasks\')" style="font-size:11px;font-weight:700;color:#4f8ef7;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);border-radius:7px;padding:5px 12px;cursor:pointer">Full View →</button>'
     +'</div>'
     // Quick-add card
-    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px;margin-bottom:18px">'
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:18px;margin-bottom:18px">'
+    // Title — larger, room to breathe, underline focus hint
     +'<input type="text" id="qt-title" placeholder="New task…" autocomplete="off" autofocus '
     +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();_qtAdd();}" '
-    +'style="width:100%;background:none;border:none;font-size:16px;font-weight:600;color:#f0f4ff;outline:none;box-sizing:border-box;margin-bottom:12px;padding:2px 0">'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
-    +'<select id="qt-project" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;max-width:180px">'+projOpts+'</select>'
-    +'<input type="date" id="qt-due" title="Due date" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;color-scheme:dark">'
-    +'<button onclick="document.getElementById(\'qt-due\').value=\''+today+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 9px;cursor:pointer">Today</button>'
-    +'<button onclick="document.getElementById(\'qt-due\').value=\''+tomorrow+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 9px;cursor:pointer">Tomorrow</button>'
+    +'style="width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.12);font-size:19px;font-weight:600;color:#f0f4ff;outline:none;box-sizing:border-box;padding:4px 0 12px;margin-bottom:14px;line-height:1.4">'
+    // Row 1 — project + priority
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px">'
+    +'<select id="qt-project" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;max-width:200px">'+projOpts+'</select>'
     +'<select id="qt-priority" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer">'
-    +'<option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option>'
+    +'<option value="medium">Medium</option><option value="high">⬆ High</option><option value="low">⬇ Low</option>'
     +'</select>'
-    +'<button onclick="_qtAdd()" style="margin-left:auto;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:rgba(79,142,247,0.2);color:#4f8ef7">Add Task</button>'
+    +'<button onclick="_qtAdd()" style="margin-left:auto;padding:7px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:rgba(79,142,247,0.2);color:#4f8ef7">Add Task</button>'
+    +'</div>'
+    // Row 2 — date picker + quick-date chips
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
+    +'<input type="date" id="qt-due" title="Pick a date" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;color-scheme:dark">'
+    +[
+      ['Today',    today],
+      ['Tomorrow', tomorrow],
+      ['This Fri', thisFri],
+      ['Next Mon', nextMon],
+      ['+1 Week',  oneWeek],
+      ['+2 Weeks', twoWeeks]
+    ].map(function(pair){
+      return '<button onclick="document.getElementById(\'qt-due\').value=\''+pair[1]+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">'+pair[0]+'</button>';
+    }).join('')
     +'</div></div>'
     // Task list
     +(open.length===0
