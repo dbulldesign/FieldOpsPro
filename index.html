@@ -3978,9 +3978,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <!-- TOP BAR -->
     <div id="topbar" role="banner">
       <button class="btn btn-ghost btn-icon" id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">&#9776;</button>
-      <button id="mob-back-btn" onclick="switchView('dashboard')" style="display:none;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:10px;flex-shrink:0">
+      <button id="mob-back-btn" onclick="switchView('quicktasks')" style="display:none;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:10px;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><polyline points="15 18 9 12 15 6"/></svg>
-        <span style="font-size:16px;font-weight:600;color:#4f8ef7;white-space:nowrap">Home</span>
+        <span style="font-size:16px;font-weight:600;color:#4f8ef7;white-space:nowrap">Back</span>
       </button>
       <div class="topbar-title" id="topbarTitle">Dashboard <span id="topbarSub"></span></div>
       <!-- Timer running chip — visible on all pages when a timer is active -->
@@ -5067,28 +5067,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <nav id="mobileNav">
   <div class="mobile-nav-items">
-    <div class="mobile-nav-item active" onclick="switchView('dashboard')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span class="nav-label">Home</span>
-    </div>
-    <div class="mobile-nav-item" onclick="switchView('quicktasks')" style="position:relative">
+    <div class="mobile-nav-item active" id="mob-tab-quicktasks" onclick="switchView('quicktasks')" style="position:relative">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       <span class="nav-label">Tasks</span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('timekeeping')" style="position:relative">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-      <span class="nav-label">Timer</span>
-      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
-    </div>
-    <div class="mobile-nav-item" onclick="switchView('shipping')">
+    <div class="mobile-nav-item" id="mob-tab-shipping" onclick="switchView('shipping')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       <span class="nav-label">Shipping</span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('mobiletools')">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="7" height="7" rx="1.5"/><rect x="15" y="3" width="7" height="7" rx="1.5"/><rect x="2" y="14" width="7" height="7" rx="1.5"/><rect x="15" y="14" width="7" height="7" rx="1.5"/></svg>
-      <span class="nav-label">Tools</span>
+    <div class="mobile-nav-item" id="mob-tab-timekeeping" onclick="switchView('timekeeping')" style="position:relative">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      <span class="nav-label">Time</span>
+      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
     </div>
-    <div class="mobile-nav-item" onclick="switchView('settings')">
+    <div class="mobile-nav-item" id="mob-tab-settings" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span class="nav-label">Settings</span>
     </div>
@@ -5869,28 +5861,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 <!-- ── iOS TAB BAR ── -->
 <div id="mob-tab-bar">
-  <div class="mob-tab-item active" onclick="mobTabSwitch('dashboard')" id="tab-dashboard">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    <span>Home</span>
-  </div>
-  <div class="mob-tab-item" onclick="mobTabSwitch('tasks')" id="tab-tasks">
+  <div class="mob-tab-item active" onclick="mobTabSwitch('quicktasks')" id="tab-quicktasks">
     <div style="position:relative;display:inline-flex">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       <span class="mob-tab-badge" id="tab-badge-tasks"></span>
     </div>
     <span>Tasks</span>
   </div>
-  <div class="mob-tab-item" onclick="mobTabSwitch('pos')" id="tab-pos">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    <span>POs</span>
-  </div>
   <div class="mob-tab-item" onclick="mobTabSwitch('shipping')" id="tab-shipping">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-    <span>Ship</span>
+    <span>Shipping</span>
   </div>
-  <div class="mob-tab-item" onclick="mobTabSwitch('more')" id="tab-more">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
-    <span>More</span>
+  <div class="mob-tab-item" onclick="mobTabSwitch('timekeeping')" id="tab-timekeeping" style="position:relative">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+    <span id="mob-timer-dot" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
+    <span>Time</span>
+  </div>
+  <div class="mob-tab-item" onclick="mobTabSwitch('settings')" id="tab-settings">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Settings</span>
   </div>
 </div>
 
@@ -6478,15 +6467,22 @@ function showSkeleton(containerId, count) {
 var _mobMoreOpen = false;
 
 function mobTabSwitch(v) {
-  if (v === 'more') {
-    openModal('mob-more-sheet');
-    return;
-  }
   // Update tab active states
   document.querySelectorAll('.mob-tab-item').forEach(function(t) { t.classList.remove('active'); });
   var tab = document.getElementById('tab-' + v);
   if (tab) tab.classList.add('active');
   switchView(v);
+}
+
+function updateMobTabActive(v) {
+  // Keep #mob-tab-bar in sync when switchView is called from anywhere
+  var tabMap = { quicktasks:'quicktasks', shipping:'shipping', timekeeping:'timekeeping', settings:'settings' };
+  document.querySelectorAll('.mob-tab-item').forEach(function(t) { t.classList.remove('active'); });
+  var key = tabMap[v];
+  if (key) {
+    var el = document.getElementById('tab-' + key);
+    if (el) el.classList.add('active');
+  }
 }
 
 function closeMobMore(v) {
@@ -7414,7 +7410,10 @@ function switchView(v) {
   }
   haptic('light');
   document.title = (viewTitles[v]||'FieldOps Pro') + ' · FieldOps Pro';
-  if (window.innerWidth <= 768) updateThingsNav(v);
+  if (window.innerWidth <= 768) {
+    updateThingsNav(v);
+    if (typeof updateMobTabActive === 'function') updateMobTabActive(v);
+  }
 }
 
 function toggleSidebar() {
@@ -12722,8 +12721,8 @@ window.addEventListener('load', function(){
   if (compactMode) document.body.classList.add('compact');
   initBottomSheets();
   if (window.innerWidth <= 768) {
-    // Tab bar mode — no need for Things nav
-    renderThingsHome();
+    // iOS simplified nav — start on Tasks
+    switchView('quicktasks');
     var mds = document.getElementById('mob-sync-status');
     if (mds) mds.style.display = 'flex';
     var ctb = document.getElementById('compact-toggle-btn');
@@ -16254,28 +16253,42 @@ function updateThingsNav(v) {
   var backBtn = document.getElementById('mob-back-btn');
   var menuBtn = document.getElementById('menuBtn');
   var searchBtn = document.getElementById('mob-global-search-btn');
-  if (v === 'dashboard') {
+
+  // These are the 4 primary iOS tabs — treated as top-level (no back button)
+  var PRIMARY_TABS = ['quicktasks', 'shipping', 'timekeeping', 'settings', 'dashboard'];
+  var isPrimary = PRIMARY_TABS.indexOf(v) !== -1;
+
+  if (isPrimary) {
     if (backBtn) backBtn.style.display = 'none';
-    if (menuBtn) menuBtn.style.display = 'flex';
-    if (searchBtn) searchBtn.style.display = 'none';
+    if (menuBtn) menuBtn.style.display = 'none';
+    if (searchBtn) searchBtn.style.display = v !== 'settings' ? 'flex' : 'none';
     document.body.classList.remove('mob-subview');
-    var hw=document.getElementById('things-home-wrap');
-    if(hw) hw.style.display='block';
-    setTimeout(renderThingsHome, 0);
+    var hw = document.getElementById('things-home-wrap');
+    if (hw) hw.style.display = 'none';
   } else {
     if (backBtn) backBtn.style.display = 'flex';
     if (menuBtn) menuBtn.style.display = 'none';
     if (searchBtn) searchBtn.style.display = 'flex';
     document.body.classList.add('mob-subview');
-    var hw=document.getElementById('things-home-wrap');
-    if(hw) hw.style.display='none';
+    var hw = document.getElementById('things-home-wrap');
+    if (hw) hw.style.display = 'none';
   }
+
+  // Highlight the active tab
+  var tabMap = { quicktasks:'quicktasks', shipping:'shipping', timekeeping:'timekeeping', settings:'settings' };
+  document.querySelectorAll('#mobileNav .mobile-nav-item').forEach(function(el) { el.classList.remove('active'); });
+  var activeKey = tabMap[v];
+  if (activeKey) {
+    var tabEl = document.getElementById('mob-tab-'+activeKey);
+    if (tabEl) tabEl.classList.add('active');
+  }
+
   // Update large title
   var lt = document.getElementById('mob-large-title');
   if (lt) {
-    var titles = {dashboard:'FieldOps Pro', projects:'Projects', tasks:'Tasks',
-      calendar:'Calendar & Events', schedule:'Schedule',
-      pos:'Purchase Orders', shipping:'Shipping', troubleshoot:'Troubleshoot', settings:'Settings'};
+    var titles = {quicktasks:'Tasks', shipping:'Shipping', timekeeping:'Time',
+      settings:'Settings', dashboard:'FieldOps Pro', projects:'Projects',
+      tasks:'Tasks', pos:'Purchase Orders', troubleshoot:'Troubleshoot'};
     lt.textContent = titles[v] || v;
   }
 }
