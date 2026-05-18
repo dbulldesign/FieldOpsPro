@@ -23064,7 +23064,7 @@ function _specLibRender(rootId, mfr, accentColor, builtinDocs) {
     +'<p style="font-size:12px;color:#4a5e7a;margin:0">'+totalDocs+' documents · spec sheets, cut sheets &amp; control docs</p>'
     +'</div>'
     +'<div style="display:flex;gap:6px;flex-shrink:0">'
-    +(hidden.length?'<button onclick="_specLibRestoreAllHidden(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#f87171">↩ Restore '+hidden.length+' hidden</button>':'')
+    +''
     +'<button onclick="window[\'_specLib_'+rootId+'\'].showAdd=!window[\'_specLib_'+rootId+'\'].showAdd;_specLibRerender(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0">+ Add Doc</button>'
     +'<button id="'+rootId+'-chk-btn" onclick="_specLibStartCheck(\''+rootId+'\')" style="padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(79,142,247,0.4);background:rgba(79,142,247,0.1);color:#4f8ef7">↻ Check Links</button>'
     +'</div>'
@@ -23221,7 +23221,7 @@ function _specLibCheckSingleDoc(rootId, url) {
 }
 
 function _specLibDeleteBuiltinDoc(rootId, docName) {
-  if (confirm('Hide "'+docName+'" from this library?\n\nThis can be undone with the "Restore hidden" button.')) {
+  if (confirm('Delete "'+docName+'"?')) {
     var hidden = _specLibGetHidden(rootId);
     if (hidden.indexOf(docName) === -1) hidden.push(docName);
     _specLibSaveHidden(rootId, hidden);
