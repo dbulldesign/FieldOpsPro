@@ -7014,9 +7014,13 @@ function initFirebase(config) {
     try {
       var app = firebase.initializeApp(config, 'fieldops');
       db = firebase.firestore(app);
-      db.enablePersistence({synchronizeTabs: false}).catch(function(err) {
-        console.warn('Firestore offline persistence unavailable:', err.code);
-      });
+      // iOS (Safari/PWA) has unreliable IndexedDB — skip persistence there
+      var _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!_isIOS) {
+        db.enablePersistence({synchronizeTabs: false}).catch(function(err) {
+          console.warn('Firestore offline persistence unavailable:', err.code);
+        });
+      }
 
       COLLECTIONS.forEach(function(col) {
         var unsub = db.collection(col)
