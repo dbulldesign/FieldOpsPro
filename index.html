@@ -3790,6 +3790,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           Schedule
           <span class="nav-badge" id="badge-schedule" style="display:none">0</span>
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('quicktasks')" id="nav-quicktasks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Tasks
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Operations</div>
@@ -4460,6 +4464,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <button class="sched-tab" id="sched-tab-calendar" onclick="switchScheduleTab('calendar',this)">Calendar</button>
     </div>
     <div id="sched-content"></div>
+  </div>
+
+  <!-- ═══ QUICK TASKS ═══ -->
+  <div class="view" id="view-quicktasks">
+    <div id="qt-root" style="width:100%;max-width:100%;box-sizing:border-box;height:100%;overflow-y:auto"></div>
   </div>
 
   <!-- ═══ PURCHASE ORDERS ═══ -->
@@ -7273,7 +7282,8 @@ var viewTitles = {
   vendors: 'Vendors',
   fieldlog: 'Field Log',
   punchlist: 'Punch Lists',
-  mapview: 'Project Map'
+  mapview: 'Project Map',
+  quicktasks: 'Tasks'
 };
 
 function switchView(v) {
@@ -7371,6 +7381,9 @@ function switchView(v) {
   if(v==='iprating')     { if (typeof _ipRender   === 'function') _ipRender(); }
   if(v==='specdocs') {
     if (typeof _specDocsRender === 'function') _specDocsRender();
+  }
+  if(v==='quicktasks') {
+    if (typeof _qtRender === 'function') _qtRender();
   }
   if(v==='vendors') {
     if (typeof renderVendors === 'function') renderVendors();
@@ -12530,7 +12543,8 @@ function renderAll() {
   if (cv === 'timekeeping') renderTimeLog();
   if (cv === 'schedule')    renderSchedule();
   if (cv === 'systainer')   renderSystainer();
-  if (cv === 'ledcalc')    _ledRender();
+  if (cv === 'ledcalc')     _ledRender();
+  if (cv === 'quicktasks')  { if (typeof _qtRender === 'function') _qtRender(); }
   updateTabBadges();
   if (typeof updateNotifBadge === 'function') updateNotifBadge();
 }
@@ -22388,6 +22402,117 @@ window._llcRender = _llcRender;
   window._photoUpdate = _photoUpdate;
   window._photo = _photo;
 })();
+
+// ═══════════════════════════════════════════════
+//  QUICK TASKS VIEW
+// ═══════════════════════════════════════════════
+function _qtRender() {
+  var root = document.getElementById('qt-root'); if (!root) return;
+  var projects = state.projects || [];
+  var today    = new Date().toISOString().slice(0,10);
+  var tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+
+  var projOpts = '<option value="">— No Project —</option>'
+    + projects.map(function(p){ return '<option value="'+p.id+'">'+escH(p.name)+'</option>'; }).join('');
+
+  var open = (state.tasks||[]).filter(function(t){ return !t.archived && t.status!=='done'; });
+  open.sort(function(a,b){
+    if(!a.due&&!b.due) return 0; if(!a.due) return 1; if(!b.due) return -1;
+    return a.due<b.due?-1:a.due>b.due?1:0;
+  });
+  var doneCount = (state.tasks||[]).filter(function(t){ return t.status==='done'&&!t.archived; }).length;
+
+  function taskRow(t) {
+    var proj = projects.find(function(p){ return p.id===t.project; });
+    var isOverdue = t.due && t.due<today;
+    var isToday   = t.due===today;
+    var pColor = {high:'#ef4444',medium:'#f59e0b',low:'#10b981'}[t.priority]||'#6e8aad';
+    var dueFmt='';
+    if(t.due){
+      if(t.due===today) dueFmt='Today';
+      else if(t.due===tomorrow) dueFmt='Tomorrow';
+      else { var d=new Date(t.due+'T00:00:00'); dueFmt=d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+    }
+    return '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05)" onclick="_qtEdit(\''+t.id+'\')">'
+      +'<button onclick="event.stopPropagation();_qtDone(\''+t.id+'\')" title="Mark complete" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid '+pColor+';background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseenter="this.style.background=\''+pColor+'33\'" onmouseleave="this.style.background=\'transparent\'"></button>'
+      +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f4ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">'+escH(t.title)+'</span>'
+      +(proj?'<span style="font-size:10px;font-weight:700;color:#6e8aad;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:2px 7px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">'+escH(proj.name)+'</span>':'')
+      +(dueFmt?'<span style="font-size:11px;font-weight:700;color:'+(isOverdue?'#ef4444':isToday?'#f59e0b':'#6e8aad')+';white-space:nowrap;flex-shrink:0">'+dueFmt+'</span>':'')
+      +'</div>';
+  }
+
+  function group(label, tasks, color) {
+    if(!tasks.length) return '';
+    return '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:'+(color||'#6e8aad')+';padding:10px 14px 3px">'+label+' ('+tasks.length+')</div>'
+      +tasks.map(taskRow).join('');
+  }
+
+  var overdue  = open.filter(function(t){ return t.due&&t.due<today; });
+  var todayT   = open.filter(function(t){ return t.due===today; });
+  var upcoming = open.filter(function(t){ return t.due&&t.due>today; });
+  var noDue    = open.filter(function(t){ return !t.due; });
+
+  root.innerHTML =
+    '<div style="max-width:640px;margin:0 auto;padding:20px 16px 60px">'
+    // Header
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    +'<div><h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Tasks</h2>'
+    +'<p style="font-size:12px;color:#6e8aad;margin:0">'+open.length+' open &nbsp;·&nbsp; '+doneCount+' done</p></div>'
+    +'<button onclick="switchView(\'tasks\')" style="font-size:11px;font-weight:700;color:#4f8ef7;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);border-radius:7px;padding:5px 12px;cursor:pointer">Full View →</button>'
+    +'</div>'
+    // Quick-add card
+    +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px;margin-bottom:18px">'
+    +'<input type="text" id="qt-title" placeholder="New task…" autocomplete="off" autofocus '
+    +'onkeydown="if(event.key===\'Enter\'){event.preventDefault();_qtAdd();}" '
+    +'style="width:100%;background:none;border:none;font-size:16px;font-weight:600;color:#f0f4ff;outline:none;box-sizing:border-box;margin-bottom:12px;padding:2px 0">'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
+    +'<select id="qt-project" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;max-width:180px">'+projOpts+'</select>'
+    +'<input type="date" id="qt-due" title="Due date" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer;color-scheme:dark">'
+    +'<button onclick="document.getElementById(\'qt-due\').value=\''+today+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 9px;cursor:pointer">Today</button>'
+    +'<button onclick="document.getElementById(\'qt-due\').value=\''+tomorrow+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:4px 9px;cursor:pointer">Tomorrow</button>'
+    +'<select id="qt-priority" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 10px;color:#a3b8d4;font-size:12px;font-weight:600;outline:none;cursor:pointer">'
+    +'<option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option>'
+    +'</select>'
+    +'<button onclick="_qtAdd()" style="margin-left:auto;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:rgba(79,142,247,0.2);color:#4f8ef7">Add Task</button>'
+    +'</div></div>'
+    // Task list
+    +(open.length===0
+      ? '<div style="text-align:center;padding:48px 0;color:#6e8aad;font-size:14px">No open tasks — add one above</div>'
+      : '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">'
+        +group('Overdue',overdue,'#ef4444')
+        +group('Today',todayT,'#f59e0b')
+        +group('Upcoming',upcoming,'#4f8ef7')
+        +group('No Date',noDue,'#6e8aad')
+        +'</div>'
+    )
+    +'</div>';
+}
+
+function _qtAdd() {
+  var titleEl = document.getElementById('qt-title');
+  var title = (titleEl ? titleEl.value : '').trim();
+  if(!title){ if(titleEl) titleEl.focus(); return; }
+  var proj  = (document.getElementById('qt-project')||{}).value||'';
+  var due   = (document.getElementById('qt-due')||{}).value||null;
+  var prio  = (document.getElementById('qt-priority')||{}).value||'medium';
+  addItem('tasks',{ title:title, project:proj, due:due||null, priority:prio, status:'todo' });
+  toast('Task added');
+  _qtRender();
+  setTimeout(function(){ var el=document.getElementById('qt-title'); if(el) el.focus(); },50);
+}
+
+function _qtDone(id) {
+  updateItem('tasks',id,{ status:'done' });
+  toast('✓ Done');
+  setTimeout(_qtRender,120);
+}
+
+function _qtEdit(id) { editTask(id); }
+
+window._qtRender = _qtRender;
+window._qtAdd    = _qtAdd;
+window._qtDone   = _qtDone;
+window._qtEdit   = _qtEdit;
 
 // ═══════════════════════════════════════════════
 //  SHARED SPEC LIBRARY RENDERER
