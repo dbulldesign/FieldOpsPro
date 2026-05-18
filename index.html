@@ -5460,7 +5460,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <select id="ship-project"><option value="">— None —</option></select>
         </div>
         <div class="form-group"><label>Linked PO</label>
-          <select id="ship-po"><option value="">— None —</option></select>
+          <input type="text" id="ship-po" placeholder="Type or select PO #…" list="ship-po-list" autocomplete="off" style="width:100%;box-sizing:border-box">
+          <datalist id="ship-po-list"></datalist>
         </div>
       </div>
       <div class="form-row">
@@ -7494,11 +7495,14 @@ function populateProjectSelects() {
       el.onchange = (function(selId){ return function() { if(this.value==='__new__') { this.value=''; _quickNewProject(selId); } }; })(id);
     }
   });
-  // Populate ship-po with PO options
-  var poEl = document.getElementById('ship-po');
-  if(poEl) {
-    poEl.innerHTML = '<option value="">— None —</option>' +
-      state.pos.map(function(p){return '<option value="'+p.id+'">'+(p.number?escH(p.number)+' - ':'')+escH(p.vendor||'PO')+'</option>';}).join('');
+  // Populate ship-po datalist with existing PO suggestions
+  var poList = document.getElementById('ship-po-list');
+  if(poList) {
+    poList.innerHTML = state.pos.map(function(p){
+      var num = p.number || p.id;
+      var label = num + (p.vendor ? ' — ' + p.vendor : '');
+      return '<option value="'+escH(num)+'">'+escH(label)+'</option>';
+    }).join('');
   }
   // Populate task-shipment with shipping options
   var taskShipEl = document.getElementById('task-shipment');
@@ -11352,7 +11356,8 @@ function editShipment(id) {
   document.getElementById('ship-tracking').value=s.tracking||'';
   document.getElementById('ship-carrier').value=s.carrier||'';
   document.getElementById('ship-desc').value=s.desc||'';
-  document.getElementById('ship-po').value=s.po||'';
+  var poObj = (state.pos||[]).find(function(p){ return p.id===s.po; });
+  document.getElementById('ship-po').value = poObj ? (poObj.number||s.po||'') : (s.po||'');
   document.getElementById('ship-task').value=s.task||'';
   document.getElementById('ship-project').value=s.project||'';
   document.getElementById('ship-status').value=s.status||'pending';
