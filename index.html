@@ -835,7 +835,7 @@ background: var(--bg) !important;
 #main > #view-colorcam { padding: 0 !important; }
 /* -- iOS Tab Bar -- */
 #mobileNav {
-display: block !important;
+display: none !important;
 position: fixed !important;
 bottom: 0; left: 0; right: 0;
 z-index: 500;
@@ -2781,8 +2781,13 @@ body.light-mode #mob-tab-bar::after { background: rgba(248,250,252,0.99); }
   /* Hide old back/menu btn nav pattern when tab bar is shown */
   #menuBtn { display: none !important; }
   #mob-back-btn { display: none !important; }
+  /* Hide compact toggle (not useful on mobile) */
+  #compact-toggle-btn { display: none !important; }
+  /* Shrink sync status to dot-only to free topbar space */
+  #mobSyncLabel { display: none !important; }
+  #mob-sync-status { flex-shrink: 1 !important; min-width: 0 !important; }
   /* Adjust topbar */
-  #topbar { padding: 0 16px !important; }
+  #topbar { padding: 0 16px !important; gap: 8px !important; }
 }
 
 /* -- Smart FAB radial menu -- */
@@ -5078,7 +5083,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div class="mobile-nav-item" id="mob-tab-timekeeping" onclick="switchView('timekeeping')" style="position:relative">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
       <span class="nav-label">Time</span>
-      <span id="mob-timer-dot" style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
+      <span style="display:none;position:absolute;top:4px;right:10px;width:7px;height:7px;border-radius:50%;background:#f97316;animation:timerPulse 1.2s ease-in-out infinite"></span>
     </div>
     <div class="mobile-nav-item" id="mob-tab-settings" onclick="switchView('settings')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -13021,16 +13026,20 @@ function startTimer() {
 }
 
 function stopTimer() {
-  if (!_timerInterval && !_timerRunning) return;
+  // Always clear remote timer state regardless of local timer status
+  if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
+  localStorage.removeItem('fop_timer_active');
+  if (!_timerInterval && !_timerRunning) {
+    _timerUpdateUI(false);
+    return;
+  }
   clearInterval(_timerInterval);
   _timerInterval = null;
   var totalMs = Math.ceil((_timerElapsedMs + (Date.now() - _timerStartMs)) / 60000) * 60000;
   _timerRunning = false;
   _timerElapsedMs = 0;
   _timerStoppedAt = Date.now();
-  localStorage.removeItem('fop_timer_active');
   localStorage.setItem('fop_timer_stopped_at', String(_timerStoppedAt));
-  if (db) db.collection('_app_state').doc('timer_active').delete().catch(function(){});
 
   var label = (document.getElementById('timer-label-input')||{}).value || 'Untitled';
   var project = (document.getElementById('timer-project-select')||{}).value || '';
