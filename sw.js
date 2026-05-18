@@ -1,11 +1,11 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v1';
+var CACHE_NAME = 'fieldops-v3';
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(['/index.html', '/manifest.json']).then(function() {
+      return cache.addAll(['/manifest.json']).then(function() {
         return cache.add('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap').catch(function(){});
       });
     })
@@ -32,9 +32,29 @@ var NETWORK_ONLY = [
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
   var url = e.request.url;
+
   for (var i = 0; i < NETWORK_ONLY.length; i++) {
     if (url.indexOf(NETWORK_ONLY[i]) >= 0) return;
   }
+
+  // HTML navigation: network-first so updates always reach the user
+  if (e.request.mode === 'navigate' || url.endsWith('.html')) {
+    e.respondWith(
+      fetch(e.request).then(function(response) {
+        if (response && response.status === 200) {
+          caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, response.clone()); });
+        }
+        return response;
+      }).catch(function() {
+        return caches.match(e.request).then(function(cached){
+          return cached || caches.match('/index.html');
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else: cache-first (fonts, images, scripts)
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       var networkFetch = fetch(e.request).then(function(response) {
@@ -42,9 +62,7 @@ self.addEventListener('fetch', function(e) {
           caches.open(CACHE_NAME).then(function(cache){ cache.put(e.request, response.clone()); });
         }
         return response;
-      }).catch(function() {
-        if (e.request.mode === 'navigate') return caches.match('/index.html');
-      });
+      }).catch(function() { return cached; });
       return cached || networkFetch;
     })
   );
