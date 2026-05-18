@@ -23475,8 +23475,8 @@ function _specDocsRender() {
     if (totalHidden > 0 && !st.q) {
       groupedHtml = '<div style="text-align:center;padding:40px;color:#4a5e7a">'
         +'<div style="font-size:28px;margin-bottom:10px">🙈</div>'
-        +'<div style="font-size:13px;font-weight:700;color:#8da0c0;margin-bottom:6px">All documents in this view are hidden</div>'
-        +'<div style="font-size:12px">Use the ↩ Restore hidden button above to bring them back</div>'
+        +'<div style="font-size:13px;font-weight:700;color:#8da0c0;margin-bottom:6px">All documents have been deleted</div>'
+        +'<div style="font-size:12px">Add new documents with the + Add Doc button</div>'
         +'</div>';
     } else {
       groupedHtml = '<div style="text-align:center;padding:40px;color:#4a5e7a;font-size:13px">No documents match your filters</div>';
@@ -23495,11 +23495,7 @@ function _specDocsRender() {
     });
   }
 
-  // ── Restore-hidden buttons ────────────────────────────────────────
-  var hiddenBtns = sources.map(function(src) {
-    var h = _specLibGetHidden(src.rootId);
-    return h.length ? '<button onclick="_specDocsRestoreHidden(\''+src.rootId+'\')" style="padding:5px 10px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#f87171">↩ '+h.length+' hidden in '+escH(src.mfr)+'</button>' : '';
-  }).filter(Boolean).join('');
+  var hiddenBtns = '';
 
   // ── Manufacturer management panel ────────────────────────────────
   var MFR_PALETTE = ['139,92,246','236,72,153','6,182,212','249,115,22','239,68,68','99,102,241','234,179,8','20,184,166','100,116,139'];
@@ -23737,7 +23733,7 @@ function _specDocsDeleteDoc(key) {
     var origName = docPart;
     var metaOver = _specLibGetMetaOverrides(rootId);
     var displayName = (metaOver[origName]||{}).name || origName;
-    if (confirm('Hide "'+displayName+'" from Spec Docs?\n\nThis can be undone with the "Restore hidden" button.')) {
+    if (confirm('Delete "'+displayName+'"?')) {
       var hidden = _specLibGetHidden(rootId);
       if (hidden.indexOf(origName) === -1) hidden.push(origName);
       _specLibSaveHidden(rootId, hidden);
