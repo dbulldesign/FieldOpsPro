@@ -6418,15 +6418,19 @@ function updateSyncBar() {
 
 function flushSyncQueue() {
   if (!_isOnline || !db || !_syncQueue.length) return;
-  var queue = _syncQueue.slice();
+  // De-duplicate: skip 'set' ops for IDs Firestore already has — these are stale local items
+  var firestoreIds = {};
+  COLLECTIONS.forEach(function(col) { (state[col]||[]).forEach(function(it){ firestoreIds[it.id] = true; }); });
+  var queue = _syncQueue.filter(function(op) { return op.type === 'delete' || !firestoreIds[op.id]; });
+  _syncQueue = [];
+  saveSyncQueue();
+  if (!queue.length) { updateSyncBar(); return; }
   queue.forEach(function(op) {
     try {
       if (op.type === 'set') db.collection(op.col).doc(op.id).set(op.data, {merge:true});
       else if (op.type === 'delete') db.collection(op.col).doc(op.id).delete();
     } catch(e) {}
   });
-  _syncQueue = [];
-  saveSyncQueue();
 
   // Show push notification prompt on desktop after 3rd visit
   if (window.innerWidth > 768 && typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -7022,6 +7026,17 @@ function initFirebase(config) {
         });
       }
 
+      // Track first-snapshot arrival per collection so flush waits for real data
+      var _snapInitCols = {};
+      var _snapFlushDone = false;
+      function _maybeFlush() {
+        if (_snapFlushDone) return;
+        if (COLLECTIONS.every(function(c){ return _snapInitCols[c]; })) {
+          _snapFlushDone = true;
+          setTimeout(flushSyncQueue, 100);
+        }
+      }
+
       COLLECTIONS.forEach(function(col) {
         var unsub = db.collection(col)
           .orderBy('createdAt', 'asc')
@@ -7031,6 +7046,15 @@ function initFirebase(config) {
               // Check for conflicts with recent local edits
               incoming.forEach(function(remoteItem) { _checkConflict(col, remoteItem); });
               state[col] = incoming;
+              // Eagerly remove stale sync queue entries whose IDs Firestore already owns
+              if (_syncQueue.length) {
+                var fsIds = {};
+                incoming.forEach(function(it){ fsIds[it.id] = true; });
+                _syncQueue = _syncQueue.filter(function(op){ return op.type === 'delete' || !fsIds[op.id]; });
+                saveSyncQueue();
+              }
+              // First snapshot for this collection — check if all are ready
+              if (!_snapInitCols[col]) { _snapInitCols[col] = true; _maybeFlush(); }
               renderAllDebounced();
             } catch(renderErr) {
               console.error('renderAll error in onSnapshot:', renderErr);
@@ -7091,7 +7115,8 @@ function initFirebase(config) {
 
       window._fbConfig = config;
       window._fbConnected = true;
-      setTimeout(flushSyncQueue, 800);
+      // Fallback flush in case a collection listener never fires (e.g. network error)
+      setTimeout(function(){ if (!_snapFlushDone) { _snapFlushDone = true; flushSyncQueue(); } }, 6000);
       var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
       var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
       var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
