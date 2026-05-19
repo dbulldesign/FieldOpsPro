@@ -6004,6 +6004,7 @@ window._embeddedFirebaseConfig = {
 };
   </script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- App JavaScript (inline for reliability) -->
@@ -7026,104 +7027,132 @@ function initFirebase(config) {
         });
       }
 
-      // Track first-snapshot arrival per collection so flush waits for real data
-      var _snapInitCols = {};
-      var _snapFlushDone = false;
-      function _maybeFlush() {
-        if (_snapFlushDone) return;
-        if (COLLECTIONS.every(function(c){ return _snapInitCols[c]; })) {
-          _snapFlushDone = true;
-          setTimeout(flushSyncQueue, 100);
+      // Wire all Firestore listeners — called after auth is confirmed
+      function _setupListeners() {
+        // Track first-snapshot arrival per collection so flush waits for real data
+        var _snapInitCols = {};
+        var _snapFlushDone = false;
+        function _maybeFlush() {
+          if (_snapFlushDone) return;
+          if (COLLECTIONS.every(function(c){ return _snapInitCols[c]; })) {
+            _snapFlushDone = true;
+            setTimeout(flushSyncQueue, 100);
+          }
         }
+
+        COLLECTIONS.forEach(function(col) {
+          var unsub = db.collection(col)
+            .orderBy('createdAt', 'asc')
+            .onSnapshot(function(snap) {
+              try {
+                var incoming = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
+                // Check for conflicts with recent local edits
+                incoming.forEach(function(remoteItem) { _checkConflict(col, remoteItem); });
+                state[col] = incoming;
+                // Eagerly remove stale sync queue entries whose IDs Firestore already owns
+                if (_syncQueue.length) {
+                  var fsIds = {};
+                  incoming.forEach(function(it){ fsIds[it.id] = true; });
+                  _syncQueue = _syncQueue.filter(function(op){ return op.type === 'delete' || !fsIds[op.id]; });
+                  saveSyncQueue();
+                }
+                // First snapshot for this collection — check if all are ready
+                if (!_snapInitCols[col]) { _snapInitCols[col] = true; _maybeFlush(); }
+                renderAllDebounced();
+              } catch(renderErr) {
+                console.error('renderAll error in onSnapshot:', renderErr);
+                if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
+                window._dbgDiv = document.createElement('div');
+                window._dbgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all;max-height:120px;overflow:auto';
+                window._dbgDiv.textContent = 'RENDER ERR: '+(renderErr.message||renderErr)+(renderErr.stack ? ' @ '+renderErr.stack.split('\n')[1] : '');
+                document.body && document.body.appendChild(window._dbgDiv);
+              }
+            }, function(err) { console.error('Firestore snapshot error ['+col+']:', err.code, err.message); });
+          unsubscribers.push(unsub);
+        });
+
+        // Cross-device timer sync — listen for active timer state
+        var timerUnsub = db.collection('_app_state').doc('timer_active')
+          .onSnapshot(function(doc) {
+            if (!doc.exists) {
+              // Timer was stopped on another device
+              if (_timerRunning) {
+                clearInterval(_timerInterval);
+                _timerInterval = null;
+                _timerRunning = false;
+                _timerElapsedMs = 0;
+                localStorage.removeItem('fop_timer_active');
+                var disp = document.getElementById('timer-display');
+                if (disp) disp.textContent = '00:00:00';
+                _timerUpdateUI(false);
+              }
+              return;
+            }
+            var d = doc.data();
+            if (!d || !d.running) return;
+            // Already running the same timer on this device — don't restart
+            if (_timerRunning && _timerStartMs === d.startMs) return;
+            // This timer session was already stopped or discarded on this device — don't revive it
+            if (d.startMs && _timerStoppedAt && d.startMs <= _timerStoppedAt) return;
+            // Adopt the timer started on another device
+            clearInterval(_timerInterval);
+            _timerStartMs = d.startMs || 0;
+            _timerElapsedMs = d.elapsedMs || 0;
+            _timerRunning = true;
+            var labelEl = document.getElementById('timer-label-input');
+            var projEl  = document.getElementById('timer-project-select');
+            if (labelEl) labelEl.value = d.label || '';
+            if (projEl)  projEl.value  = d.project || '';
+            updateTimerTaskSelect();
+            var taskEl = document.getElementById('timer-task-select');
+            if (taskEl && d.taskId) taskEl.value = d.taskId;
+            localStorage.setItem('fop_timer_active', JSON.stringify({
+              startMs: _timerStartMs, elapsedMs: _timerElapsedMs,
+              label: d.label || '', project: d.project || '', taskId: d.taskId || ''
+            }));
+            _timerTick();
+            _timerInterval = setInterval(_timerTick, 1000);
+            _timerUpdateUI(true);
+          }, function(err) { console.warn('Timer sync listener error:', err); });
+        unsubscribers.push(timerUnsub);
+
+        window._fbConfig = config;
+        window._fbConnected = true;
+        // Fallback flush in case a collection listener never fires (e.g. network error)
+        setTimeout(function(){ if (!_snapFlushDone) { _snapFlushDone = true; flushSyncQueue(); } }, 6000);
+        var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
+        var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
+        var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
+        var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
+        var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
+        toast('🔥 Firebase connected — syncing!');
+        if (typeof updateSyncDot === 'function') updateSyncDot();
       }
 
-      COLLECTIONS.forEach(function(col) {
-        var unsub = db.collection(col)
-          .orderBy('createdAt', 'asc')
-          .onSnapshot(function(snap) {
-            try {
-              var incoming = snap.docs.map(function(d){ return _merge({id: d.id}, d.data()); });
-              // Check for conflicts with recent local edits
-              incoming.forEach(function(remoteItem) { _checkConflict(col, remoteItem); });
-              state[col] = incoming;
-              // Eagerly remove stale sync queue entries whose IDs Firestore already owns
-              if (_syncQueue.length) {
-                var fsIds = {};
-                incoming.forEach(function(it){ fsIds[it.id] = true; });
-                _syncQueue = _syncQueue.filter(function(op){ return op.type === 'delete' || !fsIds[op.id]; });
-                saveSyncQueue();
-              }
-              // First snapshot for this collection — check if all are ready
-              if (!_snapInitCols[col]) { _snapInitCols[col] = true; _maybeFlush(); }
-              renderAllDebounced();
-            } catch(renderErr) {
-              console.error('renderAll error in onSnapshot:', renderErr);
-              if(window._dbgDiv) window._dbgDiv.parentNode && window._dbgDiv.parentNode.removeChild(window._dbgDiv);
-              window._dbgDiv = document.createElement('div');
-              window._dbgDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:99999;font-family:monospace;word-break:break-all;max-height:120px;overflow:auto';
-              window._dbgDiv.textContent = 'RENDER ERR: '+(renderErr.message||renderErr)+(renderErr.stack ? ' @ '+renderErr.stack.split('\n')[1] : '');
-              document.body && document.body.appendChild(window._dbgDiv);
-            }
-          }, function(err) { console.warn('Firestore error:', err); });
-        unsubscribers.push(unsub);
+      // Sign in anonymously so Firestore rules based on request.auth != null work.
+      // onAuthStateChanged fires immediately if already signed in (persisted session).
+      var auth = firebase.auth(app);
+      var _authListenerDone = false;
+      var _authUnsub = auth.onAuthStateChanged(function(user) {
+        if (_authListenerDone) return;
+        _authListenerDone = true;
+        _authUnsub();
+        if (user) {
+          _setupListeners();
+        } else {
+          auth.signInAnonymously().then(function() {
+            // onAuthStateChanged will fire again with the new user
+          }).catch(function(authErr) {
+            console.warn('Anonymous sign-in failed (' + authErr.code + ') — connecting without auth');
+            _setupListeners();
+          });
+        }
       });
+      // Retry if onAuthStateChanged never fires (offline at startup)
+      setTimeout(function() {
+        if (!_authListenerDone) { _authListenerDone = true; _authUnsub(); _setupListeners(); }
+      }, 5000);
 
-      // Cross-device timer sync — listen for active timer state
-      var timerUnsub = db.collection('_app_state').doc('timer_active')
-        .onSnapshot(function(doc) {
-          if (!doc.exists) {
-            // Timer was stopped on another device
-            if (_timerRunning) {
-              clearInterval(_timerInterval);
-              _timerInterval = null;
-              _timerRunning = false;
-              _timerElapsedMs = 0;
-              localStorage.removeItem('fop_timer_active');
-              var disp = document.getElementById('timer-display');
-              if (disp) disp.textContent = '00:00:00';
-              _timerUpdateUI(false);
-            }
-            return;
-          }
-          var d = doc.data();
-          if (!d || !d.running) return;
-          // Already running the same timer on this device — don't restart
-          if (_timerRunning && _timerStartMs === d.startMs) return;
-          // This timer session was already stopped or discarded on this device — don't revive it
-          if (d.startMs && _timerStoppedAt && d.startMs <= _timerStoppedAt) return;
-          // Adopt the timer started on another device
-          clearInterval(_timerInterval);
-          _timerStartMs = d.startMs || 0;
-          _timerElapsedMs = d.elapsedMs || 0;
-          _timerRunning = true;
-          var labelEl = document.getElementById('timer-label-input');
-          var projEl  = document.getElementById('timer-project-select');
-          if (labelEl) labelEl.value = d.label || '';
-          if (projEl)  projEl.value  = d.project || '';
-          updateTimerTaskSelect();
-          var taskEl = document.getElementById('timer-task-select');
-          if (taskEl && d.taskId) taskEl.value = d.taskId;
-          localStorage.setItem('fop_timer_active', JSON.stringify({
-            startMs: _timerStartMs, elapsedMs: _timerElapsedMs,
-            label: d.label || '', project: d.project || '', taskId: d.taskId || ''
-          }));
-          _timerTick();
-          _timerInterval = setInterval(_timerTick, 1000);
-          _timerUpdateUI(true);
-        }, function(err) { console.warn('Timer sync listener error:', err); });
-      unsubscribers.push(timerUnsub);
-
-      window._fbConfig = config;
-      window._fbConnected = true;
-      // Fallback flush in case a collection listener never fires (e.g. network error)
-      setTimeout(function(){ if (!_snapFlushDone) { _snapFlushDone = true; flushSyncQueue(); } }, 6000);
-      var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
-      var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
-      var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
-      var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
-      var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
-      toast('🔥 Firebase connected — syncing!');
-      if (typeof updateSyncDot === 'function') updateSyncDot();
     } catch(e) {
       var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
       toast('Firebase error: ' + e.message);
@@ -10197,11 +10226,13 @@ function syncNow() {
         if (btn) { btn.classList.remove('syncing'); btn.classList.add('synced'); btn.title = 'Synced ✓'; setTimeout(function(){ btn.classList.remove('synced'); btn.title='Sync with Firebase (R)'; }, 2000); }
         toast('✓ Synced with Firebase');
       }
-    }).catch(function() {
+    }).catch(function(err) {
+      console.error('syncNow error ['+col+']:', err.code, err.message);
       done++;
       if (done === total) {
-        if (btn) { btn.classList.remove('syncing'); btn.classList.add('sync-error'); btn.title = 'Sync failed'; setTimeout(function(){ btn.classList.remove('sync-error'); btn.title='Sync with Firebase (R)'; }, 2500); }
-        toast('⚠️ Sync error — check connection');
+        var errMsg = (err && err.code) ? err.code : 'check connection';
+        if (btn) { btn.classList.remove('syncing'); btn.classList.add('sync-error'); btn.title = 'Sync failed: ' + errMsg; setTimeout(function(){ btn.classList.remove('sync-error'); btn.title='Sync with Firebase (R)'; }, 4000); }
+        toast('⚠️ Sync error: ' + errMsg);
       }
     });
   });
