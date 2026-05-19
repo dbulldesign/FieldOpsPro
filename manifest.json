@@ -2,7 +2,7 @@
   "name": "FieldOps Pro",
   "short_name": "FieldOps",
   "description": "Field operations management — tasks, projects, shipping, troubleshooting",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#080d1a",
   "theme_color": "#080d1a",

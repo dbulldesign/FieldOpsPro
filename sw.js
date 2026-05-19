@@ -1,11 +1,16 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v8';
+var CACHE_NAME = 'fieldops-v9';
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(['./manifest.json']).then(function() {
+      // Cache both the clean root URL and the explicit index.html URL
+      return cache.addAll([
+        self.registration.scope,
+        self.registration.scope + 'index.html',
+        self.registration.scope + 'manifest.json'
+      ]).then(function() {
         return cache.add('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap').catch(function(){});
       });
     })
@@ -38,7 +43,7 @@ self.addEventListener('fetch', function(e) {
   }
 
   // HTML navigation: network-first so updates always reach the user
-  if (e.request.mode === 'navigate' || url.endsWith('.html')) {
+  if (e.request.mode === 'navigate' || url.endsWith('.html') || url === self.registration.scope) {
     e.respondWith(
       fetch(e.request).then(function(response) {
         if (response && response.status === 200) {
@@ -47,7 +52,10 @@ self.addEventListener('fetch', function(e) {
         return response;
       }).catch(function() {
         return caches.match(e.request).then(function(cached){
-          return cached || caches.match(self.registration.scope + 'index.html');
+          // Fall back to any cached version of the app shell
+          return cached
+            || caches.match(self.registration.scope)
+            || caches.match(self.registration.scope + 'index.html');
         });
       })
     );
