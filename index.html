@@ -4942,8 +4942,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <button onclick="window._fbRunDiag()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Run Connection Test</button>
         <div id="fdb-diag-result" style="margin-top:10px;font-size:12px;line-height:1.8;"></div>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);color:#8da0c0;">
-          <strong style="color:#f59e0b;">If sync fails:</strong><br>
-          1. <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6;">Firebase Console</a> → your project → <strong>Firestore Database → Rules</strong> — paste:<br>
+          <strong style="color:#f59e0b;">If sync fails (permission-denied):</strong><br>
+          <a href="https://console.firebase.google.com" target="_blank" style="color:#3b82f6;">Firebase Console</a> → your project → <strong>Firestore Database → Rules</strong> — paste then click Publish:<br>
           <code style="display:block;background:rgba(255,255,255,0.06);padding:8px 10px;border-radius:6px;margin:6px 0;white-space:pre;font-size:11px;">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -4952,7 +4952,6 @@ service cloud.firestore {
     }
   }
 }</code>
-          2. Firebase Console → <strong>Authentication → Sign-in method → Anonymous → Enable</strong>
         </div>
       </div>
 
@@ -6041,7 +6040,6 @@ window._embeddedFirebaseConfig = {
 };
   </script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- App JavaScript (inline for reliability) -->
@@ -7209,33 +7207,12 @@ function initFirebase(config) {
         if (typeof updateSyncDot === 'function') updateSyncDot();
       }
 
-      // Start listeners immediately — don't block on auth
+      // Start listeners immediately
       _setupListeners();
 
-      // Try anonymous auth in the background.
-      // Required if Firestore rules use `request.auth != null`.
-      // If auth is not enabled in Firebase console, sign-in fails silently and rules
-      // based on `if true` or a time-based test-mode rule still work.
-      try {
-        var auth = firebase.auth(app);
-        var _authPersist = _isIOS ? firebase.auth.Auth.Persistence.SESSION : firebase.auth.Auth.Persistence.LOCAL;
-        auth.setPersistence(_authPersist).catch(function(){}).then(function() {
-          auth.onAuthStateChanged(function(user) {
-            window._fbAuthUid = user ? user.uid : null;
-            var el = document.getElementById('fdb-auth-status');
-            if (el) el.textContent = user ? ('Signed in (uid: ' + user.uid.slice(0, 8) + '…)') : 'Not authenticated';
-          });
-          auth.signInAnonymously().catch(function(err) {
-            console.warn('[Firebase] Anonymous sign-in failed:', err.code,
-              '— if Firestore rules require auth, enable Anonymous sign-in in Firebase Console → Authentication → Sign-in method');
-            window._fbAuthErr = err.code;
-            var el = document.getElementById('fdb-auth-status');
-            if (el) el.textContent = 'Auth error: ' + err.code;
-          });
-        });
-      } catch(authErr) {
-        console.warn('[Firebase] Auth init failed:', authErr.message);
-      }
+      // Auth not required — Firestore rules use `allow read, write: if true`
+      var el = document.getElementById('fdb-auth-status');
+      if (el) el.textContent = 'Not required';
 
     } catch(e) {
       var _fse=document.getElementById('firebase-status'); if(_fse) _fse.innerHTML='<span style="color:#ef4444">&#x274C; Error: '+e.message+'</span>';
