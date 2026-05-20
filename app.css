@@ -524,7 +524,7 @@ border-top-color: rgba(0,0,0,0.12) !important;
 display: flex !important;
 justify-content: space-around;
 align-items: flex-start;
-padding: 8px 4px 4px !important;
+padding: 8px 4px 18px !important;
 gap: 0;
 }
 .mobile-nav-item {
