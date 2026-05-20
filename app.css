@@ -431,28 +431,11 @@ Desktop is completely unchanged
 ====================================================== */
 @media (max-width: 768px) {
 
-/* -- Safe area + base layout -- */
+/* -- Base layout -- */
 html, body {
 height: 100%; height: 100dvh;
 overflow: hidden;
 -webkit-text-size-adjust: 100%;
-background: #0e1525;
-}
-html[data-theme="light"], html[data-theme="light"] body {
-background: #f9f9fb;
-}
-/* Explicit fill for safe-area zone below mobileNav — prevents blank strip on iOS PWA */
-html::after {
-content: '';
-position: fixed;
-bottom: 0; left: 0; right: 0;
-height: env(safe-area-inset-bottom, 0px);
-background: #0e1525;
-z-index: 499;
-pointer-events: none;
-}
-html[data-theme="light"]::after {
-background: #f9f9fb;
 }
 #app {
 height: 100dvh;
@@ -483,8 +466,7 @@ z-index: -1;
 /* -- iOS Topbar -- */
 #topbar {
 padding: 0 12px;
-padding-top: env(safe-area-inset-top, 0px);
-height: calc(52px + env(safe-area-inset-top, 0px));
+height: 52px;
 flex-shrink: 0;
 position: static; top: 0; z-index: 200;
 }
@@ -518,7 +500,7 @@ overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 overscroll-behavior-y: contain;
 padding: 14px 14px 0 14px;
-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+padding-bottom: 80px;
 }
 
 /* -- iOS Tab Bar -- */
@@ -531,7 +513,7 @@ background: rgba(14,21,37,0.94) !important;
 backdrop-filter: blur(24px) saturate(180%) !important;
 -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
 border-top: 1px solid rgba(255,255,255,0.1) !important;
-padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+padding-bottom: 0 !important;
 padding-top: 0 !important;
 }
 [data-theme="light"] #mobileNav {
