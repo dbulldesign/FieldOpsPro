@@ -436,6 +436,23 @@ html, body {
 height: 100%; height: 100dvh;
 overflow: hidden;
 -webkit-text-size-adjust: 100%;
+background: #0e1525;
+}
+html[data-theme="light"], html[data-theme="light"] body {
+background: #f9f9fb;
+}
+/* Explicit fill for safe-area zone below mobileNav — prevents blank strip on iOS PWA */
+html::after {
+content: '';
+position: fixed;
+bottom: 0; left: 0; right: 0;
+height: env(safe-area-inset-bottom, 0px);
+background: #0e1525;
+z-index: 499;
+pointer-events: none;
+}
+html[data-theme="light"]::after {
+background: #f9f9fb;
 }
 #app {
 height: 100dvh;
