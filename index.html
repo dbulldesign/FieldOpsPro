@@ -6492,9 +6492,9 @@ setInterval(function() {
   el.textContent = db ? 'connected' : 'not connected';
   el.style.color  = db ? '#22c55e' : '#ef4444';
   var au = document.getElementById('fdb-auth-status');
-  if (au && !au.textContent.match(/Signed in|error/i)) {
-    au.textContent = window._fbAuthUid ? ('Signed in (uid: ' + window._fbAuthUid.slice(0,8) + '…)') : (window._fbAuthErr ? 'Auth error: ' + window._fbAuthErr : 'Not authenticated');
-    au.style.color  = window._fbAuthUid ? '#22c55e' : '#f59e0b';
+  if (au) {
+    au.textContent = 'Not required';
+    au.style.color = '#22c55e';
   }
 }, 2000);
 
