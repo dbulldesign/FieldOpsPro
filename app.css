@@ -431,15 +431,11 @@ Desktop is completely unchanged
 ====================================================== */
 @media (max-width: 768px) {
 
-/* -- Safe area + base layout -- */
+/* -- Base layout -- */
 html, body {
 height: 100%; height: 100dvh;
 overflow: hidden;
 -webkit-text-size-adjust: 100%;
-background: #0e1525;
-}
-html[data-theme="light"], html[data-theme="light"] body {
-background: #f9f9fb;
 }
 #app {
 height: 100dvh;
@@ -470,8 +466,7 @@ z-index: -1;
 /* -- iOS Topbar -- */
 #topbar {
 padding: 0 12px;
-padding-top: env(safe-area-inset-top, 0px);
-height: calc(52px + env(safe-area-inset-top, 0px));
+height: 52px;
 flex-shrink: 0;
 position: static; top: 0; z-index: 200;
 }
