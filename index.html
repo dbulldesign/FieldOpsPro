@@ -5298,6 +5298,7 @@ service cloud.firestore {
       <h3 id="task-modal-title">New Task</h3>
       <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
         <button class="btn btn-primary btn-sm" onclick="saveTask()">Save</button>
+        <button id="task-timer-btn" class="btn btn-ghost btn-sm" onclick="_startTaskTimer()" style="display:none;font-size:12px">⏱ Timer</button>
         <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-task')">✕</button>
       </div>
     </div>
@@ -5369,6 +5370,15 @@ service cloud.firestore {
         </div>
       </div>
       <div class="form-group"><label for="task-desc">Description</label><textarea id="task-desc" placeholder="Task details, steps, notes…"></textarea></div>
+      <!-- Subtasks -->
+      <div class="form-group" id="task-subtasks-wrap">
+        <label>Subtasks</label>
+        <div id="task-subtasks-list" style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="task-subtask-input" placeholder="Add a subtask…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();_addSubtask();}">
+          <button class="btn btn-ghost btn-sm" onclick="_addSubtask()">Add</button>
+        </div>
+      </div>
       <!-- Custom fields -->
       <div class="form-group" style="margin-top:6px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -7574,9 +7584,12 @@ function openAddModal() {
   if(m !== 'modal-issue') populateProjectSelects();
   if(m === 'modal-issue') { openTagsForEdit(''); var ci=document.getElementById('issue-cat'); if(ci) ci.value=''; _issueLinks=[]; renderIssueLinksList(); loadStepsEditor([]); }
   if(m === 'modal-event') populateEventContactList();
-  // Hide notes section for new tasks
+  // Hide notes section and timer button for new tasks; reset subtask state
   var ns = document.getElementById('task-notes-section');
   if (ns) ns.style.display = 'none';
+  var tb = document.getElementById('task-timer-btn'); if(tb) tb.style.display = 'none';
+  _newTaskSubtasks = [];
+  _populateSubtasks(null);
   document.getElementById('task-modal-title').textContent = 'New Task';
   openModal(m);
 }
@@ -10950,6 +10963,7 @@ function saveTask() {
     nextTitle: document.getElementById('task-next-title') ? document.getElementById('task-next-title').value.trim() : '',
     customFields: getTaskCustomFields()
   };
+  if(!editingId && _newTaskSubtasks.length) item.subtasks = _newTaskSubtasks.slice();
   if(editingId){
     updateItem('tasks',editingId,item);
     toast('Task updated');
@@ -10957,6 +10971,7 @@ function saveTask() {
     addItem('tasks',item);
     if(recur) scheduleNextRecur(item);
     toast('Task added' + (recur ? ' · Repeats ' + recur : ''));
+    _newTaskSubtasks = [];
   }
   closeModal('modal-task');
 }
@@ -11002,6 +11017,8 @@ function editTask(id) {
   var ntSel = document.getElementById('task-next-title');
   if (ntSel) ntSel.value = t.nextTitle||'';
   populateTaskCustomFields(t.customFields||[]);
+  _populateSubtasks(t);
+  var tb = document.getElementById('task-timer-btn'); if(tb) tb.style.display = '';
   openModal('modal-task');
 }
 
@@ -22780,6 +22797,9 @@ window._colorCamStop   = _colorCamStop;
 // ═══════════════════════════════════════════════
 //  QUICK TASKS VIEW
 // ═══════════════════════════════════════════════
+var _qtFilter = 'all'; // 'all' | 'high' | 'today' | 'overdue'
+var _newTaskSubtasks = []; // subtask buffer for tasks not yet saved
+
 function _qtRender() {
   var root = document.getElementById('qt-root'); if (!root) return;
   var projects = state.projects || [];
@@ -22808,17 +22828,33 @@ function _qtRender() {
     var proj = projects.find(function(p){ return p.id===t.project; });
     var isOverdue = t.due && t.due<today;
     var isToday   = t.due===today;
-    var pColor = {high:'#ef4444',medium:'#f59e0b',low:'#10b981'}[t.priority]||'#6e8aad';
+    var pColor = {high:'#ef4444',medium:'#f59e0b',low:'#10b981'}[t.priority||'medium']||'#6e8aad';
+    // Priority cycle chip
+    var prioLabel = {high:'H',medium:'M',low:'L'}[t.priority||'medium']||'M';
+    // Due date formatting with overdue days count
     var dueFmt='';
     if(t.due){
       if(t.due===today) dueFmt='Today';
       else if(t.due===tomorrow) dueFmt='Tomorrow';
+      else if(isOverdue){ var diffDays=Math.round((new Date(today+'T00:00:00')-new Date(t.due+'T00:00:00'))/86400000); dueFmt=diffDays+'d overdue'; }
       else { var d=new Date(t.due+'T00:00:00'); dueFmt=d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
     }
-    return '<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05)" onclick="_qtEdit(\''+t.id+'\')">'
+    // Project color: use project's stored color, or derive from status
+    var projColorVal=(function(){
+      if(!t.project||!proj) return null;
+      if(proj.color) return proj.color;
+      return {active:'#10b981',planning:'#3b82f6','on-hold':'#fbbf24',completed:'#64748b'}[proj.status]||'#6e8aad';
+    })();
+    // Subtask progress badge
+    var subBadge=(t.subtasks&&t.subtasks.length
+      ?'<span style="font-size:10px;color:#6e8aad;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:2px 6px;flex-shrink:0">'
+        +t.subtasks.filter(function(s){return s.done;}).length+'/'+t.subtasks.length+'</span>':'');
+    return '<div style="display:flex;align-items:center;gap:8px;padding:11px 14px 11px '+(projColorVal?'11px':'14px')+';border-bottom:1px solid rgba(255,255,255,0.05);border-left:3px solid '+(projColorVal||'transparent')+'" onclick="_qtEdit(\''+t.id+'\')">'
       +'<button onclick="event.stopPropagation();_qtDone(\''+t.id+'\')" title="Mark complete" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid '+pColor+';background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseenter="this.style.background=\''+pColor+'33\'" onmouseleave="this.style.background=\'transparent\'"></button>'
+      +'<span onclick="event.stopPropagation();_qtCyclePriority(\''+t.id+'\')" title="Cycle priority" style="flex-shrink:0;font-size:9px;font-weight:800;color:'+pColor+';background:'+pColor+'1a;border:1px solid '+pColor+'44;border-radius:4px;padding:1px 5px;cursor:pointer;line-height:1.5;-webkit-tap-highlight-color:transparent">'+prioLabel+'</span>'
       +'<span style="flex:1;font-size:13px;font-weight:600;color:#f0f4ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer">'+escH(t.title)+'</span>'
-      +(proj?'<span style="font-size:10px;font-weight:700;color:#6e8aad;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:2px 7px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">'+escH(proj.name)+'</span>':'')
+      +subBadge
+      +(proj?'<span style="font-size:10px;font-weight:700;color:#6e8aad;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:2px 7px;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">'+escH(proj.name)+'</span>':'')
       +(dueFmt?'<span style="font-size:11px;font-weight:700;color:'+(isOverdue?'#ef4444':isToday?'#f59e0b':'#6e8aad')+';white-space:nowrap;flex-shrink:0">'+dueFmt+'</span>':'')
       +'</div>';
   }
@@ -22829,17 +22865,32 @@ function _qtRender() {
       +tasks.map(taskRow).join('');
   }
 
-  var overdue  = open.filter(function(t){ return t.due&&t.due<today; });
-  var todayT   = open.filter(function(t){ return t.due===today; });
-  var upcoming = open.filter(function(t){ return t.due&&t.due>today; });
-  var noDue    = open.filter(function(t){ return !t.due; });
+  var filtered = open;
+  if(_qtFilter==='high')    filtered=open.filter(function(t){return t.priority==='high';});
+  if(_qtFilter==='today')   filtered=open.filter(function(t){return t.due===today;});
+  if(_qtFilter==='overdue') filtered=open.filter(function(t){return t.due&&t.due<today;});
+  var overdue  = filtered.filter(function(t){ return t.due&&t.due<today; });
+  var todayT   = filtered.filter(function(t){ return t.due===today; });
+  var upcoming = filtered.filter(function(t){ return t.due&&t.due>today; });
+  var noDue    = filtered.filter(function(t){ return !t.due; });
+
+  var total = open.length + doneCount;
+  var pct = total > 0 ? doneCount / total : 0;
+  var r = 14; var circ = 2 * Math.PI * r;
+  var dashFill = (pct * circ).toFixed(2); var dashGap = ((1-pct) * circ).toFixed(2);
 
   root.innerHTML =
     '<div style="max-width:640px;margin:0 auto;padding:20px 16px 60px">'
-    // Header
+    // Header with progress ring
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<svg width="36" height="36" viewBox="0 0 36 36" style="transform:rotate(-90deg);flex-shrink:0">'
+    +'<circle cx="18" cy="18" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2.5"/>'
+    +(total>0?'<circle cx="18" cy="18" r="'+r+'" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="'+dashFill+' '+dashGap+'" stroke-linecap="round"/>':'')
+    +'</svg>'
     +'<div><h2 style="font-size:18px;font-weight:700;color:#f0f4ff;margin:0 0 2px">Tasks</h2>'
     +'<p style="font-size:12px;color:#6e8aad;margin:0">'+open.length+' open &nbsp;·&nbsp; '+doneCount+' done</p></div>'
+    +'</div>'
     +'<button onclick="switchView(\'tasks\')" style="font-size:11px;font-weight:700;color:#4f8ef7;background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);border-radius:7px;padding:5px 12px;cursor:pointer">Full View →</button>'
     +'</div>'
     // Quick-add card
@@ -22870,15 +22921,25 @@ function _qtRender() {
       return '<button onclick="document.getElementById(\'qt-due\').value=\''+pair[1]+'\'" style="font-size:11px;font-weight:700;color:#a3b8d4;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap">'+pair[0]+'</button>';
     }).join('')
     +'</div></div>'
+    // Filter chips
+    +'<div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none">'
+    +['all','high','today','overdue'].map(function(f){
+      var labels={all:'All',high:'⬆ High',today:'Due Today',overdue:'Overdue'};
+      var on=(_qtFilter===f);
+      return '<button onclick="_qtSetFilter(\''+f+'\')" style="flex-shrink:0;font-size:11px;font-weight:700;border-radius:20px;padding:5px 13px;border:1px solid '+(on?'#4f8ef7':'rgba(255,255,255,0.1)')+';background:'+(on?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';color:'+(on?'#4f8ef7':'#6e8aad')+';cursor:pointer;-webkit-tap-highlight-color:transparent">'+labels[f]+'</button>';
+    }).join('')
+    +'</div>'
     // Task list
     +(open.length===0
       ? '<div style="text-align:center;padding:48px 0;color:#6e8aad;font-size:14px">No open tasks — add one above</div>'
-      : '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">'
-        +group('Overdue',overdue,'#ef4444')
-        +group('Today',todayT,'#f59e0b')
-        +group('Upcoming',upcoming,'#4f8ef7')
-        +group('No Date',noDue,'#6e8aad')
-        +'</div>'
+      : filtered.length===0
+        ? '<div style="text-align:center;padding:32px 0;color:#6e8aad;font-size:14px">No tasks match this filter</div>'
+        : '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">'
+          +group('Overdue',overdue,'#ef4444')
+          +group('Today',todayT,'#f59e0b')
+          +group('Upcoming',upcoming,'#4f8ef7')
+          +group('No Date',noDue,'#6e8aad')
+          +'</div>'
     )
     +'</div>';
 }
@@ -22904,10 +22965,103 @@ function _qtDone(id) {
 
 function _qtEdit(id) { editTask(id); }
 
-window._qtRender = _qtRender;
-window._qtAdd    = _qtAdd;
-window._qtDone   = _qtDone;
-window._qtEdit   = _qtEdit;
+function _qtSetFilter(f) { _qtFilter = f; _qtRender(); }
+
+function _qtCyclePriority(id) {
+  var t = (state.tasks||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  var next = {high:'low',medium:'high',low:'medium'}[t.priority||'medium'];
+  updateItem('tasks', id, { priority: next });
+  setTimeout(_qtRender, 80);
+}
+
+function _startTaskTimer() {
+  var t = state.tasks.find(function(x){ return x.id===editingId; });
+  if(!t) return;
+  closeModal('modal-task');
+  var labelEl = document.getElementById('timer-label-input');
+  var projSel = document.getElementById('timer-project-select');
+  var taskSel = document.getElementById('timer-task-select');
+  if(labelEl) labelEl.value = t.title;
+  if(projSel && t.project) {
+    projSel.value = t.project;
+    if(typeof updateTimerTaskSelect === 'function') updateTimerTaskSelect();
+    if(taskSel) { taskSel.value = t.id; if(taskSel.style) taskSel.style.display=''; }
+  }
+  startTimer();
+  toast('Timer started · ' + t.title);
+}
+
+function _populateSubtasks(t) {
+  var list = document.getElementById('task-subtasks-list');
+  var inp  = document.getElementById('task-subtask-input');
+  if(!list) return;
+  if(inp) inp.value = '';
+  var subs = t ? (t.subtasks||[]) : _newTaskSubtasks;
+  if(!subs.length){ list.innerHTML=''; return; }
+  list.innerHTML = subs.map(function(s,i){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">'
+      +'<input type="checkbox" '+(s.done?'checked':'')+' onclick="_toggleSubtask('+i+')" style="width:14px;height:14px;accent-color:#10b981;flex-shrink:0;cursor:pointer">'
+      +'<span style="flex:1;font-size:12px;color:'+(s.done?'#4a5e7a':'#c8d8f0')+';text-decoration:'+(s.done?'line-through':'none')+'">'+escH(s.text)+'</span>'
+      +'<button onclick="_deleteSubtask('+i+')" style="background:none;border:none;color:#4a5e7a;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0" title="Remove">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+function _addSubtask() {
+  var inp = document.getElementById('task-subtask-input');
+  var text = inp ? inp.value.trim() : '';
+  if(!text) return;
+  if(inp) inp.value = '';
+  if(editingId) {
+    var t = (state.tasks||[]).find(function(x){ return x.id===editingId; });
+    var subs = (t&&t.subtasks) ? t.subtasks.slice() : [];
+    subs.push({text:text, done:false});
+    updateItem('tasks', editingId, {subtasks:subs});
+    _populateSubtasks(state.tasks.find(function(x){return x.id===editingId;}));
+  } else {
+    _newTaskSubtasks.push({text:text, done:false});
+    _populateSubtasks(null);
+  }
+}
+
+function _toggleSubtask(idx) {
+  if(editingId) {
+    var t = (state.tasks||[]).find(function(x){ return x.id===editingId; });
+    var subs = (t&&t.subtasks) ? t.subtasks.slice() : [];
+    if(subs[idx]) subs[idx] = {text:subs[idx].text, done:!subs[idx].done};
+    updateItem('tasks', editingId, {subtasks:subs});
+    _populateSubtasks(state.tasks.find(function(x){return x.id===editingId;}));
+  } else {
+    if(_newTaskSubtasks[idx]) _newTaskSubtasks[idx].done = !_newTaskSubtasks[idx].done;
+    _populateSubtasks(null);
+  }
+}
+
+function _deleteSubtask(idx) {
+  if(editingId) {
+    var t = (state.tasks||[]).find(function(x){ return x.id===editingId; });
+    var subs = (t&&t.subtasks) ? t.subtasks.slice() : [];
+    subs.splice(idx,1);
+    updateItem('tasks', editingId, {subtasks:subs});
+    _populateSubtasks(state.tasks.find(function(x){return x.id===editingId;}));
+  } else {
+    _newTaskSubtasks.splice(idx,1);
+    _populateSubtasks(null);
+  }
+}
+
+window._qtRender        = _qtRender;
+window._qtAdd           = _qtAdd;
+window._qtDone          = _qtDone;
+window._qtEdit          = _qtEdit;
+window._qtSetFilter     = _qtSetFilter;
+window._qtCyclePriority = _qtCyclePriority;
+window._startTaskTimer  = _startTaskTimer;
+window._populateSubtasks= _populateSubtasks;
+window._addSubtask      = _addSubtask;
+window._toggleSubtask   = _toggleSubtask;
+window._deleteSubtask   = _deleteSubtask;
 
 // ═══════════════════════════════════════════════
 //  SHARED SPEC LIBRARY RENDERER
