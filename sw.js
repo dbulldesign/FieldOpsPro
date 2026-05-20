@@ -1,5 +1,5 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v10';
+var CACHE_NAME = 'fieldops-v11';
 
 self.addEventListener('install', function(e) {
   self.skipWaiting();
