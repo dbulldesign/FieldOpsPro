@@ -748,7 +748,7 @@ Desktop is completely unchanged
 
 /* -- Safe area + base layout -- */
 html {
-background: #0a0f1e;
+background: #0d1526;
 }
 html[data-theme="light"] {
 background: #f0f4fa;
@@ -845,15 +845,13 @@ display: none !important;
 position: fixed !important;
 bottom: 0; left: 0; right: 0;
 z-index: 500;
-background: rgba(14,21,37,0.96) !important;
-backdrop-filter: blur(24px) saturate(180%) !important;
--webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+background: #0d1526 !important;
 border-top: 1px solid rgba(255,255,255,0.1) !important;
-padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+padding-bottom: env(safe-area-inset-bottom, 34px) !important;
 padding-top: 0 !important;
 }
 [data-theme="light"] #mobileNav {
-background: rgba(249,249,251,0.96) !important;
+background: #f0f4fa !important;
 border-top-color: rgba(0,0,0,0.12) !important;
 }
 .mobile-nav-items {
