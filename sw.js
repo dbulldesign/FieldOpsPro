@@ -1,11 +1,12 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v13';
+var CACHE_NAME = 'fieldops-v14';
 
 self.addEventListener('install', function(e) {
-  self.skipWaiting();
+  // No skipWaiting — let the SW wait until all tabs are closed before
+  // activating. This prevents mid-session re-navigation on iOS PWA which
+  // causes the Safari toolbar to reappear.
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      // Cache both the clean root URL and the explicit index.html URL
       return cache.addAll([
         self.registration.scope,
         self.registration.scope + 'index.html',
@@ -23,7 +24,7 @@ self.addEventListener('activate', function(e) {
       return Promise.all(
         keys.filter(function(k){ return k !== CACHE_NAME; }).map(function(k){ return caches.delete(k); })
       );
-    }).then(function(){ return self.clients.claim(); })
+    })
   );
 });
 
