@@ -840,20 +840,27 @@ background: var(--bg) !important;
 #main > #view-ledcalc { padding: 0; }
 #main > #view-colorcam { padding: 0 !important; }
 /* -- iOS Tab Bar -- */
+#ios-bottom-fill {
+display: block !important;
+}
 #mobileNav {
 display: flex !important;
 flex-direction: column !important;
 position: fixed !important;
-bottom: 0; left: 0; right: 0;
+bottom: env(safe-area-inset-bottom, 34px) !important;
+left: 0; right: 0;
 z-index: 500;
 background: #0d1526 !important;
 border-top: 1px solid rgba(255,255,255,0.1) !important;
-padding-bottom: env(safe-area-inset-bottom, 34px) !important;
 padding-top: 0 !important;
+padding-bottom: 0 !important;
 }
 [data-theme="light"] #mobileNav {
 background: #f0f4fa !important;
 border-top-color: rgba(0,0,0,0.12) !important;
+}
+[data-theme="light"] #ios-bottom-fill {
+background: #f0f4fa !important;
 }
 .mobile-nav-items {
 display: flex !important;
@@ -5110,6 +5117,7 @@ service cloud.firestore {
 </div><!-- /app -->
 
 <!-- MOBILE NAV -->
+<div id="ios-bottom-fill" style="display:none;position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom,34px);background:#0d1526;z-index:499;"></div>
 
 <nav id="mobileNav">
   <div class="mobile-nav-items">
