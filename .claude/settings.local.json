@@ -7,7 +7,8 @@
       "WebFetch(domain:itshover.com)",
       "WebSearch",
       "WebFetch(domain:www.etcconnect.com)",
-      "WebFetch(domain:www.qtl.lighting)"
+      "WebFetch(domain:www.qtl.lighting)",
+      "Bash(awk '{print $9, $5}')"
     ]
   }
 }
