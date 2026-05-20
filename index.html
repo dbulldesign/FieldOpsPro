@@ -3919,6 +3919,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5.25 3.5 10.14 8 11.29C16.5 22.14 20 17.25 20 12V6l-8-4z"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="15" r="0.5" fill="currentColor"/></svg>
           IP Rating Reference
         </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('fixturedb')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="8" y1="3" x2="8" y2="17"/><line x1="16" y1="3" x2="16" y2="17"/><path d="M7 21h10M12 17v4"/></svg>
+          Fixture Database
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-label">Knowledge</div>
@@ -4733,6 +4737,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <!-- ═══ LED TAPE CALCULATOR ═══ -->
   <div class="view" id="view-ledcalc">
     <div id="led-root" style="width:100%;max-width:100%;padding:24px 24px 40px;box-sizing:border-box"></div>
+  </div>
+
+  <!-- ═══ FIXTURE DATABASE ═══ -->
+  <div class="view" id="view-fixturedb">
+    <div id="fixture-db-root" style="width:100%;max-width:100%;box-sizing:border-box;min-height:100%;"></div>
   </div>
 
   <!-- ═══ COLOR CALCULATOR ═══ -->
@@ -7181,10 +7190,11 @@ function _syncBlob(key, data) {
 
 function _initBlobListeners() {
   var blobDefs = [
-    { key:'dailyPlans', ls:'fop_dailyPlans' },
-    { key:'backlog',    ls:'fop_backlog'    },
-    { key:'systainer',  ls:'fop_systainer'  },
-    { key:'sysLibrary', ls:'fop_sys_lib'    }
+    { key:'dailyPlans',  ls:'fop_dailyPlans'  },
+    { key:'backlog',     ls:'fop_backlog'     },
+    { key:'systainer',  ls:'fop_systainer'   },
+    { key:'sysLibrary', ls:'fop_sys_lib'     },
+    { key:'fixture_db', ls:'fop_fixture_db', onSync: function(data){ if (typeof window._fdbSyncFromFirebase === 'function') window._fdbSyncFromFirebase(data); } }
   ];
   blobDefs.forEach(function(b) {
     var unsub = db.collection('_app_blobs').doc(b.key)
@@ -7192,12 +7202,8 @@ function _initBlobListeners() {
         if (!doc.exists) return;
         var remote = doc.data();
         if (!remote || remote.data === undefined) return;
-        // Only apply if remote is newer than what we have
-        try {
-          var localRaw = localStorage.getItem(b.ls);
-          // Simple last-write-wins: trust remote
-          localStorage.setItem(b.ls, JSON.stringify(remote.data));
-        } catch(e) {}
+        try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e) {}
+        if (b.onSync) try { b.onSync(remote.data); } catch(e2) {}
         renderAllDebounced();
       }, function(err){ console.warn('Blob listener error ('+b.key+'):', err); });
     unsubscribers.push(unsub);
@@ -7350,6 +7356,7 @@ var viewTitles = {
   cablecutlist: 'Cable Cut List',
   ohmslaw:      'Ohm\'s Law Calculator',
   iprating:     'IP Rating Reference',
+  fixturedb:    'Fixture Database',
   etcdocs: 'ETC Spec Library',
   lutrondocs: 'Lutron Spec Library',
   archfixtures: 'Arch Fixtures & Power Supplies',
@@ -7457,7 +7464,8 @@ function switchView(v) {
   if(v==='twblend')      { if (typeof _twRender   === 'function') _twRender(); }
   if(v==='cablecutlist') { if (typeof _ccutRender === 'function') _ccutRender(); }
   if(v==='ohmslaw')      { if (typeof _ohmRender  === 'function') _ohmRender(); }
-  if(v==='iprating')     { if (typeof _ipRender   === 'function') _ipRender(); }
+  if(v==='iprating')     { if (typeof _ipRender       === 'function') _ipRender(); }
+  if(v==='fixturedb')   { if (typeof _fixtureDbRender === 'function') _fixtureDbRender(); }
   if(v==='specdocs') {
     if (typeof _specDocsRender === 'function') _specDocsRender();
   }
@@ -24082,6 +24090,413 @@ window._specDocsExportCSV    = _specDocsExportCSV;
 window._specDocsStartCheckMfr= _specDocsStartCheckMfr;
 window._specDocsAddMfr       = _specDocsAddMfr;
 window._specDocsDeleteMfr    = _specDocsDeleteMfr;
+
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  FIXTURE DATABASE
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  'use strict';
+
+  var SK      = 'fop_fixture_db';
+  var SK_HCOL = 'fop_fixture_db_hcols';
+  var SK_LED  = 'fop_led_fixtures';
+
+  var FIELDS = [
+    { key:'brand',       label:'Brand',         type:'text',   required:true  },
+    { key:'model',       label:'Model / Part #', type:'text',   required:true  },
+    { key:'series',      label:'Series',        type:'text'                   },
+    { key:'type',        label:'Type',          type:'select', options:['LED Tape','Linear','Strip Light','Rope Light','Neon Flex','Other'] },
+    { key:'cct',         label:'CCT',           type:'select', options:['2200K','2700K','3000K','3500K','4000K','5000K','5700K','6500K','Tunable White','RGB','RGBW','RGBA','Other'] },
+    { key:'cri',         label:'CRI',           type:'number'                 },
+    { key:'voltage',     label:'Voltage',       type:'select', options:['12V','24V','48V','120V','277V'] },
+    { key:'watts_ft',    label:'W/ft',          type:'number'                 },
+    { key:'lumens_ft',   label:'lm/ft',         type:'number'                 },
+    { key:'ip',          label:'IP Rating',     type:'select', options:['IP20','IP44','IP54','IP65','IP67','IP68','IP69K'] },
+    { key:'cut_in',      label:'Cut Interval (in)', type:'number'             },
+    { key:'max_run_ft',  label:'Max Run (ft)',   type:'number'                 },
+    { key:'dimming',     label:'Dimming',       type:'select', options:['0-10V','TRIAC','PWM','DALI','DMX','Phase Cut','ELV','Non-Dim','Other'] },
+    { key:'sku',         label:'SKU',           type:'text'                   },
+    { key:'price_ft',    label:'$/ft',          type:'number'                 },
+    { key:'datasheet',   label:'Datasheet URL', type:'text'                   },
+    { key:'notes',       label:'Notes',         type:'text'                   }
+  ];
+
+  var TABLE_KEYS = ['brand','model','type','cct','cri','voltage','watts_ft','lumens_ft','ip','cut_in','max_run_ft','dimming','sku','price_ft'];
+
+  var SAMPLE_FIXTURES = [
+    { id:'fdb-s1', brand:'Generic', model:'60 LEDs/m Standard', series:'', type:'LED Tape', cct:'3000K', cri:80, voltage:'24V', watts_ft:3.2, lumens_ft:320, ip:'IP20', cut_in:1.97, max_run_ft:33, dimming:'0-10V', sku:'', price_ft:null, datasheet:'', notes:'Standard density 24V tape', createdAt:new Date().toISOString() },
+    { id:'fdb-s2', brand:'Generic', model:'60 LEDs/m Wet Location', series:'', type:'LED Tape', cct:'3000K', cri:80, voltage:'24V', watts_ft:3.2, lumens_ft:310, ip:'IP65', cut_in:1.97, max_run_ft:33, dimming:'0-10V', sku:'', price_ft:null, datasheet:'', notes:'Silicone sleeve IP65 version', createdAt:new Date().toISOString() },
+    { id:'fdb-s3', brand:'Generic', model:'120 LEDs/m High Density', series:'', type:'LED Tape', cct:'3000K', cri:90, voltage:'24V', watts_ft:6.4, lumens_ft:680, ip:'IP20', cut_in:0.98, max_run_ft:16, dimming:'0-10V', sku:'', price_ft:null, datasheet:'', notes:'High-output high density', createdAt:new Date().toISOString() }
+  ];
+
+  var _st = {
+    fixtures:   [],
+    filter:     '',
+    sortKey:    'brand',
+    sortDir:    1,
+    hiddenCols: [],
+    modal:      null,
+    editId:     null,
+    editData:   {}
+  };
+
+  // ── Persistence ──────────────────────────────────────────────
+  function _load() {
+    try { var r = JSON.parse(localStorage.getItem(SK) || 'null'); _st.fixtures = (r && r.length) ? r : SAMPLE_FIXTURES.slice(); } catch(e) { _st.fixtures = SAMPLE_FIXTURES.slice(); }
+    try { _st.hiddenCols = JSON.parse(localStorage.getItem(SK_HCOL) || '[]'); } catch(e) { _st.hiddenCols = []; }
+  }
+
+  function _save() {
+    try { localStorage.setItem(SK, JSON.stringify(_st.fixtures)); } catch(e) {}
+    if (window.db) {
+      try { window.db.collection('_app_blobs').doc('fixture_db').set({ data: _st.fixtures, updatedAt: new Date().toISOString() }).catch(function(){}); } catch(e) {}
+    }
+  }
+
+  function _genId() { return 'fx' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+
+  function _esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function _findFx(id) { for (var i = 0; i < _st.fixtures.length; i++) { if (_st.fixtures[i].id === id) return _st.fixtures[i]; } return null; }
+
+  // ── Filtered/sorted list ─────────────────────────────────────
+  function _list() {
+    var q = _st.filter.trim().toLowerCase();
+    var out = _st.fixtures.filter(function(f) {
+      if (!q) return true;
+      return ['brand','model','series','type','cct','sku','notes'].some(function(k){ return String(f[k]||'').toLowerCase().indexOf(q) >= 0; });
+    });
+    var sk = _st.sortKey, sd = _st.sortDir;
+    out.sort(function(a, b) {
+      var av = a[sk], bv = b[sk];
+      if (av == null) av = ''; if (bv == null) bv = '';
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sd;
+      return String(av).localeCompare(String(bv)) * sd;
+    });
+    return out;
+  }
+
+  function _visCols() { return TABLE_KEYS.filter(function(k){ return _st.hiddenCols.indexOf(k) < 0; }); }
+
+  // ── Render ───────────────────────────────────────────────────
+  function _render() {
+    _load();
+    var root = document.getElementById('fixture-db-root');
+    if (!root) return;
+    root.innerHTML = _html();
+    _bind();
+  }
+
+  function _fieldLabel(key) { for (var i = 0; i < FIELDS.length; i++) { if (FIELDS[i].key === key) return FIELDS[i].label; } return key; }
+
+  function _html() {
+    var vc = _visCols();
+    var rows = _list();
+    var totalCount = _st.fixtures.length;
+
+    // ── Toolbar
+    var tb = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+      + '<input id="fdb-q" type="search" placeholder="Search fixtures…" value="' + _esc(_st.filter) + '" style="flex:1;min-width:140px;background:var(--input-bg,var(--surface));border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--fg);font-size:13px;">'
+      + '<button id="fdb-add" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">+ Add Fixture</button>'
+      + '<button id="fdb-imp" style="background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;flex-shrink:0;">↑ Import CSV</button>'
+      + '<button id="fdb-exp" style="background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;flex-shrink:0;">↓ Export CSV</button>'
+      + '<input type="file" id="fdb-file" accept=".csv" style="display:none">'
+      + '</div>';
+
+    // ── Column toggles
+    var ct = '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;">';
+    TABLE_KEYS.forEach(function(k) {
+      var hidden = _st.hiddenCols.indexOf(k) >= 0;
+      ct += '<button onclick="window._fdbTogCol(\'' + k + '\')" style="font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:' + (hidden ? 'transparent' : 'var(--accent)') + ';color:' + (hidden ? 'var(--muted)' : '#fff') + ';opacity:' + (hidden ? '0.5' : '1') + ';">' + _esc(_fieldLabel(k)) + '</button>';
+    });
+    ct += '</div>';
+
+    // ── Count
+    var cnt = '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">'
+      + rows.length + ' fixture' + (rows.length !== 1 ? 's' : '') + (_st.filter ? ' matching "' + _esc(_st.filter) + '"' : '') + ' · ' + totalCount + ' total'
+      + '</div>';
+
+    // ── Table header
+    var th = '<thead><tr style="background:var(--surface);">';
+    vc.forEach(function(k) {
+      var lbl = _fieldLabel(k);
+      var arrow = (k === _st.sortKey) ? (_st.sortDir === 1 ? ' ▲' : ' ▼') : '';
+      th += '<th onclick="window._fdbSort(\'' + k + '\')" style="padding:9px 11px;font-size:11px;font-weight:600;color:var(--muted);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;">' + _esc(lbl) + arrow + '</th>';
+    });
+    th += '<th style="padding:9px 11px;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2;min-width:120px;">Actions</th></tr></thead>';
+
+    // ── Table rows
+    var tb2 = '<tbody>';
+    if (!rows.length) {
+      tb2 += '<tr><td colspan="' + (vc.length + 1) + '" style="padding:48px;text-align:center;color:var(--muted);font-size:14px;">'
+        + (_st.filter ? 'No fixtures match your search.' : 'No fixtures yet — click <strong>+ Add Fixture</strong> or import a CSV.')
+        + '</td></tr>';
+    } else {
+      rows.forEach(function(fx) {
+        tb2 += '<tr onmouseenter="this.style.background=\'var(--hover,rgba(255,255,255,0.04))\'" onmouseleave="this.style.background=\'\'">';
+        vc.forEach(function(k) {
+          var v = fx[k];
+          var disp;
+          if (v === null || v === undefined || v === '') {
+            disp = '<span style="color:var(--muted);opacity:0.4;">—</span>';
+          } else if (k === 'datasheet' && v) {
+            disp = '<a href="' + _esc(v) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;">↗</a>';
+          } else {
+            disp = _esc(String(v));
+          }
+          tb2 += '<td onclick="window._fdbOpenEdit(\'' + fx.id + '\')" style="padding:8px 11px;font-size:13px;color:var(--fg);border-bottom:1px solid var(--border-dim,rgba(255,255,255,0.05));cursor:pointer;white-space:nowrap;">' + disp + '</td>';
+        });
+        tb2 += '<td style="padding:6px 8px;border-bottom:1px solid var(--border-dim,rgba(255,255,255,0.05));white-space:nowrap;">'
+          + '<button onclick="window._fdbToLed(\'' + fx.id + '\')" title="Send to LED Tape Calculator" style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;margin-right:3px;">⚡ LED</button>'
+          + '<button onclick="window._fdbOpenEdit(\'' + fx.id + '\')" title="Edit fixture" style="background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;margin-right:3px;">✏️</button>'
+          + '<button onclick="window._fdbDel(\'' + fx.id + '\')" title="Delete fixture" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;">✕</button>'
+          + '</td>';
+        tb2 += '</tr>';
+      });
+    }
+    tb2 += '</tbody>';
+
+    var table = '<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);">'
+      + '<table style="width:100%;border-collapse:collapse;">' + th + tb2 + '</table>'
+      + '</div>';
+
+    // ── Modal
+    var modal = '';
+    if (_st.modal) {
+      var isEdit = (_st.modal === 'edit');
+      var d = _st.editData;
+      var flds = '';
+      FIELDS.forEach(function(f) {
+        var val = d[f.key] !== undefined && d[f.key] !== null ? d[f.key] : '';
+        var inp;
+        var baseStyle = 'width:100%;box-sizing:border-box;background:var(--input-bg,var(--surface));border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--fg);font-size:13px;';
+        if (f.type === 'select') {
+          inp = '<select id="fdbf-' + f.key + '" style="' + baseStyle + '">'
+            + '<option value="">—</option>'
+            + f.options.map(function(o){ return '<option value="' + _esc(o) + '"' + (val === o ? ' selected' : '') + '>' + _esc(o) + '</option>'; }).join('')
+            + '</select>';
+        } else if (f.type === 'number') {
+          inp = '<input id="fdbf-' + f.key + '" type="number" step="any" value="' + _esc(val) + '" placeholder="optional" style="' + baseStyle + '">';
+        } else {
+          inp = '<input id="fdbf-' + f.key + '" type="text" value="' + _esc(val) + '" placeholder="' + (f.required ? 'required' : 'optional') + '" style="' + baseStyle + '">';
+        }
+        flds += '<div style="display:grid;grid-template-columns:130px 1fr;align-items:center;gap:8px;margin-bottom:9px;">'
+          + '<label style="font-size:12px;color:var(--muted);font-weight:500;">' + _esc(f.label) + (f.required ? '<span style="color:#ef4444"> *</span>' : '') + '</label>'
+          + inp + '</div>';
+      });
+
+      modal = '<div id="fdb-modal-wrap" style="position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;" onclick="if(event.target.id===\'fdb-modal-wrap\')window._fdbCloseModal()">'
+        + '<div style="background:var(--card,var(--surface));border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;padding:24px;margin:auto;" onclick="event.stopPropagation()">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">'
+        + '<h3 style="margin:0;font-size:16px;font-weight:700;">' + (isEdit ? 'Edit Fixture' : 'Add Fixture') + '</h3>'
+        + '<button onclick="window._fdbCloseModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:0 4px;">✕</button>'
+        + '</div>'
+        + '<div id="fdb-err" style="color:#ef4444;font-size:13px;margin-bottom:6px;min-height:18px;"></div>'
+        + flds
+        + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">'
+        + '<button id="fdb-modal-cancel" style="background:var(--surface);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;">Cancel</button>'
+        + '<button id="fdb-modal-save" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">Save Fixture</button>'
+        + '</div></div></div>';
+    }
+
+    return '<div style="padding:20px 20px 80px;">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="22" height="22"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="8" y1="3" x2="8" y2="17"/><line x1="16" y1="3" x2="16" y2="17"/><path d="M7 21h10M12 17v4"/></svg>'
+      + '<h2 style="margin:0;font-size:18px;font-weight:700;">Fixture Database</h2>'
+      + '</div>'
+      + tb + cnt + ct + table + modal
+      + '</div>';
+  }
+
+  // ── Event binding ────────────────────────────────────────────
+  function _bind() {
+    var q = document.getElementById('fdb-q');
+    if (q) q.addEventListener('input', function(){ _st.filter = this.value; _render(); });
+
+    var addBtn = document.getElementById('fdb-add');
+    if (addBtn) addBtn.addEventListener('click', function(){ _st.modal = 'add'; _st.editId = null; _st.editData = {}; _render(); });
+
+    var expBtn = document.getElementById('fdb-exp');
+    if (expBtn) expBtn.addEventListener('click', _exportCSV);
+
+    var impBtn = document.getElementById('fdb-imp');
+    var fileInp = document.getElementById('fdb-file');
+    if (impBtn && fileInp) {
+      impBtn.addEventListener('click', function(){ fileInp.click(); });
+      fileInp.addEventListener('change', function(){ if (this.files && this.files[0]) _importCSV(this.files[0]); this.value = ''; });
+    }
+
+    var saveBtn = document.getElementById('fdb-modal-save');
+    if (saveBtn) saveBtn.addEventListener('click', _save);
+
+    var cancelBtn = document.getElementById('fdb-modal-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', _fdbCloseModal);
+  }
+
+  // ── CRUD ─────────────────────────────────────────────────────
+  function _collectForm() {
+    var d = {};
+    FIELDS.forEach(function(f) {
+      var el = document.getElementById('fdbf-' + f.key);
+      if (!el) return;
+      var v = el.value.trim();
+      d[f.key] = (f.type === 'number') ? (v === '' ? null : parseFloat(v)) : (v || null);
+    });
+    return d;
+  }
+
+  function _save() {
+    var d = _collectForm();
+    var errEl = document.getElementById('fdb-err');
+    if (!d.brand || !d.model) { if (errEl) errEl.textContent = 'Brand and Model are required.'; return; }
+    if (errEl) errEl.textContent = '';
+    if (_st.editId) {
+      for (var i = 0; i < _st.fixtures.length; i++) {
+        if (_st.fixtures[i].id === _st.editId) { _st.fixtures[i] = _merge({}, _st.fixtures[i], d); break; }
+      }
+      if (typeof toast === 'function') toast('Fixture updated');
+    } else {
+      d.id = _genId(); d.createdAt = new Date().toISOString();
+      _st.fixtures.push(d);
+      if (typeof toast === 'function') toast('Fixture added');
+    }
+    _saveData(); _fdbCloseModal();
+  }
+
+  function _saveData() {
+    try { localStorage.setItem(SK, JSON.stringify(_st.fixtures)); } catch(e) {}
+    if (window.db) {
+      try { window.db.collection('_app_blobs').doc('fixture_db').set({ data: _st.fixtures, updatedAt: new Date().toISOString() }).catch(function(){}); } catch(e) {}
+    }
+  }
+
+  function _merge() {
+    var r = {}; for (var a = 0; a < arguments.length; a++) { var o = arguments[a]; if (!o) continue; for (var k in o) { if (Object.prototype.hasOwnProperty.call(o, k)) r[k] = o[k]; } } return r;
+  }
+
+  // ── Global action handlers ───────────────────────────────────
+  function _fdbSort(key) {
+    if (_st.sortKey === key) { _st.sortDir *= -1; } else { _st.sortKey = key; _st.sortDir = 1; }
+    _render();
+  }
+
+  function _fdbOpenEdit(id) {
+    var fx = _findFx(id); if (!fx) return;
+    _st.modal = 'edit'; _st.editId = id; _st.editData = _merge({}, fx); _render();
+  }
+
+  function _fdbDel(id) {
+    if (!confirm('Delete this fixture?')) return;
+    _st.fixtures = _st.fixtures.filter(function(f){ return f.id !== id; });
+    _saveData(); _render();
+    if (typeof toast === 'function') toast('Fixture deleted');
+  }
+
+  function _fdbCloseModal() { _st.modal = null; _st.editId = null; _st.editData = {}; _render(); }
+
+  function _fdbTogCol(key) {
+    var idx = _st.hiddenCols.indexOf(key);
+    if (idx >= 0) { _st.hiddenCols.splice(idx, 1); } else { _st.hiddenCols.push(key); }
+    try { localStorage.setItem(SK_HCOL, JSON.stringify(_st.hiddenCols)); } catch(e) {}
+    _render();
+  }
+
+  function _fdbToLed(id) {
+    var fx = _findFx(id); if (!fx) return;
+    var ledFx = {
+      id: 'fdb-' + fx.id,
+      manufacturer: fx.brand || '',
+      partNumber: (fx.model || '') + (fx.cct ? ' · ' + fx.cct : '') + (fx.series ? ' (' + fx.series + ')' : ''),
+      cutIncrement: fx.cut_in || 1.9685,
+      cutUnit: 'in',
+      wattsPerFt: fx.watts_ft || null,
+      cct: fx.cct || null,
+      maxLen: fx.max_run_ft || null,
+      maxLenUnit: 'ft'
+    };
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(SK_LED) || '[]'); } catch(e) {}
+    var found = false;
+    for (var i = 0; i < list.length; i++) { if (list[i].id === ledFx.id) { list[i] = ledFx; found = true; break; } }
+    if (!found) list.push(ledFx);
+    try { localStorage.setItem(SK_LED, JSON.stringify(list)); } catch(e) {}
+    if (typeof toast === 'function') toast('⚡ Sent to LED Tape Calculator — switch to LED Calc to use it');
+  }
+
+  // ── CSV export ───────────────────────────────────────────────
+  function _exportCSV() {
+    if (!_st.fixtures.length) { if (typeof toast === 'function') toast('No fixtures to export'); return; }
+    var hdr = FIELDS.map(function(f){ return '"' + f.label + '"'; }).join(',');
+    var body = _st.fixtures.map(function(fx){
+      return FIELDS.map(function(f){ return '"' + String(fx[f.key] == null ? '' : fx[f.key]).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\r\n');
+    var blob = new Blob(['﻿' + hdr + '\r\n' + body], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'fixture-database.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (typeof toast === 'function') toast('Exported ' + _st.fixtures.length + ' fixtures');
+  }
+
+  // ── CSV import ───────────────────────────────────────────────
+  function _importCSV(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var lines = e.target.result.split(/\r?\n/).filter(function(l){ return l.trim(); });
+      if (lines.length < 2) { if (typeof toast === 'function') toast('CSV is empty or unreadable'); return; }
+      var headers = _csvRow(lines[0]).map(function(h){ return h.trim().toLowerCase(); });
+      var keyMap = {};
+      FIELDS.forEach(function(f) {
+        var hi = headers.indexOf(f.label.toLowerCase());
+        if (hi < 0) hi = headers.indexOf(f.key.toLowerCase());
+        if (hi >= 0) keyMap[f.key] = hi;
+      });
+      var added = 0;
+      for (var r = 1; r < lines.length; r++) {
+        var cells = _csvRow(lines[r]);
+        var fx = { id: _genId(), createdAt: new Date().toISOString() };
+        FIELDS.forEach(function(f) {
+          var ci = keyMap[f.key];
+          var v = (ci !== undefined && cells[ci] !== undefined) ? cells[ci].trim() : '';
+          fx[f.key] = (f.type === 'number') ? (v === '' ? null : parseFloat(v) || null) : (v || null);
+        });
+        if (fx.brand || fx.model) { _st.fixtures.push(fx); added++; }
+      }
+      _saveData(); _render();
+      if (typeof toast === 'function') toast('Imported ' + added + ' fixture' + (added !== 1 ? 's' : ''));
+    };
+    reader.readAsText(file);
+  }
+
+  function _csvRow(line) {
+    var cells = [], cur = '', inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else { inQ = !inQ; } }
+      else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    cells.push(cur);
+    return cells;
+  }
+
+  // ── Firebase sync callback ───────────────────────────────────
+  window._fdbSyncFromFirebase = function(data) {
+    if (!Array.isArray(data)) return;
+    try { localStorage.setItem(SK, JSON.stringify(data)); } catch(e) {}
+    var root = document.getElementById('fixture-db-root');
+    if (root && root.innerHTML) _render();
+  };
+
+  // ── Public API ───────────────────────────────────────────────
+  window._fixtureDbRender = _render;
+  window._fdbSort         = _fdbSort;
+  window._fdbOpenEdit     = _fdbOpenEdit;
+  window._fdbDel          = _fdbDel;
+  window._fdbCloseModal   = _fdbCloseModal;
+  window._fdbTogCol       = _fdbTogCol;
+  window._fdbToLed        = _fdbToLed;
 
 })();
 
