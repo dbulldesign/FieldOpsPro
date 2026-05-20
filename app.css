@@ -538,6 +538,19 @@ padding-top: 0 !important;
 background: rgba(249,249,251,0.94) !important;
 border-top-color: rgba(0,0,0,0.12) !important;
 }
+/* Solid fill over the safe-area zone inside the nav — backdrop-filter renders differently there */
+#mobileNav::after {
+content: '';
+position: absolute;
+bottom: 0; left: 0; right: 0;
+height: env(safe-area-inset-bottom, 0px);
+background: #0e1525;
+pointer-events: none;
+z-index: 1;
+}
+[data-theme="light"] #mobileNav::after {
+background: #f9f9fb;
+}
 .mobile-nav-items {
 display: flex !important;
 justify-content: space-around;
