@@ -823,7 +823,7 @@ overflow-y: auto;
 overscroll-behavior-y: contain;
 min-height: 0;
 padding: 14px 14px 0 14px;
-padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+padding-bottom: 90px;
 }
 /* Non-dashboard views are direct children of #main on mobile too */
 #main > .view.active {
@@ -833,7 +833,7 @@ overflow-y: auto;
 overscroll-behavior-y: contain;
 min-height: 0;
 padding: 14px 14px 0 14px;
-padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+padding-bottom: 90px;
 background: var(--bg) !important;
 }
 [data-theme="light"] #main > .view.active { background: #f0f4fa !important; }
@@ -842,12 +842,20 @@ background: var(--bg) !important;
 /* -- iOS Tab Bar -- */
 #ios-bottom-fill {
 display: block !important;
+position: fixed !important;
+bottom: 0; left: 0; right: 0;
+height: 34px;
+background: #0d1526;
+z-index: 498;
+}
+[data-theme="light"] #ios-bottom-fill {
+background: #f0f4fa !important;
 }
 #mobileNav {
 display: flex !important;
 flex-direction: column !important;
 position: fixed !important;
-bottom: env(safe-area-inset-bottom, 34px) !important;
+bottom: 34px !important;
 left: 0; right: 0;
 z-index: 500;
 background: #0d1526 !important;
@@ -858,9 +866,6 @@ padding-bottom: 0 !important;
 [data-theme="light"] #mobileNav {
 background: #f0f4fa !important;
 border-top-color: rgba(0,0,0,0.12) !important;
-}
-[data-theme="light"] #ios-bottom-fill {
-background: #f0f4fa !important;
 }
 .mobile-nav-items {
 display: flex !important;
@@ -5117,7 +5122,7 @@ service cloud.firestore {
 </div><!-- /app -->
 
 <!-- MOBILE NAV -->
-<div id="ios-bottom-fill" style="display:none;position:fixed;bottom:0;left:0;right:0;height:env(safe-area-inset-bottom,34px);background:#0d1526;z-index:499;"></div>
+<div id="ios-bottom-fill"></div>
 
 <nav id="mobileNav">
   <div class="mobile-nav-items">
