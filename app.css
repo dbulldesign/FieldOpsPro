@@ -441,19 +441,6 @@ background: #0e1525;
 html[data-theme="light"], html[data-theme="light"] body {
 background: #f9f9fb;
 }
-/* Explicit fill for safe-area zone below mobileNav — prevents blank strip on iOS PWA */
-html::after {
-content: '';
-position: fixed;
-bottom: 0; left: 0; right: 0;
-height: env(safe-area-inset-bottom, 0px);
-background: #0e1525;
-z-index: 499;
-pointer-events: none;
-}
-html[data-theme="light"]::after {
-background: #f9f9fb;
-}
 #app {
 height: 100dvh;
 display: flex; flex-direction: column;
@@ -518,7 +505,7 @@ overflow-y: auto;
 -webkit-overflow-scrolling: touch;
 overscroll-behavior-y: contain;
 padding: 14px 14px 0 14px;
-padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+padding-bottom: 80px;
 }
 
 /* -- iOS Tab Bar -- */
@@ -531,25 +518,12 @@ background: rgba(14,21,37,0.94) !important;
 backdrop-filter: blur(24px) saturate(180%) !important;
 -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
 border-top: 1px solid rgba(255,255,255,0.1) !important;
-padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+padding-bottom: 0 !important;
 padding-top: 0 !important;
 }
 [data-theme="light"] #mobileNav {
 background: rgba(249,249,251,0.94) !important;
 border-top-color: rgba(0,0,0,0.12) !important;
-}
-/* Solid fill over the safe-area zone inside the nav — backdrop-filter renders differently there */
-#mobileNav::after {
-content: '';
-position: absolute;
-bottom: 0; left: 0; right: 0;
-height: env(safe-area-inset-bottom, 0px);
-background: #0e1525;
-pointer-events: none;
-z-index: 1;
-}
-[data-theme="light"] #mobileNav::after {
-background: #f9f9fb;
 }
 .mobile-nav-items {
 display: flex !important;
