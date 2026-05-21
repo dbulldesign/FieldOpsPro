@@ -1699,6 +1699,8 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after { content: '↕'; 
 .lc-badge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-muted); font-family: monospace; }
 [data-theme="light"] .lc-badge { background: #f1f5f9; }
 .lc-errmsg { font-size: 12px; color: #ef4444; margin-top: 6px; }
+.lc-run-row:hover { background: rgba(255,255,255,0.04) !important; }
+[data-theme="light"] .lc-run-row:hover { background: rgba(0,0,0,0.03) !important; }
 .lc-edit-banner { font-size: 12px; color: #4f8ef7; margin-bottom: 12px; padding: 8px 10px; background: rgba(79,142,247,0.08); border-radius: 8px; display: flex; align-items: center; gap: 6px; }
 .lc-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 13px; }
 .lc-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
@@ -19128,7 +19130,7 @@ var _dmxMode = 'd2p';
     // Quick-add fixture inline on calc tab
     qaFx:false, qaFxMfr:'', qaFxPart:'', qaFxInc:'', qaFxUnit:'in', qaFxWpf:'', qaFxCct:'', qaFxErr:'',
     // Quick-add PSU inline on calc tab
-    qaPsu:false, qaPsuMfr:'', qaPsuPart:'', qaPsuWatts:'', qaPsuBuffer:'', qaPsuLimit:'', qaPsuErr:'', qaPsuZone:'',
+    qaPsu:false, qaPsuMfr:'', qaPsuPart:'', qaPsuWatts:'', qaPsuBuffer:'', qaPsuLimit:'', qaPsuErr:'', qaPsuZone:'', qaPsuProjId:'',
     // Fixture form
     fxMfr:'', fxPart:'', fxInc:'', fxUnit:'in', fxWpf:'', fxCct:'', fxMaxLen:'', fxMaxLenUnit:'ft', fxErr:'', fxEditId:null,
     // PSU form
@@ -19142,6 +19144,8 @@ var _dmxMode = 'd2p';
     runForm:{ fixtureId:'', lengthStr:'', qty:'1', label:'', description:'', leaders:'1', zone:'' },
     runEditId:null, runFormErr:'',
     projPsuId:'',
+    runTableSortCol:'', runTableSortDir:'asc', runTableSearch:'',
+    expandedRunIds:{}, openCutCells:{},
     // Save-to-project overlay
     stp:{ open:false, projId:'', newProjName:'', qty:'1', label:'', description:'', lengthIn:null, fixtureId:'' }
   };
@@ -19408,61 +19412,547 @@ var _dmxMode = 'd2p';
     return html;
   }
 
+  // ── cut-increment helper ──────────────────────────────────────
+  function closestCuts(lengthIn, fx){
+    if(!fx||!fx.cutIncrement) return null;
+    var cutIn=toIn(parseFloat(fx.cutIncrement),fx.cutUnit);
+    if(!cutIn||cutIn<=0) return null;
+    var below=Math.floor(lengthIn/cutIn)*cutIn;
+    var above=below+cutIn;
+    if(below<0) below=0;
+    var closest=(lengthIn-below)<=(above-lengthIn)?below:above;
+    return {cutIn:cutIn, below:below, above:above, closest:closest, shorter:(below-cutIn)>=0?below-cutIn:null, longer:above+cutIn};
+  }
+  function fmtCutIn(inches){
+    var f=fmtIn(inches);
+    return f.ftIn+' <span style="color:var(--text-muted);font-size:10px">'+inches.toFixed(2)+'"</span>';
+  }
+  // ── CSV export ────────────────────────────────────────────────
+  function exportProjCSV(proj){
+    var rows=[['Label','Type/Description','Fixture','Zone','Inches','Ft+In','MM','Qty','Watts per run','Total Watts','Leaders','Cut increment','Closest cut','Shorter cut','Longer cut','Zone PSU','Zone Channel','Channel pieces/run','End caps/run','Clips/run']];
+    if(!proj.psuByZone) proj.psuByZone={};
+    if(!proj.channelByZone) proj.channelByZone={};
+    proj.runs.forEach(function(run){
+      var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+      var qty=parseInt(run.qty)||1;
+      var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+      var wps=wpf?(run.lengthIn/12)*wpf:null;
+      var lenFmt=fmtIn(run.lengthIn);
+      var zoneKey=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
+      var zonePsuId=proj.psuByZone[zoneKey]||'';
+      var zonePsu=zonePsuId?S.psu.find(function(p){return p.id===zonePsuId;}):null;
+      var zoneChId=proj.channelByZone[zoneKey]||'';
+      var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
+      var cuts=closestCuts(run.lengthIn,fx);
+      var chPieces=zoneCh?Math.ceil(run.lengthIn/(zoneCh.lengthIn||1)):0;
+      var chEndCaps=zoneCh?(parseFloat(zoneCh.endCapsPerRun)||2):0;
+      var chClips=zoneCh?(chPieces*(parseFloat(zoneCh.clipsPerPiece)||0)):0;
+      rows.push([
+        run.label||'', run.description||'',
+        fx?(fx.manufacturer+' '+fx.partNumber):'',
+        run.zone||'',
+        run.lengthIn.toFixed(4), lenFmt.ftIn, (run.lengthIn*25.4).toFixed(2),
+        qty, wps?wps.toFixed(2):'', wps?(wps*qty).toFixed(2):'',
+        run.leaders||'1',
+        cuts?cuts.cutIn.toFixed(4):'',
+        cuts?cuts.closest.toFixed(4):'',
+        cuts&&cuts.shorter!==null?cuts.shorter.toFixed(4):'',
+        cuts?cuts.longer.toFixed(4):'',
+        zonePsu?(zonePsu.manufacturer+' '+zonePsu.partNumber+' '+zonePsu.outputWatts+'W'):'',
+        zoneCh?(zoneCh.manufacturer+' '+zoneCh.partNumber+' '+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc'):'',
+        chPieces||'', chEndCaps||'', chClips||''
+      ]);
+    });
+    var csv=rows.map(function(r){ return r.map(function(c){ var s=String(c); return s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0?'"'+s.replace(/"/g,'""')+'"':s; }).join(','); }).join('\r\n');
+    var blob=new Blob([csv],{type:'text/csv'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=(proj.name||'project').replace(/[^a-z0-9_-]/gi,'_')+'.csv'; a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+
   function projDetailHTML(proj){
-    // Runs table
-    var runsHtml='';
-    if(proj.runs.length){
-      runsHtml='<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px">'
-        +'<thead><tr style="border-bottom:1px solid var(--border)">'
-          +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Label</th>'
-          +'<th style="text-align:left;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Fixture</th>'
-          +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Zone</th>'
-          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Inches</th>'
-          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Ft + In</th>'
-          +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Qty</th>'
-          +'<th style="text-align:right;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Watts</th>'
-          +'<th style="text-align:center;padding:5px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">Leaders</th>'
-          +'<th style="padding:5px 6px;width:58px"></th>'
-        +'</tr></thead><tbody>';
-      proj.runs.forEach(function(run){
+    // ── per-zone PSU + channel pre-calc (same logic as before) ──
+    if(!proj.psuOverrides) proj.psuOverrides={};
+    if(!proj.psuByZone) proj.psuByZone={};
+    if(!proj.channelByZone) proj.channelByZone={};
+    if(!proj.channelQtyOverrides) proj.channelQtyOverrides={};
+
+    function zonePsuOpts(selId){
+      return '<option value="">— Select PSU —</option>'
+        +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===selId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
+        +'<option value="__addpsu__">+ Add new power supply…</option>';
+    }
+    function zoneChOpts(selId){
+      return '<option value="">— No Channel —</option>'
+        +S.channels.map(function(c){return '<option value="'+c.id+'"'+(c.id===selId?' selected':'')+'>'+escH(c.manufacturer)+' '+escH(c.partNumber)+' ('+fmtIn(c.lengthIn||0).ftIn+'/pc)</option>';}).join('')
+        +'<option value="__addch__">+ Add new channel…</option>';
+    }
+    function calcGroupPsu(runs,zPsEff,overrideCount){
+      var totalW=0,psNeeded=0,defaultLoads=[],runUnits=[];
+      runs.forEach(function(run){
+        var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+        var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+        var qty=parseInt(run.qty)||1;
+        var wps=wpf?(run.lengthIn/12)*wpf:0;
+        totalW+=wps*qty;
+        if(wps>0&&zPsEff>0){
+          var spp=Math.floor(zPsEff/wps);
+          if(spp<1){psNeeded+=qty;for(var i=0;i<qty;i++){defaultLoads.push({w:wps,over:true});runUnits.push(wps);}
+          }else{var fp=Math.floor(qty/spp),rm=qty%spp;psNeeded+=fp+(rm>0?1:0);for(var j=0;j<fp;j++)defaultLoads.push({w:spp*wps,over:false});if(rm>0)defaultLoads.push({w:rm*wps,over:false});for(var k=0;k<qty;k++)runUnits.push(wps);}
+        }
+      });
+      if(overrideCount!==null&&overrideCount!==undefined&&overrideCount>0&&zPsEff>0){var numPS=overrideCount,loadEach=totalW/numPS,ovLoads=[];for(var ii=0;ii<numPS;ii++)ovLoads.push({w:loadEach,over:loadEach>zPsEff});return{totalW:totalW,psNeeded:psNeeded,loads:ovLoads};}
+      if(psNeeded>1&&totalW>0&&zPsEff>0){var evenLoad=totalW/psNeeded,evLoads=[];for(var ei=0;ei<psNeeded;ei++)evLoads.push({w:evenLoad,over:evenLoad>zPsEff});return{totalW:totalW,psNeeded:psNeeded,loads:evLoads};}
+      return{totalW:totalW,psNeeded:psNeeded,loads:defaultLoads};
+    }
+
+    // ── group runs by zone ──
+    var groups=[],groupMap={};
+    proj.runs.forEach(function(run){
+      var key=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
+      if(!groupMap[key]){groupMap[key]=[];groups.push(key);}
+      groupMap[key].push(run);
+    });
+    groups.sort(function(a,b){
+      if(a==='(No Zone)')return 1;if(b==='(No Zone)')return -1;
+      var na=parseFloat(a),nb=parseFloat(b);
+      if(!isNaN(na)&&!isNaN(nb))return na-nb;
+      return a.localeCompare(b);
+    });
+
+    // ── grand totals ──
+    var grandTotalW=0,grandTotalPS=0,grandTotalChPieces=0,grandTotalEndCaps=0,grandTotalClips=0,grandTotalRuns=0;
+    var zoneData={};
+    groups.forEach(function(zk){
+      var gRuns=groupMap[zk];
+      var zonePsuId=proj.psuByZone[zk]||'';
+      var zonePsu=zonePsuId?S.psu.find(function(p){return p.id===zonePsuId;}):null;
+      var zPsEff=zonePsu?psuEffectiveW(zonePsu):0;
+      var zPsRated=zonePsu?(parseFloat(zonePsu.outputWatts)||0):0;
+      var zHasDerate=zonePsu?((zonePsu.bufferPct&&parseFloat(zonePsu.bufferPct)>0)||(zonePsu.limitW&&parseFloat(zonePsu.limitW)>0)):false;
+      var manualPS=proj.psuOverrides[zk]!==undefined?parseInt(proj.psuOverrides[zk]):null;
+      var g=calcGroupPsu(gRuns,zPsEff,manualPS);
+      var displayPS=manualPS!==null?manualPS:g.psNeeded;
+      var calcPS=g.psNeeded;
+      var zoneChId=proj.channelByZone[zk]||'';
+      var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
+      var manualChQty=proj.channelQtyOverrides[zk]!==undefined?parseInt(proj.channelQtyOverrides[zk]):null;
+      var totalChPieces=0,totalChEndCaps=0,totalChClips=0;
+      if(zoneCh){
+        gRuns.forEach(function(run){
+          var qty=parseInt(run.qty)||1;
+          var pieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+          totalChPieces+=pieces*qty;
+          totalChEndCaps+=(parseFloat(zoneCh.endCapsPerRun)||2)*qty;
+          var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
+          if(cpc>0)totalChClips+=pieces*cpc*qty;
+        });
+      }
+      var displayChQty=manualChQty!==null?manualChQty:totalChPieces;
+      var isChOverridden=manualChQty!==null;
+      grandTotalW+=g.totalW;
+      grandTotalPS+=displayPS;
+      grandTotalChPieces+=displayChQty;
+      grandTotalEndCaps+=totalChEndCaps;
+      grandTotalClips+=totalChClips;
+      grandTotalRuns+=gRuns.length;
+      zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,manualChQty:manualChQty,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId};
+    });
+
+    // ── apply search ──
+    var search=(S.runTableSearch||'').toLowerCase().trim();
+
+    // ── sort cols ──
+    var sortCol=S.runTableSortCol||'';
+    var sortDir=S.runTableSortDir||'asc';
+    function sortVal(run,col){
+      var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+      var qty=parseInt(run.qty)||1;
+      var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+      if(col==='label') return (run.label||'').toLowerCase();
+      if(col==='fixture') return fx?(fx.partNumber||'').toLowerCase():'';
+      if(col==='zone') return (run.zone||'').toLowerCase();
+      if(col==='length') return run.lengthIn||0;
+      if(col==='qty') return qty;
+      if(col==='watts') return wpf?(run.lengthIn/12)*wpf*qty:0;
+      if(col==='cut'){var cuts=closestCuts(run.lengthIn,fx);return cuts?cuts.closest:0;}
+      return 0;
+    }
+
+    // ── summary bar ──
+    var summaryBar='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px">'
+      +'<span style="font-size:11px;color:var(--text-muted)">'+grandTotalRuns+' run'+(grandTotalRuns!==1?'s':'')+'</span>'
+      +(grandTotalW?'<span class="lc-badge" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">'+grandTotalW.toFixed(1)+'W total</span>':'')
+      +(grandTotalPS?'<span class="lc-badge" style="color:#4f8ef7;border-color:rgba(79,142,247,0.3)">'+grandTotalPS+' PS</span>':'')
+      +(grandTotalChPieces?'<span class="lc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">'+grandTotalChPieces+' ch pcs</span>':'')
+      +(grandTotalEndCaps?'<span class="lc-badge" style="color:#34d399;border-color:rgba(52,211,153,0.3)">'+grandTotalEndCaps+' end caps</span>':'')
+      +(grandTotalClips?'<span class="lc-badge">'+grandTotalClips+' clips</span>':'')
+      +'<div style="margin-left:auto;display:flex;gap:6px">'
+        +'<button class="lc-btn lc-btn-sm" id="lc-export-csv-'+proj.id+'" data-proj-id="'+proj.id+'">⬇ Export CSV</button>'
+      +'</div>'
+    +'</div>';
+
+    // ── search / filter bar ──
+    var searchBar='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+      +'<input class="lc-input" id="lc-run-search-'+proj.id+'" type="text" placeholder="Search runs…" value="'+escH(S.runTableSearch)+'" style="flex:1;height:32px;font-size:12px">'
+      +(search?'<button class="lc-btn lc-btn-sm" id="lc-run-search-clear-'+proj.id+'">✕ Clear</button>':'')
+    +'</div>';
+
+    // ── table ──
+    var thStyle='padding:6px 6px 5px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;user-select:none;white-space:nowrap';
+    function thSort(col,label,align){
+      var active=sortCol===col;
+      var arrow=active?(sortDir==='asc'?' ▲':' ▼'):'';
+      return '<th style="'+thStyle+';text-align:'+(align||'left')+';'+(active?'color:var(--text)':'')+'" data-sort-col="'+col+'" data-proj-id="'+proj.id+'">'+label+escH(arrow)+'</th>';
+    }
+
+    var tableHtml='<div style="overflow-x:auto;margin-bottom:14px">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<colgroup>'
+          +'<col style="width:28px">'   // expand
+          +'<col style="width:90px">'   // label
+          +'<col>'                       // fixture
+          +'<col style="width:130px">'  // zone
+          +'<col style="width:70px">'   // inches
+          +'<col style="width:80px">'   // ft+in
+          +'<col style="width:38px">'   // qty
+          +'<col style="width:66px">'   // watts
+          +'<col style="width:90px">'   // cut
+          +'<col style="width:58px">'   // actions
+        +'</colgroup>'
+        +'<thead><tr style="border-bottom:2px solid var(--border)">'
+          +'<th style="'+thStyle+'"></th>'
+          +thSort('label','Label','left')
+          +thSort('fixture','Fixture','left')
+          +thSort('zone','Zone','left')
+          +thSort('length','In','right')
+          +'<th style="'+thStyle+';text-align:right">Ft+In</th>'
+          +thSort('qty','Qty','center')
+          +thSort('watts','Watts','right')
+          +thSort('cut','Cut','center')
+          +'<th style="'+thStyle+'"></th>'
+        +'</tr></thead>';
+
+    var tbodyHtml='<tbody>';
+    var hasAnyRun=false;
+
+    // ── quick-add PSU panel (floats above table, shown globally per project) ──
+    var qaPsuGlobalHtml='';
+    if(S.qaPsu&&S.qaChProjId!==proj.id){
+      qaPsuGlobalHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-bottom:12px">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Power Supply'+(S.qaPsuZone?' <span style="font-weight:400;color:var(--text-muted)">for Zone '+escH(S.qaPsuZone)+'</span>':'')+'</div>'
+        +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
+        +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
+        +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+          +'<div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div>'
+          +'<div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div>'
+        +'</div>'
+        +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
+        +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
+      +'</div>';
+    }
+
+    var globalPsuOffset=0;
+    groups.forEach(function(zk){
+      var gRuns=groupMap[zk];
+      var zd=zoneData[zk];
+      var zonePsu=zd.zonePsu, zPsEff=zd.zPsEff, zPsRated=zd.zPsRated, zHasDerate=zd.zHasDerate;
+      var manualPS=zd.manualPS, g=zd.g, displayPS=zd.displayPS, calcPS=zd.calcPS;
+      var zoneCh=zd.zoneCh, manualChQty=zd.manualChQty, totalChPieces=zd.totalChPieces;
+      var totalChEndCaps=zd.totalChEndCaps, totalChClips=zd.totalChClips;
+      var displayChQty=zd.displayChQty, isChOverridden=zd.isChOverridden;
+      var zonePsuId=zd.zonePsuId, zoneChId=zd.zoneChId;
+      var isOverridden=manualPS!==null;
+
+      // PSU badge
+      var psuBadge='<div style="display:inline-flex;align-items:center;gap:2px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:4px;padding:1px 5px 1px 5px">'
+        +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:28px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+        +'<span style="font-size:11px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
+      +'</div>'
+      +(isOverridden?'<span style="font-size:10px;color:var(--text-muted);margin-left:3px">calc:'+calcPS+'</span>':'');
+
+      // Channel badge
+      var chBadge='';
+      if(zoneCh){
+        chBadge='<div style="display:inline-flex;align-items:center;gap:2px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:4px;padding:1px 5px 1px 5px">'
+          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:28px;font-size:11px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+          +'<span style="font-size:11px;color:#a78bfa;font-weight:700">&nbsp;pcs</span>'
+        +'</div>'
+        +(isChOverridden?'<span style="font-size:10px;color:var(--text-muted);margin-left:3px">calc:'+totalChPieces+'</span>':'')
+        +(totalChEndCaps?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+totalChEndCaps+' caps</span>':'')
+        +(totalChClips?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+totalChClips+' clips</span>':'');
+      }
+
+      // Zone header row
+      tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
+        +'<td colspan="10" style="padding:6px 8px">'
+          +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
+            +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
+            +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
+            +psuBadge
+            +chBadge
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">'
+            +'<span style="font-size:10px;color:var(--text-muted);flex-shrink:0">PSU:</span>'
+            +'<select class="lc-select" style="height:28px;font-size:11px;flex:1;min-width:120px;max-width:280px" data-zone-psu-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
+            +(zonePsu?'<span style="font-size:10px;color:var(--text-muted)">'+zPsEff.toFixed(1)+'W usable</span>':'')
+            +'<span style="font-size:10px;color:var(--text-muted);flex-shrink:0;margin-left:6px">Ch:</span>'
+            +'<select class="lc-select" style="height:28px;font-size:11px;flex:1;min-width:120px;max-width:280px" data-zone-ch-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
+            +(zoneCh?'<span style="font-size:10px;color:var(--text-muted)">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
+          +'</div>'
+          // Load bars inline under zone header
+          +(g.loads.length&&zonePsu?'<div style="margin-top:6px">'+(function(){
+            var h='';
+            g.loads.forEach(function(entry,i){
+              var used=entry.w,isOver=entry.over;
+              var rawPct=zPsEff>0?(used/zPsEff)*100:0;
+              var barPct=Math.min(100,rawPct);
+              var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+              var sc=isOver?'#ef4444':rawPct>=80?'#f59e0b':'#6ee7b7';
+              var sl=isOver?'OVER':rawPct>=80?'HIGH':'OK';
+              h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+                +'<span style="font-size:10px;color:var(--text-muted);width:100px;flex-shrink:0">'+(zk==='(No Zone)'?'':'Zone '+escH(zk)+' – ')+'Power Supply '+(globalPsuOffset+i+1)+'</span>'
+                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div>'
+                +'<span style="font-size:10px;font-family:monospace;color:var(--text);width:100px;text-align:right;flex-shrink:0">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W</span>'
+                +'<span style="font-size:9px;font-weight:700;color:'+sc+';width:32px;flex-shrink:0">'+sl+'</span>'
+              +'</div>';
+            });
+            return h;
+          }())+'</div>':'')
+          // Quick-add PSU / Channel panels for this zone
+          +(S.qaPsu&&S.qaPsuZone===zk&&S.qaPsuProjId===proj.id?(
+            '<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">New Power Supply</div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div><div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div></div>'
+            +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
+            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
+            +'</div>'
+          ):'')
+          +(S.qaCh&&S.qaChZone===zk&&S.qaChProjId===proj.id?(
+            '<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">New LED Channel</div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div><div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div></div>'
+            +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
+            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
+            +'</div>'
+          ):'')
+        +'</td>'
+      +'</tr>';
+
+      // Apply search filter + sort within zone
+      var filteredRuns=gRuns;
+      if(search){
+        filteredRuns=gRuns.filter(function(run){
+          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+          var txt=[run.label||'',run.description||'',fx?fx.manufacturer:'',fx?fx.partNumber:'',run.zone||'',fmtIn(run.lengthIn).ftIn,fmtIn(run.lengthIn).inches].join(' ').toLowerCase();
+          return txt.indexOf(search)>=0;
+        });
+      }
+      if(sortCol){
+        filteredRuns=filteredRuns.slice().sort(function(a,b){
+          var av=sortVal(a,sortCol), bv=sortVal(b,sortCol);
+          if(av<bv) return sortDir==='asc'?-1:1;
+          if(av>bv) return sortDir==='asc'?1:-1;
+          return 0;
+        });
+      }
+
+      filteredRuns.forEach(function(run){
+        hasAnyRun=true;
         var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
         var qty=parseInt(run.qty)||1;
         var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-        var wattsTotal=wpf?(run.lengthIn/12)*wpf*qty:null;
-        var leaders=run.leaders||'1';
+        var wps=wpf?(run.lengthIn/12)*wpf:null;
+        var wattsTotal=wps?wps*qty:null;
         var lenFmt=fmtIn(run.lengthIn);
-        runsHtml+='<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">'
-          +'<td style="padding:8px 6px;color:var(--text)">'+(run.label?escH(run.label):'—')+(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-top:1px">'+escH(run.description)+'</div>':'')+'</td>'
-          +'<td style="padding:8px 6px;color:var(--text-muted);font-size:12px">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
-          +'<td style="padding:8px 6px;text-align:center;color:var(--text);font-size:12px">'+(run.zone?escH(run.zone):'—')+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text-muted);font-size:12px;white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
-          +'<td style="padding:8px 6px;text-align:center;color:var(--text)">×'+qty+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-family:monospace;color:var(--text)">'+(wattsTotal!==null?wattsTotal.toFixed(1)+'W':'—')+'</td>'
-          +'<td style="padding:8px 6px;text-align:center;color:var(--text-muted);font-size:12px">'+leaders+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;white-space:nowrap">'
-            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:3px">✏</button>'
+        var cuts=closestCuts(run.lengthIn,fx);
+        var expKey=proj.id+'_'+run.id;
+        var isExpanded=!!S.expandedRunIds[expKey];
+        var isCutOpen=!!S.openCutCells[expKey];
+
+        // Cut cell content
+        var cutCell='<span style="color:var(--text-muted);font-size:11px">—</span>';
+        if(cuts){
+          var closestFmt=fmtIn(cuts.closest);
+          if(isCutOpen){
+            var parts=[];
+            if(cuts.shorter!==null)parts.push('<span style="color:var(--text-muted)">← '+fmtIn(cuts.shorter).ftIn+'</span>');
+            parts.push('<span style="color:#4f8ef7;font-weight:700">'+closestFmt.ftIn+'<span style="font-size:9px;color:#4f8ef7"> ✓</span></span>');
+            parts.push('<span style="color:var(--text-muted)">'+fmtIn(cuts.longer).ftIn+' →</span>');
+            cutCell='<div style="display:flex;flex-direction:column;gap:2px;font-size:10px;font-family:monospace">'+parts.join('')+'</div>';
+          } else {
+            var diff=cuts.closest-run.lengthIn;
+            var diffStr=diff===0?'':' <span style="font-size:9px;color:var(--text-muted)">'+(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches+'</span>';
+            cutCell='<span style="font-family:monospace;font-size:11px">'+closestFmt.ftIn+'</span>'+diffStr;
+          }
+        }
+
+        // Row itself
+        var over=wps&&zPsEff>0&&wps>zPsEff;
+        var rowBg=over?'background:rgba(249,115,22,0.04)':'';
+        tbodyHtml+='<tr class="lc-run-row" style="border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;'+rowBg+'" data-run-id="'+run.id+'" data-proj-id="'+proj.id+'">'
+          +'<td style="padding:6px 4px 6px 8px;text-align:center">'
+            +'<span style="font-size:10px;color:var(--text-muted);transition:transform 0.15s;display:inline-block;'+(isExpanded?'transform:rotate(90deg)':'')+'">▶</span>'
+          +'</td>'
+          +'<td style="padding:6px 6px;color:var(--text);font-size:12px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(run.label?escH(run.label):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+          +'<td style="padding:6px 6px;color:var(--text-muted);font-size:11px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:10px">no fixture</span>')+'</td>'
+          +'<td style="padding:6px 6px;color:var(--text);font-size:12px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
+          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:var(--text-muted);white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
+          +'<td style="padding:6px 6px;text-align:center;font-size:12px;color:var(--text)">×'+qty+'</td>'
+          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
+          +'<td style="padding:6px 6px;text-align:center" data-cut-key="'+expKey+'" data-proj-id="'+proj.id+'">'+cutCell+'</td>'
+          +'<td style="padding:6px 4px;text-align:right;white-space:nowrap">'
+            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:2px">✏</button>'
             +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-del-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Remove" style="color:#ef4444;border-color:#ef4444">✕</button>'
-          +'</td></tr>';
+          +'</td>'
+        +'</tr>';
+
+        // Expanded detail row
+        if(isExpanded){
+          // Per-run PSU detail
+          var psuDetail='';
+          if(zonePsu&&wps){
+            var rawPct=zPsEff>0?(wps/zPsEff)*100:0;
+            var barPct=Math.min(100,rawPct);
+            var bc2=over?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+            psuDetail='<div style="margin-bottom:10px">'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Power Supply</div>'
+              +'<div style="display:flex;align-items:center;gap:8px">'
+                +'<span style="font-size:11px;color:var(--text);white-space:nowrap">'+(zk==='(No Zone)'?'':'Zone '+escH(zk)+' – ')+'Power Supply ('+escH(zonePsu.manufacturer)+' '+escH(zonePsu.partNumber)+')</span>'
+              +'</div>'
+              +'<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'
+                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc2+';border-radius:3px"></div></div>'
+                +'<span style="font-size:11px;font-family:monospace;color:var(--text);white-space:nowrap">'+wps.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W ('+rawPct.toFixed(0)+'%)</span>'
+              +'</div>'
+              +(over?'<div style="margin-top:5px;font-size:10px;color:#f97316;font-weight:700">⚠ Exceeds PSU usable capacity</div>':'')
+              +'<div style="display:flex;gap:6px;margin-top:6px">'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:10px;'+(run.psuForce?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;">Need extra PSU</button>'
+              +'</div>'
+            +'</div>';
+          } else if(!zonePsu){
+            psuDetail='<div style="margin-bottom:10px;font-size:11px;color:var(--text-muted)">No PSU assigned to this zone. Select one in the zone header.</div>';
+          }
+
+          // Per-run channel detail
+          var chDetail='';
+          if(zoneCh){
+            var runPieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+            var runEndCaps=(parseFloat(zoneCh.endCapsPerRun)||2);
+            var runClips=runPieces*(parseFloat(zoneCh.clipsPerPiece)||0);
+            var chPieceLen=fmtIn(zoneCh.lengthIn||0).ftIn;
+            var runFt=fmtIn(run.lengthIn).ftIn;
+            chDetail='<div style="margin-bottom:10px">'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">LED Channel</div>'
+              +'<div style="font-size:11px;color:var(--text);margin-bottom:5px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
+              +'<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">'
+                +(function(){
+                  var pieces=[];
+                  var remaining=run.lengthIn;
+                  for(var pi=0;pi<runPieces;pi++){
+                    var thisLen=Math.min(remaining,zoneCh.lengthIn||1);
+                    var pct=(thisLen/(zoneCh.lengthIn||1))*100;
+                    pieces.push('<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'
+                      +'<div style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;height:14px;width:'+(Math.max(16,Math.round(pct*0.5)))+'px;position:relative;overflow:hidden">'
+                        +'<div style="height:100%;width:'+pct.toFixed(0)+'%;background:rgba(167,139,250,0.5);border-radius:3px"></div>'
+                      +'</div>'
+                      +'<span style="font-size:9px;color:var(--text-muted)">'+(pi+1)+'</span>'
+                    +'</div>');
+                    remaining-=thisLen;
+                  }
+                  return pieces.join('<span style="font-size:10px;color:var(--text-muted)">+</span>');
+                }())
+                +'<span style="font-size:11px;color:var(--text);margin-left:4px">= '+runFt+(qty>1?' ×'+qty:'')+'</span>'
+              +'</div>'
+              +'<div style="display:flex;gap:10px;margin-top:5px">'
+                +'<span style="font-size:11px;color:var(--text-muted)">'+runPieces+' pcs/run'+(qty>1?' ('+runPieces*qty+' total)':'')+'</span>'
+                +(runEndCaps?'<span style="font-size:11px;color:var(--text-muted)">'+runEndCaps+' end caps/run'+(qty>1?' ('+runEndCaps*qty+' total)':'')+'</span>':'')
+                +(runClips?'<span style="font-size:11px;color:var(--text-muted)">'+runClips.toFixed(0)+' clips/run'+(qty>1?' ('+(runClips*qty).toFixed(0)+' total)':'')+'</span>':'')
+              +'</div>'
+            +'</div>';
+          }
+
+          // Cut length visual
+          var cutDetail='';
+          if(cuts){
+            var shorter=cuts.shorter, below=cuts.below, above=cuts.above, longer=cuts.longer, closest=cuts.closest;
+            function makeCutBtn(val,isClosest){
+              var f=fmtIn(val);
+              var diff=val-run.lengthIn;
+              var diffStr=diff===0?'exact':(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches;
+              return '<div style="text-align:center;padding:8px 10px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:6px;min-width:70px">'
+                +'<div style="font-size:13px;font-weight:'+(isClosest?'700':'400')+';font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+f.ftIn+'</div>'
+                +'<div style="font-size:9px;font-family:monospace;color:var(--text-muted)">'+val.toFixed(2)+'"</div>'
+                +'<div style="font-size:9px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+'">'+diffStr+'</div>'
+              +'</div>';
+            }
+            var cutOptions=[
+              (shorter!==null?makeCutBtn(shorter,shorter===closest):null),
+              makeCutBtn(below, below===closest),
+              (below!==above?makeCutBtn(above,above===closest):null),
+              makeCutBtn(longer,longer===closest)
+            ].filter(function(x){return x&&x!==null;});
+            // deduplicate by value
+            var seen={};
+            cutOptions=([shorter,below,above,longer]).filter(function(v){return v!==null&&v!==undefined;}).filter(function(v,idx,arr){return arr.indexOf(v)===idx;}).map(function(v){return makeCutBtn(v,v===closest);});
+            cutDetail='<div>'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Cut Options <span style="font-weight:400;text-transform:none;letter-spacing:0">('+cuts.cutIn.toFixed(2)+'" increment)</span></div>'
+              +'<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">'
+                +'<div style="text-align:center;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px dashed var(--border);border-radius:6px;min-width:70px">'
+                  +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Input</div>'
+                  +'<div style="font-size:13px;font-weight:700;font-family:monospace;color:var(--text)">'+fmtIn(run.lengthIn).ftIn+'</div>'
+                  +'<div style="font-size:9px;font-family:monospace;color:var(--text-muted)">'+run.lengthIn.toFixed(2)+'"</div>'
+                +'</div>'
+                +'<div style="font-size:18px;color:var(--text-muted);align-self:center">→</div>'
+                +cutOptions.join('')
+              +'</div>'
+            +'</div>';
+          }
+
+          tbodyHtml+='<tr style="background:rgba(255,255,255,0.015);border-bottom:1px solid rgba(255,255,255,0.04)">'
+            +'<td colspan="10" style="padding:12px 14px 12px 28px">'
+              +(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic">'+escH(run.description)+'</div>':'')
+              +psuDetail
+              +chDetail
+              +cutDetail
+            +'</td>'
+          +'</tr>';
+        }
       });
-      runsHtml+='</tbody></table>';
-    } else {
-      runsHtml='<p style="font-size:13px;color:var(--text-muted);padding:8px 0 14px">No runs yet — add one below.</p>';
+
+      globalPsuOffset+=displayPS;
+    });
+
+    if(!hasAnyRun&&!proj.runs.length){
+      tbodyHtml+='<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">No runs yet — add one below.</td></tr>';
+    } else if(!hasAnyRun&&search){
+      tbodyHtml+='<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">No runs match "'+escH(search)+'"</td></tr>';
     }
 
-    // Add / edit run form
+    tbodyHtml+='</tbody>';
+    tableHtml+=tbodyHtml+'</table></div>';
+
+    // ── Add / edit run form ──
     var rf=S.runForm;
     var isEditRun=!!S.runEditId;
     var runFormHtml='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">'
       +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">'+(isEditRun?'Edit Run':'Add Run')+'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:8px">'
-        +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-rf-label" placeholder="e.g. Under cabinet" value="'+escH(rf.label)+'"></div>'
+      +'<div style="display:grid;grid-template-columns:90px 1fr 180px;gap:8px;margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Label / type</span><input class="lc-input" id="lc-rf-label" placeholder="e.g. Cove" value="'+escH(rf.label)+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Fixture</span><select class="lc-select" id="lc-rf-fx">'+fxOpts(rf.fixtureId)+'</select></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Zone</span><input class="lc-input" id="lc-rf-zone" placeholder="e.g. 1" value="'+escH(rf.zone)+'"></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Zone</span><input class="lc-input" id="lc-rf-zone" placeholder="e.g. Living Room Cove / 1" value="'+escH(rf.zone)+'"></div>'
       +'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 72px 90px;gap:8px;margin-bottom:8px">'
-        +'<div class="lc-field"><span class="lc-lbl">Length <span style="font-weight:400;color:var(--text-muted)">(math ok: 17\'5\"/2)</span></span><input class="lc-input" id="lc-rf-len" placeholder="84in · 7ft 3in · 17\'5\"/2 · 8ft*3" autocomplete="off" spellcheck="false" value="'+escH(rf.lengthStr)+'"><div id="lc-rf-len-prev" style="font-size:10px;color:#4f8ef7;margin-top:3px;min-height:14px;font-family:monospace"></div></div>'
-        +'<div class="lc-field"><span class="lc-lbl">Qty (runs)</span><input class="lc-input" id="lc-rf-qty" type="number" min="1" value="'+escH(rf.qty)+'"></div>'
+      +'<div style="display:grid;grid-template-columns:180px 72px 90px;gap:8px;margin-bottom:8px">'
+        +'<div class="lc-field"><span class="lc-lbl">Length <span style="font-weight:400;color:var(--text-muted)">(math ok: 17\'5\"/2)</span></span><input class="lc-input" id="lc-rf-len" placeholder="84in · 7ft 3in · 17\'5\"/2" autocomplete="off" spellcheck="false" value="'+escH(rf.lengthStr)+'"><div id="lc-rf-len-prev" style="font-size:10px;color:#4f8ef7;margin-top:3px;min-height:14px;font-family:monospace"></div></div>'
+        +'<div class="lc-field"><span class="lc-lbl">Qty</span><input class="lc-input" id="lc-rf-qty" type="number" min="1" value="'+escH(rf.qty)+'"></div>'
         +'<div class="lc-field"><span class="lc-lbl">Leaders</span><select class="lc-select" id="lc-rf-leaders"><option value="1"'+(rf.leaders==='1'?' selected':'')+'>1 leader</option><option value="2"'+(rf.leaders==='2'?' selected':'')+'>2 leaders</option></select></div>'
       +'</div>'
       +'<div class="lc-field" style="margin-bottom:10px"><span class="lc-lbl">Description (optional)</span><input class="lc-input" id="lc-rf-desc" placeholder="Notes…" value="'+escH(rf.description)+'"></div>'
@@ -19472,283 +19962,8 @@ var _dmxMode = 'd2p';
         +(isEditRun?'<button class="lc-btn" id="lc-rf-cancel">Cancel</button>':'')
       +'</div></div>';
 
-    // Power supply calculation
-    var psHtml='';
-    if(proj.runs.length){
-      if(!proj.psuOverrides) proj.psuOverrides={};
-      if(!proj.psuByZone) proj.psuByZone={};
-
-      // Helper: build PSU option list for a dropdown
-      function zonePsuOpts(selId){
-        return '<option value="">— Select PSU —</option>'
-          +S.psu.map(function(p){return '<option value="'+p.id+'"'+(p.id===selId?' selected':'')+'>'+psuShort(p)+'</option>';}).join('')
-          +'<option value="__addpsu__">+ Add new power supply…</option>';
-      }
-      // Helper: build channel option list for a dropdown
-      function zoneChOpts(selId){
-        return '<option value="">— No Channel —</option>'
-          +S.channels.map(function(c){return '<option value="'+c.id+'"'+(c.id===selId?' selected':'')+'>'+escH(c.manufacturer)+' '+escH(c.partNumber)+' ('+fmtIn(c.lengthIn||0).ftIn+'/pc)</option>';}).join('')
-          +'<option value="__addch__">+ Add new channel…</option>';
-      }
-
-      // Helper: compute PSU loads for a set of runs against a given PSU effective wattage.
-      // overrideCount (optional): if set, redistribute all run units evenly across that many PSUs.
-      function calcGroupPsu(runs,zPsEff,overrideCount){
-        var totalW=0, psNeeded=0, defaultLoads=[], runUnits=[];
-        runs.forEach(function(run){
-          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
-          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-          var qty=parseInt(run.qty)||1;
-          var wps=wpf?(run.lengthIn/12)*wpf:0;
-          totalW+=wps*qty;
-          if(wps>0&&zPsEff>0){
-            var spp=Math.floor(zPsEff/wps);
-            if(spp<1){
-              psNeeded+=qty;
-              for(var i=0;i<qty;i++){ defaultLoads.push({w:wps,over:true}); runUnits.push(wps); }
-            } else {
-              var fp=Math.floor(qty/spp),rm=qty%spp;
-              psNeeded+=fp+(rm>0?1:0);
-              for(var j=0;j<fp;j++) defaultLoads.push({w:spp*wps,over:false});
-              if(rm>0) defaultLoads.push({w:rm*wps,over:false});
-              for(var k=0;k<qty;k++) runUnits.push(wps);
-            }
-          }
-        });
-        if(overrideCount!==null&&overrideCount!==undefined&&overrideCount>0&&zPsEff>0){
-          var numPS=overrideCount;
-          var loadEach=totalW/numPS;
-          var ovLoads=[];
-          for(var ii=0;ii<numPS;ii++) ovLoads.push({w:loadEach,over:loadEach>zPsEff});
-          return {totalW:totalW,psNeeded:psNeeded,loads:ovLoads};
-        }
-        if(psNeeded>1&&totalW>0&&zPsEff>0){
-          var evenLoad=totalW/psNeeded;
-          var evLoads=[];
-          for(var ei=0;ei<psNeeded;ei++) evLoads.push({w:evenLoad,over:evenLoad>zPsEff});
-          return {totalW:totalW,psNeeded:psNeeded,loads:evLoads};
-        }
-        return {totalW:totalW,psNeeded:psNeeded,loads:defaultLoads};
-      }
-
-      // Helper: render load bars for a zone's PSU
-      function loadBarsHTML(loads,psOffset,zPsEff,zPsRated,zHasDerate){
-        var h='';
-        loads.forEach(function(entry,i){
-          var used=entry.w, isOver=entry.over;
-          var rawPct=zPsEff>0?(used/zPsEff)*100:0;
-          var barPct=Math.min(100,rawPct);
-          var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-          var sc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-          var sl=isOver?'OVER SPEC':rawPct>=95?'NEAR LIMIT':rawPct>=80?'HIGH':'OK';
-          h+='<div style="margin-bottom:6px">'
-            +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
-              +'<span style="font-size:11px;color:var(--text-muted)">PSU '+(psOffset+i+1)+'</span>'
-              +'<span style="font-size:11px;font-family:monospace;color:'+(isOver?'#f97316':'var(--text)')+'">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W'+(zHasDerate?' <span style="font-size:10px;color:var(--text-muted)">('+zPsRated+'W rated)</span>':'')+'</span>'
-              +'<span style="font-size:10px;font-weight:700;color:'+sc+'">'+sl+(isOver?' ('+rawPct.toFixed(0)+'%)':'')+'</span>'
-            +'</div>'
-            +'<div style="background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden">'
-              +'<div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div>'
-            +'</div>'
-          +'</div>';
-        });
-        return h;
-      }
-
-      // Quick-add PSU panel
-      var qaPsuHtml='';
-      if(S.qaPsu){
-        qaPsuHtml='<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:10px;padding:14px;margin-bottom:12px">'
-          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:10px">New Power Supply'+(S.qaPsuZone?' <span style="font-weight:400;color:var(--text-muted)">for Zone '+escH(S.qaPsuZone)+'</span>':'')+'</div>'
-          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
-          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
-          +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
-          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-            +'<div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div>'
-            +'<div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div>'
-          +'</div>'
-          +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
-          +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
-          +'</div>';
-      }
-
-      // Group runs by zone
-      var groups=[], groupMap={};
-      proj.runs.forEach(function(run){
-        var key=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
-        if(!groupMap[key]){ groupMap[key]=[]; groups.push(key); }
-        groupMap[key].push(run);
-      });
-      groups.sort(function(a,b){
-        if(a==='(No Zone)') return 1; if(b==='(No Zone)') return -1;
-        var na=parseFloat(a), nb=parseFloat(b);
-        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
-        return a.localeCompare(b);
-      });
-
-      var grandTotalW=0, grandTotalPS=0, globalPsuOffset=0;
-      var treatmentsHtml='';
-      groups.forEach(function(zoneKey){
-        var gRuns=groupMap[zoneKey];
-
-        // Resolve this zone's PSU
-        var zonePsuId=proj.psuByZone[zoneKey]||'';
-        var zonePsu=zonePsuId?S.psu.find(function(p){return p.id===zonePsuId;}):null;
-        var zPsEff=zonePsu?psuEffectiveW(zonePsu):0;
-        var zPsRated=zonePsu?(parseFloat(zonePsu.outputWatts)||0):0;
-        var zHasDerate=zonePsu?((zonePsu.bufferPct&&parseFloat(zonePsu.bufferPct)>0)||(zonePsu.limitW&&parseFloat(zonePsu.limitW)>0)):false;
-
-        var manualPS=proj.psuOverrides[zoneKey]!==undefined?parseInt(proj.psuOverrides[zoneKey]):null;
-        var g=calcGroupPsu(gRuns,zPsEff,manualPS);
-
-        // Channel calc for this zone
-        var zoneChId=proj.channelByZone?(proj.channelByZone[zoneKey]||''):'';
-        var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
-        var manualChQty=proj.channelQtyOverrides&&proj.channelQtyOverrides[zoneKey]!==undefined?parseInt(proj.channelQtyOverrides[zoneKey]):null;
-        var totalChPieces=0, totalChEndCaps=0, totalChClips=0;
-        if(zoneCh){
-          gRuns.forEach(function(run){
-            var qty=parseInt(run.qty)||1;
-            var pieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
-            totalChPieces+=pieces*qty;
-            totalChEndCaps+=(parseFloat(zoneCh.endCapsPerRun)||2)*qty;
-            var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
-            if(cpc>0) totalChClips+=pieces*cpc*qty;
-          });
-        }
-        var displayChQty=manualChQty!==null?manualChQty:totalChPieces;
-        var isChOverridden=manualChQty!==null;
-        grandTotalW+=g.totalW;
-        var calcPS=g.psNeeded;
-        var displayPS=manualPS!==null?manualPS:calcPS;
-        grandTotalPS+=displayPS;
-
-        // Runs list
-        var runLines=gRuns.map(function(r){
-          var fx=S.fixtures.find(function(f){return f.id===r.fixtureId;});
-          var qty=parseInt(r.qty)||1;
-          var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-          var wps=wpf?(r.lengthIn/12)*wpf:null;
-          var tw=wps?wps*qty:null;
-          var over=wps&&zPsEff>0&&wps>zPsEff;
-          var forced=!!r.psuForce;
-          var overHtml='';
-          if(over){
-            overHtml='<div style="margin-top:5px;padding:6px 8px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
-              +'<span style="font-size:10px;color:#f97316;font-weight:700">⚠ '+wps.toFixed(1)+'W/strip exceeds PSU usable capacity ('+zPsEff.toFixed(1)+'W)</span>'
-              +'<div style="display:flex;gap:4px;margin-left:auto">'
-                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:10px;'+(forced?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
-                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+r.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;'+(!forced?'background:rgba(255,255,255,0.06);color:var(--text)':'')+'">Need extra PSU</button>'
-              +'</div>'
-            +'</div>';
-          }
-          var totalFt=(r.lengthIn*qty/12);
-          var totalFtStr=totalFt%1===0?totalFt+'\'':totalFt.toFixed(1)+'\'';
-          return '<div style="margin-bottom:'+(over?'8px':'2px')+'">'
-            +'<div style="display:flex;gap:6px;align-items:baseline;font-size:11px;color:var(--text-muted)">'
-              +(r.label?'<span style="font-size:10px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 5px;color:var(--text-muted)">'+escH(r.label)+'</span>':'')
-              +'<span style="color:var(--text)">'+(fx?escH(fx.partNumber):'no fixture')+'</span>'
-              +'<span>'+escH(fmtIn(r.lengthIn).ftIn)+(qty>1?' ×'+qty:'')+'</span>'
-              +'<span style="color:var(--text-muted);font-family:monospace">'+totalFtStr+' total</span>'
-              +(tw!==null?'<span style="margin-left:auto;font-family:monospace;color:'+(over?'#f97316':'inherit')+'">'+tw.toFixed(1)+'W'+(over?' ⚠':'')+'</span>':'')
-            +'</div>'
-            +overHtml
-          +'</div>';
-        }).join('');
-
-        // Editable PS count badge
-        var isOverridden=manualPS!==null;
-        var psuBadge='<div style="display:flex;align-items:center;gap:3px;background:rgba(79,142,247,0.15);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
-          +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Edit PS count" style="width:34px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
-          +'<span style="font-size:11px;color:#4f8ef7;font-weight:700"> PS</span>'
-        +'</div>'
-        +(isOverridden?'<span style="font-size:10px;color:var(--text-muted)">calc: '+calcPS+'</span>':'');
-
-        // PSU selector for this zone
-        var psuSelRow='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06)">'
-          +'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0">Power Supply:</span>'
-          +'<select class="lc-select" style="height:32px;font-size:12px;flex:1" data-zone-psu-sel="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
-          +(zonePsu?'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">'+zPsEff.toFixed(1)+'W usable'+(zHasDerate?' / '+zPsRated+'W rated':'')+'</span>':'')
-        +'</div>';
-
-        treatmentsHtml+='<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-            +'<span style="font-size:13px;font-weight:700;color:var(--text)">'+(zoneKey==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zoneKey))+'</span>'
-            +'<div style="display:flex;gap:6px;align-items:center">'
-              +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
-              +psuBadge
-            +'</div>'
-          +'</div>'
-          +psuSelRow
-          +'<div style="margin-bottom:'+(g.loads.length&&zonePsu?'10px':'0')+'">'+runLines+'</div>'
-          +(g.loads.length&&zonePsu?loadBarsHTML(g.loads,globalPsuOffset,zPsEff,zPsRated,zHasDerate):'')
-          +(!zonePsu?'<p style="font-size:11px;color:var(--text-muted);margin-top:6px;margin-bottom:0">Select a power supply above to see load calculations</p>':'')
-          // Channel selector row
-          +(function(){
-            var qaChHtml='';
-            if(S.qaCh&&S.qaChZone===zoneKey&&S.qaChProjId===proj.id){
-              qaChHtml='<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:14px;margin-top:8px">'
-                +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:10px">New LED Channel</div>'
-                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
-                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
-                +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
-                +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-                  +'<div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div>'
-                  +'<div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div>'
-                +'</div>'
-                +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
-                +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
-              +'</div>';
-            }
-            var chSummaryHtml='';
-            if(zoneCh){
-              chSummaryHtml='<div style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px">'
-                +'<div style="display:flex;align-items:center;gap:3px;background:rgba(167,139,250,0.15);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.3)')+';border-radius:5px;padding:1px 5px 1px 6px">'
-                  +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:34px;font-size:11px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:2px 0;-moz-appearance:textfield;appearance:textfield">'
-                  +'<span style="font-size:11px;color:#a78bfa;font-weight:700"> pcs</span>'
-                +'</div>'
-                +(isChOverridden?'<span style="font-size:10px;color:var(--text-muted)">calc: '+totalChPieces+'</span>':'')
-                +(totalChEndCaps>0?'<span style="font-size:11px;color:var(--text-muted)">· '+totalChEndCaps+' end caps</span>':'')
-                +(totalChClips>0?'<span style="font-size:11px;color:var(--text-muted)">· '+totalChClips+' clips</span>':'')
-              +'</div>';
-            }
-            return '<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:10px;padding-top:10px">'
-              +'<div style="display:flex;align-items:center;gap:8px">'
-                +'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0">LED Channel:</span>'
-                +'<select class="lc-select" style="height:32px;font-size:12px;flex:1" data-zone-ch-sel="'+escH(zoneKey)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
-                +(zoneCh?'<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
-              +'</div>'
-              +chSummaryHtml
-              +qaChHtml
-            +'</div>';
-          })()
-        +'</div>';
-
-        globalPsuOffset+=displayPS;
-      });
-
-      psHtml='<div style="border-top:1px solid var(--border);padding:16px 16px 14px">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Power Supply Calculation</div>'
-        +(!S.psu.length&&!S.qaPsu?'<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">No power supplies saved yet — use a zone dropdown to add one</div>':'')
-        +qaPsuHtml
-        +treatmentsHtml
-        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">'
-          +'<div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Total Watts</div>'
-            +'<div style="font-size:21px;font-weight:700;color:var(--text);font-family:monospace">'+grandTotalW.toFixed(1)+'<span style="font-size:12px">W</span></div>'
-          +'</div>'
-          +'<div style="background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.3);border-radius:8px;padding:12px;text-align:center">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:4px">Total PS Needed</div>'
-            +'<div style="font-size:21px;font-weight:700;color:var(--accent);font-family:monospace">'+grandTotalPS+'</div>'
-          +'</div>'
-        +'</div>'
-        +'<p style="font-size:11px;color:var(--text-muted);margin-top:8px">Each zone has its own PSU · Click the PS number to override the count · Strips/PS = ⌊usable W ÷ W per strip⌋</p>'
-      +'</div>';
-    }
-
-    return '<div style="padding:0 16px 16px">'+runsHtml+runFormHtml+'</div>'+psHtml;
+    return '<div style="padding:0 16px 16px">'+summaryBar+searchBar+tableHtml+runFormHtml+'</div>';
   }
-
   // ── Fixtures tab ──────────────────────────────────────────────
   function fixturesTabHTML(){
     var isEd=!!S.fxEditId, et=isEd?S.fixtures.find(function(f){return f.id===S.fxEditId;}):null;
@@ -20118,10 +20333,10 @@ var _dmxMode = 'd2p';
             if(!proj.psuByZone) proj.psuByZone={};
             if(this.value==='__addpsu__'){
               this.value=proj.psuByZone[zoneKey]||'';
-              S.qaPsu=true; S.qaPsuZone=zoneKey; S.qaPsuMfr=''; S.qaPsuPart=''; S.qaPsuWatts=''; S.qaPsuBuffer=''; S.qaPsuLimit=''; S.qaPsuErr='';
+              S.qaPsu=true; S.qaPsuZone=zoneKey; S.qaPsuProjId=projId; S.qaPsuMfr=''; S.qaPsuPart=''; S.qaPsuWatts=''; S.qaPsuBuffer=''; S.qaPsuLimit=''; S.qaPsuErr='';
               _ledRender(); return;
             }
-            proj.psuByZone[zoneKey]=this.value; S.qaPsu=false; S.qaPsuZone='';
+            proj.psuByZone[zoneKey]=this.value; S.qaPsu=false; S.qaPsuZone=''; S.qaPsuProjId='';
             saveProj(); _ledRender();
           });
         });
@@ -20141,14 +20356,14 @@ var _dmxMode = 'd2p';
                      bufferPct:(!isNaN(buf)&&buf>0)?buf:null,limitW:(!isNaN(lim)&&lim>0)?lim:null};
             S.psu.push(obj);
             // Assign new PSU to the zone that triggered quick-add
-            if(S.qaPsuZone){
-              var activeProj=S.projects.find(function(p){return p.id===S.projOpen;});
+            if(S.qaPsuZone&&S.qaPsuProjId){
+              var activeProj=S.projects.find(function(p){return p.id===S.qaPsuProjId;});
               if(activeProj){ if(!activeProj.psuByZone) activeProj.psuByZone={}; activeProj.psuByZone[S.qaPsuZone]=obj.id; }
             }
-            S.qaPsu=false; S.qaPsuZone='';
+            S.qaPsu=false; S.qaPsuZone=''; S.qaPsuProjId='';
             savePsu(); saveProj(); _ledRender(); toast('Power supply saved');
           });
-          bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;S.qaPsuZone='';_ledRender();});
+          bindEl('lc-qa-psu-cancel','click',function(){S.qaPsu=false;S.qaPsuZone='';S.qaPsuProjId='';_ledRender();});
         }
         // Per-zone channel selectors
         document.querySelectorAll('[data-zone-ch-sel]').forEach(function(sel){
@@ -20203,8 +20418,55 @@ var _dmxMode = 'd2p';
           });
           inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){this.blur();} });
         });
-        document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(){doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
-        document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(){doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
+        document.querySelectorAll('[data-edit-run]').forEach(function(b){ b.addEventListener('click',function(e){e.stopPropagation();doEditRun(this.getAttribute('data-run-proj'),this.getAttribute('data-edit-run'));}); });
+        document.querySelectorAll('[data-del-run]').forEach(function(b){ b.addEventListener('click',function(e){e.stopPropagation();doDeleteRun(this.getAttribute('data-run-proj'),this.getAttribute('data-del-run'));}); });
+        // Sort column headers
+        document.querySelectorAll('[data-sort-col]').forEach(function(th){
+          th.addEventListener('click',function(){
+            var col=this.getAttribute('data-sort-col');
+            if(S.runTableSortCol===col){ S.runTableSortDir=(S.runTableSortDir==='asc'?'desc':'asc'); }
+            else { S.runTableSortCol=col; S.runTableSortDir='asc'; }
+            _ledRender();
+          });
+        });
+        // Run table search input
+        document.querySelectorAll('[id^="lc-run-search-"]').forEach(function(inp){
+          inp.addEventListener('input',function(){ S.runTableSearch=this.value; _ledRender(); });
+        });
+        document.querySelectorAll('[id^="lc-run-search-clear-"]').forEach(function(btn){
+          btn.addEventListener('click',function(){ S.runTableSearch=''; _ledRender(); });
+        });
+        // Expandable run rows — click anywhere on row toggles expand
+        document.querySelectorAll('.lc-run-row').forEach(function(tr){
+          tr.addEventListener('click',function(e){
+            if(e.target.closest('button')||e.target.closest('[data-cut-key]')) return;
+            var runId=this.getAttribute('data-run-id');
+            var projId=this.getAttribute('data-proj-id');
+            var key=projId+'_'+runId;
+            if(S.expandedRunIds[key]) delete S.expandedRunIds[key];
+            else S.expandedRunIds[key]=true;
+            _ledRender();
+          });
+        });
+        // Cut cell click — toggle cut options open/close
+        document.querySelectorAll('[data-cut-key]').forEach(function(td){
+          td.addEventListener('click',function(e){
+            e.stopPropagation();
+            var key=this.getAttribute('data-cut-key');
+            if(S.openCutCells[key]) delete S.openCutCells[key];
+            else S.openCutCells[key]=true;
+            _ledRender();
+          });
+        });
+        // CSV export button
+        document.querySelectorAll('[id^="lc-export-csv-"]').forEach(function(btn){
+          btn.addEventListener('click',function(e){
+            e.stopPropagation();
+            var projId=this.getAttribute('data-proj-id');
+            var proj=S.projects.find(function(p){return p.id===projId;}); if(!proj) return;
+            exportProjCSV(proj);
+          });
+        });
         // PSU over-capacity force toggles
         document.querySelectorAll('[data-psu-force]').forEach(function(b){
           b.addEventListener('click',function(){

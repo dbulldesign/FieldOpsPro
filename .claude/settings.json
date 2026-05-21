@@ -4,7 +4,8 @@
       "Bash(curl -sL \"https://itshover.com/r/gear-icon.json\")",
       "Bash(node -e ':*)",
       "Bash(python -c ' *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
