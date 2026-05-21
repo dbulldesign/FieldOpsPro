@@ -3,7 +3,8 @@
     "allow": [
       "Bash(curl -sL \"https://itshover.com/r/gear-icon.json\")",
       "Bash(node -e ':*)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(git pull *)"
     ]
   }
 }
