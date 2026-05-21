@@ -19666,22 +19666,22 @@ var _dmxMode = 'd2p';
       var isOverridden=manualPS!==null;
 
       // PSU badge
-      var psuBadge='<div style="display:inline-flex;align-items:center;gap:2px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:4px;padding:1px 5px 1px 5px">'
-        +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:28px;font-size:11px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
-        +'<span style="font-size:11px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
+      var psuBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
+        +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:46px;font-size:14px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+        +'<span style="font-size:13px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
       +'</div>'
-      +(isOverridden?'<span style="font-size:10px;color:var(--text-muted);margin-left:3px">calc:'+calcPS+'</span>':'');
+      +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
 
       // Channel badge
       var chBadge='';
       if(zoneCh){
-        chBadge='<div style="display:inline-flex;align-items:center;gap:2px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:4px;padding:1px 5px 1px 5px">'
-          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:28px;font-size:11px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
-          +'<span style="font-size:11px;color:#a78bfa;font-weight:700">&nbsp;pcs</span>'
+        chBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
+          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:46px;font-size:14px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+          +'<span style="font-size:13px;color:#a78bfa;font-weight:700">&nbsp;pcs</span>'
         +'</div>'
-        +(isChOverridden?'<span style="font-size:10px;color:var(--text-muted);margin-left:3px">calc:'+totalChPieces+'</span>':'')
-        +(totalChEndCaps?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+totalChEndCaps+' caps</span>':'')
-        +(totalChClips?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+totalChClips+' clips</span>':'');
+        +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
+        +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChEndCaps+' caps</span>':'')
+        +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
       }
 
       // Zone header row — read-only summary only
@@ -19838,16 +19838,16 @@ var _dmxMode = 'd2p';
             var rawPct=zPsEff>0?(wps/zPsEff)*100:0;
             var barPct=Math.min(100,rawPct);
             var bc2=over?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-            psuDetail='<div style="margin-bottom:10px">'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">This run\'s load</div>'
-              +'<div style="display:flex;align-items:center;gap:8px">'
-                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc2+';border-radius:3px"></div></div>'
-                +'<span style="font-size:11px;font-family:monospace;color:var(--text);white-space:nowrap">'+wps.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W ('+rawPct.toFixed(0)+'%)</span>'
+            psuDetail='<div style="margin-bottom:12px">'
+              +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">This run\'s load</div>'
+              +'<div style="display:flex;align-items:center;gap:10px">'
+                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:4px;height:9px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc2+';border-radius:4px"></div></div>'
+                +'<span style="font-size:13px;font-family:monospace;color:var(--text);white-space:nowrap">'+wps.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W ('+rawPct.toFixed(0)+'%)</span>'
               +'</div>'
-              +(over?'<div style="margin-top:5px;font-size:10px;color:#f97316;font-weight:700">⚠ Exceeds PSU usable capacity</div>':'')
-              +'<div style="display:flex;gap:6px;margin-top:6px">'
-                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:10px;'+(run.psuForce?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
-                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;">Need extra PSU</button>'
+              +(over?'<div style="margin-top:6px;font-size:12px;color:#f97316;font-weight:700">⚠ Exceeds PSU usable capacity</div>':'')
+              +'<div style="display:flex;gap:8px;margin-top:8px">'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="1" style="font-size:12px;'+(run.psuForce?'background:rgba(249,115,22,0.2);color:#f97316;border-color:#f97316':'')+'">Use this PSU</button>'
+                +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:12px;">Need extra PSU</button>'
               +'</div>'
             +'</div>';
           }
@@ -19860,32 +19860,32 @@ var _dmxMode = 'd2p';
             var runClips=runPieces*(parseFloat(zoneCh.clipsPerPiece)||0);
             var chPieceLen=fmtIn(zoneCh.lengthIn||0).ftIn;
             var runFt=fmtIn(run.lengthIn).ftIn;
-            chDetail='<div style="margin-bottom:10px">'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">LED Channel</div>'
-              +'<div style="font-size:11px;color:var(--text);margin-bottom:5px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
-              +'<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">'
+            chDetail='<div style="margin-bottom:12px">'
+              +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">This run\'s channel</div>'
+              +'<div style="font-size:13px;color:var(--text);margin-bottom:7px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
+              +'<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'
                 +(function(){
                   var pieces=[];
                   var remaining=run.lengthIn;
                   for(var pi=0;pi<runPieces;pi++){
                     var thisLen=Math.min(remaining,zoneCh.lengthIn||1);
                     var pct=(thisLen/(zoneCh.lengthIn||1))*100;
-                    pieces.push('<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'
-                      +'<div style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;height:14px;width:'+(Math.max(16,Math.round(pct*0.5)))+'px;position:relative;overflow:hidden">'
+                    pieces.push('<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+                      +'<div style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;height:16px;width:'+(Math.max(20,Math.round(pct*0.6)))+'px;position:relative;overflow:hidden">'
                         +'<div style="height:100%;width:'+pct.toFixed(0)+'%;background:rgba(167,139,250,0.5);border-radius:3px"></div>'
                       +'</div>'
-                      +'<span style="font-size:9px;color:var(--text-muted)">'+(pi+1)+'</span>'
+                      +'<span style="font-size:11px;color:var(--text-muted)">'+(pi+1)+'</span>'
                     +'</div>');
                     remaining-=thisLen;
                   }
-                  return pieces.join('<span style="font-size:10px;color:var(--text-muted)">+</span>');
+                  return pieces.join('<span style="font-size:12px;color:var(--text-muted);padding:0 2px">+</span>');
                 }())
-                +'<span style="font-size:11px;color:var(--text);margin-left:4px">= '+runFt+(qty>1?' ×'+qty:'')+'</span>'
+                +'<span style="font-size:13px;color:var(--text);margin-left:6px">= '+runFt+(qty>1?' ×'+qty:'')+'</span>'
               +'</div>'
-              +'<div style="display:flex;gap:10px;margin-top:5px">'
-                +'<span style="font-size:11px;color:var(--text-muted)">'+runPieces+' pcs/run'+(qty>1?' ('+runPieces*qty+' total)':'')+'</span>'
-                +(runEndCaps?'<span style="font-size:11px;color:var(--text-muted)">'+runEndCaps+' end caps/run'+(qty>1?' ('+runEndCaps*qty+' total)':'')+'</span>':'')
-                +(runClips?'<span style="font-size:11px;color:var(--text-muted)">'+runClips.toFixed(0)+' clips/run'+(qty>1?' ('+(runClips*qty).toFixed(0)+' total)':'')+'</span>':'')
+              +'<div style="display:flex;gap:14px;margin-top:7px;flex-wrap:wrap">'
+                +'<span style="font-size:13px;color:var(--text-muted)">'+runPieces+' pcs/run'+(qty>1?' <strong style="color:var(--text)">('+runPieces*qty+' total)</strong>':'')+'</span>'
+                +(runEndCaps?'<span style="font-size:13px;color:var(--text-muted)">'+runEndCaps+' end caps/run'+(qty>1?' <strong style="color:var(--text)">('+runEndCaps*qty+' total)</strong>':'')+'</span>':'')
+                +(runClips?'<span style="font-size:13px;color:var(--text-muted)">'+runClips.toFixed(0)+' clips/run'+(qty>1?' <strong style="color:var(--text)">'+(runClips*qty).toFixed(0)+' total</strong>':'')+'</span>':'')
               +'</div>'
             +'</div>';
           }
@@ -19898,10 +19898,10 @@ var _dmxMode = 'd2p';
               var f=fmtIn(val);
               var diff=val-run.lengthIn;
               var diffStr=diff===0?'exact':(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches;
-              return '<div style="text-align:center;padding:8px 10px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:6px;min-width:70px">'
-                +'<div style="font-size:13px;font-weight:'+(isClosest?'700':'400')+';font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+f.ftIn+'</div>'
-                +'<div style="font-size:9px;font-family:monospace;color:var(--text-muted)">'+val.toFixed(2)+'"</div>'
-                +'<div style="font-size:9px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+'">'+diffStr+'</div>'
+              return '<div style="text-align:center;padding:10px 12px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:8px;min-width:80px">'
+                +'<div style="font-size:15px;font-weight:'+(isClosest?'700':'400')+';font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+f.ftIn+'</div>'
+                +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:2px">'+val.toFixed(2)+'"</div>'
+                +'<div style="font-size:11px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+';margin-top:2px">'+diffStr+'</div>'
               +'</div>';
             }
             var cutOptions=[
@@ -19914,7 +19914,7 @@ var _dmxMode = 'd2p';
             var seen={};
             cutOptions=([shorter,below,above,longer]).filter(function(v){return v!==null&&v!==undefined;}).filter(function(v,idx,arr){return arr.indexOf(v)===idx;}).map(function(v){return makeCutBtn(v,v===closest);});
             cutDetail='<div>'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Cut Options <span style="font-weight:400;text-transform:none;letter-spacing:0">('+cuts.cutIn.toFixed(2)+'" increment)</span></div>'
+              +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Cut Options <span style="font-weight:400;text-transform:none;letter-spacing:0">('+cuts.cutIn.toFixed(2)+'" increment)</span></div>'
               +'<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">'
                 +'<div style="text-align:center;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px dashed var(--border);border-radius:6px;min-width:70px">'
                   +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Input</div>'
