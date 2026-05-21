@@ -19607,18 +19607,18 @@ var _dmxMode = 'd2p';
     }
 
     var tableHtml='<div style="overflow-x:auto;margin-bottom:14px">'
-      +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
         +'<colgroup>'
-          +'<col style="width:28px">'   // expand
-          +'<col style="width:90px">'   // label
-          +'<col>'                       // fixture
-          +'<col style="width:130px">'  // zone
-          +'<col style="width:70px">'   // inches
-          +'<col style="width:80px">'   // ft+in
-          +'<col style="width:38px">'   // qty
-          +'<col style="width:66px">'   // watts
-          +'<col style="width:90px">'   // cut
-          +'<col style="width:58px">'   // actions
+          +'<col style="width:28px">'    // expand
+          +'<col style="width:100px">'   // label
+          +'<col>'                        // fixture
+          +'<col style="width:140px">'   // zone
+          +'<col style="width:74px">'    // inches
+          +'<col style="width:86px">'    // ft+in
+          +'<col style="width:40px">'    // qty
+          +'<col style="width:70px">'    // watts
+          +'<col style="width:96px">'    // cut
+          +'<col style="width:60px">'    // actions
         +'</colgroup>'
         +'<thead><tr style="border-bottom:2px solid var(--border)">'
           +'<th style="'+thStyle+'"></th>'
@@ -19684,65 +19684,16 @@ var _dmxMode = 'd2p';
         +(totalChClips?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+totalChClips+' clips</span>':'');
       }
 
-      // Zone header row
+      // Zone header row — read-only summary only
       tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
-        +'<td colspan="10" style="padding:6px 8px">'
+        +'<td colspan="10" style="padding:5px 8px">'
           +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
             +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
             +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
             +psuBadge
             +chBadge
+            +'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
           +'</div>'
-          +'<div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">'
-            +'<span style="font-size:10px;color:var(--text-muted);flex-shrink:0">PSU:</span>'
-            +'<select class="lc-select" style="height:28px;font-size:11px;flex:1;min-width:120px;max-width:280px" data-zone-psu-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
-            +(zonePsu?'<span style="font-size:10px;color:var(--text-muted)">'+zPsEff.toFixed(1)+'W usable</span>':'')
-            +'<span style="font-size:10px;color:var(--text-muted);flex-shrink:0;margin-left:6px">Ch:</span>'
-            +'<select class="lc-select" style="height:28px;font-size:11px;flex:1;min-width:120px;max-width:280px" data-zone-ch-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
-            +(zoneCh?'<span style="font-size:10px;color:var(--text-muted)">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
-          +'</div>'
-          // Load bars inline under zone header
-          +(g.loads.length&&zonePsu?'<div style="margin-top:6px">'+(function(){
-            var h='';
-            g.loads.forEach(function(entry,i){
-              var used=entry.w,isOver=entry.over;
-              var rawPct=zPsEff>0?(used/zPsEff)*100:0;
-              var barPct=Math.min(100,rawPct);
-              var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-              var sc=isOver?'#ef4444':rawPct>=80?'#f59e0b':'#6ee7b7';
-              var sl=isOver?'OVER':rawPct>=80?'HIGH':'OK';
-              h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
-                +'<span style="font-size:10px;color:var(--text-muted);width:100px;flex-shrink:0">'+(zk==='(No Zone)'?'':'Zone '+escH(zk)+' – ')+'Power Supply '+(globalPsuOffset+i+1)+'</span>'
-                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div>'
-                +'<span style="font-size:10px;font-family:monospace;color:var(--text);width:100px;text-align:right;flex-shrink:0">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W</span>'
-                +'<span style="font-size:9px;font-weight:700;color:'+sc+';width:32px;flex-shrink:0">'+sl+'</span>'
-              +'</div>';
-            });
-            return h;
-          }())+'</div>':'')
-          // Quick-add PSU / Channel panels for this zone
-          +(S.qaPsu&&S.qaPsuZone===zk&&S.qaPsuProjId===proj.id?(
-            '<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:12px;margin-top:8px">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">New Power Supply</div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
-            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div><div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div></div>'
-            +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
-            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
-            +'</div>'
-          ):'')
-          +(S.qaCh&&S.qaChZone===zk&&S.qaChProjId===proj.id?(
-            '<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px;margin-top:8px">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">New LED Channel</div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
-            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
-            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div><div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div></div>'
-            +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
-            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
-            +'</div>'
-          ):'')
         +'</td>'
       +'</tr>';
 
@@ -19798,16 +19749,16 @@ var _dmxMode = 'd2p';
         var over=wps&&zPsEff>0&&wps>zPsEff;
         var rowBg=over?'background:rgba(249,115,22,0.04)':'';
         tbodyHtml+='<tr class="lc-run-row" style="border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;'+rowBg+'" data-run-id="'+run.id+'" data-proj-id="'+proj.id+'">'
-          +'<td style="padding:6px 4px 6px 8px;text-align:center">'
+          +'<td style="padding:7px 4px 7px 8px;text-align:center">'
             +'<span style="font-size:10px;color:var(--text-muted);transition:transform 0.15s;display:inline-block;'+(isExpanded?'transform:rotate(90deg)':'')+'">▶</span>'
           +'</td>'
-          +'<td style="padding:6px 6px;color:var(--text);font-size:12px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(run.label?escH(run.label):'<span style="color:var(--text-muted)">—</span>')+'</td>'
-          +'<td style="padding:6px 6px;color:var(--text-muted);font-size:11px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:10px">no fixture</span>')+'</td>'
-          +'<td style="padding:6px 6px;color:var(--text);font-size:12px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
-          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
-          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:var(--text-muted);white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
-          +'<td style="padding:6px 6px;text-align:center;font-size:12px;color:var(--text)">×'+qty+'</td>'
-          +'<td style="padding:6px 6px;text-align:right;font-family:monospace;font-size:11px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
+          +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(run.label?escH(run.label):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+          +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
+          +'<td style="padding:7px 6px;color:var(--text);font-size:13px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
+          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:var(--text-muted);white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
+          +'<td style="padding:7px 6px;text-align:center;font-size:13px;color:var(--text)">×'+qty+'</td>'
+          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
           +'<td style="padding:6px 6px;text-align:center" data-cut-key="'+expKey+'" data-proj-id="'+proj.id+'">'+cutCell+'</td>'
           +'<td style="padding:6px 4px;text-align:right;white-space:nowrap">'
             +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:2px">✏</button>'
@@ -19817,18 +19768,79 @@ var _dmxMode = 'd2p';
 
         // Expanded detail row
         if(isExpanded){
-          // Per-run PSU detail
+          // ── Zone PSU selector (shown in expanded row) ──
+          var zonePsuSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#4f8ef7;margin-bottom:6px">Power Supply — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">'
+              +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-psu-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
+              +(zonePsu?'<span style="font-size:11px;color:var(--text-muted)">'+zPsEff.toFixed(1)+'W usable'+(zHasDerate?' / '+zPsRated+'W rated':'')+'</span>':'')
+              +psuBadge
+            +'</div>'
+            // Zone-level load bars
+            +(g.loads.length&&zonePsu?'<div style="margin-top:4px">'+(function(){
+              var h='';
+              g.loads.forEach(function(entry,i){
+                var used=entry.w,isOver=entry.over;
+                var rawPct=zPsEff>0?(used/zPsEff)*100:0;
+                var barPct=Math.min(100,rawPct);
+                var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+                var sc=isOver?'#ef4444':rawPct>=80?'#f59e0b':'#6ee7b7';
+                var sl=isOver?'OVER':rawPct>=80?'HIGH':'OK';
+                h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+                  +'<span style="font-size:11px;color:var(--text-muted);width:120px;flex-shrink:0;white-space:nowrap">Power Supply '+(globalPsuOffset+i+1)+'</span>'
+                  +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div>'
+                  +'<span style="font-size:11px;font-family:monospace;color:var(--text);width:120px;text-align:right;flex-shrink:0;white-space:nowrap">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W</span>'
+                  +'<span style="font-size:10px;font-weight:700;color:'+sc+';width:34px;flex-shrink:0">'+sl+'</span>'
+                +'</div>';
+              });
+              return h;
+            }())+'</div>':'')
+            +(!zonePsu?'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Select a power supply above to see load calculations.</div>':'')
+            // Quick-add PSU panel
+            +(S.qaPsu&&S.qaPsuZone===zk&&S.qaPsuProjId===proj.id?(
+              '<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">New Power Supply</div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div><div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div></div>'
+              +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
+              +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
+              +'</div>'
+            ):'')
+          +'</div>';
+
+          // ── Zone Channel selector (shown in expanded row) ──
+          var zoneChSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#a78bfa;margin-bottom:6px">LED Channel — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+              +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-ch-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
+              +(zoneCh?'<span style="font-size:11px;color:var(--text-muted)">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
+              +chBadge
+            +'</div>'
+            // Quick-add channel panel
+            +(S.qaCh&&S.qaChZone===zk&&S.qaChProjId===proj.id?(
+              '<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">New LED Channel</div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
+              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div><div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div></div>'
+              +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
+              +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
+              +'</div>'
+            ):'')
+          +'</div>';
+
+          // ── Per-run PSU load detail ──
           var psuDetail='';
           if(zonePsu&&wps){
             var rawPct=zPsEff>0?(wps/zPsEff)*100:0;
             var barPct=Math.min(100,rawPct);
             var bc2=over?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
             psuDetail='<div style="margin-bottom:10px">'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Power Supply</div>'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">This run\'s load</div>'
               +'<div style="display:flex;align-items:center;gap:8px">'
-                +'<span style="font-size:11px;color:var(--text);white-space:nowrap">'+(zk==='(No Zone)'?'':'Zone '+escH(zk)+' – ')+'Power Supply ('+escH(zonePsu.manufacturer)+' '+escH(zonePsu.partNumber)+')</span>'
-              +'</div>'
-              +'<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'
                 +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:7px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc2+';border-radius:3px"></div></div>'
                 +'<span style="font-size:11px;font-family:monospace;color:var(--text);white-space:nowrap">'+wps.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W ('+rawPct.toFixed(0)+'%)</span>'
               +'</div>'
@@ -19838,8 +19850,6 @@ var _dmxMode = 'd2p';
                 +'<button class="lc-btn lc-btn-sm" data-psu-force="'+run.id+'" data-proj-id="'+proj.id+'" data-force="0" style="font-size:10px;">Need extra PSU</button>'
               +'</div>'
             +'</div>';
-          } else if(!zonePsu){
-            psuDetail='<div style="margin-bottom:10px;font-size:11px;color:var(--text-muted)">No PSU assigned to this zone. Select one in the zone header.</div>';
           }
 
           // Per-run channel detail
@@ -19918,10 +19928,11 @@ var _dmxMode = 'd2p';
           }
 
           tbodyHtml+='<tr style="background:rgba(255,255,255,0.015);border-bottom:1px solid rgba(255,255,255,0.04)">'
-            +'<td colspan="10" style="padding:12px 14px 12px 28px">'
-              +(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic">'+escH(run.description)+'</div>':'')
-              +psuDetail
-              +chDetail
+            +'<td colspan="10" style="padding:12px 16px 14px 20px">'
+              +(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic">'+escH(run.description)+'</div>':'')
+              +zonePsuSelector
+              +zoneChSelector
+              +(psuDetail||chDetail?'<div style="margin-bottom:12px">'+psuDetail+chDetail+'</div>':'')
               +cutDetail
             +'</td>'
           +'</tr>';
