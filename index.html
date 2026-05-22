@@ -19521,7 +19521,7 @@ var _dmxMode = 'd2p';
     });
 
     // ── grand totals ──
-    var grandTotalW=0,grandTotalPS=0,grandTotalChPieces=0,grandTotalEndCaps=0,grandTotalClips=0,grandTotalRuns=0;
+    var grandTotalW=0,grandTotalPS=0,grandTotalChPieces=0,grandTotalEndCaps=0,grandTotalClips=0,grandTotalRuns=0,grandTotalLengthIn=0;
     var zoneData={};
     groups.forEach(function(zk){
       var gRuns=groupMap[zk];
@@ -19556,6 +19556,7 @@ var _dmxMode = 'd2p';
       grandTotalEndCaps+=totalChEndCaps;
       grandTotalClips+=totalChClips;
       grandTotalRuns+=gRuns.length;
+      gRuns.forEach(function(run){grandTotalLengthIn+=run.lengthIn*(parseInt(run.qty)||1);});
       zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,manualChQty:manualChQty,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId};
     });
 
@@ -19582,6 +19583,7 @@ var _dmxMode = 'd2p';
     // ── summary bar ──
     var summaryBar='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px">'
       +'<span style="font-size:11px;color:var(--text-muted)">'+grandTotalRuns+' run'+(grandTotalRuns!==1?'s':'')+'</span>'
+      +(grandTotalLengthIn?'<span class="lc-badge">'+(grandTotalLengthIn/12).toFixed(1)+' ft total</span>':'')
       +(grandTotalW?'<span class="lc-badge" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">'+grandTotalW.toFixed(1)+'W total</span>':'')
       +(grandTotalPS?'<span class="lc-badge" style="color:#4f8ef7;border-color:rgba(79,142,247,0.3)">'+grandTotalPS+' PS</span>':'')
       +(grandTotalChPieces?'<span class="lc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">'+grandTotalChPieces+' ch pcs</span>':'')
@@ -19879,8 +19881,8 @@ var _dmxMode = 'd2p';
               var diff=val-run.lengthIn;
               var diffStr=diff===0?'exact':(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches;
               return '<div style="text-align:center;padding:10px 12px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:8px;min-width:80px">'
-                +'<div style="font-size:15px;font-weight:'+(isClosest?'700':'400')+';font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+f.ftIn+'</div>'
-                +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:2px">'+val.toFixed(2)+'"</div>'
+                +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+val.toFixed(2)+'"</div>'
+                +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+f.ftIn+'</div>'
                 +'<div style="font-size:11px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+';margin-top:2px">'+diffStr+'</div>'
               +'</div>';
             }
@@ -19898,8 +19900,8 @@ var _dmxMode = 'd2p';
               +'<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">'
                 +'<div style="text-align:center;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px dashed var(--border);border-radius:6px;min-width:70px">'
                   +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Input</div>'
-                  +'<div style="font-size:13px;font-weight:700;font-family:monospace;color:var(--text)">'+fmtIn(run.lengthIn).ftIn+'</div>'
-                  +'<div style="font-size:9px;font-family:monospace;color:var(--text-muted)">'+run.lengthIn.toFixed(2)+'"</div>'
+                  +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)">'+run.lengthIn.toFixed(2)+'"</div>'
+                  +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+fmtIn(run.lengthIn).ftIn+'</div>'
                 +'</div>'
                 +'<div style="font-size:18px;color:var(--text-muted);align-self:center">→</div>'
                 +cutOptions.join('')
