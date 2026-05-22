@@ -19666,14 +19666,18 @@ var _dmxMode = 'd2p';
       var zonePsuId=zd.zonePsuId, zoneChId=zd.zoneChId;
       var isOverridden=manualPS!==null;
 
-      // PSU badge
+      // PSU badge — editable (used in expanded row only)
       var psuBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
         +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:62px;font-size:14px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
         +'<span style="font-size:13px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
       +'</div>'
       +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
 
-      // Channel badge
+      // PSU badge — read-only (used in zone header row)
+      var psuBadgeRO=(displayPS?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:#4f8ef7">'+displayPS+' PS</span>':'')
+      +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
+
+      // Channel badge — editable (used in expanded row only)
       var chBadge='';
       if(zoneCh){
         chBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
@@ -19685,14 +19689,23 @@ var _dmxMode = 'd2p';
         +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
       }
 
+      // Channel badge — read-only (used in zone header row)
+      var chBadgeRO='';
+      if(zoneCh&&displayChQty){
+        chBadgeRO='<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:#a78bfa">'+displayChQty+' pcs</span>'
+        +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
+        +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChEndCaps+' caps</span>':'')
+        +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
+      }
+
       // Zone header row — read-only summary only
       tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
         +'<td colspan="10" style="padding:5px 8px">'
           +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
             +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
             +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
-            +psuBadge
-            +chBadge
+            +psuBadgeRO
+            +chBadgeRO
             +'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
           +'</div>'
         +'</td>'
