@@ -19667,7 +19667,7 @@ var _dmxMode = 'd2p';
 
       // PSU badge
       var psuBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
-        +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:46px;font-size:14px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+        +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:62px;font-size:14px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
         +'<span style="font-size:13px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
       +'</div>'
       +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
@@ -19676,7 +19676,7 @@ var _dmxMode = 'd2p';
       var chBadge='';
       if(zoneCh){
         chBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
-          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:46px;font-size:14px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0;-moz-appearance:textfield;appearance:textfield">'
+          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:62px;font-size:14px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
           +'<span style="font-size:13px;color:#a78bfa;font-weight:700">&nbsp;pcs</span>'
         +'</div>'
         +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
