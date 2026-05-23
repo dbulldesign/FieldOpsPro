@@ -19536,28 +19536,61 @@ var _dmxMode = 'd2p';
       var calcPS=g.psNeeded;
       var zoneChId=proj.channelByZone[zk]||'';
       var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
-      var manualChQty=proj.channelQtyOverrides[zk]!==undefined?parseInt(proj.channelQtyOverrides[zk]):null;
-      var totalChPieces=0,totalChEndCaps=0,totalChClips=0;
+      var totalChPieces=0,totalChEndCaps=0,totalChClips=0,isChOverridden=false;
       if(zoneCh){
         gRuns.forEach(function(run){
           var qty=parseInt(run.qty)||1;
-          var pieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+          var calc=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+          var pieces=run.chPcsOverride!==undefined?run.chPcsOverride:calc;
+          if(run.chPcsOverride!==undefined) isChOverridden=true;
           totalChPieces+=pieces*qty;
           totalChEndCaps+=(parseFloat(zoneCh.endCapsPerRun)||2)*qty;
           var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
           if(cpc>0)totalChClips+=pieces*cpc*qty;
         });
       }
-      var displayChQty=manualChQty!==null?manualChQty:totalChPieces;
-      var isChOverridden=manualChQty!==null;
+      var displayChQty=totalChPieces;
       grandTotalW+=g.totalW;
       grandTotalPS+=displayPS;
       grandTotalChPieces+=displayChQty;
       grandTotalEndCaps+=totalChEndCaps;
       grandTotalClips+=totalChClips;
-      grandTotalRuns+=gRuns.length;
+      gRuns.forEach(function(run){grandTotalRuns+=parseInt(run.qty)||1;});
       gRuns.forEach(function(run){grandTotalLengthIn+=run.lengthIn*(parseInt(run.qty)||1);});
-      zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,manualChQty:manualChQty,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId};
+      zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId};
+    });
+
+    // ── per-label summary ──
+    var lblMap={},lblOrder=[];
+    proj.runs.forEach(function(run){
+      var lbl=run.label&&run.label.trim()?run.label.trim():'(No Label)';
+      var qty=parseInt(run.qty)||1;
+      var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+      var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+      var runW=wpf?(run.lengthIn/12)*wpf*qty:0;
+      var zk=run.zone&&run.zone.trim()?run.zone.trim():'(No Zone)';
+      var zd=zoneData[zk];
+      var zoneCh=zd?zd.zoneCh:null;
+      var chPcs=0,endCapPairs=0,clips=0;
+      if(zoneCh){
+        var calcPcs=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+        var pcs=run.chPcsOverride!==undefined?run.chPcsOverride:calcPcs;
+        var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
+        chPcs=pcs*qty;
+        endCapPairs=Math.ceil((parseFloat(zoneCh.endCapsPerRun)||2)*qty/2);
+        clips=cpc>0?pcs*cpc*qty:0;
+      }
+      if(!lblMap[lbl]){lblMap[lbl]={qty:0,lengthIn:0,W:0,chPcs:0,endCapPairs:0,clips:0};lblOrder.push(lbl);}
+      lblMap[lbl].qty+=qty;
+      lblMap[lbl].lengthIn+=run.lengthIn*qty;
+      lblMap[lbl].W+=runW;
+      lblMap[lbl].chPcs+=chPcs;
+      lblMap[lbl].endCapPairs+=endCapPairs;
+      lblMap[lbl].clips+=clips;
+    });
+    lblOrder.sort(function(a,b){
+      if(a==='(No Label)') return 1; if(b==='(No Label)') return -1;
+      return a.localeCompare(b);
     });
 
     // ── apply search ──
@@ -19581,16 +19614,50 @@ var _dmxMode = 'd2p';
     }
 
     // ── summary bar ──
-    var summaryBar='<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px">'
-      +'<span style="font-size:11px;color:var(--text-muted)">'+grandTotalRuns+' run'+(grandTotalRuns!==1?'s':'')+'</span>'
-      +(grandTotalLengthIn?'<span class="lc-badge">'+(grandTotalLengthIn/12).toFixed(1)+' ft total</span>':'')
-      +(grandTotalW?'<span class="lc-badge" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">'+grandTotalW.toFixed(1)+'W total</span>':'')
-      +(grandTotalPS?'<span class="lc-badge" style="color:#4f8ef7;border-color:rgba(79,142,247,0.3)">'+grandTotalPS+' PS</span>':'')
-      +(grandTotalChPieces?'<span class="lc-badge" style="color:#a78bfa;border-color:rgba(167,139,250,0.3)">'+grandTotalChPieces+' ch pcs</span>':'')
-      +(grandTotalEndCaps?'<span class="lc-badge" style="color:#34d399;border-color:rgba(52,211,153,0.3)">'+grandTotalEndCaps+' end caps</span>':'')
-      +(grandTotalClips?'<span class="lc-badge">'+grandTotalClips+' clips</span>':'')
-      +'<div style="margin-left:auto;display:flex;gap:6px">'
-        +'<button class="lc-btn lc-btn-sm" id="lc-export-csv-'+proj.id+'" data-proj-id="'+proj.id+'">⬇ Export CSV</button>'
+    var hasCh=grandTotalChPieces>0, hasCaps=grandTotalEndCaps>0, hasClips=grandTotalClips>0;
+    var thS='padding:5px 8px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;border-bottom:1px solid var(--border)';
+    var tdS='padding:5px 8px;font-size:12px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,0.04)';
+    var lblRows='';
+    lblOrder.forEach(function(lbl){
+      var d=lblMap[lbl];
+      lblRows+='<tr>'
+        +'<td style="'+tdS+';font-weight:600;font-family:inherit;color:var(--text)">'+escH(lbl)+'</td>'
+        +'<td style="'+tdS+';text-align:center;color:var(--text-muted)">'+d.qty+'</td>'
+        +'<td style="'+tdS+';text-align:right;color:var(--text)">'+(d.lengthIn/12).toFixed(1)+'\'</td>'
+        +'<td style="'+tdS+';text-align:right;color:#f59e0b">'+(d.W?d.W.toFixed(1)+'W':'—')+'</td>'
+        +(hasCh?'<td style="'+tdS+';text-align:right;color:#a78bfa">'+(d.chPcs||'—')+'</td>':'')
+        +(hasCaps?'<td style="'+tdS+';text-align:right;color:#34d399">'+(d.endCapPairs||'—')+'</td>':'')
+        +(hasClips?'<td style="'+tdS+';text-align:right;color:var(--text)">'+(d.clips||'—')+'</td>':'')
+      +'</tr>';
+    });
+    var ttdS='padding:5px 8px;font-size:12px;font-weight:700;border-top:2px solid var(--border);background:rgba(255,255,255,0.04)';
+    var totalRow='<tr>'
+      +'<td style="'+ttdS+';color:var(--text-muted)">Total</td>'
+      +'<td style="'+ttdS+';text-align:center;font-family:monospace;color:var(--text-muted)">'+grandTotalRuns+'</td>'
+      +'<td style="'+ttdS+';text-align:right;font-family:monospace;color:var(--text)">'+(grandTotalLengthIn/12).toFixed(1)+'\'</td>'
+      +'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#f59e0b">'+(grandTotalW?grandTotalW.toFixed(1)+'W':'—')+'</td>'
+      +(hasCh?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#a78bfa">'+grandTotalChPieces+'</td>':'')
+      +(hasCaps?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#34d399">'+Math.ceil(grandTotalEndCaps/2)+'</td>':'')
+      +(hasClips?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:var(--text)">'+grandTotalClips+'</td>':'')
+    +'</tr>';
+    var summaryBar='<div style="margin-bottom:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;overflow:hidden">'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr>'
+          +'<th style="'+thS+';text-align:left">Label</th>'
+          +'<th style="'+thS+';text-align:center">Qty</th>'
+          +'<th style="'+thS+';text-align:right">Length</th>'
+          +'<th style="'+thS+';text-align:right">Watts</th>'
+          +(hasCh?'<th style="'+thS+';text-align:right;color:#a78bfa">Ch Pcs</th>':'')
+          +(hasCaps?'<th style="'+thS+';text-align:right;color:#34d399">Cap Pr</th>':'')
+          +(hasClips?'<th style="'+thS+';text-align:right">Clips</th>':'')
+        +'</tr></thead>'
+        +'<tbody>'+lblRows+totalRow+'</tbody>'
+      +'</table></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--border)">'
+        +(grandTotalPS?'<span class="lc-badge" style="color:#4f8ef7;border-color:rgba(79,142,247,0.3)">'+grandTotalPS+' PS total</span>':'')
+        +'<div style="margin-left:auto">'
+          +'<button class="lc-btn lc-btn-sm" id="lc-export-csv-'+proj.id+'" data-proj-id="'+proj.id+'">⬇ Export CSV</button>'
+        +'</div>'
       +'</div>'
     +'</div>';
 
@@ -19615,8 +19682,7 @@ var _dmxMode = 'd2p';
           +'<col style="width:100px">'   // label
           +'<col>'                        // fixture
           +'<col style="width:140px">'   // zone
-          +'<col style="width:74px">'    // inches
-          +'<col style="width:86px">'    // ft+in
+          +'<col style="width:90px">'    // length (ft + ft+in stacked)
           +'<col style="width:40px">'    // qty
           +'<col style="width:70px">'    // watts
           +'<col style="width:96px">'    // cut
@@ -19627,8 +19693,7 @@ var _dmxMode = 'd2p';
           +thSort('label','Label','left')
           +thSort('fixture','Fixture','left')
           +thSort('zone','Zone','left')
-          +thSort('length','In','right')
-          +'<th style="'+thStyle+';text-align:right">Ft+In</th>'
+          +thSort('length','Ft','right')
           +thSort('qty','Qty','center')
           +thSort('watts','Watts','right')
           +thSort('cut','Cut','center')
@@ -19655,285 +19720,269 @@ var _dmxMode = 'd2p';
       +'</div>';
     }
 
-    groups.forEach(function(zk){
-      var gRuns=groupMap[zk];
+    // ── build flat run list then apply global search + sort ──
+    var allRunItems=[];
+    groups.forEach(function(zk){ groupMap[zk].forEach(function(run){ allRunItems.push({run:run,zk:zk}); }); });
+    if(search){
+      allRunItems=allRunItems.filter(function(item){
+        var run=item.run, fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+        var txt=[run.label||'',run.description||'',fx?fx.manufacturer:'',fx?fx.partNumber:'',run.zone||'',fmtIn(run.lengthIn).ftIn,fmtIn(run.lengthIn).inches].join(' ').toLowerCase();
+        return txt.indexOf(search)>=0;
+      });
+    }
+    if(sortCol){
+      allRunItems=allRunItems.slice().sort(function(a,b){
+        var av=sortVal(a.run,sortCol),bv=sortVal(b.run,sortCol);
+        if(av<bv) return sortDir==='asc'?-1:1;
+        if(av>bv) return sortDir==='asc'?1:-1;
+        return 0;
+      });
+    }
+
+    var lastRenderedZk=null;
+    allRunItems.forEach(function(item){
+      var run=item.run, zk=item.zk;
       var zd=zoneData[zk];
       var zonePsu=zd.zonePsu, zPsEff=zd.zPsEff, zPsRated=zd.zPsRated, zHasDerate=zd.zHasDerate;
       var manualPS=zd.manualPS, g=zd.g, displayPS=zd.displayPS, calcPS=zd.calcPS;
-      var zoneCh=zd.zoneCh, manualChQty=zd.manualChQty, totalChPieces=zd.totalChPieces;
+      var zoneCh=zd.zoneCh, totalChPieces=zd.totalChPieces;
       var totalChEndCaps=zd.totalChEndCaps, totalChClips=zd.totalChClips;
       var displayChQty=zd.displayChQty, isChOverridden=zd.isChOverridden;
       var zonePsuId=zd.zonePsuId, zoneChId=zd.zoneChId;
       var isOverridden=manualPS!==null;
 
-      // PSU badge — editable (used in expanded row only)
+      // PSU badge — editable (expanded row)
       var psuBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
         +'<input type="number" min="0" step="1" value="'+displayPS+'" data-zone-psu="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override PS count" style="width:62px;font-size:14px;font-weight:700;color:#4f8ef7;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
         +'<span style="font-size:13px;color:#4f8ef7;font-weight:700">&nbsp;PS</span>'
       +'</div>'
       +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
 
-      // PSU badge — read-only (used in zone header row)
+      // PSU badge — read-only (zone header)
       var psuBadgeRO=(displayPS?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(79,142,247,0.12);border:1px solid '+(isOverridden?'rgba(79,142,247,0.6)':'rgba(79,142,247,0.25)')+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:#4f8ef7">'+displayPS+' PS</span>':'')
       +(isOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+calcPS+'</span>':'');
 
-      // Channel badge — editable (used in expanded row only)
-      var chBadge='';
-      if(zoneCh){
-        chBadge='<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
-          +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override piece count" style="width:62px;font-size:14px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
-          +'<span style="font-size:13px;color:#a78bfa;font-weight:700">&nbsp;pcs</span>'
-        +'</div>'
-        +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
-        +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChEndCaps+' caps</span>':'')
-        +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
-      }
+      // Channel badge — editable input now lives in chDetail (per-run), not here
 
-      // Channel badge — read-only (used in zone header row)
+      // Channel badge — read-only (zone header)
       var chBadgeRO='';
       if(zoneCh&&displayChQty){
         chBadgeRO='<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:#a78bfa">'+displayChQty+' pcs</span>'
         +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
-        +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChEndCaps+' caps</span>':'')
+        +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+Math.ceil(totalChEndCaps/2)+' cap pr</span>':'')
         +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
       }
 
-      // Zone header row — read-only summary only
-      tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
-        +'<td colspan="10" style="padding:5px 8px">'
-          +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
-            +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
-            +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
-            +psuBadgeRO
-            +chBadgeRO
-            +'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
-          +'</div>'
+      // Zone header — emitted when zone changes in the sorted list
+      if(zk!==lastRenderedZk){
+        tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
+          +'<td colspan="9" style="padding:5px 8px">'
+            +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
+              +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
+              +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
+              +psuBadgeRO+chBadgeRO
+              +'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
+            +'</div>'
+          +'</td>'
+        +'</tr>';
+        lastRenderedZk=zk;
+      }
+
+      hasAnyRun=true;
+      var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
+      var qty=parseInt(run.qty)||1;
+      var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
+      var wps=wpf?(run.lengthIn/12)*wpf:null;
+      var wattsTotal=wps?wps*qty:null;
+      var lenFmt=fmtIn(run.lengthIn);
+      var lenFtDec=(run.lengthIn/12).toFixed(2)+"'";
+      var cuts=closestCuts(run.lengthIn,fx);
+      var expKey=proj.id+'_'+run.id;
+      var isExpanded=!!S.expandedRunIds[expKey];
+      var isCutOpen=!!S.openCutCells[expKey];
+
+      // Cut cell content
+      var cutCell='<span style="color:var(--text-muted);font-size:11px">—</span>';
+      if(cuts){
+        var closestFmt=fmtIn(cuts.closest);
+        if(isCutOpen){
+          var parts=[];
+          if(cuts.shorter!==null)parts.push('<span style="color:var(--text-muted)">← '+fmtIn(cuts.shorter).ftIn+'</span>');
+          parts.push('<span style="color:#4f8ef7;font-weight:700">'+closestFmt.ftIn+'<span style="font-size:9px;color:#4f8ef7"> ✓</span></span>');
+          parts.push('<span style="color:var(--text-muted)">'+fmtIn(cuts.longer).ftIn+' →</span>');
+          cutCell='<div style="display:flex;flex-direction:column;gap:2px;font-size:10px;font-family:monospace">'+parts.join('')+'</div>';
+        } else {
+          var diff=cuts.closest-run.lengthIn;
+          var diffStr=diff===0?'':' <span style="font-size:9px;color:var(--text-muted)">'+(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches+'</span>';
+          cutCell='<span style="font-family:monospace;font-size:11px">'+closestFmt.ftIn+'</span>'+diffStr;
+        }
+      }
+
+      // Row
+      var over=wps&&zPsEff>0&&wps>zPsEff;
+      var rowBg=over?'background:rgba(249,115,22,0.04)':'';
+      tbodyHtml+='<tr class="lc-run-row" style="border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;'+rowBg+'" data-run-id="'+run.id+'" data-proj-id="'+proj.id+'">'
+        +'<td style="padding:7px 4px 7px 8px;text-align:center">'
+          +'<span style="font-size:10px;color:var(--text-muted);transition:transform 0.15s;display:inline-block;'+(isExpanded?'transform:rotate(90deg)':'')+'">▶</span>'
+        +'</td>'
+        +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(run.label?escH(run.label):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+        +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber)+(fx.cutIncrement?'<span style="color:var(--text-muted);font-size:11px"> · '+escH(String(fx.cutIncrement))+escH(fx.cutUnit||'in')+'/cut</span>':''):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
+        +'<td style="padding:7px 6px;color:var(--text);font-size:13px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
+        +'<td style="padding:7px 6px;text-align:right;white-space:nowrap">'
+          +'<div style="font-size:12px;font-family:monospace;color:var(--text)">'+lenFtDec+'</div>'
+          +'<div style="font-size:10px;font-family:monospace;color:var(--text-muted)">'+escH(lenFmt.ftIn)+'</div>'
+        +'</td>'
+        +'<td style="padding:7px 6px;text-align:center;font-size:13px;color:var(--text)">×'+qty+'</td>'
+        +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
+        +'<td style="padding:6px 6px;text-align:center" data-cut-key="'+expKey+'" data-proj-id="'+proj.id+'">'+cutCell+'</td>'
+        +'<td style="padding:6px 4px;text-align:right;white-space:nowrap">'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:2px">✏</button>'
+          +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-del-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Remove" style="color:#ef4444;border-color:#ef4444">✕</button>'
         +'</td>'
       +'</tr>';
 
-      // Apply search filter + sort within zone
-      var filteredRuns=gRuns;
-      if(search){
-        filteredRuns=gRuns.filter(function(run){
-          var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
-          var txt=[run.label||'',run.description||'',fx?fx.manufacturer:'',fx?fx.partNumber:'',run.zone||'',fmtIn(run.lengthIn).ftIn,fmtIn(run.lengthIn).inches].join(' ').toLowerCase();
-          return txt.indexOf(search)>=0;
-        });
-      }
-      if(sortCol){
-        filteredRuns=filteredRuns.slice().sort(function(a,b){
-          var av=sortVal(a,sortCol), bv=sortVal(b,sortCol);
-          if(av<bv) return sortDir==='asc'?-1:1;
-          if(av>bv) return sortDir==='asc'?1:-1;
-          return 0;
-        });
-      }
+      // Expanded detail row
+      if(isExpanded){
+        var zonePsuSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#4f8ef7;margin-bottom:6px">Power Supply — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">'
+            +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-psu-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
+            +(zonePsu?'<span style="font-size:11px;color:var(--text-muted)">'+zPsEff.toFixed(1)+'W usable'+(zHasDerate?' / '+zPsRated+'W rated':'')+'</span>':'')
+            +psuBadge
+          +'</div>'
+          +(g.loads.length&&zonePsu?'<div style="margin-top:4px">'+(function(){
+            var h='';
+            g.loads.forEach(function(entry,i){
+              var used=entry.w,isOver=entry.over;
+              var rawPct=zPsEff>0?(used/zPsEff)*100:0;
+              var barPct=Math.min(100,rawPct);
+              var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
+              var sc=isOver?'#ef4444':rawPct>=80?'#f59e0b':'#6ee7b7';
+              var sl=isOver?'OVER':rawPct>=80?'HIGH':'OK';
+              h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+                +'<span style="font-size:11px;color:var(--text-muted);width:120px;flex-shrink:0;white-space:nowrap">PS-'+escH(zk)+'-'+(i+1)+'</span>'
+                +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div>'
+                +'<span style="font-size:11px;font-family:monospace;color:var(--text);width:120px;text-align:right;flex-shrink:0;white-space:nowrap">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W</span>'
+                +'<span style="font-size:10px;font-weight:700;color:'+sc+';width:34px;flex-shrink:0">'+sl+'</span>'
+              +'</div>';
+            });
+            return h;
+          }())+'</div>':'')
+          +(!zonePsu?'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Select a power supply above to see load calculations.</div>':'')
+          +(S.qaPsu&&S.qaPsuZone===zk&&S.qaPsuProjId===proj.id?(
+            '<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">New Power Supply</div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div><div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div></div>'
+            +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
+            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
+            +'</div>'
+          ):'')
+        +'</div>';
 
-      filteredRuns.forEach(function(run){
-        hasAnyRun=true;
-        var fx=S.fixtures.find(function(f){return f.id===run.fixtureId;});
-        var qty=parseInt(run.qty)||1;
-        var wpf=fx?(parseFloat(fx.wattsPerFt)||0):0;
-        var wps=wpf?(run.lengthIn/12)*wpf:null;
-        var wattsTotal=wps?wps*qty:null;
-        var lenFmt=fmtIn(run.lengthIn);
-        var cuts=closestCuts(run.lengthIn,fx);
-        var expKey=proj.id+'_'+run.id;
-        var isExpanded=!!S.expandedRunIds[expKey];
-        var isCutOpen=!!S.openCutCells[expKey];
+        var zoneChSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
+          +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#a78bfa;margin-bottom:6px">LED Channel — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+            +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-ch-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
+            +(zoneCh?'<span style="font-size:11px;color:var(--text-muted)">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
+          +'</div>'
+          +(S.qaCh&&S.qaChZone===zk&&S.qaChProjId===proj.id?(
+            '<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px;margin-top:8px">'
+            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">New LED Channel</div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
+            +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div><div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div></div>'
+            +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
+            +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
+            +'</div>'
+          ):'')
+        +'</div>';
 
-        // Cut cell content
-        var cutCell='<span style="color:var(--text-muted);font-size:11px">—</span>';
-        if(cuts){
-          var closestFmt=fmtIn(cuts.closest);
-          if(isCutOpen){
-            var parts=[];
-            if(cuts.shorter!==null)parts.push('<span style="color:var(--text-muted)">← '+fmtIn(cuts.shorter).ftIn+'</span>');
-            parts.push('<span style="color:#4f8ef7;font-weight:700">'+closestFmt.ftIn+'<span style="font-size:9px;color:#4f8ef7"> ✓</span></span>');
-            parts.push('<span style="color:var(--text-muted)">'+fmtIn(cuts.longer).ftIn+' →</span>');
-            cutCell='<div style="display:flex;flex-direction:column;gap:2px;font-size:10px;font-family:monospace">'+parts.join('')+'</div>';
-          } else {
-            var diff=cuts.closest-run.lengthIn;
-            var diffStr=diff===0?'':' <span style="font-size:9px;color:var(--text-muted)">'+(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches+'</span>';
-            cutCell='<span style="font-family:monospace;font-size:11px">'+closestFmt.ftIn+'</span>'+diffStr;
-          }
+        var chDetail='';
+        if(zoneCh){
+          var calcRunPieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
+          var isRunChOvr=run.chPcsOverride!==undefined;
+          var displayRunPieces=isRunChOvr?run.chPcsOverride:calcRunPieces;
+          var runEndCaps=(parseFloat(zoneCh.endCapsPerRun)||2);
+          var runClips=displayRunPieces*(parseFloat(zoneCh.clipsPerPiece)||0);
+          var chPieceLen=fmtIn(zoneCh.lengthIn||0).ftIn;
+          var runFt=fmtIn(run.lengthIn).ftIn;
+          chDetail='<div style="margin-bottom:12px">'
+            +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">This run\'s channel</div>'
+            +'<div style="font-size:13px;color:var(--text);margin-bottom:7px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
+            +'<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'
+              +(function(){
+                var pieces=[];
+                var remaining=run.lengthIn;
+                for(var pi=0;pi<calcRunPieces;pi++){
+                  var thisLen=Math.min(remaining,zoneCh.lengthIn||1);
+                  var pct=(thisLen/(zoneCh.lengthIn||1))*100;
+                  pieces.push('<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
+                    +'<div style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;height:16px;width:'+(Math.max(20,Math.round(pct*0.6)))+'px;position:relative;overflow:hidden">'
+                      +'<div style="height:100%;width:'+pct.toFixed(0)+'%;background:rgba(167,139,250,0.5);border-radius:3px"></div>'
+                    +'</div>'
+                    +'<span style="font-size:11px;color:var(--text-muted)">'+(pi+1)+'</span>'
+                  +'</div>');
+                  remaining-=thisLen;
+                }
+                return pieces.join('<span style="font-size:12px;color:var(--text-muted);padding:0 2px">+</span>');
+              }())
+              +'<span style="font-size:13px;color:var(--text);margin-left:6px">= '+runFt+(qty>1?' ×'+qty:'')+'</span>'
+            +'</div>'
+            +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">'
+              +'<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isRunChOvr?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px 3px 6px">'
+                +'<input type="number" min="0" step="1" value="'+displayRunPieces+'" data-run-ch-pcs="'+escH(run.id)+'" data-proj-id="'+proj.id+'" title="Override piece count for this run" style="width:46px;font-size:13px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0 18px 0 2px">'
+                +'<span style="font-size:12px;color:#a78bfa;font-weight:700">&nbsp;pcs/run</span>'
+              +'</div>'
+              +(isRunChOvr?'<span style="font-size:11px;color:var(--text-muted)">calc:'+calcRunPieces+'</span>':'')
+              +(qty>1?'<span style="font-size:13px;color:var(--text-muted)">× '+qty+' = <strong style="color:var(--text)">'+displayRunPieces*qty+' total</strong></span>':'')
+              +(runEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">'+Math.ceil(runEndCaps/2)+' cap pr/run'+(qty>1?' ('+Math.ceil(runEndCaps*qty/2)+' pr total)':'')+'</span>':'')
+              +(runClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">'+runClips.toFixed(0)+' clips/run'+(qty>1?' ('+(runClips*qty).toFixed(0)+' total)':'')+'</span>':'')
+            +'</div>'
+          +'</div>';
         }
 
-        // Row itself
-        var over=wps&&zPsEff>0&&wps>zPsEff;
-        var rowBg=over?'background:rgba(249,115,22,0.04)':'';
-        tbodyHtml+='<tr class="lc-run-row" style="border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;'+rowBg+'" data-run-id="'+run.id+'" data-proj-id="'+proj.id+'">'
-          +'<td style="padding:7px 4px 7px 8px;text-align:center">'
-            +'<span style="font-size:10px;color:var(--text-muted);transition:transform 0.15s;display:inline-block;'+(isExpanded?'transform:rotate(90deg)':'')+'">▶</span>'
-          +'</td>'
-          +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(run.label?escH(run.label):'<span style="color:var(--text-muted)">—</span>')+'</td>'
-          +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber)+(fx.cutIncrement?'<span style="color:var(--text-muted);font-size:11px"> · '+escH(String(fx.cutIncrement))+escH(fx.cutUnit||'in')+'/cut</span>':''):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
-          +'<td style="padding:7px 6px;color:var(--text);font-size:13px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
-          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:var(--text);white-space:nowrap">'+escH(lenFmt.inches)+'</td>'
-          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:var(--text-muted);white-space:nowrap">'+escH(lenFmt.ftIn)+'</td>'
-          +'<td style="padding:7px 6px;text-align:center;font-size:13px;color:var(--text)">×'+qty+'</td>'
-          +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
-          +'<td style="padding:6px 6px;text-align:center" data-cut-key="'+expKey+'" data-proj-id="'+proj.id+'">'+cutCell+'</td>'
-          +'<td style="padding:6px 4px;text-align:right;white-space:nowrap">'
-            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:2px">✏</button>'
-            +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-del-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Remove" style="color:#ef4444;border-color:#ef4444">✕</button>'
+        var cutDetail='';
+        if(cuts){
+          var shorter=cuts.shorter, below=cuts.below, above=cuts.above, longer=cuts.longer, closest=cuts.closest;
+          function makeCutBtn(val,isClosest){
+            var f=fmtIn(val);
+            var diff=val-run.lengthIn;
+            var diffStr=diff===0?'exact':(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches;
+            return '<div style="text-align:center;padding:10px 12px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:8px;min-width:80px">'
+              +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+val.toFixed(2)+'"</div>'
+              +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+f.ftIn+'</div>'
+              +'<div style="font-size:11px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+';margin-top:2px">'+diffStr+'</div>'
+            +'</div>';
+          }
+          var seen={};
+          var cutOptions=([shorter,below,above,longer]).filter(function(v){return v!==null&&v!==undefined;}).filter(function(v,idx,arr){return arr.indexOf(v)===idx;}).map(function(v){return makeCutBtn(v,v===closest);});
+          cutDetail='<div>'
+            +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Cut Options <span style="font-weight:400;text-transform:none;letter-spacing:0">('+cuts.cutIn.toFixed(2)+'" increment)</span></div>'
+            +'<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">'
+              +'<div style="text-align:center;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px dashed var(--border);border-radius:6px;min-width:70px">'
+                +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Input</div>'
+                +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)">'+run.lengthIn.toFixed(2)+'"</div>'
+                +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+fmtIn(run.lengthIn).ftIn+'</div>'
+              +'</div>'
+              +'<div style="font-size:18px;color:var(--text-muted);align-self:center">→</div>'
+              +cutOptions.join('')
+            +'</div>'
+          +'</div>';
+        }
+
+        tbodyHtml+='<tr style="background:rgba(255,255,255,0.015);border-bottom:1px solid rgba(255,255,255,0.04)">'
+          +'<td colspan="9" style="padding:12px 16px 14px 20px">'
+            +(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic">'+escH(run.description)+'</div>':'')
+            +zonePsuSelector+zoneChSelector
+            +(chDetail?'<div style="margin-bottom:12px">'+chDetail+'</div>':'')
+            +cutDetail
           +'</td>'
         +'</tr>';
-
-        // Expanded detail row
-        if(isExpanded){
-          // ── Zone PSU selector (shown in expanded row) ──
-          var zonePsuSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#4f8ef7;margin-bottom:6px">Power Supply — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
-            +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">'
-              +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-psu-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zonePsuOpts(zonePsuId)+'</select>'
-              +(zonePsu?'<span style="font-size:11px;color:var(--text-muted)">'+zPsEff.toFixed(1)+'W usable'+(zHasDerate?' / '+zPsRated+'W rated':'')+'</span>':'')
-              +psuBadge
-            +'</div>'
-            // Zone-level load bars
-            +(g.loads.length&&zonePsu?'<div style="margin-top:4px">'+(function(){
-              var h='';
-              g.loads.forEach(function(entry,i){
-                var used=entry.w,isOver=entry.over;
-                var rawPct=zPsEff>0?(used/zPsEff)*100:0;
-                var barPct=Math.min(100,rawPct);
-                var bc=isOver?'#ef4444':rawPct>=95?'#ef4444':rawPct>=80?'#f59e0b':'#34d399';
-                var sc=isOver?'#ef4444':rawPct>=80?'#f59e0b':'#6ee7b7';
-                var sl=isOver?'OVER':rawPct>=80?'HIGH':'OK';
-                h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
-                  +'<span style="font-size:11px;color:var(--text-muted);width:120px;flex-shrink:0;white-space:nowrap">PS-'+escH(zk)+'-'+(i+1)+'</span>'
-                  +'<div style="flex:1;background:rgba(255,255,255,0.08);border-radius:3px;height:6px;overflow:hidden"><div style="height:100%;width:'+barPct.toFixed(1)+'%;background:'+bc+';border-radius:3px"></div></div>'
-                  +'<span style="font-size:11px;font-family:monospace;color:var(--text);width:120px;text-align:right;flex-shrink:0;white-space:nowrap">'+used.toFixed(1)+'W / '+zPsEff.toFixed(1)+'W</span>'
-                  +'<span style="font-size:10px;font-weight:700;color:'+sc+';width:34px;flex-shrink:0">'+sl+'</span>'
-                +'</div>';
-              });
-              return h;
-            }())+'</div>':'')
-            +(!zonePsu?'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">Select a power supply above to see load calculations.</div>':'')
-            // Quick-add PSU panel
-            +(S.qaPsu&&S.qaPsuZone===zk&&S.qaPsuProjId===proj.id?(
-              '<div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.25);border-radius:8px;padding:12px;margin-top:8px">'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px">New Power Supply</div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-pm" placeholder="e.g. Mean Well" value="'+escH(S.qaPsuMfr)+'"></div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number / model</span><input class="lc-input" id="lc-qa-pp" placeholder="e.g. HLG-100H-24B" value="'+escH(S.qaPsuPart)+'"></div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Output wattage (W)</span><input class="lc-input" id="lc-qa-pw" type="number" min="0" step="0.1" placeholder="e.g. 96" value="'+escH(S.qaPsuWatts)+'"></div>'
-              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">Buffer %</span><input class="lc-input" id="lc-qa-pb" type="number" min="0" max="99" step="1" placeholder="e.g. 20" value="'+escH(S.qaPsuBuffer)+'"></div><div class="lc-field"><span class="lc-lbl">Hard watt limit</span><input class="lc-input" id="lc-qa-pl" type="number" min="0" step="0.1" placeholder="optional" value="'+escH(S.qaPsuLimit)+'"></div></div>'
-              +(S.qaPsuErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaPsuErr)+'</p>':'')
-              +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-psu-save" style="flex:1">Save Power Supply</button><button class="lc-btn" id="lc-qa-psu-cancel">Cancel</button></div>'
-              +'</div>'
-            ):'')
-          +'</div>';
-
-          // ── Zone Channel selector (shown in expanded row) ──
-          var zoneChSelector='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.07)">'
-            +'<div style="font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#a78bfa;margin-bottom:6px">LED Channel — Zone '+(zk==='(No Zone)'?'(unzoned)':escH(zk))+'</div>'
-            +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
-              +'<select class="lc-select" style="height:30px;font-size:12px;flex:1;min-width:140px;max-width:320px" data-zone-ch-sel="'+escH(zk)+'" data-proj-id="'+proj.id+'">'+zoneChOpts(zoneChId)+'</select>'
-              +(zoneCh?'<span style="font-size:11px;color:var(--text-muted)">'+fmtIn(zoneCh.lengthIn||0).ftIn+'/pc</span>':'')
-              +chBadge
-            +'</div>'
-            // Quick-add channel panel
-            +(S.qaCh&&S.qaChZone===zk&&S.qaChProjId===proj.id?(
-              '<div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:12px;margin-top:8px">'
-              +'<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#a78bfa;margin-bottom:8px">New LED Channel</div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Manufacturer</span><input class="lc-input" id="lc-qa-cm" placeholder="e.g. SloanLED" value="'+escH(S.qaChMfr)+'"></div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Part number</span><input class="lc-input" id="lc-qa-cp" placeholder="e.g. V-SLIM-120" value="'+escH(S.qaChPart)+'"></div>'
-              +'<div class="lc-field" style="margin-bottom:8px"><span class="lc-lbl">Piece length</span><input class="lc-input" id="lc-qa-cl" placeholder="e.g. 4ft · 48in · 1200mm" value="'+escH(S.qaChLenStr)+'"></div>'
-              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><div class="lc-field"><span class="lc-lbl">End caps / run</span><input class="lc-input" id="lc-qa-ce" type="number" min="0" value="'+escH(S.qaChEndCaps)+'"></div><div class="lc-field"><span class="lc-lbl">Clips / piece</span><input class="lc-input" id="lc-qa-cc" type="number" min="0" step="1" placeholder="e.g. 4" value="'+escH(S.qaChClipsPerPiece)+'"></div></div>'
-              +(S.qaChErr?'<p class="lc-errmsg" style="margin-bottom:8px">'+escH(S.qaChErr)+'</p>':'')
-              +'<div class="lc-row"><button class="lc-btn lc-btn-primary" id="lc-qa-ch-save" style="flex:1">Save Channel</button><button class="lc-btn" id="lc-qa-ch-cancel">Cancel</button></div>'
-              +'</div>'
-            ):'')
-          +'</div>';
-
-
-          // Per-run channel detail
-          var chDetail='';
-          if(zoneCh){
-            var runPieces=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
-            var runEndCaps=(parseFloat(zoneCh.endCapsPerRun)||2);
-            var runClips=runPieces*(parseFloat(zoneCh.clipsPerPiece)||0);
-            var chPieceLen=fmtIn(zoneCh.lengthIn||0).ftIn;
-            var runFt=fmtIn(run.lengthIn).ftIn;
-            chDetail='<div style="margin-bottom:12px">'
-              +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">This run\'s channel</div>'
-              +'<div style="font-size:13px;color:var(--text);margin-bottom:7px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
-              +'<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">'
-                +(function(){
-                  var pieces=[];
-                  var remaining=run.lengthIn;
-                  for(var pi=0;pi<runPieces;pi++){
-                    var thisLen=Math.min(remaining,zoneCh.lengthIn||1);
-                    var pct=(thisLen/(zoneCh.lengthIn||1))*100;
-                    pieces.push('<div style="display:flex;flex-direction:column;align-items:center;gap:3px">'
-                      +'<div style="background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.4);border-radius:4px;height:16px;width:'+(Math.max(20,Math.round(pct*0.6)))+'px;position:relative;overflow:hidden">'
-                        +'<div style="height:100%;width:'+pct.toFixed(0)+'%;background:rgba(167,139,250,0.5);border-radius:3px"></div>'
-                      +'</div>'
-                      +'<span style="font-size:11px;color:var(--text-muted)">'+(pi+1)+'</span>'
-                    +'</div>');
-                    remaining-=thisLen;
-                  }
-                  return pieces.join('<span style="font-size:12px;color:var(--text-muted);padding:0 2px">+</span>');
-                }())
-                +'<span style="font-size:13px;color:var(--text);margin-left:6px">= '+runFt+(qty>1?' ×'+qty:'')+'</span>'
-              +'</div>'
-              +'<div style="display:flex;gap:14px;margin-top:7px;flex-wrap:wrap">'
-                +'<span style="font-size:13px;color:var(--text-muted)">'+runPieces+' pcs/run'+(qty>1?' <strong style="color:var(--text)">('+runPieces*qty+' total)</strong>':'')+'</span>'
-                +(runEndCaps?'<span style="font-size:13px;color:var(--text-muted)">'+runEndCaps+' end caps/run'+(qty>1?' <strong style="color:var(--text)">('+runEndCaps*qty+' total)</strong>':'')+'</span>':'')
-                +(runClips?'<span style="font-size:13px;color:var(--text-muted)">'+runClips.toFixed(0)+' clips/run'+(qty>1?' <strong style="color:var(--text)">'+(runClips*qty).toFixed(0)+' total</strong>':'')+'</span>':'')
-              +'</div>'
-            +'</div>';
-          }
-
-          // Cut length visual
-          var cutDetail='';
-          if(cuts){
-            var shorter=cuts.shorter, below=cuts.below, above=cuts.above, longer=cuts.longer, closest=cuts.closest;
-            function makeCutBtn(val,isClosest){
-              var f=fmtIn(val);
-              var diff=val-run.lengthIn;
-              var diffStr=diff===0?'exact':(diff>0?'+':'')+fmtIn(Math.abs(diff)).inches;
-              return '<div style="text-align:center;padding:10px 12px;background:'+(isClosest?'rgba(79,142,247,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(isClosest?'rgba(79,142,247,0.5)':'var(--border)')+';border-radius:8px;min-width:80px">'
-                +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:'+(isClosest?'#4f8ef7':'var(--text)')+'">'+val.toFixed(2)+'"</div>'
-                +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+f.ftIn+'</div>'
-                +'<div style="font-size:11px;color:'+(isClosest?'#4f8ef7':diff>0?'#f59e0b':'var(--text-muted)')+';margin-top:2px">'+diffStr+'</div>'
-              +'</div>';
-            }
-            var cutOptions=[
-              (shorter!==null?makeCutBtn(shorter,shorter===closest):null),
-              makeCutBtn(below, below===closest),
-              (below!==above?makeCutBtn(above,above===closest):null),
-              makeCutBtn(longer,longer===closest)
-            ].filter(function(x){return x&&x!==null;});
-            // deduplicate by value
-            var seen={};
-            cutOptions=([shorter,below,above,longer]).filter(function(v){return v!==null&&v!==undefined;}).filter(function(v,idx,arr){return arr.indexOf(v)===idx;}).map(function(v){return makeCutBtn(v,v===closest);});
-            cutDetail='<div>'
-              +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Cut Options <span style="font-weight:400;text-transform:none;letter-spacing:0">('+cuts.cutIn.toFixed(2)+'" increment)</span></div>'
-              +'<div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap">'
-                +'<div style="text-align:center;padding:8px 10px;background:rgba(255,255,255,0.06);border:1px dashed var(--border);border-radius:6px;min-width:70px">'
-                  +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Input</div>'
-                  +'<div style="font-size:20px;font-weight:700;font-family:monospace;color:var(--text)">'+run.lengthIn.toFixed(2)+'"</div>'
-                  +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-top:3px">'+fmtIn(run.lengthIn).ftIn+'</div>'
-                +'</div>'
-                +'<div style="font-size:18px;color:var(--text-muted);align-self:center">→</div>'
-                +cutOptions.join('')
-              +'</div>'
-            +'</div>';
-          }
-
-          tbodyHtml+='<tr style="background:rgba(255,255,255,0.015);border-bottom:1px solid rgba(255,255,255,0.04)">'
-            +'<td colspan="10" style="padding:12px 16px 14px 20px">'
-              +(run.description?'<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;font-style:italic">'+escH(run.description)+'</div>':'')
-              +zonePsuSelector
-              +zoneChSelector
-              +(chDetail?'<div style="margin-bottom:12px">'+chDetail+'</div>':'')
-              +cutDetail
-            +'</td>'
-          +'</tr>';
-        }
-      });
-
+      }
     });
 
     if(!hasAnyRun&&!proj.runs.length){
@@ -20409,16 +20458,16 @@ var _dmxMode = 'd2p';
           });
           bindEl('lc-qa-ch-cancel','click',function(){S.qaCh=false;S.qaChZone='';S.qaChProjId='';_ledRender();});
         }
-        // Per-zone channel piece count override
-        document.querySelectorAll('[data-zone-ch]').forEach(function(inp){
+        // Per-run channel piece count override
+        document.querySelectorAll('[data-run-ch-pcs]').forEach(function(inp){
           inp.addEventListener('change',function(){
-            var zoneKey=this.getAttribute('data-zone-ch');
+            var runId=this.getAttribute('data-run-ch-pcs');
             var projId=this.getAttribute('data-proj-id');
             var p=S.projects.find(function(x){return x.id===projId;}); if(!p) return;
-            if(!p.channelQtyOverrides) p.channelQtyOverrides={};
+            var run=p.runs.find(function(r){return r.id===runId;}); if(!run) return;
             var val=parseInt(this.value);
-            if(!isNaN(val)&&val>=0) p.channelQtyOverrides[zoneKey]=val;
-            else delete p.channelQtyOverrides[zoneKey];
+            if(!isNaN(val)&&val>=0) run.chPcsOverride=val;
+            else delete run.chPcsOverride;
             saveProj(); _ledRender();
           });
           inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){this.blur();} });
