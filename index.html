@@ -19627,7 +19627,6 @@ var _dmxMode = 'd2p';
         +'<td style="'+tdS+';font-weight:600;font-family:inherit;color:var(--text)">'+escH(lbl)+'</td>'
         +'<td style="'+tdS+';text-align:center;color:var(--text-muted)">'+d.qty+'</td>'
         +'<td style="'+tdS+';text-align:right;color:var(--text)">'+(d.lengthIn/12).toFixed(1)+'\'</td>'
-        +(hasAnyCut?'<td style="'+tdS+';text-align:right;color:#34d399">'+(d.hasCut?Math.round(d.cutLengthIn/12)+'\'':'—')+'</td>':'')
         +'<td style="'+tdS+';text-align:right;color:#f59e0b">'+(d.W?d.W.toFixed(1)+'W':'—')+'</td>'
         +(hasCh?'<td style="'+tdS+';text-align:right;color:#a78bfa">'+(d.chPcs||'—')+'</td>':'')
         +(hasCaps?'<td style="'+tdS+';text-align:right;color:#34d399">'+(d.endCapPairs||'—')+'</td>':'')
@@ -19639,19 +19638,33 @@ var _dmxMode = 'd2p';
       +'<td style="'+ttdS+';color:var(--text-muted)">Total</td>'
       +'<td style="'+ttdS+';text-align:center;font-family:monospace;color:var(--text-muted)">'+grandTotalRuns+'</td>'
       +'<td style="'+ttdS+';text-align:right;font-family:monospace;color:var(--text)">'+(grandTotalLengthIn/12).toFixed(1)+'\'</td>'
-      +(hasAnyCut?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#34d399">'+Math.round(grandTotalCutLengthIn/12)+'\'</td>':'')
       +'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#f59e0b">'+(grandTotalW?grandTotalW.toFixed(1)+'W':'—')+'</td>'
       +(hasCh?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#a78bfa">'+grandTotalChPieces+'</td>':'')
       +(hasCaps?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:#34d399">'+Math.ceil(grandTotalEndCaps/2)+'</td>':'')
       +(hasClips?'<td style="'+ttdS+';text-align:right;font-family:monospace;color:var(--text)">'+grandTotalClips+'</td>':'')
     +'</tr>';
+    var roundedSection='';
+    if(hasAnyCut){
+      var rItems='';
+      lblOrder.forEach(function(lbl){
+        var d=lblMap[lbl];
+        if(!d.hasCut) return;
+        rItems+='<div style="display:flex;align-items:baseline;gap:6px">'
+          +'<span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">'+escH(lbl)+'</span>'
+          +'<span style="font-size:14px;font-weight:700;font-family:monospace;color:#34d399">'+Math.round(d.cutLengthIn/12)+'\'</span>'
+        +'</div>';
+      });
+      roundedSection='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:7px 10px;border-top:1px solid var(--border);background:rgba(52,211,153,0.04)">'
+        +'<span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap">Rounded Length</span>'
+        +rItems
+      +'</div>';
+    }
     var summaryBar='<div style="margin-bottom:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;overflow:hidden">'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
         +'<thead><tr>'
           +'<th style="'+thS+';text-align:left">Label</th>'
           +'<th style="'+thS+';text-align:center">Qty</th>'
           +'<th style="'+thS+';text-align:right">Length</th>'
-          +(hasAnyCut?'<th style="'+thS+';text-align:right;color:#34d399">Rounded</th>':'')
           +'<th style="'+thS+';text-align:right">Watts</th>'
           +(hasCh?'<th style="'+thS+';text-align:right;color:#a78bfa">Ch Pcs</th>':'')
           +(hasCaps?'<th style="'+thS+';text-align:right;color:#34d399">Cap Pr</th>':'')
@@ -19659,6 +19672,7 @@ var _dmxMode = 'd2p';
         +'</tr></thead>'
         +'<tbody>'+lblRows+totalRow+'</tbody>'
       +'</table></div>'
+      +roundedSection
       +'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--border)">'
         +(grandTotalPS?'<span class="lc-badge" style="color:#4f8ef7;border-color:rgba(79,142,247,0.3)">'+grandTotalPS+' PS total</span>':'')
         +'<div style="margin-left:auto">'
