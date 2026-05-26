@@ -19536,18 +19536,54 @@ var _dmxMode = 'd2p';
       var calcPS=g.psNeeded;
       var zoneChId=proj.channelByZone[zk]||'';
       var zoneCh=zoneChId?S.channels.find(function(c){return c.id===zoneChId;}):null;
-      var totalChPieces=0,totalChEndCaps=0,totalChClips=0,isChOverridden=false;
+      var totalChPieces=0,totalChEndCaps=0,totalChClips=0,isChOverridden=false,packedChannels=[];
       if(zoneCh){
-        gRuns.forEach(function(run){
-          var qty=parseInt(run.qty)||1;
-          var calc=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
-          var pieces=run.chPcsOverride!==undefined?run.chPcsOverride:calc;
-          if(run.chPcsOverride!==undefined) isChOverridden=true;
-          totalChPieces+=pieces*qty;
-          totalChEndCaps+=(parseFloat(zoneCh.endCapsPerRun)||2)*qty;
-          var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
-          if(cpc>0)totalChClips+=pieces*cpc*qty;
-        });
+        var chLen=zoneCh.lengthIn||1;
+        var ecpr=parseFloat(zoneCh.endCapsPerRun)||2;
+        var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
+        var anyOvr=gRuns.some(function(r){return r.chPcsOverride!==undefined;});
+        if(anyOvr){
+          gRuns.forEach(function(run){
+            var qty=parseInt(run.qty)||1;
+            var calc=Math.ceil(run.lengthIn/chLen);
+            var pieces=run.chPcsOverride!==undefined?run.chPcsOverride:calc;
+            if(run.chPcsOverride!==undefined) isChOverridden=true;
+            totalChPieces+=pieces*qty;
+            totalChEndCaps+=ecpr*qty;
+            if(cpc>0)totalChClips+=pieces*cpc*qty;
+          });
+        } else {
+          gRuns.forEach(function(run){
+            var qty=parseInt(run.qty)||1;
+            var runPieces=Math.ceil(run.lengthIn/chLen);
+            totalChEndCaps+=ecpr*qty;
+            if(cpc>0)totalChClips+=runPieces*cpc*qty;
+            if(runPieces>1){
+              // Long run: spans multiple pieces, each piece is dedicated
+              for(var qi=0;qi<qty;qi++){
+                for(var pi=0;pi<runPieces;pi++){
+                  var usedInPiece=pi<runPieces-1?chLen:(run.lengthIn-(runPieces-1)*chLen);
+                  packedChannels.push({used:usedInPiece,spare:chLen-usedInPiece,runCount:1,dedicated:true});
+                }
+              }
+            } else {
+              // Short run: bin-pack into shared channel pieces
+              for(var si=0;si<qty;si++){
+                var placed=false;
+                for(var ci=0;ci<packedChannels.length;ci++){
+                  if(!packedChannels[ci].dedicated&&packedChannels[ci].spare>=run.lengthIn){
+                    packedChannels[ci].used+=run.lengthIn;
+                    packedChannels[ci].spare-=run.lengthIn;
+                    packedChannels[ci].runCount++;
+                    placed=true; break;
+                  }
+                }
+                if(!placed) packedChannels.push({used:run.lengthIn,spare:chLen-run.lengthIn,runCount:1,dedicated:false});
+              }
+            }
+          });
+          totalChPieces=packedChannels.length;
+        }
       }
       var displayChQty=totalChPieces;
       grandTotalW+=g.totalW;
@@ -19557,7 +19593,7 @@ var _dmxMode = 'd2p';
       grandTotalClips+=totalChClips;
       gRuns.forEach(function(run){grandTotalRuns+=parseInt(run.qty)||1;});
       gRuns.forEach(function(run){grandTotalLengthIn+=run.lengthIn*(parseInt(run.qty)||1);});
-      zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId};
+      zoneData[zk]={zonePsu:zonePsu,zPsEff:zPsEff,zPsRated:zPsRated,zHasDerate:zHasDerate,manualPS:manualPS,g:g,displayPS:displayPS,calcPS:calcPS,zoneCh:zoneCh,totalChPieces:totalChPieces,totalChEndCaps:totalChEndCaps,totalChClips:totalChClips,displayChQty:displayChQty,isChOverridden:isChOverridden,zonePsuId:zonePsuId,zoneChId:zoneChId,packedChannels:packedChannels};
     });
 
     // ── per-label summary ──
@@ -19573,12 +19609,21 @@ var _dmxMode = 'd2p';
       var zoneCh=zd?zd.zoneCh:null;
       var chPcs=0,endCapPairs=0,clips=0;
       if(zoneCh){
-        var calcPcs=Math.ceil(run.lengthIn/(zoneCh.lengthIn||1));
-        var pcs=run.chPcsOverride!==undefined?run.chPcsOverride:calcPcs;
-        var cpc=parseFloat(zoneCh.clipsPerPiece)||0;
-        chPcs=pcs*qty;
+        var lblChLen=zoneCh.lengthIn||1;
+        var lblRunPieces=Math.ceil(run.lengthIn/lblChLen);
+        var lblCpc=parseFloat(zoneCh.clipsPerPiece)||0;
         endCapPairs=Math.ceil((parseFloat(zoneCh.endCapsPerRun)||2)*qty/2);
-        clips=cpc>0?pcs*cpc*qty:0;
+        if(run.chPcsOverride!==undefined){
+          chPcs=run.chPcsOverride*qty;
+          clips=lblCpc>0?run.chPcsOverride*lblCpc*qty:0;
+        } else if(lblRunPieces<=1){
+          var runsPerPiece=Math.floor(lblChLen/(run.lengthIn||1))||1;
+          chPcs=Math.ceil(qty/runsPerPiece);
+          clips=lblCpc>0?lblCpc*qty:0;
+        } else {
+          chPcs=lblRunPieces*qty;
+          clips=lblCpc>0?lblRunPieces*lblCpc*qty:0;
+        }
       }
       if(!lblMap[lbl]){lblMap[lbl]={qty:0,lengthIn:0,W:0,chPcs:0,endCapPairs:0,clips:0,cutLengthIn:0,hasCut:false};lblOrder.push(lbl);}
       lblMap[lbl].qty+=qty;
@@ -19923,6 +19968,18 @@ var _dmxMode = 'd2p';
           var runClips=displayRunPieces*(parseFloat(zoneCh.clipsPerPiece)||0);
           var chPieceLen=fmtIn(zoneCh.lengthIn||0).ftIn;
           var runFt=fmtIn(run.lengthIn).ftIn;
+          var packingSummary='';
+          if(!isRunChOvr&&calcRunPieces<=1&&zd.packedChannels&&zd.packedChannels.length){
+            var zpcs=zd.packedChannels;
+            packingSummary='<div style="margin-top:6px;padding:5px 10px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.15);border-radius:6px;font-size:11px;color:var(--text-muted);line-height:1.8">'
+              +'<span style="font-weight:700;color:#a78bfa">Zone packing · </span>'
+              +zpcs.length+' channel piece'+(zpcs.length>1?'s':'')+': '
+              +zpcs.map(function(ch,idx){
+                return '<span style="white-space:nowrap;margin-right:8px">'+(idx+1)+': <strong style="color:var(--text)">'+ch.runCount+'</strong> strip'+(ch.runCount>1?'s':'')
+                  +(ch.spare>0.005?' · <span style="color:#34d399">'+fmtIn(ch.spare).ftIn+' spare</span>':'')+'</span>';
+              }).join('')
+            +'</div>';
+          }
           chDetail='<div style="margin-bottom:12px">'
             +'<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">This run\'s channel</div>'
             +'<div style="font-size:13px;color:var(--text);margin-bottom:7px">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+' · '+chPieceLen+'/pc</div>'
@@ -19955,6 +20012,7 @@ var _dmxMode = 'd2p';
               +(runEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">'+Math.ceil(runEndCaps/2)+' cap pr/run'+(qty>1?' ('+Math.ceil(runEndCaps*qty/2)+' pr total)':'')+'</span>':'')
               +(runClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">'+runClips.toFixed(0)+' clips/run'+(qty>1?' ('+(runClips*qty).toFixed(0)+' total)':'')+'</span>':'')
             +'</div>'
+            +packingSummary
           +'</div>';
         }
 
