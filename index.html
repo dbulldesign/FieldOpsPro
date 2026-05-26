@@ -4082,6 +4082,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
   Offline — changes saved locally and will sync when reconnected
 </div>
+<!-- Offline feature popup -->
+<div id="offlineFeatureModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#0f1729;border:1px solid rgba(252,165,165,0.25);border-radius:14px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="width:48px;height:48px;background:rgba(127,29,29,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:#f8fafc;margin-bottom:8px">You're Offline</div>
+    <div id="offlineFeatureMsg" style="font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:20px">This feature requires an internet connection. Your local data is saved and will sync automatically when you reconnect.</div>
+    <button onclick="document.getElementById('offlineFeatureModal').style.display='none'" style="background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;width:100%">Got it</button>
+  </div>
+</div>
 <!-- CONTENT -->
 <!-- MOBILE ONLY: full-width search + notif bar -->
 <div id="mob-search-bar">
@@ -6541,7 +6552,15 @@ window.addEventListener('online', function() {
   _isOnline = true;
   updateSyncBar();
   setTimeout(flushSyncQueue, 500);
-  toast('Back online — syncing\u2026');
+  toast('Back online — syncing…');
+  if (!window._fbConnected && typeof firebase !== 'undefined') {
+    var cfg = window._fbConfig || null;
+    if (!cfg && window._embeddedFirebaseConfig && window._embeddedFirebaseConfig.apiKey) cfg = window._embeddedFirebaseConfig;
+    if (!cfg) { var _raw = localStorage.getItem('fop_firebase_cfg'); if (_raw) { try { cfg = JSON.parse(_raw); } catch(e2) {} } }
+    if (cfg && cfg.apiKey) { setTimeout(function() { initFirebase(cfg); }, 1200); }
+  }
+  var _ofm = document.getElementById('offlineFeatureModal');
+  if (_ofm) _ofm.style.display = 'none';
 });
 window.addEventListener('offline', function() {
   _isOnline = false;
@@ -7100,7 +7119,23 @@ function deleteItem(col, id) {
   renderAll();
 }
 
+function showOfflinePopup(feature) {
+  var modal = document.getElementById('offlineFeatureModal');
+  var msg = document.getElementById('offlineFeatureMsg');
+  if (!modal) { toast('Offline — ' + (feature || 'this feature') + ' requires an internet connection'); return; }
+  if (msg) msg.textContent = (feature || 'This feature') + ' requires an internet connection. Your local data is saved and will sync automatically when you reconnect.';
+  modal.style.display = 'flex';
+}
+window.showOfflinePopup = showOfflinePopup;
+
 function initFirebase(config) {
+  // If the Firebase SDK didn't load (offline on first visit, not yet cached), fall back gracefully
+  if (typeof firebase === 'undefined') {
+    console.warn('Firebase SDK not available — running in local-only mode');
+    loadLocalData();
+    if (!navigator.onLine) showOfflinePopup('Cloud sync');
+    return;
+  }
   // Tear down existing listeners first
   unsubscribers.forEach(function(u){ u(); });
   unsubscribers = [];
@@ -14341,6 +14376,7 @@ function onFirebaseInputChange(val) {
 }
 
 function saveFirebaseApiKey() {
+  if (!navigator.onLine) { showOfflinePopup('Firebase connection'); return; }
   var inp = document.getElementById('firebase-api-key-input');
   var statusEl = document.getElementById('firebase-api-key-status');
   var raw = inp ? inp.value.trim() : '';
