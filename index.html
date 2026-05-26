@@ -19687,8 +19687,8 @@ var _dmxMode = 'd2p';
 
     // ── summary bar ──
     var hasCh=grandTotalChPieces>0, hasCaps=grandTotalEndCaps>0, hasClips=grandTotalClips>0;
-    var thS='padding:5px 8px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;border-bottom:1px solid var(--border)';
-    var tdS='padding:5px 8px;font-size:12px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,0.04)';
+    var thS='padding:5px 8px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;border-bottom:1px solid var(--border)';
+    var tdS='padding:5px 8px;font-size:13px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,0.04)';
     var lblRows='';
     lblOrder.forEach(function(lbl){
       var d=lblMap[lbl];
@@ -19702,7 +19702,7 @@ var _dmxMode = 'd2p';
         +(hasClips?'<td style="'+tdS+';text-align:right;color:var(--text)">'+(d.clips||'—')+'</td>':'')
       +'</tr>';
     });
-    var ttdS='padding:5px 8px;font-size:12px;font-weight:700;border-top:2px solid var(--border);background:rgba(255,255,255,0.04)';
+    var ttdS='padding:5px 8px;font-size:13px;font-weight:700;border-top:2px solid var(--border);background:rgba(255,255,255,0.04)';
     var totalRow='<tr>'
       +'<td style="'+ttdS+';color:var(--text-muted)">Total</td>'
       +'<td style="'+ttdS+';text-align:center;font-family:monospace;color:var(--text-muted)">'+grandTotalRuns+'</td>'
@@ -19757,7 +19757,7 @@ var _dmxMode = 'd2p';
     +'</div>';
 
     // ── table ──
-    var thStyle='padding:6px 6px 5px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;user-select:none;white-space:nowrap';
+    var thStyle='padding:6px 8px 5px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;user-select:none;white-space:nowrap';
     function thSort(col,label,align){
       var active=sortCol===col;
       var arrow=active?(sortDir==='asc'?' ▲':' ▼'):'';
@@ -19854,10 +19854,17 @@ var _dmxMode = 'd2p';
       // Channel badge — editable input now lives in chDetail (per-run), not here
 
       // Channel badge — read-only (zone header)
+      var chOverrideTooLow=isChOverridden&&manualChPcs<totalChPieces;
+      var chOverrideTooHigh=isChOverridden&&manualChPcs>totalChPieces;
       var chBadgeRO='';
       if(zoneCh&&displayChQty){
-        chBadgeRO='<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)')+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:#a78bfa">'+displayChQty+' pcs</span>'
-        +(isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">calc:'+totalChPieces+'</span>':'')
+        var chBadgeBorder=chOverrideTooLow?'rgba(239,68,68,0.7)':chOverrideTooHigh?'rgba(245,158,11,0.6)':isChOverridden?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)';
+        var chBadgeBg=chOverrideTooLow?'rgba(239,68,68,0.1)':chOverrideTooHigh?'rgba(245,158,11,0.08)':'rgba(167,139,250,0.12)';
+        var chBadgeColor=chOverrideTooLow?'#f87171':chOverrideTooHigh?'#fbbf24':'#a78bfa';
+        chBadgeRO='<span style="display:inline-flex;align-items:center;gap:3px;background:'+chBadgeBg+';border:1px solid '+chBadgeBorder+';border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;color:'+chBadgeColor+'">'+displayChQty+' pcs</span>'
+        +(chOverrideTooLow?'<span style="font-size:11px;font-weight:600;color:#f87171;margin-left:2px">⚠ need '+totalChPieces+'</span>':'')
+        +(chOverrideTooHigh?'<span style="font-size:11px;font-weight:600;color:#fbbf24;margin-left:2px">'+( manualChPcs-totalChPieces)+' extra</span>':'')
+        +(!chOverrideTooLow&&!chOverrideTooHigh&&isChOverridden?'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">matches calc</span>':'')
         +(totalChEndCaps?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+Math.ceil(totalChEndCaps/2)+' End Cap Pair'+(Math.ceil(totalChEndCaps/2)!==1?'s':'')+'</span>':'')
         +(totalChClips?'<span style="font-size:12px;color:var(--text-muted);margin-left:6px">'+totalChClips+' clips</span>':'');
       }
@@ -19867,10 +19874,10 @@ var _dmxMode = 'd2p';
         tbodyHtml+='<tr style="background:rgba(255,255,255,0.04);border-top:2px solid rgba(79,142,247,0.25)">'
           +'<td colspan="9" style="padding:5px 8px">'
             +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'
-              +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
-              +'<span style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
+              +'<span style="font-size:14px;font-weight:700;color:var(--text)">'+(zk==='(No Zone)'?'<span style="color:var(--text-muted)">No Zone</span>':'Zone '+escH(zk))+'</span>'
+              +'<span style="font-size:12px;font-family:monospace;color:var(--text-muted)">'+g.totalW.toFixed(1)+'W</span>'
               +psuBadgeRO+chBadgeRO
-              +'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
+              +'<span style="font-size:11px;color:var(--text-muted);margin-left:4px">↓ expand a run to configure PSU &amp; channel</span>'
             +'</div>'
           +'</td>'
         +'</tr>';
@@ -19895,8 +19902,8 @@ var _dmxMode = 'd2p';
       if(selCutIn!==null){
         var selTotalFt=(selCutIn*qty/12).toFixed(1);
         cutCell='<div style="display:flex;flex-direction:column;gap:1px;text-align:right">'
-          +'<div style="font-size:11px;font-family:monospace;color:'+(isManualCut?'#34d399':'var(--text)')+'">'+selCutIn.toFixed(2)+'"'+(isManualCut?' ✓':'')+'</div>'
-          +'<div style="font-size:10px;color:var(--text-muted)">×'+qty+' = '+selTotalFt+'\'</div>'
+          +'<div style="font-size:12px;font-family:monospace;color:'+(isManualCut?'#34d399':'var(--text)')+'">'+selCutIn.toFixed(2)+'"'+(isManualCut?' ✓':'')+'</div>'
+          +'<div style="font-size:11px;color:var(--text-muted)">×'+qty+' = '+selTotalFt+'\'</div>'
         +'</div>';
       }
 
@@ -19911,11 +19918,11 @@ var _dmxMode = 'd2p';
         +'<td style="padding:7px 6px;color:var(--text);font-size:13px;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(fx?escH(fx.partNumber)+(fx.cutIncrement?'<span style="color:var(--text-muted);font-size:11px"> · '+escH(String(fx.cutIncrement))+escH(fx.cutUnit||'in')+'/cut</span>':''):'<span style="color:#ef4444;font-size:11px">no fixture</span>')+'</td>'
         +'<td style="padding:7px 6px;color:var(--text);font-size:13px">'+(run.zone?escH(run.zone):'<span style="color:var(--text-muted)">—</span>')+'</td>'
         +'<td style="padding:7px 6px;text-align:right;white-space:nowrap">'
-          +'<div style="font-size:12px;font-family:monospace;color:var(--text)">'+lenFtDec+'</div>'
-          +'<div style="font-size:10px;font-family:monospace;color:var(--text-muted)">'+escH(lenFmt.ftIn)+'</div>'
+          +'<div style="font-size:13px;font-family:monospace;color:var(--text)">'+lenFtDec+'</div>'
+          +'<div style="font-size:11px;font-family:monospace;color:var(--text-muted)">'+escH(lenFmt.ftIn)+'</div>'
         +'</td>'
         +'<td style="padding:7px 6px;text-align:center;font-size:13px;color:var(--text)">×'+qty+'</td>'
-        +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:12px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
+        +'<td style="padding:7px 6px;text-align:right;font-family:monospace;font-size:13px;color:'+(over?'#f97316':'var(--text)')+'">'+  (wattsTotal!==null?wattsTotal.toFixed(1)+'W'+(over?' ⚠':''):'—')+'</td>'
         +'<td style="padding:6px 6px;text-align:center">'+cutCell+'</td>'
         +'<td style="padding:6px 4px;text-align:right;white-space:nowrap">'
           +'<button class="lc-btn lc-btn-sm lc-btn-icon" data-edit-run="'+run.id+'" data-run-proj="'+proj.id+'" title="Edit" style="margin-right:2px">✏</button>'
@@ -19998,11 +20005,13 @@ var _dmxMode = 'd2p';
               +'<span style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap">'+escH(zoneCh.manufacturer)+' '+escH(zoneCh.partNumber)+'</span>'
               +'<span style="font-size:10px;color:var(--text-muted)">'+chPieceLen+'/pc</span>'
               +'<span style="font-size:10px;color:rgba(167,139,250,0.6)">zone '+escH(zk)+'</span>'
-              +'<div style="margin-left:auto;display:inline-flex;align-items:center;gap:2px;background:rgba(167,139,250,0.12);border:1px solid '+(isChOverridden?'rgba(167,139,250,0.55)':'rgba(167,139,250,0.2)')+';border-radius:5px;padding:2px 6px 2px 4px">'
-                +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch-pcs="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override total channel pieces for zone" style="width:30px;font-size:12px;font-weight:700;color:#a78bfa;background:none;border:none;outline:none;text-align:right;padding:0">'
-                +'<span style="font-size:10px;color:#a78bfa;font-weight:700">pcs</span>'
+              +'<div style="margin-left:auto;display:inline-flex;align-items:center;gap:2px;background:'+(chOverrideTooLow?'rgba(239,68,68,0.08)':chOverrideTooHigh?'rgba(245,158,11,0.06)':'rgba(167,139,250,0.12)')+';border:1px solid '+(chOverrideTooLow?'rgba(239,68,68,0.5)':chOverrideTooHigh?'rgba(245,158,11,0.45)':isChOverridden?'rgba(167,139,250,0.55)':'rgba(167,139,250,0.2)')+';border-radius:5px;padding:2px 6px 2px 4px">'
+                +'<input type="number" min="0" step="1" value="'+displayChQty+'" data-zone-ch-pcs="'+escH(zk)+'" data-proj-id="'+proj.id+'" title="Override total channel pieces for zone" style="width:30px;font-size:12px;font-weight:700;color:'+(chOverrideTooLow?'#f87171':chOverrideTooHigh?'#fbbf24':'#a78bfa')+';background:none;border:none;outline:none;text-align:right;padding:0">'
+                +'<span style="font-size:10px;color:'+(chOverrideTooLow?'#f87171':chOverrideTooHigh?'#fbbf24':'#a78bfa')+';font-weight:700">pcs</span>'
               +'</div>'
-              +(isChOverridden?'<span style="font-size:10px;color:var(--text-muted)">smart:'+totalChPieces+'</span>':'')
+              +(chOverrideTooLow?'<span style="font-size:10px;font-weight:600;color:#f87171">⚠ need '+totalChPieces+'</span>':'')
+              +(chOverrideTooHigh?'<span style="font-size:10px;font-weight:600;color:#fbbf24">'+( manualChPcs-totalChPieces)+' extra</span>':'')
+              +(!chOverrideTooLow&&!chOverrideTooHigh&&isChOverridden?'<span style="font-size:10px;color:#34d399">✓ matches</span>':'')
             +'</div>'
             // Row 2: packing chips + stats — all inline, wrappable
             +'<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">'
