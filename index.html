@@ -23026,29 +23026,28 @@ function _ccGetMeta() {
   return {ts: null, count: (_etcCableCrossData ? _etcCableCrossData.records.length : 0), live: false};
 }
 
-window._etcCcRender = function() {
-  var root = document.getElementById('etc-cc-root');
-  if (!root) return;
-  if (!window._etcCcState) window._etcCcState = {};
-  var st = window._etcCcState;
-  if (st.q       === undefined) st.q        = '';
-  if (st.signal  === undefined) st.signal   = 'All';
-  if (st.jacket  === undefined) st.jacket   = 'All';
-  if (st.approvedOnly === undefined) st.approvedOnly = false;
-  if (st.refreshing   === undefined) st.refreshing   = false;
+function _etcCcBuildRows(filtered) {
+  var tdBase = 'padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle';
+  if (!filtered.length) return '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">No results match your search</td></tr>';
+  return filtered.slice(0, 500).map(function(r) {
+    var approvedBadge = r.approved
+      ? '<span style="display:inline-flex;align-items:center;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;color:#34d399">YES</span>'
+      : '<span style="display:inline-flex;align-items:center;background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;color:var(--text-muted)">NO</span>';
+    var jacketColor = r.jacket==='NON-PLENUM'?'#6e8aad':r.jacket.indexOf('PLENUM')>=0?'#a78bfa':r.jacket==='DIRECT BURIAL'?'#f59e0b':r.jacket==='OUTDOOR'?'#10b981':'#94a3b8';
+    var signalColor = r.signal==='DMX'?'#4f8ef7':r.signal.indexOf('UNISON')>=0?'#f97316':r.signal.indexOf('ETHERNET')>=0?'#10b981':r.signal==='RIGGING ENCODER'?'#f59e0b':'#94a3b8';
+    return '<tr>'
+      +'<td style="'+tdBase+';color:var(--text);font-weight:500">'+escH(r.mfr)+'</td>'
+      +'<td style="'+tdBase+';font-family:monospace;color:#e2e8f0;font-weight:600">'+escH(r.part)+(r.alias?'<div style="font-size:10px;color:var(--text-muted);font-family:inherit">'+escH(r.alias)+'</div>':'')+'</td>'
+      +'<td style="'+tdBase+'"><span style="font-size:11px;font-weight:600;color:'+jacketColor+'">'+escH(r.jacket)+'</span></td>'
+      +'<td style="'+tdBase+'"><span style="font-size:12px;font-weight:600;color:'+signalColor+'">'+escH(r.signal)+'</span></td>'
+      +'<td style="'+tdBase+';text-align:center">'+approvedBadge+'</td>'
+    +'</tr>';
+  }).join('');
+}
 
+function _etcCcUpdateResults() {
+  var st = window._etcCcState || {};
   var records = _ccGetRecords();
-  var meta    = _ccGetMeta();
-
-  var signals = ['All'];
-  var jackets = ['All'];
-  records.forEach(function(r) {
-    if (r.signal && signals.indexOf(r.signal) < 0) signals.push(r.signal);
-    if (r.jacket && jackets.indexOf(r.jacket) < 0) jackets.push(r.jacket);
-  });
-  signals.sort(function(a,b){ return a==='All'?-1:b==='All'?1:a.localeCompare(b); });
-  jackets.sort(function(a,b){ return a==='All'?-1:b==='All'?1:a.localeCompare(b); });
-
   var q = (st.q || '').toLowerCase().trim();
   var filtered = records.filter(function(r) {
     if (st.approvedOnly && !r.approved) return false;
@@ -23060,44 +23059,52 @@ window._etcCcRender = function() {
         || (r.alias||'').toLowerCase().indexOf(q) >= 0
         || (r.signal||'').toLowerCase().indexOf(q) >= 0;
   });
+  var tbody = document.getElementById('etc-cc-tbody');
+  if (tbody) tbody.innerHTML = _etcCcBuildRows(filtered);
+  var countEl = document.getElementById('etc-cc-count');
+  if (countEl) countEl.textContent = filtered.length+' result'+(filtered.length!==1?'s':'')
+    +(q||st.signal!=='All'||st.jacket!=='All'||st.approvedOnly?' (filtered)':'')+' of '+records.length+' total';
+  var truncEl = document.getElementById('etc-cc-trunc');
+  if (truncEl) truncEl.innerHTML = filtered.length > 500
+    ? '<div style="padding:8px 12px;font-size:11px;color:var(--text-muted);text-align:center">Showing first 500 of '+filtered.length+' matches — refine your search</div>' : '';
+}
+
+window._etcCcRender = function() {
+  var root = document.getElementById('etc-cc-root');
+  if (!root) return;
+  if (!window._etcCcState) window._etcCcState = {};
+  var st = window._etcCcState;
+  if (st.q           === undefined) st.q           = '';
+  if (st.signal      === undefined) st.signal      = 'All';
+  if (st.jacket      === undefined) st.jacket      = 'All';
+  if (st.approvedOnly=== undefined) st.approvedOnly= false;
+  if (st.refreshing  === undefined) st.refreshing  = false;
+
+  var records = _ccGetRecords();
+  var meta    = _ccGetMeta();
+  var signals = ['All'], jackets = ['All'];
+  records.forEach(function(r) {
+    if (r.signal && signals.indexOf(r.signal) < 0) signals.push(r.signal);
+    if (r.jacket && jackets.indexOf(r.jacket) < 0) jackets.push(r.jacket);
+  });
+  signals.sort(function(a,b){ return a==='All'?-1:b==='All'?1:a.localeCompare(b); });
+  jackets.sort(function(a,b){ return a==='All'?-1:b==='All'?1:a.localeCompare(b); });
 
   var tsStr = meta.ts
-    ? 'Refreshed ' + new Date(meta.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
-    : 'Snapshot ' + (_etcCableCrossData ? _etcCableCrossData.builtDate : '');
-
+    ? 'Refreshed '+new Date(meta.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+    : 'Snapshot '+(_etcCableCrossData?_etcCableCrossData.builtDate:'');
   var selStyle = 'padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:12px;flex:1;min-width:120px;max-width:200px';
   var signalOpts = signals.map(function(s){ return '<option value="'+s+'"'+(st.signal===s?' selected':'')+'>'+s+'</option>'; }).join('');
   var jacketOpts = jackets.map(function(j){ return '<option value="'+j+'"'+(st.jacket===j?' selected':'')+'>'+j+'</option>'; }).join('');
-
   var thS = 'padding:8px 10px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,0.08);text-align:left';
-  var tdBase = 'padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle';
-
-  var rows = filtered.slice(0, 500).map(function(r) {
-    var approvedBadge = r.approved
-      ? '<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;color:#34d399">YES</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(100,116,139,0.12);border:1px solid rgba(100,116,139,0.2);border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;color:var(--text-muted)">NO</span>';
-    var jacketColor = r.jacket==='NON-PLENUM'?'#6e8aad':r.jacket.indexOf('PLENUM')>=0?'#a78bfa':r.jacket==='DIRECT BURIAL'?'#f59e0b':r.jacket==='OUTDOOR'?'#10b981':'#94a3b8';
-    var signalColor = r.signal==='DMX'?'#4f8ef7':r.signal.indexOf('UNISON')>=0?'#f97316':r.signal.indexOf('ETHERNET')>=0?'#10b981':r.signal==='RIGGING ENCODER'?'#f59e0b':'#94a3b8';
-    return '<tr>'
-      +'<td style="'+tdBase+';color:var(--text);font-weight:500">'+escH(r.mfr)+'</td>'
-      +'<td style="'+tdBase+';font-family:monospace;color:#e2e8f0;font-weight:600">'+escH(r.part)+(r.alias?'<div style="font-size:10px;color:var(--text-muted);font-family:inherit">'+escH(r.alias)+'</div>':'')+'</td>'
-      +'<td style="'+tdBase+'"><span style="font-size:11px;font-weight:600;color:'+jacketColor+'">'+escH(r.jacket)+'</span></td>'
-      +'<td style="'+tdBase+'"><span style="font-size:12px;font-weight:600;color:'+signalColor+'">'+escH(r.signal)+'</span></td>'
-      +'<td style="'+tdBase+';text-align:center">'+approvedBadge+'</td>'
-    +'</tr>';
-  }).join('');
-
-  var truncNote = filtered.length > 500 ? '<div style="padding:8px 12px;font-size:11px;color:var(--text-muted);text-align:center">Showing first 500 of '+filtered.length+' matches — refine your search</div>' : '';
 
   root.innerHTML =
     '<div style="padding:20px 16px 100px;max-width:900px;margin:0 auto">'
-    // Header
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;flex-wrap:wrap">'
       +'<h2 style="font-size:22px;font-weight:700;color:#f0f4ff;margin:0;letter-spacing:-0.3px">ETC Cable Cross</h2>'
       +'<a href="'+_CC_URL+'" target="_blank" rel="noopener" style="font-size:11px;color:#4f8ef7;text-decoration:none;border:1px solid rgba(79,142,247,0.3);border-radius:5px;padding:2px 8px;white-space:nowrap">etcconnect.com ↗</a>'
     +'</div>'
     +'<p style="font-size:12px;color:#6e8aad;margin:0 0 16px">ETC-approved cable cross reference — '+records.length+' records loaded &nbsp;·&nbsp; <span style="color:rgba(255,255,255,0.3)">'+tsStr+'</span></p>'
-    // Controls
     +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
       +'<input id="etc-cc-q" type="search" placeholder="Search manufacturer or part number…" value="'+escH(st.q)+'" style="flex:2;min-width:180px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:13px;outline:none">'
       +'<select id="etc-cc-signal" style="'+selStyle+'">'+signalOpts+'</select>'
@@ -23106,31 +23113,26 @@ window._etcCcRender = function() {
         +'<input type="checkbox" id="etc-cc-approved"'+(st.approvedOnly?' checked':'')+' style="accent-color:#34d399"> ETC Approved only'
       +'</label>'
     +'</div>'
-    // Results count + refresh
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">'
-      +'<span style="font-size:12px;color:var(--text-muted)">'+filtered.length+' result'+(filtered.length!==1?'s':'')+(q||st.signal!=='All'||st.jacket!=='All'||st.approvedOnly?' (filtered)':'')+' of '+records.length+' total</span>'
+      +'<span id="etc-cc-count" style="font-size:12px;color:var(--text-muted)"></span>'
       +'<span style="flex:1"></span>'
       +(st.refreshing
         ? '<span style="font-size:12px;color:#4f8ef7">Fetching from ETC…</span>'
         : '<button id="etc-cc-refresh" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(79,142,247,0.35);background:rgba(79,142,247,0.08);color:#4f8ef7;font-size:12px;font-weight:600;cursor:pointer">⟳ Refresh from ETC</button>')
     +'</div>'
-    // Table
     +'<div style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.07)">'
       +'<table style="width:100%;border-collapse:collapse;min-width:560px">'
-        +'<thead>'
-          +'<tr style="background:rgba(255,255,255,0.03)">'
-            +'<th style="'+thS+'">Manufacturer</th>'
-            +'<th style="'+thS+'">Part Number</th>'
-            +'<th style="'+thS+'">Jacket Type</th>'
-            +'<th style="'+thS+'">Signal Type</th>'
-            +'<th style="'+thS+';text-align:center">Approved</th>'
-          +'</tr>'
-        +'</thead>'
-        +'<tbody>'+(rows||'<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">No results match your search</td></tr>')+'</tbody>'
+        +'<thead><tr style="background:rgba(255,255,255,0.03)">'
+          +'<th style="'+thS+'">Manufacturer</th>'
+          +'<th style="'+thS+'">Part Number</th>'
+          +'<th style="'+thS+'">Jacket Type</th>'
+          +'<th style="'+thS+'">Signal Type</th>'
+          +'<th style="'+thS+';text-align:center">Approved</th>'
+        +'</tr></thead>'
+        +'<tbody id="etc-cc-tbody"></tbody>'
       +'</table>'
     +'</div>'
-    +truncNote
-    // Footer note
+    +'<div id="etc-cc-trunc"></div>'
     +'<div style="margin-top:14px;padding:10px 14px;background:rgba(79,142,247,0.04);border:1px solid rgba(79,142,247,0.12);border-radius:8px;font-size:11px;color:#6e8aad;line-height:1.7">'
       +'<strong style="color:#4f8ef7">Snapshot data:</strong> this tool bundles '+(_etcCableCrossData?_etcCableCrossData.records.length:0)+' records. '
       +'The full ETC database has '+(_etcCableCrossData?_etcCableCrossData.totalInDatabase:758)+' entries. '
@@ -23139,21 +23141,22 @@ window._etcCcRender = function() {
     +'</div>'
   +'</div>';
 
-  // Wire up events
-  var qEl = document.getElementById('etc-cc-q');
-  var sigEl = document.getElementById('etc-cc-signal');
-  var jacEl = document.getElementById('etc-cc-jacket');
-  var appEl = document.getElementById('etc-cc-approved');
-  var refEl = document.getElementById('etc-cc-refresh');
+  var qEl  = document.getElementById('etc-cc-q');
+  var sigEl= document.getElementById('etc-cc-signal');
+  var jacEl= document.getElementById('etc-cc-jacket');
+  var appEl= document.getElementById('etc-cc-approved');
+  var refEl= document.getElementById('etc-cc-refresh');
 
   if (qEl) {
-    qEl.addEventListener('input', function(){ st.q = this.value; _etcCcRender(); });
+    qEl.addEventListener('input', function(){ st.q = this.value; _etcCcUpdateResults(); });
     qEl.focus();
   }
-  if (sigEl) sigEl.addEventListener('change', function(){ st.signal = this.value; _etcCcRender(); });
-  if (jacEl) jacEl.addEventListener('change', function(){ st.jacket = this.value; _etcCcRender(); });
-  if (appEl) appEl.addEventListener('change', function(){ st.approvedOnly = this.checked; _etcCcRender(); });
+  if (sigEl) sigEl.addEventListener('change', function(){ st.signal = this.value; _etcCcUpdateResults(); });
+  if (jacEl) jacEl.addEventListener('change', function(){ st.jacket = this.value; _etcCcUpdateResults(); });
+  if (appEl) appEl.addEventListener('change', function(){ st.approvedOnly = this.checked; _etcCcUpdateResults(); });
   if (refEl) refEl.addEventListener('click', _etcCcDoRefresh);
+
+  _etcCcUpdateResults();
 };
 
 function _etcCcDoRefresh() {
