@@ -1,10 +1,11 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v15';
+var CACHE_NAME = 'fieldops-v16';
 
 var PRECACHE_URLS = [
   self.registration.scope,
   self.registration.scope + 'index.html',
   self.registration.scope + 'manifest.json',
+  self.registration.scope + 'etc-cablecross.js',
   self.registration.scope + 'etc-docs.js',
   self.registration.scope + 'lutron-docs.js',
   self.registration.scope + 'arch-fixtures-docs.js',
