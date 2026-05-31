@@ -1,5 +1,5 @@
 // FieldOps Pro — Service Worker
-var CACHE_NAME = 'fieldops-v16';
+var CACHE_NAME = 'fieldops-v17';
 
 var PRECACHE_URLS = [
   self.registration.scope,

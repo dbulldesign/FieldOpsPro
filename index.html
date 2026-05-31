@@ -23010,8 +23010,12 @@ window._llcRender = _llcRender;
 // ═══════════════════════════════════════════════
 (function(){
 
-var _CC_PROXY = 'https://api.allorigins.win/get?url=';
-var _CC_URL   = 'https://www.etcconnect.com/cablecross/';
+var _CC_URL = 'https://www.etcconnect.com/cablecross/';
+var _CC_PROXIES = [
+  {u: 'https://corsproxy.io/?' + encodeURIComponent(_CC_URL),                    json: false},
+  {u: 'https://api.allorigins.win/get?url=' + encodeURIComponent(_CC_URL),       json: true},
+  {u: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(_CC_URL),  json: false}
+];
 
 function _ccGetRecords() {
   var cached = null;
@@ -23159,6 +23163,35 @@ window._etcCcRender = function() {
   _etcCcUpdateResults();
 };
 
+function _etcCcParseHtml(html) {
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(html, 'text/html');
+  // Find the table with the most rows — that's the results grid
+  var tables = Array.from(doc.querySelectorAll('table'));
+  if (!tables.length) return {records:[], viewState:'', vsGen:'', evTarget:''};
+  tables.sort(function(a,b){ return b.querySelectorAll('tr').length - a.querySelectorAll('tr').length; });
+  var tbl = tables[0];
+  var records = [];
+  tbl.querySelectorAll('tr').forEach(function(row) {
+    var cells = row.querySelectorAll('td');
+    if (cells.length < 4) return;
+    var v = Array.from(cells).map(function(c){ return (c.textContent||'').trim(); });
+    var mfr = v[0], part = v[1], alias, jacket, signal, appStr;
+    if (!mfr || !part || mfr.toLowerCase()==='manufacturer') return;
+    if (cells.length >= 6) { alias=v[2]; jacket=v[3]; signal=v[4]; appStr=v[5]; }
+    else                   { alias='';  jacket=v[2]; signal=v[3]; appStr=v[4]; }
+    records.push({mfr:mfr, part:part, alias:alias||'', jacket:jacket||'', signal:signal||'', approved:(appStr||'').toUpperCase()==='YES'});
+  });
+  // Extract ASP.NET hidden fields for pagination
+  function hv(id){ var el=doc.getElementById(id); return el?el.value:''; }
+  return {records:records, viewState:hv('__VIEWSTATE'), vsGen:hv('__VIEWSTATEGENERATOR'), evVal:hv('__EVENTVALIDATION')};
+}
+
+function _etcCcFetchHtml(proxy) {
+  return fetch(proxy.u, {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return proxy.json?r.json().then(function(d){return d.contents||'';}):r.text(); });
+}
+
 function _etcCcDoRefresh() {
   var st = window._etcCcState;
   if (!st || st.refreshing) return;
@@ -23166,37 +23199,59 @@ function _etcCcDoRefresh() {
   st.refreshing = true;
   window._etcCcRender();
 
-  fetch(_CC_PROXY + encodeURIComponent(_CC_URL))
-    .then(function(r) { if (!r.ok) throw new Error('proxy error'); return r.json(); })
-    .then(function(data) {
-      var html = data.contents || '';
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(html, 'text/html');
-      var parsed = [];
-      var tables = doc.querySelectorAll('table');
-      tables.forEach(function(tbl) {
-        var rows = tbl.querySelectorAll('tr');
-        rows.forEach(function(row) {
-          var cells = row.querySelectorAll('td');
-          if (cells.length < 5) return;
-          var vals = Array.from(cells).map(function(c){ return (c.textContent||'').trim(); });
-          var mfr = vals[0], part = vals[1], alias = vals[2]||'', jacket = vals[3], signal = vals[4], appStr = vals[5]||'';
-          if (!mfr || !part || mfr.toUpperCase()===mfr.replace(/[A-Z]/g,'')) return;
-          parsed.push({mfr:mfr, part:part, alias:alias, jacket:jacket, signal:signal, approved: appStr.toUpperCase()==='YES'});
-        });
+  var idx = 0;
+  function tryNext() {
+    if (idx >= _CC_PROXIES.length) {
+      st.refreshing = false;
+      window._etcCcRender();
+      if (typeof toast === 'function') toast('Refresh failed — all proxies unreachable. Visit etcconnect.com/cablecross directly.');
+      return;
+    }
+    var proxy = _CC_PROXIES[idx++];
+    _etcCcFetchHtml(proxy)
+      .then(function(html) {
+        if (!html || html.length < 1000) throw new Error('response too short ('+html.length+' bytes)');
+        var p1 = _etcCcParseHtml(html);
+        if (p1.records.length < 5) throw new Error('only '+p1.records.length+' rows parsed');
+        // If ViewState is available, try to fetch page 2 via POST through corsproxy
+        if (p1.viewState && p1.records.length >= 10) {
+          var body = '__VIEWSTATE='+encodeURIComponent(p1.viewState)
+            +'&__VIEWSTATEGENERATOR='+encodeURIComponent(p1.vsGen||'')
+            +'&__EVENTVALIDATION='+encodeURIComponent(p1.evVal||'')
+            +'&__EVENTTARGET='+encodeURIComponent('ctl00$cphMain$gvCableCross')
+            +'&__EVENTARGUMENT=Page%242';
+          fetch('https://corsproxy.io/?'+encodeURIComponent(_CC_URL), {
+            method:'POST', cache:'no-store',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:body
+          }).then(function(r){ return r.ok?r.text():Promise.reject('p2 HTTP '+r.status); })
+            .then(function(html2){
+              var p2 = _etcCcParseHtml(html2);
+              var combined = p1.records;
+              p2.records.forEach(function(r){
+                if (!combined.some(function(x){return x.mfr===r.mfr&&x.part===r.part;})) combined.push(r);
+              });
+              _etcCcSaveAndDone(combined);
+            })
+            .catch(function(){ _etcCcSaveAndDone(p1.records); }); // page 2 failed — save page 1 anyway
+        } else {
+          _etcCcSaveAndDone(p1.records);
+        }
+      })
+      .catch(function(err) {
+        console.warn('[ETC CC] proxy failed:', proxy.u.split('?')[0], err.message||err);
+        tryNext();
       });
-      if (parsed.length < 5) throw new Error('parse failed — ' + parsed.length + ' rows');
-      var cache = {records: parsed, ts: Date.now()};
-      localStorage.setItem('etcCableCrossCache', JSON.stringify(cache));
-      st.refreshing = false;
-      window._etcCcRender();
-      if (typeof toast === 'function') toast('ETC Cable Cross: ' + parsed.length + ' records loaded');
-    })
-    .catch(function(err) {
-      st.refreshing = false;
-      window._etcCcRender();
-      if (typeof toast === 'function') toast('Refresh failed — check connection and try again');
-    });
+  }
+  tryNext();
+}
+
+function _etcCcSaveAndDone(records) {
+  var st = window._etcCcState || {};
+  try { localStorage.setItem('etcCableCrossCache', JSON.stringify({records:records, ts:Date.now()})); } catch(e){}
+  st.refreshing = false;
+  window._etcCcRender();
+  if (typeof toast === 'function') toast('ETC Cable Cross: '+records.length+' records loaded');
 }
 
 window._etcCcDoRefresh = _etcCcDoRefresh;
