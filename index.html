@@ -19199,16 +19199,47 @@ var _dmxMode = 'd2p';
   };
 
   // ── Persist ───────────────────────────────────────────────────
-  function saveFx()  { try { localStorage.setItem(SK_FX,  JSON.stringify(S.fixtures)); } catch(e){} }
-  function savePsu() { try { localStorage.setItem(SK_PSU, JSON.stringify(S.psu));      } catch(e){} }
-  function saveCh()  { try { localStorage.setItem(SK_CH,  JSON.stringify(S.channels)); } catch(e){} }
-  function saveProj(){ try { localStorage.setItem(SK_PRJ, JSON.stringify(S.projects)); } catch(e){} }
+  function saveFx()  {
+    try { localStorage.setItem(SK_FX,  JSON.stringify(S.fixtures)); } catch(e){}
+    if (window._ledSyncSave) window._ledSyncSave(SK_FX, S.fixtures);
+  }
+  function savePsu() {
+    try { localStorage.setItem(SK_PSU, JSON.stringify(S.psu)); } catch(e){}
+    if (window._ledSyncSave) window._ledSyncSave(SK_PSU, S.psu);
+  }
+  function saveCh()  {
+    try { localStorage.setItem(SK_CH,  JSON.stringify(S.channels)); } catch(e){}
+    if (window._ledSyncSave) window._ledSyncSave(SK_CH, S.channels);
+  }
+  function saveProj(){
+    try { localStorage.setItem(SK_PRJ, JSON.stringify(S.projects)); } catch(e){}
+    if (window._ledSyncSave) window._ledSyncSave(SK_PRJ, S.projects);
+  }
 
   function load() {
     try { var r=JSON.parse(localStorage.getItem(SK_FX)||'null');  S.fixtures = (r&&r.length)?r:DEFAULTS_FX.slice(); } catch(e){ S.fixtures=DEFAULTS_FX.slice(); }
     try { S.psu      = JSON.parse(localStorage.getItem(SK_PSU)||'[]'); } catch(e){ S.psu=[]; }
     try { S.channels = JSON.parse(localStorage.getItem(SK_CH)||'[]');  } catch(e){ S.channels=[]; }
     try { S.projects = JSON.parse(localStorage.getItem(SK_PRJ)||'[]'); } catch(e){ S.projects=[]; }
+
+    // Register Firebase update callbacks so remote changes are reflected live
+    window._ledSyncCallbacks = window._ledSyncCallbacks || {};
+    window._ledSyncCallbacks[SK_FX] = function(items) {
+      if (items && items.length) S.fixtures = items;
+      if (typeof window._ledRender === 'function') window._ledRender();
+    };
+    window._ledSyncCallbacks[SK_PSU] = function(items) {
+      S.psu = items || [];
+      if (typeof window._ledRender === 'function') window._ledRender();
+    };
+    window._ledSyncCallbacks[SK_CH] = function(items) {
+      S.channels = items || [];
+      if (typeof window._ledRender === 'function') window._ledRender();
+    };
+    window._ledSyncCallbacks[SK_PRJ] = function(items) {
+      S.projects = items || [];
+      if (typeof window._ledRender === 'function') window._ledRender();
+    };
   }
 
   // ── Helpers ───────────────────────────────────────────────────
