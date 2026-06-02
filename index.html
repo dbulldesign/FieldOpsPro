@@ -6222,6 +6222,7 @@ function saveCurrentProjectAsTemplate() {
   var saved = JSON.parse(localStorage.getItem('fop_templates')||'[]');
   saved.push(tmpl);
   localStorage.setItem('fop_templates', JSON.stringify(saved));
+  _syncBlob('taskTemplates', saved);
   toast('Template saved: '+name);
   renderTemplatesList();
 }
@@ -6249,6 +6250,7 @@ function deleteTemplate(idx) {
   var saved = JSON.parse(localStorage.getItem('fop_templates')||'[]');
   saved.splice(idx,1);
   localStorage.setItem('fop_templates', JSON.stringify(saved));
+  _syncBlob('taskTemplates', saved);
   renderTemplatesList();
 }
 window.openTemplatesPanel = openTemplatesPanel;
@@ -6725,7 +6727,7 @@ var _widgets = JSON.parse(localStorage.getItem('fop_dash_v2') || JSON.stringify(
   overview: true, tasks: true, shipping: true, alerts: true, activity: true
 }));
 
-function saveWidgets() { localStorage.setItem('fop_dash_v2', JSON.stringify(_widgets)); }
+function saveWidgets() { localStorage.setItem('fop_dash_v2', JSON.stringify(_widgets)); _syncBlob('dashWidgets', _widgets); }
 
 function renderWidgetToggles() {
   var bar = document.getElementById('dash-widget-bar');
@@ -7264,6 +7266,7 @@ function initFirebase(config) {
 
       // Start listeners immediately
       _setupListeners();
+      _initBlobListeners();
 
       // Auth not required — Firestore rules use `allow read, write: if true`
       var el = document.getElementById('fdb-auth-status');
@@ -7292,23 +7295,105 @@ function _syncBlob(key, data) {
     .catch(function(e){ console.warn('_syncBlob error ('+key+'):', e); });
 }
 
+// LED Tape Calculator writes go through _syncBlob so they sync across devices
+window._ledSyncSave = function(lsKey, items) {
+  var m = {
+    'fop_led_fixtures': 'led_fixtures',
+    'fop_led_psu':      'led_psu',
+    'fop_led_projects': 'led_projects',
+    'fop_led_channels': 'led_channels'
+  };
+  var k = m[lsKey];
+  if (k) _syncBlob(k, items);
+};
+
 function _initBlobListeners() {
+  window._ledSyncCallbacks = window._ledSyncCallbacks || {};
   var blobDefs = [
+    // ── Existing blobs ────────────────────────────────────────────
     { key:'dailyPlans',  ls:'fop_dailyPlans'  },
     { key:'backlog',     ls:'fop_backlog'     },
     { key:'systainer',  ls:'fop_systainer'   },
     { key:'sysLibrary', ls:'fop_sys_lib'     },
-    { key:'fixture_db', ls:'fop_fixture_db', onSync: function(data){ if (typeof window._fdbSyncFromFirebase === 'function') window._fdbSyncFromFirebase(data); } }
+    { key:'fixture_db', ls:'fop_fixture_db', onSync: function(d){ if (typeof window._fdbSyncFromFirebase === 'function') window._fdbSyncFromFirebase(d); } },
+    // ── LED Tape Calculator ───────────────────────────────────────
+    { key:'led_fixtures', ls:'fop_led_fixtures', onSync: function(d){ var cb=window._ledSyncCallbacks['fop_led_fixtures']; if(typeof cb==='function') cb(d); } },
+    { key:'led_psu',      ls:'fop_led_psu',      onSync: function(d){ var cb=window._ledSyncCallbacks['fop_led_psu'];      if(typeof cb==='function') cb(d); } },
+    { key:'led_projects', ls:'fop_led_projects', onSync: function(d){ var cb=window._ledSyncCallbacks['fop_led_projects']; if(typeof cb==='function') cb(d); } },
+    { key:'led_channels', ls:'fop_led_channels', onSync: function(d){ var cb=window._ledSyncCallbacks['fop_led_channels']; if(typeof cb==='function') cb(d); } },
+    // ── User content ─────────────────────────────────────────────
+    { key:'comboOptions',  ls:'fop_combo_opts',     onSync: function(d){ if(d && typeof d === 'object') comboCustomOptions = d; } },
+    { key:'taskTemplates', ls:'fop_templates',      onSync: function(d){ if(Array.isArray(d)) taskTemplates = d; } },
+    { key:'savedTags',     ls:'fop_saved_tags',     onSync: function(d){ if(Array.isArray(d)) _savedTags = d; } },
+    { key:'savedSystems',  ls:'fop_saved_systems',  onSync: function(d){ if(Array.isArray(d)) _savedSystems = d; } },
+    { key:'issueCats',     ls:'fop_issue_cats'     },
+    { key:'webLinks',      ls:'fop_weblinks'       },
+    { key:'eventContacts', ls:'fop_event_contacts' },
+    { key:'scratchpad',    ls:null, onSync: function(d){
+      if (d && typeof d.value === 'string') {
+        try { localStorage.setItem('fop_scratchpad', d.value); } catch(e){}
+        var el = document.getElementById('scratchpad-ta'); if(el && document.activeElement !== el) el.value = d.value;
+      }
+    }},
+    // ── Specialized tools ─────────────────────────────────────────
+    { key:'dmxAddr',     ls:'fop_dmxaddr', onSync: function(d){
+      if (d && window._dmx) { window._dmx.universe=d.universe||1; window._dmx.fixtures=d.fixtures||[]; window._dmx._nextId=d._nextId||(window._dmx.fixtures.reduce(function(m,f){return Math.max(m,f.id);},0)+1); }
+      if (typeof window._dmxAddrRender === 'function') window._dmxAddrRender();
+    }},
+    { key:'dmxPresets',  ls:'fop_dmxaddr_presets' },
+    { key:'lutronCheck', ls:'fop_lutroncheck', onSync: function(d){
+      if (d && window._lckl) { window._lckl.checks=d.checks||{}; window._lckl.notes=d.notes||{}; window._lckl.system=d.system||'quantum'; }
+      if (typeof window._lcklRender === 'function') window._lcklRender();
+    }},
+    // ── Dashboard & UI ───────────────────────────────────────────
+    { key:'dashWidgets',     ls:'fop_dash_v2',            onSync: function(d){ if(d && typeof d === 'object') { _widgets = d; if(typeof renderDash==='function') renderDash(); } } },
+    { key:'dashLayout',      ls:'fop_dash_layout',        onSync: function(){ if(typeof renderDash==='function') renderDash(); } },
+    { key:'dashWidgetOrder', ls:'fop_dash_widget_order',  onSync: function(){ if(typeof renderDash==='function') renderDash(); } },
+    { key:'compactMode',     ls:null, onSync: function(d){
+      if (d && typeof d.value === 'string') {
+        try { localStorage.setItem('fop_compact', d.value); } catch(e){}
+        compactMode = d.value === '1';
+        document.body.classList.toggle('compact', compactMode);
+      }
+    }},
+    { key:'density', ls:null, onSync: function(d){
+      if (d && typeof d.value === 'string') {
+        try { localStorage.setItem('fop_density', d.value); } catch(e){}
+        if (typeof applyDensity === 'function') applyDensity(d.value === '1');
+      }
+    }},
+    { key:'theme', ls:null, onSync: function(d){
+      if (d && typeof d.value === 'string') {
+        try { localStorage.setItem('fop_theme', d.value); } catch(e){}
+        if (typeof applyTheme === 'function') applyTheme(d.value);
+      }
+    }}
   ];
+
   blobDefs.forEach(function(b) {
-    var unsub = db.collection('_app_blobs').doc(b.key)
-      .onSnapshot(function(doc) {
+    // One-time migration: if Firebase has no data but localStorage does, upload it
+    var ref = db.collection('_app_blobs').doc(b.key);
+    if (b.ls) {
+      ref.get().then(function(snap) {
+        if (!snap.exists) {
+          try {
+            var raw = localStorage.getItem(b.ls);
+            if (raw !== null) {
+              var parsed; try { parsed = JSON.parse(raw); } catch(e) { parsed = raw; }
+              ref.set({ data: parsed, updatedAt: new Date().toISOString() });
+            }
+          } catch(e){}
+        }
+      }).catch(function(){});
+    }
+
+    var unsub = ref.onSnapshot(function(doc) {
         if (!doc.exists) return;
         var remote = doc.data();
         if (!remote || remote.data === undefined) return;
-        try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e) {}
-        if (b.onSync) try { b.onSync(remote.data); } catch(e2) {}
-        renderAllDebounced();
+        if (b.ls) { try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e) {} }
+        if (b.onSync) try { b.onSync(remote.data); } catch(e2) { console.warn('blob onSync error ('+b.key+'):', e2); }
+        if (typeof renderAllDebounced === 'function') renderAllDebounced();
       }, function(err){ console.warn('Blob listener error ('+b.key+'):', err); });
     unsubscribers.push(unsub);
   });
@@ -8284,6 +8369,7 @@ function saveDashWidgetLayout() {
     return { key: el.dataset.widgetKey, wide: el.classList.contains('w-full') };
   });
   localStorage.setItem('fop_dash_widget_order', JSON.stringify(order));
+  _syncBlob('dashWidgetOrder', order);
 }
 function loadDashWidgetLayout() {
   var raw = localStorage.getItem('fop_dash_widget_order');
@@ -8375,6 +8461,7 @@ function getDashLayout() {
 }
 function saveDashLayout(layout) {
   localStorage.setItem('fop_dash_layout', JSON.stringify(layout));
+  _syncBlob('dashLayout', layout);
 }
 function toggleDashCustomize(btn) {
   var bar = document.getElementById('dash-customize-bar');
@@ -8700,6 +8787,7 @@ function saveScratchpad(val) {
   clearTimeout(_scratchpadTimer);
   _scratchpadTimer = setTimeout(function(){
     localStorage.setItem('fop_scratchpad', val);
+    _syncBlob('scratchpad', { value: val });
     if (badge) { badge.style.opacity='1'; setTimeout(function(){ badge.style.opacity='0'; }, 1200); }
   }, 600);
 }
@@ -9289,7 +9377,7 @@ function populateEventContactList() {
 function saveEventContact(name) {
   if (!name) return;
   var contacts = JSON.parse(localStorage.getItem('fop_event_contacts')||'[]');
-  if (contacts.indexOf(name)===-1) { contacts.push(name); localStorage.setItem('fop_event_contacts', JSON.stringify(contacts)); }
+  if (contacts.indexOf(name)===-1) { contacts.push(name); localStorage.setItem('fop_event_contacts', JSON.stringify(contacts)); _syncBlob('eventContacts', contacts); }
 }
 window.populateEventContactList = populateEventContactList;
 
@@ -12035,7 +12123,7 @@ function filterSystemDropdown(q) {
   _renderSystemOptions('system-options', q, 'selectIssueSystem');
 }
 function selectIssueSystem(val, save) {
-  if (save && _savedSystems.indexOf(val)<0) { _savedSystems.push(val); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems)); }
+  if (save && _savedSystems.indexOf(val)<0) { _savedSystems.push(val); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems)); _syncBlob('savedSystems', _savedSystems); }
   var inp = document.getElementById('issue-system'); if(inp) inp.value = val;
   var dd = document.getElementById('system-dropdown'); if(dd) dd.style.display='none';
 }
@@ -12166,7 +12254,7 @@ function saveIssue() {
   var steps = getStepsEditorValue();
   var sysVal = (document.getElementById('issue-system')||{}).value||'';
   if (sysVal && _savedSystems.indexOf(sysVal)<0 && _builtinSystems.indexOf(sysVal)<0) {
-    _savedSystems.push(sysVal); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems));
+    _savedSystems.push(sysVal); localStorage.setItem('fop_saved_systems', JSON.stringify(_savedSystems)); _syncBlob('savedSystems', _savedSystems);
   }
   var catVal = (document.getElementById('issue-cat').value||'').trim().toLowerCase() || 'electrical';
   var cats = getIssueCats();
@@ -12453,7 +12541,7 @@ function toggleTag(tag) {
 }
 function createAndToggleTag(tag) {
   if (!tag) return;
-  if (_savedTags.indexOf(tag)===-1) { _savedTags.push(tag); localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags)); }
+  if (_savedTags.indexOf(tag)===-1) { _savedTags.push(tag); localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags)); _syncBlob('savedTags', _savedTags); }
   toggleTag(tag);
   var si = document.getElementById('tags-search-input'); if(si) si.value='';
   filterTagsDropdown('');
@@ -13624,6 +13712,7 @@ function toggleTheme() {
   var current = document.documentElement.getAttribute('data-theme') || 'dark';
   var next = (current === 'dark') ? 'light' : 'dark';
   localStorage.setItem('fop_theme', next);
+  _syncBlob('theme', { value: next });
   applyTheme(next);
 }
 
@@ -13713,6 +13802,7 @@ function applyDensity(compact) {
 function toggleDensity() {
   var next = !document.body.classList.contains('density-compact');
   localStorage.setItem('fop_density', next ? '1' : '0');
+  _syncBlob('density', { value: next ? '1' : '0' });
   applyDensity(next);
 }
 
@@ -13905,6 +13995,7 @@ var comboCustomOptions = JSON.parse(localStorage.getItem('fop_combo_opts')||'{}'
 
 function saveComboOpts() {
   localStorage.setItem('fop_combo_opts', JSON.stringify(comboCustomOptions));
+  _syncBlob('comboOptions', comboCustomOptions);
 }
 
 var COMBO_DEFAULTS = {
@@ -14308,7 +14399,7 @@ function getIssueCats() {
   try { var s = localStorage.getItem('fop_issue_cats'); if(s) return JSON.parse(s); } catch(e){}
   return _defaultIssueCats.slice();
 }
-function saveIssueCats(cats) { localStorage.setItem('fop_issue_cats', JSON.stringify(cats)); }
+function saveIssueCats(cats) { localStorage.setItem('fop_issue_cats', JSON.stringify(cats)); _syncBlob('issueCats', cats); }
 function refreshIssueCatSelects() {
   // Both fields are now combobox inputs — just refresh settings display
   renderIssueCatSettings();
@@ -14539,6 +14630,7 @@ function saveTagRename(oldTag) {
   var idx = _savedTags.indexOf(oldTag);
   if (idx >= 0) _savedTags[idx] = newTag; else _savedTags.push(newTag);
   localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  _syncBlob('savedTags', _savedTags);
   // Rename in all issues
   (state.issues||[]).forEach(function(issue) {
     if (!issue.tags) return;
@@ -14553,6 +14645,7 @@ function deleteTag(tag) {
   // Remove from _savedTags
   _savedTags = _savedTags.filter(function(t){ return t !== tag; });
   localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  _syncBlob('savedTags', _savedTags);
   // Remove from all issues
   (state.issues||[]).forEach(function(issue) {
     if (!issue.tags) return;
@@ -14570,6 +14663,7 @@ function addIssueTagSettings() {
   if (_savedTags.indexOf(val) >= 0) { toast('Tag already exists'); return; }
   _savedTags.push(val);
   localStorage.setItem('fop_saved_tags', JSON.stringify(_savedTags));
+  _syncBlob('savedTags', _savedTags);
   inp.value = '';
   renderIssueTagsSettings();
   toast('Tag added');
@@ -14724,7 +14818,7 @@ function getWebLinks() {
   try { var s = localStorage.getItem('fop_weblinks'); if(s) return JSON.parse(s); } catch(e){}
   return [];
 }
-function saveWebLinks(links) { localStorage.setItem('fop_weblinks', JSON.stringify(links)); }
+function saveWebLinks(links) { localStorage.setItem('fop_weblinks', JSON.stringify(links)); _syncBlob('webLinks', links); }
 
 function renderWebLinks() {
   var grid = document.getElementById('weblinks-grid');
@@ -16029,6 +16123,7 @@ var compactMode = localStorage.getItem('fop_compact') === '1';
 function toggleCompact() {
   compactMode = !compactMode;
   localStorage.setItem('fop_compact', compactMode ? '1' : '0');
+  _syncBlob('compactMode', { value: compactMode ? '1' : '0' });
   document.body.classList.toggle('compact', compactMode);
   renderTasks();
   renderPOs();
@@ -16257,7 +16352,7 @@ function downloadWithConfig() {
 }
 
 
-function saveTemplates() { localStorage.setItem('fop_templates', JSON.stringify(taskTemplates)); }
+function saveTemplates() { localStorage.setItem('fop_templates', JSON.stringify(taskTemplates)); _syncBlob('taskTemplates', taskTemplates); }
 
 function applyTemplate(templateId, projectId) {
   var tmpl = taskTemplates.find(function(t){ return t.id === templateId; });
@@ -22469,7 +22564,7 @@ window._llcRender = _llcRender;
     _nextId: 1
   };
 
-  function _dmxSave() { try { localStorage.setItem('fop_dmxaddr', JSON.stringify(_dmx)); } catch(e){} }
+  function _dmxSave() { try { localStorage.setItem('fop_dmxaddr', JSON.stringify(_dmx)); _syncBlob('dmxAddr', _dmx); } catch(e){} }
   function _dmxLoad() { try { var d=JSON.parse(localStorage.getItem('fop_dmxaddr')||'null'); if(d){_dmx.universe=d.universe||1;_dmx.fixtures=d.fixtures||[];_dmx._nextId=d._nextId||(_dmx.fixtures.reduce(function(m,f){return Math.max(m,f.id);},0)+1);} } catch(e){} }
   _dmxLoad();
 
@@ -22645,7 +22740,7 @@ window._llcRender = _llcRender;
     try { return JSON.parse(localStorage.getItem('fop_dmxaddr_presets')||'[]'); } catch(e) { return []; }
   }
   function _dmxSavePresetsLS(arr) {
-    try { localStorage.setItem('fop_dmxaddr_presets', JSON.stringify(arr)); } catch(e) {}
+    try { localStorage.setItem('fop_dmxaddr_presets', JSON.stringify(arr)); _syncBlob('dmxPresets', arr); } catch(e) {}
   }
   function _dmxSavePreset() {
     var nameEl = document.getElementById('dmx-preset-name');
@@ -22793,7 +22888,7 @@ window._llcRender = _llcRender;
     navigator.clipboard&&navigator.clipboard.writeText(lines.join('\n')).then(function(){toast('Checklist copied');}).catch(function(){toast('Copy failed');});
   }
 
-  function _lcklSave() { try{ localStorage.setItem('fop_lutroncheck',JSON.stringify({checks:_lckl.checks,notes:_lckl.notes,system:_lckl.system})); }catch(e){} }
+  function _lcklSave() { try{ var d={checks:_lckl.checks,notes:_lckl.notes,system:_lckl.system}; localStorage.setItem('fop_lutroncheck',JSON.stringify(d)); _syncBlob('lutronCheck', d); }catch(e){} }
   function _lcklLoad() { try{ var d=JSON.parse(localStorage.getItem('fop_lutroncheck')||'null'); if(d){_lckl.checks=d.checks||{};_lckl.notes=d.notes||{};_lckl.system=d.system||'quantum';} }catch(e){} }
   _lcklLoad();
 

@@ -172,54 +172,6 @@ function _doInitFirebase(config) {
       unsubscribers.push(unsub);
     });
 
-    // ── LED Tape Calculator sync ──────────────────────────────────
-    var LED_DOCS = {
-      'fop_led_fixtures': 'led_fixtures',
-      'fop_led_psu':      'led_psu',
-      'fop_led_projects': 'led_projects',
-      'fop_led_channels': 'led_channels'
-    };
-    window._ledSyncCallbacks = window._ledSyncCallbacks || {};
-    Object.keys(LED_DOCS).forEach(function(localKey) {
-      var docId = LED_DOCS[localKey];
-      var ref = db.collection('led_meta').doc(docId);
-
-      // One-time migration: if Firebase has no data yet but localStorage does, upload it
-      ref.get().then(function(snap) {
-        if (!snap.exists) {
-          try {
-            var local = JSON.parse(localStorage.getItem(localKey) || 'null');
-            if (local && local.length) {
-              ref.set({ items: local, updatedAt: new Date().toISOString() });
-            }
-          } catch(e){}
-        }
-      }).catch(function(){});
-
-      var unsub = ref.onSnapshot(function(snap) {
-          if (!snap.exists) return;
-          var items = snap.data().items || [];
-          try { localStorage.setItem(localKey, JSON.stringify(items)); } catch(e){}
-          var cb = window._ledSyncCallbacks[localKey];
-          if (typeof cb === 'function') cb(items);
-        }, function(err) { console.warn('LED Tape Firestore error:', err); });
-      unsubscribers.push(unsub);
-    });
-
-    window._ledSyncSave = function(localKey, items) {
-      if (!db) return;
-      var LED_DOCS_INNER = {
-        'fop_led_fixtures': 'led_fixtures',
-        'fop_led_psu':      'led_psu',
-        'fop_led_projects': 'led_projects',
-        'fop_led_channels': 'led_channels'
-      };
-      var docId = LED_DOCS_INNER[localKey];
-      if (!docId) return;
-      db.collection('led_meta').doc(docId).set({ items: items, updatedAt: new Date().toISOString() })
-        .catch(function(e) { console.warn('LED Tape Firebase save error:', e); });
-    };
-
     var _sdr=document.getElementById('syncDot'); if(_sdr) _sdr.classList.remove('offline');
     var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
     var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
