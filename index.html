@@ -6579,6 +6579,17 @@ window.addEventListener('offline', function() {
   updateSyncBar();
   toast('You are offline \u2014 changes saved locally');
 });
+
+// iOS / Safari: WebSocket connections are killed when the page goes to background.
+// On returning to foreground, force Firestore to drop and re-open its connection
+// without destroying the snapshot listeners (they automatically re-fire with fresh data).
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && navigator.onLine && db && window._fbConnected) {
+    db.disableNetwork().then(function() {
+      return db.enableNetwork();
+    }).catch(function(){});
+  }
+});
 // Set initial network status as soon as DOM is ready
 (function() {
   function _initNetStatus() { _isOnline = navigator.onLine; _updateNetStatus(); }
@@ -7259,7 +7270,8 @@ function initFirebase(config) {
         var _slr=document.getElementById('syncLabel'); if(_slr) _slr.textContent='Synced';
         var _msdr=document.getElementById('mobSyncDot'); if(_msdr) _msdr.style.background='#10b981';
         var _mslr=document.getElementById('mobSyncLabel'); if(_mslr) _mslr.textContent='Synced';
-        var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected to Firebase!</span>';
+        var _projId = (config && config.projectId) ? config.projectId : '?';
+        var _fs=document.getElementById('firebase-status'); if(_fs) _fs.innerHTML='<span style="color:#10b981">&#x2705; Connected — project: <code style="font-size:11px;background:rgba(16,185,129,0.1);padding:1px 5px;border-radius:4px">'+_projId+'</code></span><div style="font-size:11px;color:#6e8aad;margin-top:4px">All devices must use this same project to sync.</div>';
         toast('🔥 Firebase connected — syncing!');
         if (typeof updateSyncDot === 'function') updateSyncDot();
       }
@@ -10389,34 +10401,46 @@ function syncNow() {
     if (popup) { popup.style.display = popup.style.display === 'none' ? 'block' : 'none'; }
     return;
   }
-  // Sync blobs (schedule, backlog, systainer) — push local to Firebase, then pull remote back
-  var _blobDefs = [
-    { key:'dailyPlans', ls:'fop_dailyPlans', def:'{}' },
-    { key:'backlog',    ls:'fop_backlog',    def:'[]' },
-    { key:'systainer',  ls:'fop_systainer',  def:'null' },
-    { key:'sysLibrary', ls:'fop_sys_lib',    def:'[]'  }
+  // Pull all blob data from Firebase (read-only — writes happen automatically on each save)
+  var _allBlobKeys = [
+    { key:'dailyPlans',      ls:'fop_dailyPlans'          },
+    { key:'backlog',         ls:'fop_backlog'             },
+    { key:'systainer',       ls:'fop_systainer'           },
+    { key:'sysLibrary',      ls:'fop_sys_lib'             },
+    { key:'fixture_db',      ls:'fop_fixture_db'          },
+    { key:'led_fixtures',    ls:'fop_led_fixtures'        },
+    { key:'led_psu',         ls:'fop_led_psu'             },
+    { key:'led_projects',    ls:'fop_led_projects'        },
+    { key:'led_channels',    ls:'fop_led_channels'        },
+    { key:'comboOptions',    ls:'fop_combo_opts'          },
+    { key:'taskTemplates',   ls:'fop_templates'           },
+    { key:'savedTags',       ls:'fop_saved_tags'          },
+    { key:'savedSystems',    ls:'fop_saved_systems'       },
+    { key:'issueCats',       ls:'fop_issue_cats'          },
+    { key:'webLinks',        ls:'fop_weblinks'            },
+    { key:'eventContacts',   ls:'fop_event_contacts'      },
+    { key:'dmxAddr',         ls:'fop_dmxaddr'             },
+    { key:'dmxPresets',      ls:'fop_dmxaddr_presets'     },
+    { key:'lutronCheck',     ls:'fop_lutroncheck'         },
+    { key:'dashWidgets',     ls:'fop_dash_v2'             },
+    { key:'dashLayout',      ls:'fop_dash_layout'         },
+    { key:'dashWidgetOrder', ls:'fop_dash_widget_order'   }
   ];
-  _blobDefs.forEach(function(b) {
-    // Push local data to Firebase (write), then pull latest back (read)
-    try {
-      var localData = JSON.parse(localStorage.getItem(b.ls) || b.def);
-      if (localData !== null) {
-        db.collection('_app_blobs').doc(b.key)
-          .set({ data: localData, updatedAt: new Date().toISOString() }, { merge: true })
-          .catch(function(e){ console.warn('Blob push error ('+b.key+'):', e); });
-      }
-      // Pull latest from Firebase
-      db.collection('_app_blobs').doc(b.key).get()
-        .then(function(doc) {
-          if (!doc.exists) return;
-          var remote = doc.data();
-          if (remote && remote.data !== undefined) {
-            try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e2) {}
-            renderAllDebounced();
+  _allBlobKeys.forEach(function(b) {
+    db.collection('_app_blobs').doc(b.key).get()
+      .then(function(doc) {
+        if (!doc.exists) return;
+        var remote = doc.data();
+        if (remote && remote.data !== undefined) {
+          try { localStorage.setItem(b.ls, JSON.stringify(remote.data)); } catch(e2) {}
+          // Notify any registered onSync callbacks (LED Tape, DMX, etc.)
+          if (window._ledSyncCallbacks && window._ledSyncCallbacks[b.ls]) {
+            try { window._ledSyncCallbacks[b.ls](remote.data); } catch(e3){}
           }
-        })
-        .catch(function(e){ console.warn('Blob pull error ('+b.key+'):', e); });
-    } catch(e) {}
+          renderAllDebounced();
+        }
+      })
+      .catch(function(e){ console.warn('Blob pull error ('+b.key+'):', e); });
   });
 
   COLLECTIONS.forEach(function(col) {
