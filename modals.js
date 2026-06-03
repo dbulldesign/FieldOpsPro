@@ -178,6 +178,8 @@ function saveProject() {
   if(editingId) { updateItem('projects', editingId, item); toast('Project updated'); }
   else { addItem('projects', item); toast('Project created'); }
   closeModal('modal-project');
+  if (typeof renderProjectNotebook === 'function') renderProjectNotebook();
+  if (typeof updateProjNotebookBadge === 'function') updateProjNotebookBadge();
 }
 
 function editProject(id) {

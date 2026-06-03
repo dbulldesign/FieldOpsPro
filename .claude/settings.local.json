@@ -19,7 +19,12 @@
       "Bash(Get-ChildItem -Path \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\" -Recurse -Filter \"*.html\")",
       "Bash(Select-Object -First 20)",
       "Bash(grep -l \"switchView\\\\|renderTasks\\\\|renderProjects\\\\|switchScheduleTab\\\\|startTimer\" \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\\\\\"*.js 2>/dev/null | head -20)",
-      "Read(//d/Github Projects/FieldOpsPro/**)"
+      "Read(//d/Github Projects/FieldOpsPro/**)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\" -Recurse -Force)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Format-Table FullName)",
+      "PowerShell(\\(Get-Content \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\\\\index.html\"\\).Count)",
+      "PowerShell(Select-String -Path \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\\\\index.html\" -Pattern \"</style>\" | Select-Object -First 3 | ForEach-Object { \"Line $\\($_.LineNumber\\): $\\($_.Line\\)\" })"
     ]
   }
 }
