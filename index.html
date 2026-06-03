@@ -13182,14 +13182,6 @@ window.addEventListener('load', function(){
   setTimeout(function(){
     // Seed built-in troubleshoot issues on first run
       renderTroubleshoot();
-
-    if(!state.projects.length && !state.tasks.length) {
-      addItem('projects', {name:'Office Tower HQ', client:'Acme Corp', status:'active', system:'Lutron Quantum', location:'123 Main St', start:'2025-01-15', end:'2025-06-30', notes:'Full lighting controls replacement. 12 floors.'});
-      addItem('tasks', {title:'Verify GRAFIK Eye QS panel wiring', priority:'high', status:'inprogress', category:'install', due:'2025-04-01', assignee:'Mike T.'});
-      addItem('tasks', {title:'Commission floor 3–5 scenes', priority:'medium', status:'todo', category:'commission', due:'2025-04-15', assignee:'Sara K.'});
-      addItem('pos', {number:'PO-2025-042', vendor:'Lutron Electronics', status:'ordered', date:'2025-03-10', delivery:'2025-03-20', total:24850, items:'48 × GRAFIK Eye QS 6-zone — $295.00\n12 × Seetouch QS Keypad — $185.00\n1 × Quantum 3 Processor — $4200.00'});
-      addItem('shipping', {tracking:'1Z9F92860318165784', carrier:'UPS', desc:'Lutron GRAFIK Eye QS units', status:'transit', eta:'2025-03-20'});
-    }
   }, 1000);
 });
 
