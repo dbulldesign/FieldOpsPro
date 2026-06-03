@@ -315,6 +315,7 @@ function saveShipment() {
     tracking, carrier:document.getElementById('ship-carrier').value,
     desc, po:document.getElementById('ship-po').value,
     task:document.getElementById('ship-task').value,
+    project:document.getElementById('ship-project').value,
     status:document.getElementById('ship-status').value,
     date:document.getElementById('ship-date').value,
     eta:document.getElementById('ship-eta').value,
@@ -333,11 +334,13 @@ function editShipment(id) {
   document.getElementById('ship-modal-title').textContent='Edit Shipment';
   document.getElementById('ship-tracking').value=s.tracking||'';
   document.getElementById('ship-carrier').value=s.carrier||'';
+  comboSet('ship-carrier', s.carrier||'');
   document.getElementById('ship-desc').value=s.desc||'';
   document.getElementById('ship-po').value=s.po||'';
   document.getElementById('ship-task').value=s.task||'';
   document.getElementById('ship-project').value=s.project||'';
   document.getElementById('ship-status').value=s.status||'pending';
+  comboSet('ship-status', s.status||'pending');
   document.getElementById('ship-date').value=s.date||'';
   document.getElementById('ship-eta').value=s.eta||'';
   document.getElementById('ship-notes').value=s.notes||'';

@@ -8,7 +8,14 @@
       "WebSearch",
       "WebFetch(domain:www.etcconnect.com)",
       "WebFetch(domain:www.qtl.lighting)",
-      "Bash(awk '{print $9, $5}')"
+      "Bash(awk '{print $9, $5}')",
+      "Bash(find \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\" -type f \\\\\\( -name \"*.js\" -o -name \"*.html\" -o -name \"*.jsx\" -o -name \"*.ts\" -o -name \"*.tsx\" \\\\\\))",
+      "Bash(grep -n \"modal-detail\\\\|detail-footer\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
+      "Bash(grep -n \"function saveShipment\\\\|function editShipment\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\modals.js\")",
+      "Bash(grep -n \"function renderShipping\\\\|function toggleExpandDetail\\\\|function buildExpandDetailHtml\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
+      "Bash(grep -n \"openDetail.*shipping\\\\|setDetailFooter.*editShipment\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
+      "Bash(grep -n \"onclick.*editShipment\\\\|editFn.*=.*editShipment\\\\|button.*Edit\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
+      "Bash(grep -n \"toggleExpandDetail.*shipping\\\\|toggleExpandDetail\\(row.*shipping\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\")"
     ]
   }
 }
