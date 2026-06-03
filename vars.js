@@ -27,7 +27,7 @@ var LOCAL = {
 // ── Navigation & UI ─────────────────────────────────────────────────
 var currentView = 'dashboard';
 var viewTitles = {
-  dashboard:'Dashboard', projects:'Projects', tasks:'Tasks',
+  dashboard:'Dashboard',
   pos:'Purchase Orders', shipping:'Shipping', troubleshoot:'Troubleshoot DB', settings:'Sync Setup'
 };
 var editingId = null;

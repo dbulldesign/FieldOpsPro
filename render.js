@@ -103,21 +103,6 @@ function renderDashboard() {
     }
   }
 
-  // Recent tasks
-  var dt = document.getElementById('dash-tasks');
-  var recent = openTasks.filter(function(t){return !t.archived;}).slice(-5).reverse();
-  if(!recent.length) { dt.innerHTML='<div class="empty-state"><p>No open tasks</p></div>'; }
-  else {
-    dt.innerHTML='';
-    recent.forEach(function(t){
-      var d=document.createElement('div');
-      d.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer';
-      d.innerHTML='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#f0f4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(t.title)+'</div><div style="font-size:11px">'+fmtDateSmart(t.due)+'</div></div>'+statusBadge(t.status);
-      (function(tid){d.addEventListener('click',function(){switchView('tasks');setTimeout(function(){openDetail('tasks',tid);},100);});
-      d.addEventListener('touchend',function(e){e.preventDefault();switchView('tasks');setTimeout(function(){openDetail('tasks',tid);},100);});})(t.id);
-      dt.appendChild(d);
-    });
-  }
 
   // Shipping
   var ds = document.getElementById('dash-shipping');

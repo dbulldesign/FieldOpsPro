@@ -849,13 +849,9 @@ window.addEventListener('load', function(){
     switch(e.key.toLowerCase()) {
       case 'n': openAddModal(); break;              // N = New item
       case '1': switchView('dashboard'); break;
-      case '2': switchView('projects'); break;
-      case '3': switchView('tasks'); break;
-      case '4': switchView('pos'); break;
-      case '5': switchView('shipping'); break;
-      case '6': switchView('troubleshoot'); break;
-      case 'p': switchView('projects'); break;
-      case 't': switchView('tasks'); break;
+      case '2': switchView('pos'); break;
+      case '3': switchView('shipping'); break;
+      case '4': switchView('troubleshoot'); break;
       case 'o': switchView('pos'); break;
       case 's': switchView('shipping'); break;
       case 'f': switchView('troubleshoot'); break;  // F = Fix / troubleshoot

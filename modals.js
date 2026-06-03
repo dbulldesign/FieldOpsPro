@@ -3,24 +3,11 @@
 
 
 function switchView(v) {
-  if (v === 'tasks') {
-    setTimeout(function() {
-      var pf = document.getElementById('task-project-filter');
-      if (pf) {
-        pf.innerHTML = '<option value="">All Projects</option>' +
-          state.projects.map(function(p){return '<option value="'+p.id+'"'+(taskProjectFilter===p.id?' selected':'')+'>'+escH(p.name)+'</option>';}).join('');
-      }
-      var fab = document.getElementById('quickAddFab');
-      if (fab) fab.style.display = 'flex';
-    }, 50);
-  } else {
-    // Show FAB on all views - it opens the appropriate modal for that view
-    var fab = document.getElementById('quickAddFab');
-    if (fab) fab.style.display = 'flex';
-    var panel = document.getElementById('quickAddPanel');
-    if (panel) panel.style.display = 'none';
-    quickAddOpen = false;
-  }
+  var fab = document.getElementById('quickAddFab');
+  if (fab) fab.style.display = 'flex';
+  var panel = document.getElementById('quickAddPanel');
+  if (panel) panel.style.display = 'none';
+  quickAddOpen = false;
   currentView = v;
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
@@ -28,17 +15,12 @@ function switchView(v) {
   document.querySelectorAll('.mobile-nav-item').forEach(function(el){el.classList.remove('active');});
   var ni=document.querySelector('.nav-item[onclick*="\''+v+'\'"');
   if(ni) ni.classList.add('active');
-  var mi=null;
-  if(mi) mi.classList.add('active');
   document.getElementById('topbarTitle').textContent = viewTitles[v];
   closeSidebar();
   if(v==='troubleshoot') renderTroubleshoot();
-  // Lazy render: render view if dirty
   if (window._dirtyViews && window._dirtyViews[v]) {
     window._dirtyViews[v] = false;
-    if (v==='projects') renderProjects();
-    else if (v==='tasks') renderTasks();
-    else if (v==='pos') renderPOs();
+    if (v==='pos') renderPOs();
     else if (v==='shipping') renderShipping();
     else if (v==='troubleshoot') renderTroubleshoot();
   }

@@ -15,7 +15,11 @@
       "Bash(grep -n \"function renderShipping\\\\|function toggleExpandDetail\\\\|function buildExpandDetailHtml\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
       "Bash(grep -n \"openDetail.*shipping\\\\|setDetailFooter.*editShipment\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
       "Bash(grep -n \"onclick.*editShipment\\\\|editFn.*=.*editShipment\\\\|button.*Edit\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\index.html\")",
-      "Bash(grep -n \"toggleExpandDetail.*shipping\\\\|toggleExpandDetail\\(row.*shipping\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\")"
+      "Bash(grep -n \"toggleExpandDetail.*shipping\\\\|toggleExpandDetail\\(row.*shipping\" \"d:\\\\\\\\Github Projects\\\\\\\\FieldOpsPro\\\\\\\\FieldOpsPro\\\\\\\\render.js\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\" -Recurse -Filter \"*.html\")",
+      "Bash(Select-Object -First 20)",
+      "Bash(grep -l \"switchView\\\\|renderTasks\\\\|renderProjects\\\\|switchScheduleTab\\\\|startTimer\" \"d:\\\\Github Projects\\\\FieldOpsPro\\\\FieldOpsPro\\\\\"*.js 2>/dev/null | head -20)",
+      "Read(//d/Github Projects/FieldOpsPro/**)"
     ]
   }
 }
