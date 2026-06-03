@@ -12704,7 +12704,7 @@ function renderAll() {
   var cv = typeof currentView !== 'undefined' ? currentView : 'dashboard';
   // Lazy-render: only repaint the currently visible section; mark others dirty
   if (cv === 'dashboard')   renderDashboard();   else window._dirtyViews.dashboard   = true;
-  if (cv === 'projects')    renderProjects();    else window._dirtyViews.projects    = true;
+  if (cv === 'projects')    renderProjectNotebook();    else window._dirtyViews.projects    = true;
   if (cv === 'tasks')       renderTasks();       else window._dirtyViews.tasks       = true;
   if (cv === 'pos')         renderPOs();         else window._dirtyViews.pos         = true;
   if (cv === 'shipping')    renderShipping();    else window._dirtyViews.shipping    = true;
@@ -16081,14 +16081,14 @@ function archiveProject(id) {
   (state.tasks||[]).filter(function(t){ return t.project===id && !t.archived; }).forEach(function(t){
     updateItem('tasks', t.id, _merge({}, t, {archived: true}));
   });
-  renderProjects();
+  renderProjectNotebook();
   toast('Project archived');
 }
 function unarchiveProject(id) {
   var p = state.projects.find(function(x){return x.id===id;});
   if(!p) return;
   updateItem('projects', id, _merge({}, p, {archived: false}));
-  renderProjects();
+  renderProjectNotebook();
   toast('Project restored');
 }
 function permanentlyDeleteProject(id) {
@@ -16099,7 +16099,7 @@ function permanentlyDeleteProject(id) {
     });
     deleteItem('projects', id);
     document.querySelectorAll('.proj-expand-row').forEach(function(r){r.remove();});
-    renderProjects();
+    renderProjectNotebook();
     toast('Project permanently deleted');
   });
 }
@@ -25424,6 +25424,7 @@ function execSaveToProject() {
 
 // ── Render project notebook view ──────────────────────────────────────
 var _projExpandedId = null;
+var _projEditSave = null; // { projId, saveId } when a save entry is in edit mode
 
 function renderProjectNotebook() {
   var el = document.getElementById('proj-notebook-list');
@@ -25467,6 +25468,7 @@ function renderProjectNotebook() {
         saves.forEach(function(s) {
           var dt = new Date(s.ts);
           var dtStr = fmtDateSmart(dt.toISOString().slice(0,10)) + ' ' + dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+          var isEditing = _projEditSave && _projEditSave.projId === p.id && _projEditSave.saveId === s.id;
           html += '<div class="proj-nb-save-item">';
           html += '<div style="display:flex;align-items:flex-start;gap:10px">';
           html += '<span style="font-size:20px;flex-shrink:0;margin-top:1px">'+(s.icon||'📋')+'</span>';
@@ -25476,10 +25478,19 @@ function renderProjectNotebook() {
           html += '<span style="font-size:10px;color:#4a5e7a">'+dtStr+'</span>';
           html += '</div>';
           if (s.preview) html += '<div style="font-size:11px;color:#8da0c0;margin-top:3px;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(s.preview)+'</div>';
-          if (s.note) html += '<div style="font-size:12px;color:#c8d8f0;margin-top:5px;font-style:italic">&#8220;'+escH(s.note)+'&#8221;</div>';
+          if (isEditing) {
+            html += '<textarea id="pns-edit-'+s.id+'" style="width:100%;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(79,142,247,0.4);border-radius:8px;padding:7px 10px;color:#c8d8f0;font-size:12px;resize:vertical;min-height:60px;box-sizing:border-box">'+escH(s.note||'')+'</textarea>';
+            html += '<div style="display:flex;gap:6px;margin-top:6px">';
+            html += '<button class="btn btn-primary btn-sm" style="font-size:11px" onclick="saveProjSaveNote(\''+p.id+'\',\''+s.id+'\')">Save Note</button>';
+            html += '<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="cancelProjSaveEdit()">Cancel</button>';
+            html += '</div>';
+          } else {
+            if (s.note) html += '<div style="font-size:12px;color:#c8d8f0;margin-top:5px;font-style:italic">&#8220;'+escH(s.note)+'&#8221;</div>';
+          }
           html += '</div>';
           html += '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-left:6px">';
           html += '<button class="btn btn-primary btn-sm" onclick="restoreProjSave(\''+p.id+'\',\''+s.id+'\')">Open</button>';
+          html += '<button class="btn btn-ghost btn-sm" onclick="startProjSaveEdit(\''+p.id+'\',\''+s.id+'\')" style="color:#8da0c0;border-color:rgba(141,160,192,0.3)">✏</button>';
           html += '<button class="btn btn-ghost btn-sm" onclick="deleteProjSave(\''+p.id+'\',\''+s.id+'\')" style="color:#ef4444;border-color:rgba(239,68,68,0.25)">✕</button>';
           html += '</div></div></div>';
         });
@@ -25487,6 +25498,7 @@ function renderProjectNotebook() {
       html += '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">';
       html += '<button class="btn btn-ghost btn-sm" onclick="openEditProjModal(\''+p.id+'\')" style="flex:1">✏ Edit</button>';
       html += '<button class="btn btn-ghost btn-sm" onclick="archiveProjNb(\''+p.id+'\')" style="color:#f59e0b;border-color:rgba(245,158,11,0.25)">📦 Archive</button>';
+      html += '<button class="btn btn-danger btn-sm" onclick="permanentlyDeleteProject(\''+p.id+'\')">🗑 Delete</button>';
       html += '</div></div>';
     }
     html += '</div>';
@@ -25505,6 +25517,34 @@ function deleteProjSave(projId, saveId) {
   var saves = (proj.saves||[]).filter(function(s){ return s.id !== saveId; });
   updateItem('projects', projId, { saves: saves });
   renderProjectNotebook();
+}
+
+function startProjSaveEdit(projId, saveId) {
+  _projEditSave = { projId: projId, saveId: saveId };
+  renderProjectNotebook();
+  setTimeout(function() {
+    var ta = document.getElementById('pns-edit-' + saveId);
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 50);
+}
+
+function cancelProjSaveEdit() {
+  _projEditSave = null;
+  renderProjectNotebook();
+}
+
+function saveProjSaveNote(projId, saveId) {
+  var proj = (state.projects||[]).find(function(p){ return p.id === projId; });
+  if (!proj) return;
+  var ta = document.getElementById('pns-edit-' + saveId);
+  var newNote = ta ? ta.value.trim() : '';
+  var saves = (proj.saves||[]).map(function(s) {
+    return s.id === saveId ? _merge({}, s, { note: newNote }) : s;
+  });
+  updateItem('projects', projId, { saves: saves });
+  _projEditSave = null;
+  renderProjectNotebook();
+  toast('Note saved');
 }
 
 function restoreProjSave(projId, saveId) {
@@ -25666,6 +25706,9 @@ window._stpProjChange        = _stpProjChange;
 window.renderProjectNotebook = renderProjectNotebook;
 window.toggleProjNb          = toggleProjNb;
 window.deleteProjSave        = deleteProjSave;
+window.startProjSaveEdit     = startProjSaveEdit;
+window.cancelProjSaveEdit    = cancelProjSaveEdit;
+window.saveProjSaveNote      = saveProjSaveNote;
 window.restoreProjSave       = restoreProjSave;
 window.openNewProjectModal   = openNewProjectModal;
 window.openEditProjModal     = openEditProjModal;
