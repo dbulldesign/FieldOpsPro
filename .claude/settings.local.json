@@ -28,7 +28,8 @@
       "Bash(awk -F: '$2 > 4019 && $2 < 4150')",
       "Bash(grep -n \"</div>$\" \"d:/Github Projects/FieldOpsPro/FieldOpsPro/index.html\")",
       "Bash(awk -F: '$2 >= 4010 && $2 <= 4020')",
-      "Bash(awk -F: 'NR>=1 && $2>=4015 && $2<=4020')"
+      "Bash(awk -F: 'NR>=1 && $2>=4015 && $2<=4020')",
+      "Bash(grep -v \"//\\\\|^\\\\s*//\")"
     ]
   }
 }

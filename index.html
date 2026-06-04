@@ -3127,6 +3127,20 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
   .cal-quick-add-btn span:last-child { display: none; }
 }
 
+/* ── SECTION STUDY ──────────────────────────────────────────── */
+.ss-acc-chip {
+  display:inline-flex; align-items:center; gap:5px; padding:5px 10px;
+  border-radius:20px; border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04); color:#4a5e7a;
+  font-size:11px; cursor:pointer; user-select:none; transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-acc-chip:hover { border-color:rgba(79,142,247,0.4); color:#8da0c0; }
+.ss-acc-chip.ss-acc-on {
+  background:rgba(79,142,247,0.12); border-color:rgba(79,142,247,0.5);
+  color:#c8d8f0;
+}
+
 /* ── PROJECT LIST ROWS ──────────────────────────────────────── */
 .proj-list { display:flex; flex-direction:column; gap:0; }
 .proj-row {
@@ -3911,6 +3925,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('beamspread')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><line x1="12" y1="6" x2="12" y2="10"/><line x1="4" y1="20" x2="20" y2="20"/><line x1="12" y1="10" x2="4" y2="20"/><line x1="12" y1="10" x2="20" y2="20"/><line x1="8" y1="20" x2="8" y2="15"/><line x1="16" y1="20" x2="16" y2="15"/></svg>
           Beam Spread Calc
+        </div>
+        <div class="nav-item" role="button" tabindex="0" onclick="switchView('sectionstudy')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="17" x2="22" y2="17"/><line x1="12" y1="5" x2="12" y2="17"/><path d="M12 8 L7 17"/><path d="M12 8 L17 17"/><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/></svg>
+          Section Study
         </div>
         <div class="nav-item" role="button" tabindex="0" onclick="switchView('circuitload')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="4" width="6" height="16" rx="1"/><rect x="16" y="9" width="6" height="6" rx="1"/><line x1="8" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="16" y2="12"/></svg>
@@ -4731,6 +4749,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <div id="bs-root" style="width:100%;max-width:100%;box-sizing:border-box;overflow-y:auto;height:100%"></div>
   </div>
 
+  <!-- ═══ SECTION STUDY ═══ -->
+  <div class="view" id="view-sectionstudy">
+    <div id="ss-root" style="width:100%;height:100%;box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column"></div>
+  </div>
+
   <!-- ═══ CIRCUIT LOAD CALCULATOR ═══ -->
   <div class="view" id="view-circuitload">
     <div id="cl-root" style="width:100%;max-width:100%;box-sizing:border-box;overflow-y:auto;height:100%"></div>
@@ -5107,6 +5130,42 @@ service cloud.firestore {
     <div style="display:flex;gap:8px;padding:0 20px 20px">
       <button class="btn btn-ghost btn-sm" onclick="confirmUpdateSave('')" style="flex:1">Skip Note</button>
       <button class="btn btn-primary btn-sm" onclick="confirmUpdateSave(document.getElementById('uen-note').value)" style="flex:1;background:#f59e0b;border-color:#f59e0b;color:#000">Update Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Section Study: Add Fixture Modal -->
+<div class="modal-overlay" id="modal-ss-fixture" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3>Add Fixture</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-fixture')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Fixture Name *</label>
+        <input type="text" id="ss-af-name" placeholder="e.g. Juno 4" IC Adjust LED" style="width:100%">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lumens</label>
+          <input type="number" id="ss-af-lumens" placeholder="800" min="1" style="width:100%">
+        </div>
+        <div class="form-group">
+          <label>Beam Angle (°)</label>
+          <input type="number" id="ss-af-beam" placeholder="25" min="5" max="90" style="width:100%">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>CBFC at 5 ft <span style="color:#4a5e7a;font-size:11px;font-weight:400">(center beam foot-candles)</span></label>
+        <input type="number" id="ss-af-cbfc" placeholder="e.g. 920" min="1" style="width:100%">
+        <div style="font-size:11px;color:#4a5e7a;margin-top:4px">Found on fixture spec sheet — the foot-candle value measured at the center of beam at 5 feet.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-ss-fixture')" style="flex:1">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="_ssSaveFixture()" style="flex:1">Add Fixture</button>
     </div>
   </div>
 </div>
@@ -7458,6 +7517,7 @@ var viewTitles = {
   lutroncheck: 'Lutron Programming Checklist',
   photometrics: 'Fixture Photometrics',
   beamspread:   'Beam Spread Calculator',
+  sectionstudy: 'Section Study',
   circuitload:  'Circuit Load Calculator',
   luxconvert:   'Lux / FC Converter',
   artnetplan:   'Art-Net / sACN Planner',
@@ -7582,6 +7642,8 @@ function switchView(v) {
     if (typeof _photoRender === 'function') _photoRender();
   }
   if(v==='beamspread')   { if (typeof _bsRender   === 'function') _bsRender(); }
+  if(v==='sectionstudy') { if (typeof _ssRender === 'function') _ssRender(); }
+  else if (typeof _ssStopAnim === 'function') _ssStopAnim();
   if(v==='circuitload')  { if (typeof _clRender   === 'function') _clRender(); }
   if(v==='luxconvert')   { if (typeof _luxRender  === 'function') _luxRender(); }
   if(v==='artnetplan')   { if (typeof _anRender   === 'function') _anRender(); }
@@ -25752,6 +25814,604 @@ registerProjCapture('voltcalc', function() {
   if (typeof _vd !== 'undefined') { Object.assign(_vd, d); if (typeof _vdRender==='function') _vdRender(); }
 }, '⚡');
 
+// ═══════════════════════════════════════════════════════════════
+//  SECTION STUDY MODULE
+// ═══════════════════════════════════════════════════════════════
+
+// ── Fixture Database ─────────────────────────────────────────
+var _SS_FX = [
+  { id:'f1',  name:'4" LED Downlight (800lm)',   lumens:800,  cbfc:920,  beamDeg:25 },
+  { id:'f2',  name:'4" LED Downlight (1200lm)',  lumens:1200, cbfc:1380, beamDeg:25 },
+  { id:'f3',  name:'6" LED Downlight (1100lm)',  lumens:1100, cbfc:460,  beamDeg:40 },
+  { id:'f4',  name:'6" LED Downlight (1600lm)',  lumens:1600, cbfc:670,  beamDeg:40 },
+  { id:'f5',  name:'3" Micro Downlight',          lumens:400,  cbfc:1500, beamDeg:20 },
+  { id:'f6',  name:'PAR38 Spot (10°)',            lumens:900,  cbfc:3200, beamDeg:10 },
+  { id:'f7',  name:'PAR38 Flood (30°)',           lumens:900,  cbfc:560,  beamDeg:30 },
+  { id:'f8',  name:'PAR38 Wide Flood (40°)',      lumens:900,  cbfc:320,  beamDeg:40 },
+  { id:'f9',  name:'AR111 Spot (15°)',            lumens:1000, cbfc:2900, beamDeg:15 },
+  { id:'f10', name:'AR111 Flood (30°)',           lumens:1000, cbfc:680,  beamDeg:30 },
+  { id:'f11', name:'MR16 Spot (10°)',             lumens:500,  cbfc:2800, beamDeg:10 },
+  { id:'f12', name:'MR16 Flood (25°)',            lumens:500,  cbfc:620,  beamDeg:25 },
+  { id:'f13', name:'Pinhole 4" (750lm)',          lumens:750,  cbfc:2100, beamDeg:15 },
+  { id:'f14', name:'Track Spot (15°)',            lumens:700,  cbfc:2200, beamDeg:15 },
+  { id:'f15', name:'Track Flood (35°)',           lumens:900,  cbfc:480,  beamDeg:35 },
+  { id:'f16', name:'5" Open Trim (900lm)',        lumens:900,  cbfc:700,  beamDeg:30 },
+];
+var _SS_FX_USER = (function(){ try{ return JSON.parse(localStorage.getItem('ss_fx')||'[]'); }catch(e){ return []; } })();
+
+// ── Accessories ───────────────────────────────────────────────
+var _SS_ACC = [
+  { id:'hexcell', name:'Hexcell Louver', xmit:0.78, bMult:0.90, icon:'⬡', desc:'Glare control, slightly narrows effective beam' },
+  { id:'spread',  name:'Spread Lens',    xmit:0.88, bMult:1.50, icon:'⊞', desc:'Widens beam, softens edges' },
+  { id:'frost',   name:'Frosted Lens',   xmit:0.82, bMult:1.65, icon:'◻', desc:'Diffused, soft wide spread' },
+  { id:'color',   name:'Color Filter',   xmit:0.55, bMult:1.00, icon:'🎨', desc:'~45% output reduction' },
+  { id:'nd',      name:'ND50 Filter',    xmit:0.50, bMult:1.00, icon:'◑', desc:'50% neutral density' },
+];
+
+// ── Target Objects ────────────────────────────────────────────
+var _SS_OBJ = [
+  { id:'painting',  name:'Painting / Art',      icon:'🖼',  surf:'vertical',   h:5.5, hw:1.2, recFc:[20,50],   note:'IESNA: 20–50 fc for artwork' },
+  { id:'tapestry',  name:'Tapestry / Mural',    icon:'🎨',  surf:'vertical',   h:4.5, hw:2.0, recFc:[15,40],   note:'Large vertical surface' },
+  { id:'sculpture', name:'Sculpture / Object',  icon:'🗿',  surf:'vertical',   h:3.0, hw:1.5, recFc:[30,100],  note:'Accent: 3–5× ambient' },
+  { id:'table',     name:'Dining Table',         icon:'🪑',  surf:'horizontal', h:2.5, hw:2.5, recFc:[15,30],   note:'Typical dining: 20 fc' },
+  { id:'counter',   name:'Counter / Bar',        icon:'🍽',  surf:'horizontal', h:3.0, hw:2.0, recFc:[30,75],   note:'Food prep: 50+ fc' },
+  { id:'desk',      name:'Desk / Work Surface',  icon:'💻',  surf:'horizontal', h:2.5, hw:3.0, recFc:[30,75],   note:'Office task: 50 fc' },
+  { id:'floor',     name:'Floor / Pathway',      icon:'▭',   surf:'horizontal', h:0,   hw:5.0, recFc:[5,20],    note:'Circulation: 5–10 fc' },
+  { id:'person',    name:'Person (Face)',         icon:'👤',  surf:'horizontal', h:5.5, hw:0.5, recFc:[10,30],   note:'Portrait/face lighting' },
+  { id:'retail',    name:'Retail Display',        icon:'📦',  surf:'horizontal', h:4.5, hw:2.0, recFc:[50,150],  note:'Retail: 50–150 fc' },
+  { id:'reading',   name:'Reading Surface',       icon:'📖',  surf:'horizontal', h:2.5, hw:1.0, recFc:[30,75],   note:'Reading: 30–50 fc' },
+];
+
+// ── Module State ──────────────────────────────────────────────
+var _ss = {
+  fxId: 'f1', beamDeg: 25, useCustomBeam: false,
+  acc: [], ceilH: 10, wallDist: 3, objId: 'painting',
+  dragging: false, dragStartCX: 0, dragStartDist: 0, dragScale: 1,
+  animId: null, _phase: 0,
+};
+
+// ── Helpers ───────────────────────────────────────────────────
+function _ssAllFx() { return _SS_FX.concat(_SS_FX_USER); }
+function _ssGetFx() { return _ssAllFx().find(function(f){ return f.id===_ss.fxId; }) || _SS_FX[0]; }
+function _ssEffBeam() {
+  var bd = _ss.useCustomBeam ? _ss.beamDeg : _ssGetFx().beamDeg;
+  _ss.acc.forEach(function(aid){
+    var a=_SS_ACC.find(function(x){return x.id===aid;}); if(a) bd*=a.bMult;
+  });
+  return Math.min(bd, 89);
+}
+function _ssEffXmit() {
+  var x=1; _ss.acc.forEach(function(aid){
+    var a=_SS_ACC.find(function(x){return x.id===aid;}); if(a) x*=a.xmit;
+  }); return x;
+}
+
+// ── Foot-candle Calculation ───────────────────────────────────
+// Uses cosine-power (Lambertian-style) beam model.
+// I(α) = I₀ · cos^n(α),  n chosen so I(halfBeam) = 0.5 · I₀
+// For horizontal surface: E = I(α)·cos(α)/d²  (cos(α)=H/d)
+// For vertical surface:   E = I(α)·sin(α)/d²  (sin(α)=D/d, cos of incidence on wall)
+function _ssCalcFC(D, surfH, surfType) {
+  var fx = _ssGetFx();
+  var beamDeg = _ssEffBeam();
+  var xmit = _ssEffXmit();
+  var halfRad = (beamDeg * Math.PI / 180) / 2;
+  var H = _ss.ceilH - surfH;
+  if (H <= 0.01) return 0;
+  var Dabs = Math.abs(D);
+  var d = Math.sqrt(Dabs*Dabs + H*H);
+  var alpha = Math.atan2(Dabs, H);
+  if (alpha > halfRad * 1.25) return 0;
+  var cosHalf = Math.cos(halfRad);
+  var n = cosHalf < 0.9999 ? Math.log(0.5) / Math.log(cosHalf) : 300;
+  var cosA = Math.cos(Math.min(alpha, halfRad * 0.9999));
+  var angFactor = Math.pow(cosA, n);
+  // Soft edge rolloff past 85% of half-beam
+  if (alpha > halfRad * 0.85) {
+    var t = (alpha - halfRad * 0.85) / (halfRad * 0.40);
+    t = Math.max(0, Math.min(1, t));
+    angFactor *= (1 - t * t);
+  }
+  var I0 = fx.cbfc * 25; // candela: CBFC × 5² (ref dist 5 ft)
+  var cosInc = surfType === 'horizontal' ? H/d : Dabs/d;
+  return (I0 * angFactor * cosInc) / (d * d) * xmit;
+}
+
+// ── UI Builder ────────────────────────────────────────────────
+function _ssRender() {
+  var root = document.getElementById('ss-root');
+  if (!root) return;
+  root.innerHTML = _ssBuildHTML();
+  _ssBindEvents();
+  _ssResizeCanvas();
+  _ssStartAnim();
+}
+
+function _ssBuildHTML() {
+  var allFx = _ssAllFx();
+  var fxOpts = allFx.map(function(f){
+    return '<option value="'+escH(f.id)+'"'+(f.id===_ss.fxId?' selected':'')+'>'+escH(f.name)+'</option>';
+  }).join('');
+  var objOpts = _SS_OBJ.map(function(o){
+    return '<option value="'+o.id+'"'+(o.id===_ss.objId?' selected':'')+'>'+o.icon+' '+escH(o.name)+'</option>';
+  }).join('');
+  var beamOpts = '<option value="fix"'+(!_ss.useCustomBeam?' selected':'')+'>Use Fixture Default</option>'
+    + [5,10,15,20,25,30,35,40,50,60,75].map(function(d){
+        return '<option value="'+d+'"'+(_ss.useCustomBeam&&_ss.beamDeg===d?' selected':'')+'>'+d+'° Custom</option>';
+      }).join('');
+  var accHTML = _SS_ACC.map(function(a){
+    var on = _ss.acc.indexOf(a.id) >= 0;
+    return '<label class="ss-acc-chip'+(on?' ss-acc-on':'')+'" title="'+escH(a.desc)+'">'
+      +'<input type="checkbox" data-acc="'+a.id+'"'+(on?' checked':'')+' style="display:none">'
+      +'<span>'+a.icon+'</span><span>'+escH(a.name)+'</span></label>';
+  }).join('');
+
+  var s = '<div style="display:flex;flex-direction:column;gap:0;height:100%;min-height:0;padding:16px">';
+  // Header
+  s += '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
+    + '<div><div style="font-size:18px;font-weight:700;color:#f0f4ff">Section Study</div>'
+    + '<div style="font-size:12px;color:#4a5e7a;margin-top:2px">Visualize beam patterns &amp; foot-candle levels — drag the fixture to reposition</div></div>'
+    + '<button class="btn btn-ghost btn-sm" onclick="_ssOpenAddFixture()" style="font-size:11px;flex-shrink:0">+ Add Fixture</button>'
+    + '</div>';
+  // Controls grid
+  s += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:12px">';
+  s += _ssCtrl('Fixture', '<select id="ss-fx" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:12px;box-sizing:border-box">'+fxOpts+'</select>');
+  s += _ssCtrl('Illuminate', '<select id="ss-obj" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:12px;box-sizing:border-box">'+objOpts+'</select>');
+  s += _ssCtrl('Beam Override', '<select id="ss-beam" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:12px;box-sizing:border-box">'+beamOpts+'</select>');
+  s += _ssCtrl('Ceiling Height', '<div style="display:flex;align-items:center;gap:6px"><input id="ss-ceil" type="number" min="6" max="30" step="0.5" value="'+_ss.ceilH+'" style="flex:1;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:13px;min-width:0"><span style="font-size:11px;color:#4a5e7a;flex-shrink:0">ft</span></div>');
+  s += _ssCtrl('Distance to Wall', '<div style="display:flex;align-items:center;gap:6px"><input id="ss-wdist" type="number" min="0.5" max="20" step="0.5" value="'+_ss.wallDist+'" style="flex:1;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:13px;min-width:0"><span style="font-size:11px;color:#4a5e7a;flex-shrink:0">ft</span></div>');
+  s += '</div>';
+  // Accessories
+  s += '<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px">Accessories</div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap">'+accHTML+'</div></div>';
+  // Canvas
+  s += '<div style="flex:1;min-height:260px;position:relative;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">'
+    + '<canvas id="ss-canvas" style="width:100%;height:100%;display:block;cursor:default"></canvas>'
+    + '</div>';
+  // Results
+  s += '<div id="ss-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px"></div>';
+  s += '</div>';
+  return s;
+}
+
+function _ssCtrl(label, inner) {
+  return '<div><div style="font-size:10px;font-weight:700;color:#4a5e7a;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">'+label+'</div>'+inner+'</div>';
+}
+
+function _ssBindEvents() {
+  function bind(id, fn) { var el=document.getElementById(id); if(el) el.oninput=el.onchange=fn; }
+  bind('ss-fx', function(){ _ss.fxId=this.value; if(!_ss.useCustomBeam) _ss.beamDeg=_ssGetFx().beamDeg; _ssUpdate(); });
+  bind('ss-obj', function(){ _ss.objId=this.value; _ssUpdate(); });
+  bind('ss-beam', function(){
+    if(this.value==='fix'){ _ss.useCustomBeam=false; }
+    else { _ss.useCustomBeam=true; _ss.beamDeg=parseInt(this.value); }
+    _ssUpdate();
+  });
+  bind('ss-ceil', function(){ var v=parseFloat(this.value); if(!isNaN(v)&&v>=4&&v<=40){_ss.ceilH=v;_ssUpdate();} });
+  bind('ss-wdist', function(){ var v=parseFloat(this.value); if(!isNaN(v)&&v>=0.5&&v<=20){_ss.wallDist=v;_ssUpdate();} });
+  document.querySelectorAll('[data-acc]').forEach(function(inp){
+    inp.onchange = function(){
+      var aid=this.dataset.acc, idx=_ss.acc.indexOf(aid);
+      if(this.checked && idx<0) _ss.acc.push(aid);
+      else if(!this.checked && idx>=0) _ss.acc.splice(idx,1);
+      this.parentNode.classList.toggle('ss-acc-on', this.checked);
+      _ssUpdate();
+    };
+  });
+  var canvas=document.getElementById('ss-canvas');
+  if(!canvas) return;
+  if(window.ResizeObserver){
+    var ro=new ResizeObserver(function(){ _ssResizeCanvas(); });
+    ro.observe(canvas);
+  }
+  canvas.addEventListener('mousedown', _ssMD);
+  canvas.addEventListener('mousemove', _ssMV);
+  canvas.addEventListener('mouseup',   _ssMU);
+  canvas.addEventListener('mouseleave',_ssMU);
+  canvas.addEventListener('touchstart',_ssTD,{passive:false});
+  canvas.addEventListener('touchmove', _ssTM,{passive:false});
+  canvas.addEventListener('touchend',  _ssMU);
+}
+
+function _ssResizeCanvas() {
+  var c=document.getElementById('ss-canvas'); if(!c) return;
+  var r=c.getBoundingClientRect();
+  if(r.width>0&&r.height>0){
+    var dpr=window.devicePixelRatio||1;
+    c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+  }
+}
+
+function _ssUpdate() { _ssUpdateResults(); }
+
+// ── Animation Loop ────────────────────────────────────────────
+function _ssStartAnim() {
+  if(_ss.animId) return;
+  function frame(){
+    if(currentView!=='sectionstudy'){ _ss.animId=null; return; }
+    _ss._phase=(Date.now()/1000);
+    _ssDrawCanvas();
+    _ss.animId=requestAnimationFrame(frame);
+  }
+  _ss.animId=requestAnimationFrame(frame);
+}
+function _ssStopAnim(){ if(_ss.animId){cancelAnimationFrame(_ss.animId);_ss.animId=null;} }
+
+// ── Canvas Drawing ────────────────────────────────────────────
+function _ssDrawCanvas() {
+  var canvas=document.getElementById('ss-canvas'); if(!canvas||!canvas.getContext) return;
+  var ctx=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  var W=canvas.width, H=canvas.height;
+  if(W<10||H<10) return;
+  var w=W/dpr, h=H/dpr;
+  ctx.save(); ctx.scale(dpr,dpr);
+
+  var ML=54, MR=28, MT=42, MB=38;
+  var dw=w-ML-MR, dh=h-MT-MB;
+  var cH=_ss.ceilH, wd=_ss.wallDist;
+  var viewRange=Math.max(wd+8, cH*1.15, 14);
+  var sx=dw/viewRange, sy=dh/cH;
+
+  // Coordinate converters
+  // physX=0 → wall (RIGHT); physX=viewRange → far left
+  function cx(px){ return ML+(viewRange-px)*sx; }
+  function cy(py){ return MT+(cH-py)*sy; }
+  function fw(v){ return v*sx; }
+  function fh(v){ return v*sy; }
+
+  var fixCX=cx(wd), fixCY=cy(cH);
+  var beamDeg=_ssEffBeam();
+  var halfRad=(beamDeg*Math.PI/180)/2;
+
+  // ── Background ──
+  var bgGrad=ctx.createLinearGradient(0,MT,0,MT+dh);
+  bgGrad.addColorStop(0,'#0e1824'); bgGrad.addColorStop(1,'#080e18');
+  ctx.fillStyle=bgGrad; ctx.fillRect(0,0,w,h);
+
+  // ── Grid ──
+  ctx.strokeStyle='rgba(255,255,255,0.035)'; ctx.lineWidth=1;
+  for(var gx=0;gx<=Math.ceil(viewRange);gx++){
+    var gcx=cx(gx); if(gcx>=ML&&gcx<=ML+dw){
+      ctx.beginPath();ctx.moveTo(gcx,MT);ctx.lineTo(gcx,MT+dh);ctx.stroke();
+    }
+  }
+  for(var gy=0;gy<=Math.ceil(cH);gy++){
+    var gcy=cy(gy);
+    ctx.beginPath();ctx.moveTo(ML,gcy);ctx.lineTo(ML+dw,gcy);ctx.stroke();
+  }
+
+  // ── Beam cone geometry ──
+  // Wall-side edge: toward wall (physX decreasing)
+  var wallDepth=wd/Math.tan(halfRad); // depth before hitting wall
+  var wallSidePX, wallSidePY;
+  if(wallDepth<=cH){
+    wallSidePX=0; wallSidePY=cH-wallDepth; // hits wall above floor
+  } else {
+    wallSidePX=wd-Math.tan(halfRad)*cH; wallSidePY=0; // hits floor
+  }
+  // Open-room edge: away from wall
+  var openSidePX=wd+Math.tan(halfRad)*cH, openSidePY=0;
+  var wallSideCX=cx(wallSidePX), wallSideCY=cy(wallSidePY);
+  var openSideCX=cx(openSidePX), openSideCY=cy(openSidePY);
+
+  // Animated pulse on beam brightness
+  var pulse=0.85+0.15*Math.sin(_ss._phase*1.4);
+
+  // Beam fill gradient (along beam axis)
+  var beamLen=Math.sqrt(Math.pow(cx(wd/2)-fixCX,2)+Math.pow(cy(cH/2)-fixCY,2));
+  var bGrad=ctx.createLinearGradient(fixCX,fixCY,fixCX,cy(0));
+  bGrad.addColorStop(0,'rgba(255,248,200,0)');
+  bGrad.addColorStop(0.08,'rgba(255,245,190,'+( 0.22*pulse)+')');
+  bGrad.addColorStop(0.45,'rgba(255,235,160,'+(0.16*pulse)+')');
+  bGrad.addColorStop(1,'rgba(255,220,100,'+(0.05*pulse)+')');
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(fixCX,fixCY);
+  ctx.lineTo(wallSideCX,wallSideCY);
+  if(wallDepth<=cH){ ctx.lineTo(cx(0),cy(0)); } // trace wall down to corner
+  ctx.lineTo(openSideCX,openSideCY);
+  ctx.closePath();
+  ctx.fillStyle=bGrad; ctx.fill();
+
+  // Beam edge lines
+  ctx.strokeStyle='rgba(255,245,180,'+(0.3*pulse)+')';
+  ctx.lineWidth=1; ctx.setLineDash([4,5]);
+  ctx.beginPath(); ctx.moveTo(fixCX,fixCY); ctx.lineTo(wallSideCX,wallSideCY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fixCX,fixCY); ctx.lineTo(openSideCX,openSideCY); ctx.stroke();
+  ctx.setLineDash([]); ctx.restore();
+
+  // ── Target object & illuminance ──
+  var obj=_SS_OBJ.find(function(o){return o.id===_ss.objId;})||_SS_OBJ[0];
+  _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse);
+
+  // ── Room structure (drawn on top of beam) ──
+  // Floor
+  ctx.strokeStyle='rgba(120,150,190,0.65)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(ML,cy(0)); ctx.lineTo(ML+dw,cy(0)); ctx.stroke();
+  // Ceiling
+  ctx.strokeStyle='rgba(100,130,170,0.4)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(ML,cy(cH)); ctx.lineTo(ML+dw,cy(cH)); ctx.stroke();
+  // Wall
+  ctx.strokeStyle='rgba(140,170,210,0.75)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx(0),cy(0)); ctx.lineTo(cx(0),cy(cH)); ctx.stroke();
+  // Wall hash marks (indicates solid wall)
+  ctx.strokeStyle='rgba(140,170,210,0.25)'; ctx.lineWidth=1;
+  for(var wi=0;wi<6;wi++){
+    var wy=cy(cH*wi/6+0.2);
+    ctx.beginPath(); ctx.moveTo(cx(0),wy); ctx.lineTo(cx(0)+10,wy+10); ctx.stroke();
+  }
+
+  // ── Fixture ──
+  // Ceiling recess ring
+  ctx.fillStyle='#111e35';
+  ctx.beginPath(); ctx.arc(fixCX,fixCY,10,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(180,200,230,0.5)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(fixCX,fixCY,10,0,Math.PI*2); ctx.stroke();
+  // Glow halo (animated)
+  var halo=ctx.createRadialGradient(fixCX,fixCY,0,fixCX,fixCY,30);
+  halo.addColorStop(0,'rgba(255,248,180,'+(0.6*pulse)+')');
+  halo.addColorStop(0.35,'rgba(255,240,140,'+(0.25*pulse)+')');
+  halo.addColorStop(1,'rgba(255,220,80,0)');
+  ctx.beginPath(); ctx.arc(fixCX,fixCY,30,0,Math.PI*2);
+  ctx.fillStyle=halo; ctx.fill();
+  // Lens
+  ctx.beginPath(); ctx.arc(fixCX,fixCY,5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,250,210,'+(0.85*pulse)+')'; ctx.fill();
+
+  // ── Dimension annotations ──
+  _ssDimV(ctx,ML-14,cy(0),cy(cH),cH+'\'',ML-38);
+  _ssDimH(ctx,cx(0),fixCX,MT-16,wd+'\'',MT-6);
+
+  // Room labels
+  ctx.fillStyle='rgba(100,130,170,0.6)'; ctx.font='bold 9px system-ui,sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('CEILING',ML+6,cy(cH)-5);
+  ctx.fillText('FLOOR',ML+6,cy(0)-5);
+  ctx.save(); ctx.translate(cx(0)+14,cy(cH/2)); ctx.rotate(Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('WALL',0,0); ctx.restore();
+
+  // Beam angle label
+  ctx.fillStyle='rgba(255,240,160,'+(0.55*pulse)+')';
+  ctx.font='bold 10px system-ui,sans-serif'; ctx.textAlign='center';
+  ctx.fillText(Math.round(beamDeg)+'° beam',fixCX,fixCY+24);
+
+  ctx.restore();
+}
+
+function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse) {
+  if(obj.surf==='vertical'){
+    // Vertical object on wall
+    var topH=obj.h+obj.hw, botH=Math.max(0,obj.h-obj.hw);
+    var objCX=cx(0); var topCY=cy(topH), botCY=cy(botH);
+    // Illuminance gradient down the face
+    var grad=ctx.createLinearGradient(0,topCY,0,botCY);
+    var steps=12;
+    for(var i=0;i<=steps;i++){
+      var t=i/steps;
+      var pH=topH+(botH-topH)*t;
+      var fc=_ssCalcFC(wd,pH,'vertical');
+      grad.addColorStop(t,_fcToRGBA(fc,0.65*pulse));
+    }
+    ctx.fillStyle=grad;
+    ctx.fillRect(objCX-10,topCY,10,botCY-topCY);
+    // Object outline
+    ctx.strokeStyle='rgba(200,216,240,0.7)'; ctx.lineWidth=2;
+    ctx.strokeRect(objCX-10,topCY,10,botCY-topCY);
+    ctx.fillStyle='rgba(180,195,220,0.06)';
+    ctx.fillRect(objCX-10,topCY,10,botCY-topCY);
+    // Object label
+    ctx.fillStyle='rgba(200,216,240,0.8)'; ctx.font='bold 10px system-ui,sans-serif';
+    ctx.textAlign='right';
+    ctx.fillText(obj.icon+' '+obj.name,objCX-14,cy(obj.h)+4);
+    // FC readout at object center
+    var fcC=_ssCalcFC(wd,obj.h,'vertical');
+    if(fcC>0){
+      ctx.fillStyle='rgba(255,240,160,0.85)'; ctx.font='bold 11px system-ui,sans-serif';
+      ctx.textAlign='right';
+      ctx.fillText(Math.round(fcC)+' fc',objCX-14,cy(obj.h)+18);
+    }
+  } else {
+    // Horizontal surface
+    var surfH=obj.h;
+    var surfCY=cy(surfH);
+    var beamCX=cx(wd); // beam center directly below fixture
+    var beamR=fw(Math.tan(halfRad)*(cH-surfH));
+    // Radial gradient halo on surface
+    var fcCtr=_ssCalcFC(0,surfH,'horizontal');
+    if(fcCtr>0 && beamR>2){
+      var rGrad=ctx.createRadialGradient(beamCX,surfCY,0,beamCX,surfCY,beamR);
+      rGrad.addColorStop(0,_fcToRGBA(fcCtr,0.7*pulse));
+      rGrad.addColorStop(0.45,_fcToRGBA(fcCtr*0.5,0.5*pulse));
+      rGrad.addColorStop(0.8,_fcToRGBA(fcCtr*0.1,0.25*pulse));
+      rGrad.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.save();
+      ctx.beginPath(); ctx.rect(54,surfCY-6,cx(0)-54,12);
+      ctx.clip();
+      ctx.beginPath(); ctx.arc(beamCX,surfCY,beamR,0,Math.PI*2);
+      ctx.fillStyle=rGrad; ctx.fill();
+      ctx.restore();
+    }
+    // Dashed surface line
+    ctx.strokeStyle='rgba(160,185,215,0.7)'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(54,surfCY); ctx.lineTo(cx(0),surfCY); ctx.stroke();
+    ctx.setLineDash([]);
+    // Object label
+    ctx.fillStyle='rgba(200,216,240,0.75)'; ctx.font='bold 10px system-ui,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(obj.icon+' '+obj.name+' ('+surfH+'\')',58,surfCY-8);
+    // FC at center
+    if(fcCtr>0){
+      ctx.fillStyle='rgba(255,240,160,0.9)'; ctx.font='bold 11px system-ui,sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(Math.round(fcCtr)+' fc',beamCX,surfCY-18);
+      // Beam diameter annotation
+      if(beamR>20){
+        ctx.strokeStyle='rgba(79,142,247,0.5)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(beamCX-beamR,surfCY+6); ctx.lineTo(beamCX+beamR,surfCY+6); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(79,142,247,0.7)'; ctx.font='9px system-ui,sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('↔ '+Math.round(Math.tan(halfRad)*(cH-surfH)*2*10)/10+'\'',beamCX,surfCY+18);
+      }
+    }
+  }
+}
+
+function _fcToRGBA(fc,alpha) {
+  if(fc<=0) return 'rgba(0,0,0,0)';
+  var i=Math.min(1,fc/80);
+  var r=Math.min(255,Math.round(160+95*i));
+  var g=Math.min(255,Math.round(110+130*i));
+  var b=Math.min(255,Math.round(40+160*i));
+  var a=Math.min(alpha,(alpha*(fc/15)));
+  return 'rgba('+r+','+g+','+b+','+Math.max(0,Math.min(alpha,a)).toFixed(2)+')';
+}
+
+function _ssDimV(ctx,x,y1,y2,label,lx) {
+  ctx.strokeStyle='rgba(79,142,247,0.45)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke();
+  ctx.strokeStyle='rgba(79,142,247,0.3)';
+  ctx.beginPath(); ctx.moveTo(x-3,y1); ctx.lineTo(x+3,y1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-3,y2); ctx.lineTo(x+3,y2); ctx.stroke();
+  ctx.save(); ctx.translate(lx,(y1+y2)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle='#4f8ef7'; ctx.font='bold 10px system-ui,sans-serif';
+  ctx.textAlign='center'; ctx.fillText(label,0,0); ctx.restore();
+}
+
+function _ssDimH(ctx,x1,x2,y,label,ly) {
+  ctx.strokeStyle='rgba(79,142,247,0.45)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+  ctx.strokeStyle='rgba(79,142,247,0.3)';
+  ctx.beginPath(); ctx.moveTo(x1,y-3); ctx.lineTo(x1,y+3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y-3); ctx.lineTo(x2,y+3); ctx.stroke();
+  ctx.fillStyle='#4f8ef7'; ctx.font='bold 10px system-ui,sans-serif';
+  ctx.textAlign='center'; ctx.fillText(label,(x1+x2)/2,ly);
+}
+
+// ── Canvas Interaction ────────────────────────────────────────
+function _ssCanvasCoords(e) {
+  var c=document.getElementById('ss-canvas'); if(!c) return null;
+  var r=c.getBoundingClientRect();
+  var cx2=e.touches?e.touches[0].clientX:e.clientX;
+  var cy2=e.touches?e.touches[0].clientY:e.clientY;
+  return {x:cx2-r.left, y:cy2-r.top, rect:r};
+}
+
+function _ssGetScale() {
+  var c=document.getElementById('ss-canvas'); if(!c) return {sx:1};
+  var dpr=window.devicePixelRatio||1;
+  var w=c.width/dpr, ML=54, MR=28, dw=w-ML-MR;
+  var viewRange=Math.max(_ss.wallDist+8,_ss.ceilH*1.15,14);
+  return {sx:dw/viewRange, ML:ML, viewRange:viewRange};
+}
+
+function _ssMD(e) {
+  var p=_ssCanvasCoords(e); if(!p) return;
+  var sc=_ssGetScale();
+  var MT=42, fixCX=sc.ML+(sc.viewRange-_ss.wallDist)*sc.sx;
+  var fixCY=MT;
+  var dist=Math.sqrt((p.x-fixCX)*(p.x-fixCX)+(p.y-fixCY)*(p.y-fixCY));
+  if(dist<22){
+    _ss.dragging=true;
+    _ss.dragStartCX=p.x; _ss.dragStartDist=_ss.wallDist; _ss.dragScale=sc.sx;
+    var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='col-resize';
+  }
+}
+
+function _ssMV(e) {
+  var p=_ssCanvasCoords(e); if(!p) return;
+  if(!_ss.dragging){
+    // Cursor hint near fixture
+    var sc=_ssGetScale(), MT=42;
+    var fixCX=sc.ML+(sc.viewRange-_ss.wallDist)*sc.sx;
+    var dist=Math.sqrt((p.x-fixCX)*(p.x-fixCX)+(p.y-MT)*(p.y-MT));
+    var c=document.getElementById('ss-canvas');
+    if(c) c.style.cursor=dist<22?'col-resize':'default';
+    return;
+  }
+  e.preventDefault();
+  // dx in pixels: positive = moved right toward wall = decrease wallDist
+  var dxPx=p.x-_ss.dragStartCX;
+  var dxFt=dxPx/_ss.dragScale; // right = toward wall = reduce wallDist
+  var nd=Math.max(0.5,Math.min(20,_ss.dragStartDist-dxFt));
+  _ss.wallDist=Math.round(nd*4)/4; // snap to 0.25ft
+  var wdEl=document.getElementById('ss-wdist'); if(wdEl) wdEl.value=_ss.wallDist;
+  _ssUpdateResults();
+}
+
+function _ssMU() {
+  _ss.dragging=false;
+  var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='default';
+}
+
+function _ssTD(e){ e.preventDefault(); _ssMD(e); }
+function _ssTM(e){ e.preventDefault(); _ssMV(e); }
+
+// ── Results Panel ─────────────────────────────────────────────
+function _ssUpdateResults() {
+  var el=document.getElementById('ss-results'); if(!el) return;
+  var obj=_SS_OBJ.find(function(o){return o.id===_ss.objId;})||_SS_OBJ[0];
+  var beamDeg=_ssEffBeam();
+  var halfRad=(beamDeg*Math.PI/180)/2;
+  var H=_ss.ceilH-obj.h;
+  var D=obj.surf==='vertical'?_ss.wallDist:0;
+  var fcC=_ssCalcFC(D,obj.h,obj.surf);
+  var xmitPct=Math.round(_ssEffXmit()*100);
+  var beamW=obj.surf==='horizontal'
+    ? 2*Math.tan(halfRad)*H
+    : 2*Math.tan(halfRad)*Math.sqrt(D*D+H*H);
+  var dist=obj.surf==='vertical'?Math.sqrt(D*D+H*H):H;
+  var lo=obj.recFc[0], hi=obj.recFc[1];
+  var qlbl,qclr;
+  if(fcC<lo*0.4){qlbl='Too Dim';qclr='#ef4444';}
+  else if(fcC<lo){qlbl='Below Rec.';qclr='#f59e0b';}
+  else if(fcC<=hi){qlbl='Good';qclr='#10b981';}
+  else{qlbl='Very Bright';qclr='#60a5fa';}
+  var fcStr=fcC>0?Math.round(fcC)+' fc':'< 1 fc';
+
+  el.innerHTML=
+    _ssCard('Center fc',fcStr,qlbl,qclr)
+    +_ssCard('Beam Width',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','diameter at surface','#8da0c0')
+    +_ssCard('Distance',Math.round(dist*10)/10+' ft','fixture to surface','#8da0c0')
+    +_ssCard('Output',xmitPct+'%',xmitPct<100?'after accessories':'no accessories',xmitPct>80?'#10b981':'#f59e0b')
+    +_ssCard('Recommended',lo+'–'+hi+' fc',obj.note,'#4f8ef7');
+}
+
+function _ssCard(lbl,val,sub,color) {
+  return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px">'
+    +'<div style="font-size:10px;color:#4a5e7a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">'+escH(lbl)+'</div>'
+    +'<div style="font-size:18px;font-weight:700;color:'+color+';line-height:1.1">'+val+'</div>'
+    +'<div style="font-size:10px;color:#64748b;margin-top:3px">'+escH(sub)+'</div>'
+    +'</div>';
+}
+
+// ── Fixture Adder ─────────────────────────────────────────────
+function _ssOpenAddFixture() {
+  ['ss-af-name','ss-af-lumens','ss-af-cbfc','ss-af-beam'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var beamEl=document.getElementById('ss-af-beam'); if(beamEl) beamEl.value='25';
+  openModal('modal-ss-fixture');
+}
+
+function _ssSaveFixture() {
+  var name=(document.getElementById('ss-af-name')||{}).value||'';
+  var lumens=parseInt((document.getElementById('ss-af-lumens')||{}).value)||0;
+  var cbfc=parseInt((document.getElementById('ss-af-cbfc')||{}).value)||0;
+  var beam=parseFloat((document.getElementById('ss-af-beam')||{}).value)||25;
+  if(!name.trim()){ toast('Enter a fixture name'); return; }
+  if(cbfc<=0){ toast('Enter the CBFC value'); return; }
+  var id='uf'+Date.now();
+  _SS_FX_USER.push({id:id,name:name.trim(),lumens:lumens,cbfc:cbfc,beamDeg:beam});
+  try{ localStorage.setItem('ss_fx',JSON.stringify(_SS_FX_USER)); }catch(e){}
+  _ss.fxId=id;
+  closeModal('modal-ss-fixture');
+  toast('Fixture added');
+  _ssRender();
+}
+
 // Beam Spread Calculator
 registerProjCapture('beamspread', function() {
   if (typeof _bs === 'undefined') return { data: {}, preview: '' };
@@ -25815,6 +26475,22 @@ registerProjCapture('ohmslaw', function() {
 }, function(d) {
   if (typeof _ohm !== 'undefined') { Object.assign(_ohm, d); if (typeof _ohmRender==='function') _ohmRender(); }
 }, '⚡');
+
+// Section Study proj capture
+registerProjCapture('sectionstudy', function() {
+  return {
+    data: JSON.parse(JSON.stringify({fxId:_ss.fxId,beamDeg:_ss.beamDeg,useCustomBeam:_ss.useCustomBeam,acc:_ss.acc,ceilH:_ss.ceilH,wallDist:_ss.wallDist,objId:_ss.objId})),
+    preview: _ssGetFx().name+' · '+_ss.ceilH+'\'H · '+Math.round(_ssEffBeam())+'° · '+(_SS_OBJ.find(function(o){return o.id===_ss.objId;})||{name:'?'}).name
+  };
+}, function(d) {
+  Object.assign(_ss, d);
+  if(typeof _ssRender==='function') _ssRender();
+}, '🔦');
+
+window._ssRender            = _ssRender;
+window._ssSaveFixture       = _ssSaveFixture;
+window._ssOpenAddFixture    = _ssOpenAddFixture;
+window._ssStopAnim          = _ssStopAnim;
 
 window.openSaveToProject     = openSaveToProject;
 window.execSaveToProject     = execSaveToProject;
