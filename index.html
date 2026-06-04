@@ -25553,6 +25553,8 @@ var _projExpandedId = null;
 var _projEditSave = null; // { projId, saveId } when a save entry is in edit mode
 var _activeRestoredSave = null; // { projId, saveId, view, projName, viewTitle } when editing a restored save
 var _pendingUpdateCapture = null; // captured module state waiting for note confirmation
+// Section Study draw state — shared between draw and mouse handlers
+var _ssDS = { sc:1, ML:58, MT:50, xOff:0, yOff:0, viewRange:12, fixCX:0, fixCY:50 };
 
 function renderProjectNotebook() {
   var el = document.getElementById('proj-notebook-list');
@@ -25977,11 +25979,8 @@ function _ssRender() {
   if (!root) return;
   root.innerHTML = _ssBuildHTML();
   _ssBindEvents();
-  // Defer canvas setup until after browser layout so getBoundingClientRect is valid
-  requestAnimationFrame(function() {
-    _ssResizeCanvas();
-    _ssStartAnim();
-  });
+  _ssResizeCanvas();   // canvas has explicit CSS height so this works immediately
+  _ssStartAnim();
 }
 
 function _ssBuildHTML() {
@@ -26008,7 +26007,7 @@ function _ssBuildHTML() {
   var SEL = INP+';cursor:pointer';
   var SLR = 'width:100%;accent-color:#4f8ef7;cursor:pointer;margin-top:2px';
 
-  var s = '<div style="display:flex;flex-direction:column;gap:0;padding:16px 16px 24px">';
+  var s = '<div style="padding:16px 16px 24px">';
   // Header
   s += '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
     + '<div><div style="font-size:20px;font-weight:700;color:#f0f4ff">Section Study</div>'
@@ -26076,11 +26075,10 @@ function _ssBuildHTML() {
     + '<div style="display:flex;gap:6px;flex-wrap:wrap">'+accHTML+'</div>'
     + accDetailHTML + '</div>';
 
-  // View mode toggle + canvas
+  // View mode toolbar
   var vmOn  = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #4f8ef7;background:#4f8ef7;color:#fff;transition:all 0.15s';
   var vmOff = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0;transition:all 0.15s';
-  s += '<div style="height:clamp(280px,42vh,480px);display:flex;flex-direction:column;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">';
-  s += '<div style="display:flex;gap:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;align-items:center">';
+  s += '<div style="display:flex;gap:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-bottom:none;border-radius:12px 12px 0 0;flex-wrap:wrap;align-items:center">';
   s += '<button id="ss-vm-section" style="'+(_ss.viewMode==='section'?vmOn:vmOff)+'" onclick="_ss.viewMode=\'section\';_ssUpdateViewBtns();_ssUpdate()">Section</button>';
   s += '<button id="ss-vm-plan"    style="'+(_ss.viewMode==='plan'?vmOn:vmOff)+'"    onclick="_ss.viewMode=\'plan\';_ssUpdateViewBtns();_ssUpdate()">Plan View</button>';
   s += '<button id="ss-vm-3d"      style="'+(_ss.viewMode==='3d'?vmOn:vmOff)+'"      onclick="_ss.viewMode=\'3d\';_ssUpdateViewBtns();_ssUpdate()">3D View</button>';
@@ -26088,8 +26086,8 @@ function _ssBuildHTML() {
   s += '<input id="ss-roomw" type="number" min="8" max="40" step="1" value="'+(_ss.roomWidth||16)+'" style="width:52px;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 8px;color:#f0f4ff;font-size:12px;text-align:center">';
   s += '<span style="font-size:11px;color:#64748b">ft</span></div>';
   s += '</div>';
-  s += '<div style="flex:1;position:relative"><canvas id="ss-canvas" style="width:100%;height:100%;display:block;cursor:default"></canvas></div>';
-  s += '</div>';
+  // Canvas — fixed height block element; no wrapper flex needed
+  s += '<canvas id="ss-canvas" style="width:100%;height:360px;display:block;cursor:default;border:1px solid rgba(255,255,255,0.07);border-radius:0 0 12px 12px;margin-bottom:16px"></canvas>';
 
   // Results
   s += '<div id="ss-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:14px;align-items:start"></div>';
@@ -26199,13 +26197,11 @@ function _ssBindEvents() {
 function _ssResizeCanvas() {
   var c=document.getElementById('ss-canvas'); if(!c) return;
   var r=c.getBoundingClientRect();
-  if(r.width>10&&r.height>10){
-    var dpr=window.devicePixelRatio||1;
-    c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
-  } else {
-    // Layout not complete yet — retry next frame
-    requestAnimationFrame(_ssResizeCanvas);
-  }
+  var dpr=window.devicePixelRatio||1;
+  // Use CSS-measured size if available, otherwise fallback to offsetWidth/360
+  var cw=r.width>10?r.width:c.offsetWidth||600;
+  var ch=r.height>10?r.height:360;
+  c.width=Math.round(cw*dpr); c.height=Math.round(ch*dpr);
 }
 
 function _ssUpdate() { _ssUpdateViewBtns(); _ssUpdateResults(); }
@@ -26286,6 +26282,9 @@ function _ssDrawCanvas() {
   function fh(v){ return v*sc; }
 
   var fixCX=cx(wd), fixCY=cy(cH);
+  // Save draw state for mouse event handlers
+  _ssDS.sc=sc; _ssDS.ML=ML; _ssDS.MT=MT; _ssDS.xOff=xOff; _ssDS.yOff=yOff;
+  _ssDS.viewRange=viewRange; _ssDS.fixCX=fixCX; _ssDS.fixCY=fixCY;
   var beamDeg=_ssEffBeam();
   var halfRad=(beamDeg*Math.PI/180)/2;
 
@@ -26866,23 +26865,13 @@ function _ssCanvasCoords(e) {
   return {x:cx2-r.left, y:cy2-r.top, rect:r};
 }
 
-function _ssGetScale() {
-  var c=document.getElementById('ss-canvas'); if(!c) return {sx:1};
-  var dpr=window.devicePixelRatio||1;
-  var w=c.width/dpr, ML=54, MR=28, dw=w-ML-MR;
-  var viewRange=Math.max(_ss.wallDist+8,_ss.ceilH*1.15,14);
-  return {sx:dw/viewRange, ML:ML, viewRange:viewRange};
-}
-
 function _ssMD(e) {
+  if(_ss.viewMode!=='section') return; // only drag in section view
   var p=_ssCanvasCoords(e); if(!p) return;
-  var sc=_ssGetScale();
-  var MT=42, fixCX=sc.ML+(sc.viewRange-_ss.wallDist)*sc.sx;
-  var fixCY=MT;
-  var dist=Math.sqrt((p.x-fixCX)*(p.x-fixCX)+(p.y-fixCY)*(p.y-fixCY));
-  if(dist<22){
+  var dist=Math.sqrt((p.x-_ssDS.fixCX)*(p.x-_ssDS.fixCX)+(p.y-_ssDS.fixCY)*(p.y-_ssDS.fixCY));
+  if(dist<24){
     _ss.dragging=true;
-    _ss.dragStartCX=p.x; _ss.dragStartDist=_ss.wallDist; _ss.dragScale=sc.sx;
+    _ss.dragStartCX=p.x; _ss.dragStartDist=_ss.wallDist; _ss.dragScale=_ssDS.sc;
     var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='col-resize';
   }
 }
@@ -26890,20 +26879,18 @@ function _ssMD(e) {
 function _ssMV(e) {
   var p=_ssCanvasCoords(e); if(!p) return;
   if(!_ss.dragging){
-    // Cursor hint near fixture
-    var sc=_ssGetScale(), MT=42;
-    var fixCX=sc.ML+(sc.viewRange-_ss.wallDist)*sc.sx;
-    var dist=Math.sqrt((p.x-fixCX)*(p.x-fixCX)+(p.y-MT)*(p.y-MT));
-    var c=document.getElementById('ss-canvas');
-    if(c) c.style.cursor=dist<22?'col-resize':'default';
+    if(_ss.viewMode==='section'){
+      var dist=Math.sqrt((p.x-_ssDS.fixCX)*(p.x-_ssDS.fixCX)+(p.y-_ssDS.fixCY)*(p.y-_ssDS.fixCY));
+      var c=document.getElementById('ss-canvas');
+      if(c) c.style.cursor=dist<24?'col-resize':'default';
+    }
     return;
   }
   e.preventDefault();
-  // dx in pixels: positive = moved right toward wall = decrease wallDist
   var dxPx=p.x-_ss.dragStartCX;
-  var dxFt=dxPx/_ss.dragScale; // right = toward wall = reduce wallDist
+  var dxFt=dxPx/(_ss.dragScale||1);
   var nd=Math.max(0.5,Math.min(20,_ss.dragStartDist-dxFt));
-  _ss.wallDist=Math.round(nd*4)/4; // snap to 0.25ft
+  _ss.wallDist=Math.round(nd*4)/4;
   var wdEl=document.getElementById('ss-wdist'); if(wdEl) wdEl.value=_ss.wallDist;
   _ssUpdateResults();
 }
