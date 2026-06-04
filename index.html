@@ -4751,7 +4751,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
   <!-- ═══ SECTION STUDY ═══ -->
   <div class="view" id="view-sectionstudy">
-    <div id="ss-root" style="width:100%;height:100%;box-sizing:border-box;overflow-y:auto;display:flex;flex-direction:column"></div>
+    <div id="ss-root" style="width:100%;box-sizing:border-box"></div>
   </div>
 
   <!-- ═══ CIRCUIT LOAD CALCULATOR ═══ -->
@@ -5157,10 +5157,17 @@ service cloud.firestore {
           <input type="number" id="ss-af-beam" placeholder="25" min="5" max="90" style="width:100%">
         </div>
       </div>
-      <div class="form-group">
-        <label>CBFC at 5 ft <span style="color:#4a5e7a;font-size:11px;font-weight:400">(center beam foot-candles)</span></label>
-        <input type="number" id="ss-af-cbfc" placeholder="e.g. 920" min="1" style="width:100%">
-        <div style="font-size:11px;color:#4a5e7a;margin-top:4px">Found on fixture spec sheet — the foot-candle value measured at the center of beam at 5 feet.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CBFC at 5 ft <span style="color:#4a5e7a;font-size:11px;font-weight:400">(center beam fc)</span></label>
+          <input type="number" id="ss-af-cbfc" placeholder="e.g. 920" min="1" style="width:100%">
+          <div style="font-size:11px;color:#4a5e7a;margin-top:4px">From spec sheet — fc at beam center at 5'.</div>
+        </div>
+        <div class="form-group">
+          <label>Max Tilt Angle (°) <span style="color:#4a5e7a;font-size:11px;font-weight:400">(0 = fixed)</span></label>
+          <input type="number" id="ss-af-maxtilt" placeholder="35" min="0" max="90" value="35" style="width:100%">
+          <div style="font-size:11px;color:#4a5e7a;margin-top:4px">How far the fixture can aim off vertical.</div>
+        </div>
       </div>
     </div>
     <div style="display:flex;gap:8px;padding:0 20px 20px">
@@ -25820,22 +25827,22 @@ registerProjCapture('voltcalc', function() {
 
 // ── Fixture Database ─────────────────────────────────────────
 var _SS_FX = [
-  { id:'f1',  name:'4" LED Downlight (800lm)',   lumens:800,  cbfc:920,  beamDeg:25 },
-  { id:'f2',  name:'4" LED Downlight (1200lm)',  lumens:1200, cbfc:1380, beamDeg:25 },
-  { id:'f3',  name:'6" LED Downlight (1100lm)',  lumens:1100, cbfc:460,  beamDeg:40 },
-  { id:'f4',  name:'6" LED Downlight (1600lm)',  lumens:1600, cbfc:670,  beamDeg:40 },
-  { id:'f5',  name:'3" Micro Downlight',          lumens:400,  cbfc:1500, beamDeg:20 },
-  { id:'f6',  name:'PAR38 Spot (10°)',            lumens:900,  cbfc:3200, beamDeg:10 },
-  { id:'f7',  name:'PAR38 Flood (30°)',           lumens:900,  cbfc:560,  beamDeg:30 },
-  { id:'f8',  name:'PAR38 Wide Flood (40°)',      lumens:900,  cbfc:320,  beamDeg:40 },
-  { id:'f9',  name:'AR111 Spot (15°)',            lumens:1000, cbfc:2900, beamDeg:15 },
-  { id:'f10', name:'AR111 Flood (30°)',           lumens:1000, cbfc:680,  beamDeg:30 },
-  { id:'f11', name:'MR16 Spot (10°)',             lumens:500,  cbfc:2800, beamDeg:10 },
-  { id:'f12', name:'MR16 Flood (25°)',            lumens:500,  cbfc:620,  beamDeg:25 },
-  { id:'f13', name:'Pinhole 4" (750lm)',          lumens:750,  cbfc:2100, beamDeg:15 },
-  { id:'f14', name:'Track Spot (15°)',            lumens:700,  cbfc:2200, beamDeg:15 },
-  { id:'f15', name:'Track Flood (35°)',           lumens:900,  cbfc:480,  beamDeg:35 },
-  { id:'f16', name:'5" Open Trim (900lm)',        lumens:900,  cbfc:700,  beamDeg:30 },
+  { id:'f1',  name:'4" LED Adj. Downlight',   lumens:800,  cbfc:920,  beamDeg:25, maxTilt:35 },
+  { id:'f2',  name:'4" LED Adj. Downlight HO',lumens:1200, cbfc:1380, beamDeg:25, maxTilt:35 },
+  { id:'f3',  name:'6" LED Adj. Downlight',   lumens:1100, cbfc:460,  beamDeg:40, maxTilt:35 },
+  { id:'f4',  name:'6" LED Adj. Downlight HO',lumens:1600, cbfc:670,  beamDeg:40, maxTilt:35 },
+  { id:'f5',  name:'3" Micro Adj. Downlight', lumens:400,  cbfc:1500, beamDeg:20, maxTilt:30 },
+  { id:'f6',  name:'PAR38 Spot (10°)',         lumens:900,  cbfc:3200, beamDeg:10, maxTilt:0  },
+  { id:'f7',  name:'PAR38 Flood (30°)',        lumens:900,  cbfc:560,  beamDeg:30, maxTilt:0  },
+  { id:'f8',  name:'PAR38 Wide Flood (40°)',   lumens:900,  cbfc:320,  beamDeg:40, maxTilt:0  },
+  { id:'f9',  name:'AR111 Spot (15°)',         lumens:1000, cbfc:2900, beamDeg:15, maxTilt:0  },
+  { id:'f10', name:'AR111 Flood (30°)',        lumens:1000, cbfc:680,  beamDeg:30, maxTilt:0  },
+  { id:'f11', name:'MR16 Spot (10°)',          lumens:500,  cbfc:2800, beamDeg:10, maxTilt:0  },
+  { id:'f12', name:'MR16 Flood (25°)',         lumens:500,  cbfc:620,  beamDeg:25, maxTilt:0  },
+  { id:'f13', name:'Pinhole 4" Adj.',          lumens:750,  cbfc:2100, beamDeg:15, maxTilt:30 },
+  { id:'f14', name:'Track Spot (15°)',         lumens:700,  cbfc:2200, beamDeg:15, maxTilt:45 },
+  { id:'f15', name:'Track Flood (35°)',        lumens:900,  cbfc:480,  beamDeg:35, maxTilt:45 },
+  { id:'f16', name:'5" Open Trim',             lumens:900,  cbfc:700,  beamDeg:30, maxTilt:35 },
 ];
 var _SS_FX_USER = (function(){ try{ return JSON.parse(localStorage.getItem('ss_fx')||'[]'); }catch(e){ return []; } })();
 
@@ -25998,7 +26005,7 @@ function _ssBuildHTML() {
   var SEL = INP+';cursor:pointer';
   var SLR = 'width:100%;accent-color:#4f8ef7;cursor:pointer;margin-top:2px';
 
-  var s = '<div style="display:flex;flex-direction:column;gap:0;height:100%;min-height:0;padding:16px">';
+  var s = '<div style="display:flex;flex-direction:column;gap:0;padding:16px 16px 24px">';
   // Header
   s += '<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
     + '<div><div style="font-size:20px;font-weight:700;color:#f0f4ff">Section Study</div>'
@@ -26017,8 +26024,14 @@ function _ssBuildHTML() {
   s += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:10px">';
   s += _ssCtrl('Ceiling Height','<div style="display:flex;align-items:center;gap:6px"><input id="ss-ceil" type="number" min="6" max="30" step="0.5" value="'+_ss.ceilH+'" style="'+INP+';flex:1;min-width:0"><span style="font-size:13px;color:#64748b;flex-shrink:0">ft</span></div>');
   s += _ssCtrl('Distance to Wall','<div style="display:flex;align-items:center;gap:6px"><input id="ss-wdist" type="number" min="0.5" max="20" step="0.5" value="'+_ss.wallDist+'" style="'+INP+';flex:1;min-width:0"><span style="font-size:13px;color:#64748b;flex-shrink:0">ft</span></div>');
-  s += _ssCtrl('Fixture Tilt <span id="ss-tilt-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+(_ss.tiltDeg||0)+'°</span>',
-    '<input id="ss-tilt" type="range" min="0" max="45" step="1" value="'+(_ss.tiltDeg||0)+'" style="'+SLR+'">');
+  var _fxMaxTilt = (_ssGetFx().maxTilt !== undefined ? _ssGetFx().maxTilt : 45);
+  var _tiltClamped = Math.min(_ss.tiltDeg||0, _fxMaxTilt);
+  var _tiltLblColor = _tiltClamped >= _fxMaxTilt && _fxMaxTilt > 0 ? '#f59e0b' : '#4f8ef7';
+  var _tiltNote = _fxMaxTilt === 0 ? 'Fixed (non-adjustable)' : 'Max '+_fxMaxTilt+'° for this fixture';
+  s += _ssCtrl('Fixture Tilt <span id="ss-tilt-lbl" style="color:'+_tiltLblColor+';font-size:13px;font-weight:700">'+_tiltClamped+'°</span>',
+    '<input id="ss-tilt" type="range" min="0" max="'+_fxMaxTilt+'" step="1" value="'+_tiltClamped+'" style="'+SLR+'"'
+    +(_fxMaxTilt===0?' disabled title="This fixture is not adjustable"':'')+'/>'
+    +'<div style="font-size:10px;color:#4a5e7a;margin-top:2px">'+escH(_tiltNote)+'</div>');
   s += _ssCtrl('Output Level <span id="ss-out-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+(_ss.outputPct||100)+'%</span>',
     '<input id="ss-out" type="range" min="5" max="100" step="5" value="'+(_ss.outputPct||100)+'" style="'+SLR+'">');
   s += '</div>';
@@ -26061,12 +26074,13 @@ function _ssBuildHTML() {
     + accDetailHTML + '</div>';
 
   // View mode toggle + canvas
-  var vmBtnStyle = function(mode){ return 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);'+(mode===_ss.viewMode?'background:#4f8ef7;color:#fff;border-color:#4f8ef7':'background:rgba(255,255,255,0.05);color:#8da0c0'); };
-  s += '<div style="flex:1;min-height:280px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">';
+  var vmOn  = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #4f8ef7;background:#4f8ef7;color:#fff;transition:all 0.15s';
+  var vmOff = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0;transition:all 0.15s';
+  s += '<div style="height:clamp(280px,42vh,480px);display:flex;flex-direction:column;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">';
   s += '<div style="display:flex;gap:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;align-items:center">';
-  s += '<button style="'+vmBtnStyle('section')+'" onclick="_ss.viewMode=\'section\';_ssUpdate()">Section</button>';
-  s += '<button style="'+vmBtnStyle('plan')+'" onclick="_ss.viewMode=\'plan\';_ssUpdate()">Plan View</button>';
-  s += '<button style="'+vmBtnStyle('3d')+'" onclick="_ss.viewMode=\'3d\';_ssUpdate()">3D View</button>';
+  s += '<button id="ss-vm-section" style="'+(_ss.viewMode==='section'?vmOn:vmOff)+'" onclick="_ss.viewMode=\'section\';_ssUpdateViewBtns();_ssUpdate()">Section</button>';
+  s += '<button id="ss-vm-plan"    style="'+(_ss.viewMode==='plan'?vmOn:vmOff)+'"    onclick="_ss.viewMode=\'plan\';_ssUpdateViewBtns();_ssUpdate()">Plan View</button>';
+  s += '<button id="ss-vm-3d"      style="'+(_ss.viewMode==='3d'?vmOn:vmOff)+'"      onclick="_ss.viewMode=\'3d\';_ssUpdateViewBtns();_ssUpdate()">3D View</button>';
   s += '<div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#64748b">Room Width</span>';
   s += '<input id="ss-roomw" type="number" min="8" max="40" step="1" value="'+(_ss.roomWidth||16)+'" style="width:52px;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 8px;color:#f0f4ff;font-size:12px;text-align:center">';
   s += '<span style="font-size:11px;color:#64748b">ft</span></div>';
@@ -26086,7 +26100,17 @@ function _ssCtrl(label, inner) {
 
 function _ssBindEvents() {
   function bind(id, fn) { var el=document.getElementById(id); if(el) el.oninput=el.onchange=fn; }
-  bind('ss-fx', function(){ _ss.fxId=this.value; if(!_ss.useCustomBeam) _ss.beamDeg=_ssGetFx().beamDeg; _ssUpdate(); });
+  bind('ss-fx', function(){
+    _ss.fxId=this.value;
+    if(!_ss.useCustomBeam) _ss.beamDeg=_ssGetFx().beamDeg;
+    // Clamp tilt to new fixture's max and update slider
+    var mt = _ssGetFx().maxTilt !== undefined ? _ssGetFx().maxTilt : 45;
+    _ss.tiltDeg = Math.min(_ss.tiltDeg||0, mt);
+    var tiltEl = document.getElementById('ss-tilt');
+    if (tiltEl) { tiltEl.max = mt; tiltEl.value = _ss.tiltDeg; tiltEl.disabled = mt===0; }
+    var tiltLbl = document.getElementById('ss-tilt-lbl'); if(tiltLbl) tiltLbl.textContent = _ss.tiltDeg+'°';
+    _ssUpdate();
+  });
   bind('ss-obj', function(){ _ss.objId=this.value; _ssRefreshObjPanel(); _ssUpdate(); });
   bind('ss-beam', function(){
     if(this.value==='fix'){ _ss.useCustomBeam=false; }
@@ -26178,7 +26202,16 @@ function _ssResizeCanvas() {
   }
 }
 
-function _ssUpdate() { _ssUpdateResults(); }
+function _ssUpdate() { _ssUpdateViewBtns(); _ssUpdateResults(); }
+
+function _ssUpdateViewBtns() {
+  var vmOn  = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #4f8ef7;background:#4f8ef7;color:#fff;transition:all 0.15s';
+  var vmOff = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0;transition:all 0.15s';
+  ['section','plan','3d'].forEach(function(m){
+    var btn = document.getElementById('ss-vm-'+m);
+    if (btn) btn.style.cssText = (m===_ss.viewMode ? vmOn : vmOff);
+  });
+}
 
 function _ssRefreshObjPanel() {
   var obj = _ssGetObj();
@@ -26272,8 +26305,9 @@ function _ssDrawCanvas() {
   var openSideCX=cx(openEdge.x), openSideCY=cy(openEdge.y);
   var centerHitCX=cx(centerHit.x), centerHitCY=cy(centerHit.y);
 
-  // Animated pulse
-  var pulse=0.85+0.15*Math.sin(_ss._phase*1.4);
+  // Animated pulse — dims with output level and accessories
+  var _xmitVis = Math.max(0.05, _ssEffXmit());
+  var pulse = (0.85+0.15*Math.sin(_ss._phase*1.4)) * _xmitVis;
 
   // Beam fill gradient along center axis
   var bGrad=ctx.createLinearGradient(fixCX,fixCY,centerHitCX,centerHitCY);
@@ -26528,7 +26562,7 @@ function _ssDraw2DPlan(ctx,w,h,dpr) {
   var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
   var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
   var rW=_ss.roomWidth||16, rD=Math.max(_ss.wallDist+8,rW*0.8);
-  var pulse=0.82+0.18*Math.sin(_ss._phase*1.4);
+  var pulse=(0.82+0.18*Math.sin(_ss._phase*1.4))*Math.max(0.05,_ssEffXmit());
 
   var ML=50,MR=30,MT=42,MB=42;
   var dw=w-ML-MR, dh=h-MT-MB;
@@ -26630,7 +26664,7 @@ function _ssDraw3D(ctx,w,h,dpr) {
   var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
   var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
   var rW=_ss.roomWidth||16, rH=_ss.ceilH, rD=Math.max(_ss.wallDist+6,12);
-  var pulse=0.82+0.18*Math.sin(_ss._phase*1.4);
+  var pulse=(0.82+0.18*Math.sin(_ss._phase*1.4))*Math.max(0.05,_ssEffXmit());
 
   // Oblique cabinet projection: front face is back wall (z=0)
   // X=room width, Y=height, Z=depth from back wall
@@ -26927,10 +26961,11 @@ function _ssCard(lbl,val,sub,color) {
 
 // ── Fixture Adder ─────────────────────────────────────────────
 function _ssOpenAddFixture() {
-  ['ss-af-name','ss-af-lumens','ss-af-cbfc','ss-af-beam'].forEach(function(id){
+  ['ss-af-name','ss-af-lumens','ss-af-cbfc'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var beamEl=document.getElementById('ss-af-beam'); if(beamEl) beamEl.value='25';
+  var tiltEl=document.getElementById('ss-af-maxtilt'); if(tiltEl) tiltEl.value='35';
   openModal('modal-ss-fixture');
 }
 
@@ -26939,10 +26974,11 @@ function _ssSaveFixture() {
   var lumens=parseInt((document.getElementById('ss-af-lumens')||{}).value)||0;
   var cbfc=parseInt((document.getElementById('ss-af-cbfc')||{}).value)||0;
   var beam=parseFloat((document.getElementById('ss-af-beam')||{}).value)||25;
+  var maxTilt=parseInt((document.getElementById('ss-af-maxtilt')||{}).value)||0;
   if(!name.trim()){ toast('Enter a fixture name'); return; }
   if(cbfc<=0){ toast('Enter the CBFC value'); return; }
   var id='uf'+Date.now();
-  _SS_FX_USER.push({id:id,name:name.trim(),lumens:lumens,cbfc:cbfc,beamDeg:beam});
+  _SS_FX_USER.push({id:id,name:name.trim(),lumens:lumens,cbfc:cbfc,beamDeg:beam,maxTilt:maxTilt});
   try{ localStorage.setItem('ss_fx',JSON.stringify(_SS_FX_USER)); }catch(e){}
   _ss.fxId=id;
   closeModal('modal-ss-fixture');
@@ -27029,6 +27065,7 @@ window._ssRender            = _ssRender;
 window._ssSaveFixture       = _ssSaveFixture;
 window._ssOpenAddFixture    = _ssOpenAddFixture;
 window._ssStopAnim          = _ssStopAnim;
+window._ssUpdateViewBtns    = _ssUpdateViewBtns;
 
 window.openSaveToProject     = openSaveToProject;
 window.execSaveToProject     = execSaveToProject;
