@@ -5083,6 +5083,34 @@ service cloud.firestore {
   </div>
 </div>
 
+<!-- Update Entry Note Modal -->
+<div class="modal-overlay" id="modal-update-note" style="display:none">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-drag-handle" style="display:none"></div>
+    <div class="modal-header">
+      <h3>Update Entry</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-update-note')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="uen-source-chip" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;margin-bottom:18px">
+        <span id="uen-icon" style="font-size:22px;flex-shrink:0">📋</span>
+        <div style="min-width:0">
+          <div id="uen-title" style="font-size:13px;font-weight:600;color:#f0f4ff"></div>
+          <div id="uen-proj" style="font-size:11px;color:#f59e0b;margin-top:2px"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Note <span style="color:#4a5e7a;font-weight:400;font-size:11px">(optional)</span></label>
+        <textarea id="uen-note" placeholder="e.g. Updated load values after site visit…" rows="3" style="width:100%;resize:vertical"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button class="btn btn-ghost btn-sm" onclick="confirmUpdateSave('')" style="flex:1">Skip Note</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmUpdateSave(document.getElementById('uen-note').value)" style="flex:1;background:#f59e0b;border-color:#f59e0b;color:#000">Update Entry</button>
+    </div>
+  </div>
+</div>
+
 <!-- Save to Project Modal -->
 <div class="modal-overlay" id="modal-save-to-proj" style="display:none">
   <div class="modal" style="max-width:440px">
@@ -25455,6 +25483,7 @@ function execSaveToProject() {
 var _projExpandedId = null;
 var _projEditSave = null; // { projId, saveId } when a save entry is in edit mode
 var _activeRestoredSave = null; // { projId, saveId, view, projName, viewTitle } when editing a restored save
+var _pendingUpdateCapture = null; // captured module state waiting for note confirmation
 
 function renderProjectNotebook() {
   var el = document.getElementById('proj-notebook-list');
@@ -25611,6 +25640,7 @@ function _hideUpdateBanner() {
 
 function cancelUpdateSave() {
   _activeRestoredSave = null;
+  _pendingUpdateCapture = null;
   _hideUpdateBanner();
 }
 
@@ -25618,12 +25648,34 @@ function executeUpdateSave() {
   if (!_activeRestoredSave) return;
   var proj = (state.projects||[]).find(function(p){ return p.id === _activeRestoredSave.projId; });
   if (!proj) { cancelUpdateSave(); return; }
-  var captured = _captureCurrentView();
+  // Capture now (before the modal opens, so current module state is snapshotted)
+  _pendingUpdateCapture = _captureCurrentView();
+  // Populate and open note modal
+  var save = (proj.saves||[]).find(function(s){ return s.id === _activeRestoredSave.saveId; });
+  document.getElementById('uen-icon').textContent  = (save && save.icon) || '📋';
+  document.getElementById('uen-title').textContent = _activeRestoredSave.viewTitle;
+  document.getElementById('uen-proj').textContent  = 'in ' + _activeRestoredSave.projName;
+  document.getElementById('uen-note').value = (save && save.note) || '';
+  openModal('modal-update-note');
+}
+
+function confirmUpdateSave(note) {
+  closeModal('modal-update-note');
+  if (!_activeRestoredSave || !_pendingUpdateCapture) return;
+  var proj = (state.projects||[]).find(function(p){ return p.id === _activeRestoredSave.projId; });
+  if (!proj) { cancelUpdateSave(); return; }
+  var noteVal = (typeof note === 'string') ? note.trim() : '';
   var saves = (proj.saves||[]).map(function(s) {
     if (s.id !== _activeRestoredSave.saveId) return s;
-    return _merge({}, s, { data: captured.data, preview: captured.preview, ts: Date.now() });
+    return _merge({}, s, {
+      data: _pendingUpdateCapture.data,
+      preview: _pendingUpdateCapture.preview,
+      ts: Date.now(),
+      note: noteVal || s.note || ''
+    });
   });
   updateItem('projects', _activeRestoredSave.projId, { saves: saves });
+  _pendingUpdateCapture = null;
   cancelUpdateSave();
   toast('Entry updated ✓');
 }
@@ -25775,6 +25827,7 @@ window.cancelProjSaveEdit    = cancelProjSaveEdit;
 window.saveProjSaveNote      = saveProjSaveNote;
 window.restoreProjSave       = restoreProjSave;
 window.executeUpdateSave     = executeUpdateSave;
+window.confirmUpdateSave     = confirmUpdateSave;
 window.cancelUpdateSave      = cancelUpdateSave;
 window.openNewProjectModal   = openNewProjectModal;
 window.openEditProjModal     = openEditProjModal;
