@@ -7641,9 +7641,9 @@ function switchView(v) {
   if(v==='photometrics') {
     if (typeof _photoRender === 'function') _photoRender();
   }
-  if(v==='beamspread')   { if (typeof _bsRender   === 'function') _bsRender(); }
-  if(v==='sectionstudy') { if (typeof _ssRender === 'function') _ssRender(); }
-  else if (typeof _ssStopAnim === 'function') _ssStopAnim();
+  if(v==='beamspread')   { if (typeof _bsRender === 'function') _bsRender(); }
+  if(v==='sectionstudy') { if (typeof _ssRender === 'function') { try { _ssRender(); } catch(e){ console.warn('SS render error:', e); } } }
+  if(v!=='sectionstudy' && typeof _ssStopAnim === 'function') _ssStopAnim();
   if(v==='circuitload')  { if (typeof _clRender   === 'function') _clRender(); }
   if(v==='luxconvert')   { if (typeof _luxRender  === 'function') _luxRender(); }
   if(v==='artnetplan')   { if (typeof _anRender   === 'function') _anRender(); }
@@ -25869,6 +25869,9 @@ var _ss = {
   tiltDeg: 0,      // fixture tilt toward wall (0 = straight down, positive = toward wall)
   outputPct: 100,  // fixture output dimming percentage
   objCustom: {},   // per-object height/size overrides: { objId: { h, hw } }
+  accCustom: {},   // per-accessory overrides: { accId: { xmit, bMult } }
+  viewMode: 'section', // 'section' | 'plan' | '3d'
+  roomWidth: 16,   // room width in feet (for plan/3D views)
   dragging: false, dragStartCX: 0, dragStartDist: 0, dragScale: 1,
   animId: null, _phase: 0,
 };
@@ -25876,25 +25879,31 @@ var _ss = {
 // ── Helpers ───────────────────────────────────────────────────
 function _ssAllFx() { return _SS_FX.concat(_SS_FX_USER); }
 function _ssGetFx() { return _ssAllFx().find(function(f){ return f.id===_ss.fxId; }) || _SS_FX[0]; }
+function _ssAccVal(accId, field) {
+  // Returns custom value if set, otherwise the default from _SS_ACC
+  var base = _SS_ACC.find(function(a){return a.id===accId;});
+  if (!base) return (field==='xmit'?1:1);
+  var custom = _ss.accCustom[accId] || {};
+  return custom[field] !== undefined ? custom[field] : base[field];
+}
 function _ssEffBeam() {
   var bd = _ss.useCustomBeam ? _ss.beamDeg : _ssGetFx().beamDeg;
-  _ss.acc.forEach(function(aid){
-    var a=_SS_ACC.find(function(x){return x.id===aid;}); if(a) bd*=a.bMult;
-  });
+  _ss.acc.forEach(function(aid){ bd *= _ssAccVal(aid,'bMult'); });
   return Math.min(bd, 89);
 }
 function _ssEffXmit() {
   var x = (_ss.outputPct||100) / 100;
-  _ss.acc.forEach(function(aid){
-    var a=_SS_ACC.find(function(x){return x.id===aid;}); if(a) x*=a.xmit;
-  }); return x;
+  _ss.acc.forEach(function(aid){ x *= _ssAccVal(aid,'xmit'); });
+  return x;
 }
 function _ssGetObj() {
   var base=_SS_OBJ.find(function(o){return o.id===_ss.objId;})||_SS_OBJ[0];
   var c=_ss.objCustom[_ss.objId]||{};
+  var defWidth = base.surf==='vertical' ? 3 : 6; // default widths
   return { id:base.id, name:base.name, icon:base.icon, surf:base.surf,
-           h: c.h!==undefined ? c.h : base.h,
+           h:  c.h!==undefined  ? c.h  : base.h,
            hw: c.hw!==undefined ? c.hw : base.hw,
+           width: c.width!==undefined ? c.width : defWidth,
            recFc: base.recFc, note: base.note };
 }
 
@@ -26016,29 +26025,57 @@ function _ssBuildHTML() {
 
   // Object settings
   s += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;margin-bottom:10px">';
-  s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">'+obj.icon+' Object Details — '+escH(obj.name)+'</div>';
+  s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px"><span class="ss-obj-hdr">'+obj.icon+' '+escH(obj.name)+'</span></div>';
   s += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
   var hLabel = obj.surf==='vertical' ? 'Center Height' : 'Surface Height';
   var hMin=0, hMax=Math.max(_ss.ceilH-0.5, 1), hStep=0.5;
-  s += _ssCtrl(hLabel+' <span id="ss-objh-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+obj.h+'\'</span>',
+  s += _ssCtrl('<span id="ss-objh-ctrl-lbl">'+hLabel+'</span> <span id="ss-objh-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+obj.h+'\'</span>',
     '<input id="ss-objh" type="range" min="'+hMin+'" max="'+hMax+'" step="'+hStep+'" value="'+obj.h+'" style="'+SLR+'">');
   var swLabel = obj.surf==='vertical' ? 'Object Height' : 'Display Size';
   var hwMin=0.2, hwMax=5, hwStep=0.1;
-  s += _ssCtrl(swLabel+' <span id="ss-objhw-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+(Math.round(obj.hw*2*10)/10)+'\'</span>',
+  s += _ssCtrl('<span id="ss-objhw-ctrl-lbl">'+swLabel+'</span> <span id="ss-objhw-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+(Math.round(obj.hw*2*10)/10)+'\'</span>',
     '<input id="ss-objhw" type="range" min="'+hwMin+'" max="'+hwMax+'" step="'+hwStep+'" value="'+obj.hw+'" style="'+SLR+'">');
+  s += _ssCtrl('Object Width <span id="ss-objw-lbl" style="color:#4f8ef7;font-size:13px;font-weight:700">'+obj.width+'\'</span>',
+    '<input id="ss-objw" type="range" min="1" max="30" step="0.5" value="'+obj.width+'" style="'+SLR+'">');
   s += '</div></div>';
 
-  // Accessories
+  // Accessories + detail sliders for active ones
+  var accDetailHTML = '';
+  _SS_ACC.forEach(function(a){
+    if (_ss.acc.indexOf(a.id) < 0) return;
+    var cv = _ss.accCustom[a.id] || {};
+    var xmit = cv.xmit !== undefined ? cv.xmit : a.xmit;
+    var bMult = cv.bMult !== undefined ? cv.bMult : a.bMult;
+    accDetailHTML += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(79,142,247,0.2)">';
+    accDetailHTML += '<div style="font-size:11px;font-weight:700;color:#8da0c0;grid-column:1/-1;margin-bottom:2px">'+a.icon+' '+escH(a.name)+' Settings</div>';
+    accDetailHTML += _ssCtrl('Transmission <span id="ss-ac-xmit-lbl-'+a.id+'" style="color:#4f8ef7;font-size:13px;font-weight:700">'+Math.round(xmit*100)+'%</span>',
+      '<input id="ss-ac-xmit-'+a.id+'" data-acc-xmit="'+a.id+'" type="range" min="10" max="100" step="1" value="'+Math.round(xmit*100)+'" style="'+SLR+'">');
+    if (a.bMult !== 1.0) {
+      accDetailHTML += _ssCtrl('Beam Spread <span id="ss-ac-bmult-lbl-'+a.id+'" style="color:#4f8ef7;font-size:13px;font-weight:700">'+bMult.toFixed(2)+'×</span>',
+        '<input id="ss-ac-bmult-'+a.id+'" data-acc-bmult="'+a.id+'" type="range" min="0.5" max="2.5" step="0.05" value="'+bMult+'" style="'+SLR+'">');
+    }
+    accDetailHTML += '</div>';
+  });
   s += '<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px">Accessories</div>'
-    + '<div style="display:flex;gap:6px;flex-wrap:wrap">'+accHTML+'</div></div>';
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap">'+accHTML+'</div>'
+    + accDetailHTML + '</div>';
 
-  // Canvas
-  s += '<div style="flex:1;min-height:260px;position:relative;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">'
-    + '<canvas id="ss-canvas" style="width:100%;height:100%;display:block;cursor:default"></canvas>'
-    + '</div>';
+  // View mode toggle + canvas
+  var vmBtnStyle = function(mode){ return 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);'+(mode===_ss.viewMode?'background:#4f8ef7;color:#fff;border-color:#4f8ef7':'background:rgba(255,255,255,0.05);color:#8da0c0'); };
+  s += '<div style="flex:1;min-height:280px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)">';
+  s += '<div style="display:flex;gap:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;flex-wrap:wrap;align-items:center">';
+  s += '<button style="'+vmBtnStyle('section')+'" onclick="_ss.viewMode=\'section\';_ssUpdate()">Section</button>';
+  s += '<button style="'+vmBtnStyle('plan')+'" onclick="_ss.viewMode=\'plan\';_ssUpdate()">Plan View</button>';
+  s += '<button style="'+vmBtnStyle('3d')+'" onclick="_ss.viewMode=\'3d\';_ssUpdate()">3D View</button>';
+  s += '<div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#64748b">Room Width</span>';
+  s += '<input id="ss-roomw" type="number" min="8" max="40" step="1" value="'+(_ss.roomWidth||16)+'" style="width:52px;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 8px;color:#f0f4ff;font-size:12px;text-align:center">';
+  s += '<span style="font-size:11px;color:#64748b">ft</span></div>';
+  s += '</div>';
+  s += '<div style="flex:1;position:relative"><canvas id="ss-canvas" style="width:100%;height:100%;display:block;cursor:default"></canvas></div>';
+  s += '</div>';
 
   // Results
-  s += '<div id="ss-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:14px"></div>';
+  s += '<div id="ss-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:14px;align-items:start"></div>';
   s += '</div>';
   return s;
 }
@@ -26050,7 +26087,7 @@ function _ssCtrl(label, inner) {
 function _ssBindEvents() {
   function bind(id, fn) { var el=document.getElementById(id); if(el) el.oninput=el.onchange=fn; }
   bind('ss-fx', function(){ _ss.fxId=this.value; if(!_ss.useCustomBeam) _ss.beamDeg=_ssGetFx().beamDeg; _ssUpdate(); });
-  bind('ss-obj', function(){ _ss.objId=this.value; _ssRender(); }); // re-render to update object panel
+  bind('ss-obj', function(){ _ss.objId=this.value; _ssRefreshObjPanel(); _ssUpdate(); });
   bind('ss-beam', function(){
     if(this.value==='fix'){ _ss.useCustomBeam=false; }
     else { _ss.useCustomBeam=true; _ss.beamDeg=parseInt(this.value); }
@@ -26082,15 +26119,41 @@ function _ssBindEvents() {
     var lbl=document.getElementById('ss-objhw-lbl'); if(lbl) lbl.textContent=(Math.round(v*2*10)/10)+'\'';
     _ssUpdate();
   });
+  bind('ss-objw', function(){
+    var v=parseFloat(this.value);
+    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
+    _ss.objCustom[_ss.objId].width=v;
+    var lbl=document.getElementById('ss-objw-lbl'); if(lbl) lbl.textContent=v+'\'';
+    _ssUpdate();
+  });
   document.querySelectorAll('[data-acc]').forEach(function(inp){
     inp.onchange = function(){
       var aid=this.dataset.acc, idx=_ss.acc.indexOf(aid);
       if(this.checked && idx<0) _ss.acc.push(aid);
       else if(!this.checked && idx>=0) _ss.acc.splice(idx,1);
       this.parentNode.classList.toggle('ss-acc-on', this.checked);
+      _ssRender(); // rebuild to show/hide detail sliders
+    };
+  });
+  document.querySelectorAll('[data-acc-xmit]').forEach(function(inp){
+    inp.oninput = function(){
+      var aid=this.dataset.accXmit;
+      if(!_ss.accCustom[aid]) _ss.accCustom[aid]={};
+      _ss.accCustom[aid].xmit = parseInt(this.value)/100;
+      var lbl=document.getElementById('ss-ac-xmit-lbl-'+aid); if(lbl) lbl.textContent=this.value+'%';
       _ssUpdate();
     };
   });
+  document.querySelectorAll('[data-acc-bmult]').forEach(function(inp){
+    inp.oninput = function(){
+      var aid=this.dataset.accBmult;
+      if(!_ss.accCustom[aid]) _ss.accCustom[aid]={};
+      _ss.accCustom[aid].bMult = parseFloat(this.value);
+      var lbl=document.getElementById('ss-ac-bmult-lbl-'+aid); if(lbl) lbl.textContent=parseFloat(this.value).toFixed(2)+'×';
+      _ssUpdate();
+    };
+  });
+  bind('ss-roomw', function(){ var v=parseInt(this.value); if(!isNaN(v)&&v>=8&&v<=40){_ss.roomWidth=v;_ssUpdate();} });
   var canvas=document.getElementById('ss-canvas');
   if(!canvas) return;
   if(window.ResizeObserver){
@@ -26117,13 +26180,36 @@ function _ssResizeCanvas() {
 
 function _ssUpdate() { _ssUpdateResults(); }
 
+function _ssRefreshObjPanel() {
+  var obj = _ssGetObj();
+  var hMax = Math.max(_ss.ceilH - 0.5, 1);
+  // Update object settings section label
+  var hdr = document.querySelector('#ss-root .ss-obj-hdr');
+  if (hdr) hdr.textContent = obj.icon + ' ' + obj.name;
+  // Update height slider
+  var hEl = document.getElementById('ss-objh');
+  if (hEl) { hEl.max = hMax; hEl.value = obj.h; }
+  var hLbl = document.getElementById('ss-objh-lbl');
+  if (hLbl) hLbl.textContent = obj.h + "'";
+  // Update size slider
+  var hwEl = document.getElementById('ss-objhw');
+  if (hwEl) hwEl.value = obj.hw;
+  var hwLbl = document.getElementById('ss-objhw-lbl');
+  if (hwLbl) hwLbl.textContent = (Math.round(obj.hw * 2 * 10) / 10) + "'";
+  // Update h label text (Center Height vs Surface Height)
+  var hCtrlLbl = document.getElementById('ss-objh-ctrl-lbl');
+  if (hCtrlLbl) hCtrlLbl.textContent = (obj.surf === 'vertical' ? 'Center Height' : 'Surface Height');
+  var hwCtrlLbl = document.getElementById('ss-objhw-ctrl-lbl');
+  if (hwCtrlLbl) hwCtrlLbl.textContent = (obj.surf === 'vertical' ? 'Object Height' : 'Display Size');
+}
+
 // ── Animation Loop ────────────────────────────────────────────
 function _ssStartAnim() {
   if(_ss.animId) return;
   function frame(){
     if(currentView!=='sectionstudy'){ _ss.animId=null; return; }
     _ss._phase=(Date.now()/1000);
-    _ssDrawCanvas();
+    try { _ssDrawCanvas(); } catch(e){ console.warn('SS draw error:', e); }
     _ss.animId=requestAnimationFrame(frame);
   }
   _ss.animId=requestAnimationFrame(frame);
@@ -26138,6 +26224,8 @@ function _ssDrawCanvas() {
   var W=canvas.width, H=canvas.height;
   if(W<10||H<10) return;
   var w=W/dpr, h=H/dpr;
+  if(_ss.viewMode==='plan'){ _ssDraw2DPlan(ctx,w,h,dpr); return; }
+  if(_ss.viewMode==='3d')  { _ssDraw3D(ctx,w,h,dpr); return; }
   ctx.save(); ctx.scale(dpr,dpr);
 
   var ML=54, MR=28, MT=42, MB=38;
@@ -26433,6 +26521,255 @@ function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse,tiltDeg) {
   }
 }
 
+// ── Plan View (top-down) ──────────────────────────────────────
+function _ssDraw2DPlan(ctx,w,h,dpr) {
+  ctx.save(); ctx.scale(dpr,dpr);
+  var obj=_ssGetObj();
+  var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
+  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
+  var rW=_ss.roomWidth||16, rD=Math.max(_ss.wallDist+8,rW*0.8);
+  var pulse=0.82+0.18*Math.sin(_ss._phase*1.4);
+
+  var ML=50,MR=30,MT=42,MB=42;
+  var dw=w-ML-MR, dh=h-MT-MB;
+  var sx=dw/rW, sz=dh/rD;
+  function px(x){ return ML+x*sx; }
+  function pz(z){ return MT+dh-z*sz; }
+  function fw2(v){ return v*(sx+sz)/2; }
+
+  // Background
+  ctx.fillStyle='#080f1e'; ctx.fillRect(0,0,w,h);
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+  for(var gx=0;gx<=rW;gx++){ctx.beginPath();ctx.moveTo(px(gx),MT);ctx.lineTo(px(gx),MT+dh);ctx.stroke();}
+  for(var gz=0;gz<=Math.ceil(rD);gz++){ctx.beginPath();ctx.moveTo(ML,pz(gz));ctx.lineTo(ML+dw,pz(gz));ctx.stroke();}
+
+  // Multi-fixture calculation
+  var H=_ss.ceilH-obj.h;
+  var distAlongBeam=H>0?H/Math.max(Math.cos(tiltRad),0.1):0;
+  var beamFootprintR=Math.tan(halfRad)*distAlongBeam;
+  var objWidth=(_ss.objCustom[obj.id]||{}).width || 8; // default 8ft wide
+  var numFix=1;
+  if(objWidth>0 && beamFootprintR>0){
+    var coverSpacing=beamFootprintR*2*0.65;
+    numFix=Math.max(1,Math.ceil(objWidth/Math.max(coverSpacing,0.5)));
+  }
+  var fixSpacing=numFix>1?objWidth/(numFix):0;
+  var objCenterX=rW/2, fixZ=_ss.wallDist;
+
+  // Draw fixtures and beams in plan
+  for(var fi=0;fi<numFix;fi++){
+    var fixX=numFix>1?(objCenterX-objWidth/2+fixSpacing*0.5+fi*fixSpacing):objCenterX;
+    var beamCenterX=fixX-fixZ*Math.sin(tiltRad);
+    // Beam footprint circle on wall/surface
+    var bR=fw2(beamFootprintR);
+    if(bR>1){
+      var fcCtr=_ssCalcFC(obj.surf==='vertical'?0:beamCenterX, obj.h, obj.surf);
+      var rGrad=ctx.createRadialGradient(px(beamCenterX),pz(0),0,px(beamCenterX),pz(0),bR);
+      rGrad.addColorStop(0,_fcToRGBA(fcCtr,0.6*pulse));
+      rGrad.addColorStop(0.5,_fcToRGBA(fcCtr*0.4,0.4*pulse));
+      rGrad.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.beginPath();ctx.arc(px(beamCenterX),pz(0),bR,0,Math.PI*2);
+      ctx.fillStyle=rGrad;ctx.fill();
+    }
+    // Beam lines from fixture to footprint edges
+    ctx.strokeStyle='rgba(255,245,180,0.25)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ));ctx.lineTo(px(beamCenterX-beamFootprintR),pz(0));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ));ctx.lineTo(px(beamCenterX+beamFootprintR),pz(0));ctx.stroke();
+    ctx.setLineDash([]);
+    // Fixture symbol (⊕)
+    ctx.fillStyle='#111e35';ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),8,0,Math.PI*2);ctx.fill();
+    var halo=ctx.createRadialGradient(px(fixX),pz(fixZ),0,px(fixX),pz(fixZ),22);
+    halo.addColorStop(0,'rgba(255,248,180,'+(0.6*pulse)+')');halo.addColorStop(1,'rgba(255,220,80,0)');
+    ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),22,0,Math.PI*2);ctx.fillStyle=halo;ctx.fill();
+    ctx.strokeStyle='rgba(200,220,240,0.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),8,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,250,210,0.9)';ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),4,0,Math.PI*2);ctx.fill();
+    // Spacing annotation
+    if(numFix>1&&fi<numFix-1){
+      var nextX=objCenterX-objWidth/2+fixSpacing*0.5+(fi+1)*fixSpacing;
+      ctx.strokeStyle='rgba(79,142,247,0.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ)-24);ctx.lineTo(px(nextX),pz(fixZ)-24);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(79,142,247,0.8)';ctx.font='bold 10px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.fillText(Math.round(fixSpacing*10)/10+"'", (px(fixX)+px(nextX))/2, pz(fixZ)-28);
+    }
+  }
+
+  // Object footprint on wall
+  if(objWidth>0){
+    var oL=px(objCenterX-objWidth/2), oR=px(objCenterX+objWidth/2);
+    ctx.fillStyle='rgba(200,216,240,0.18)';ctx.fillRect(oL,MT+dh-5,oR-oL,5);
+    ctx.strokeStyle='rgba(200,216,240,0.8)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(oL,MT+dh);ctx.lineTo(oR,MT+dh);ctx.stroke();
+    ctx.fillStyle='rgba(220,230,245,0.85)';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
+    ctx.fillText(obj.icon+' '+obj.name+' ('+objWidth+"' wide)",px(objCenterX),MT+dh+16);
+  }
+
+  // Wall line
+  ctx.strokeStyle='rgba(150,175,210,0.8)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(ML,MT+dh);ctx.lineTo(ML+dw,MT+dh);ctx.stroke();
+  // Labels
+  ctx.fillStyle='rgba(110,140,180,0.7)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText('WALL',ML+dw/2,MT+dh+30);
+  ctx.fillText('OPEN ROOM',ML+dw/2,MT+12);
+  // Room width annotation
+  ctx.strokeStyle='rgba(79,142,247,0.45)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(ML,MT-14);ctx.lineTo(ML+dw,MT-14);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#4f8ef7';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText(rW+"' room width",ML+dw/2,MT-4);
+  // Multi-fixture summary
+  ctx.fillStyle='rgba(255,240,160,0.9)';ctx.font='bold 13px system-ui,sans-serif';ctx.textAlign='left';
+  ctx.fillText(numFix+' fixture'+(numFix>1?'s':'')+(numFix>1?' · '+Math.round(fixSpacing*10)/10+"' spacing":''),ML+4,MT+20);
+  ctx.restore();
+}
+
+// ── 3D Oblique View ───────────────────────────────────────────
+function _ssDraw3D(ctx,w,h,dpr) {
+  ctx.save(); ctx.scale(dpr,dpr);
+  var obj=_ssGetObj();
+  var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
+  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
+  var rW=_ss.roomWidth||16, rH=_ss.ceilH, rD=Math.max(_ss.wallDist+6,12);
+  var pulse=0.82+0.18*Math.sin(_ss._phase*1.4);
+
+  // Oblique cabinet projection: front face is back wall (z=0)
+  // X=room width, Y=height, Z=depth from back wall
+  var scaleBase=Math.min((w-80)/rW, (h-80)/rH, 30);
+  var sc=scaleBase;
+  var ox=w*0.12, oy=h*0.85; // origin at back-left-floor corner
+  var angle=Math.PI/5, dfact=0.4; // oblique depth angle and factor
+
+  function p3(x,y,z){
+    return {
+      x: ox + x*sc - z*dfact*sc*Math.cos(angle),
+      y: oy - y*sc - z*dfact*sc*Math.sin(angle)
+    };
+  }
+
+  // Background
+  ctx.fillStyle='#080f1e'; ctx.fillRect(0,0,w,h);
+
+  // ── Floor ──
+  var fl=[p3(0,0,0),p3(rW,0,0),p3(rW,0,rD),p3(0,0,rD)];
+  ctx.fillStyle='rgba(20,35,55,0.9)';
+  ctx.beginPath();ctx.moveTo(fl[0].x,fl[0].y);fl.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(60,90,130,0.5)';ctx.lineWidth=1;
+  for(var gx=0;gx<=rW;gx+=2){var a=p3(gx,0,0),b=p3(gx,0,rD);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  for(var gz=0;gz<=rD;gz+=2){var a=p3(0,0,gz),b=p3(rW,0,gz);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+
+  // ── Back wall (where painting is) ──
+  var bw=[p3(0,0,0),p3(rW,0,0),p3(rW,rH,0),p3(0,rH,0)];
+  ctx.fillStyle='rgba(15,28,48,0.9)';
+  ctx.beginPath();ctx.moveTo(bw[0].x,bw[0].y);bw.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(80,110,160,0.6)';ctx.lineWidth=1;
+  for(var gy=0;gy<=rH;gy+=2){var a=p3(0,gy,0),b=p3(rW,gy,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  for(var gx2=0;gx2<=rW;gx2+=2){var a=p3(gx2,0,0),b=p3(gx2,rH,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+
+  // ── Left wall ──
+  var lw=[p3(0,0,0),p3(0,0,rD),p3(0,rH,rD),p3(0,rH,0)];
+  ctx.fillStyle='rgba(12,22,40,0.85)';
+  ctx.beginPath();ctx.moveTo(lw[0].x,lw[0].y);lw.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(60,85,130,0.4)';ctx.lineWidth=1;
+  for(var gz2=0;gz2<=rD;gz2+=2){var a=p3(0,0,gz2),b=p3(0,rH,gz2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+
+  // Wall/floor edge lines
+  ctx.strokeStyle='rgba(100,140,190,0.7)';ctx.lineWidth=2;
+  var wallBottom=[p3(0,0,0),p3(rW,0,0)];ctx.beginPath();ctx.moveTo(wallBottom[0].x,wallBottom[0].y);ctx.lineTo(wallBottom[1].x,wallBottom[1].y);ctx.stroke();
+  var floorLeft=[p3(0,0,0),p3(0,0,rD)];ctx.beginPath();ctx.moveTo(floorLeft[0].x,floorLeft[0].y);ctx.lineTo(floorLeft[1].x,floorLeft[1].y);ctx.stroke();
+
+  // ── Object on back wall ──
+  var fixX3=rW/2, fixZ3=_ss.wallDist;
+  var beamCenterX3=fixX3; // no sideways tilt for now
+  if(obj.surf==='vertical'){
+    var ow=(_ss.objCustom[obj.id]||{}).width||4;
+    var oh=obj.hw*2;
+    var ox3L=fixX3-ow/2, ox3R=fixX3+ow/2;
+    var oyB=obj.h-obj.hw, oyT=obj.h+obj.hw;
+    // Illuminance gradient on object face
+    var p3tl=p3(ox3L,oyT,0), p3tr=p3(ox3R,oyT,0), p3br=p3(ox3R,oyB,0), p3bl=p3(ox3L,oyB,0);
+    var fcC=_ssCalcFC(0,obj.h,'vertical');
+    ctx.fillStyle=_fcToRGBA(fcC,0.6*pulse);
+    ctx.beginPath();ctx.moveTo(p3tl.x,p3tl.y);ctx.lineTo(p3tr.x,p3tr.y);ctx.lineTo(p3br.x,p3br.y);ctx.lineTo(p3bl.x,p3bl.y);ctx.closePath();ctx.fill();
+    // Frame
+    ctx.strokeStyle='rgba(210,180,120,0.8)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(p3tl.x,p3tl.y);ctx.lineTo(p3tr.x,p3tr.y);ctx.lineTo(p3br.x,p3br.y);ctx.lineTo(p3bl.x,p3bl.y);ctx.closePath();ctx.stroke();
+    // FC label
+    if(fcC>0.5){
+      var ctr=p3(fixX3,obj.h,0);
+      ctx.fillStyle='rgba(255,240,140,0.9)';ctx.font='bold 14px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.fillText(Math.round(fcC)+' fc',ctr.x,ctr.y);
+    }
+  } else {
+    var surfP=p3(fixX3,obj.h,0);
+    var fcC=_ssCalcFC(_ssBeamCenter(obj.h),obj.h,'horizontal');
+    ctx.fillStyle=_fcToRGBA(fcC,0.5*pulse);
+    var sR=sc*2;
+    ctx.beginPath();ctx.arc(surfP.x,surfP.y,sR,0,Math.PI*2);ctx.fill();
+    if(fcC>0.5){
+      ctx.fillStyle='rgba(255,240,140,0.9)';ctx.font='bold 14px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.fillText(Math.round(fcC)+' fc',surfP.x,surfP.y-sR-4);
+    }
+  }
+
+  // ── Beam cone ──
+  var fixPt=p3(fixX3,rH,fixZ3);
+  var beamDist=Math.sqrt(fixZ3*fixZ3+Math.pow(rH-obj.h,2));
+  var beamHW=Math.tan(halfRad)*beamDist;
+  var hitX3=fixX3-fixZ3*Math.sin(tiltRad);
+  var hitY3=rH-fixZ3/Math.tan(halfRad>0.01?halfRad:0.01)*0; // simplified
+  // Beam to 4 corners of illuminated area on wall/floor
+  var corners=[];
+  if(obj.surf==='vertical'){
+    corners=[p3(hitX3-beamHW,obj.h+beamHW,0),p3(hitX3+beamHW,obj.h+beamHW,0),
+             p3(hitX3+beamHW,obj.h-beamHW,0),p3(hitX3-beamHW,obj.h-beamHW,0)];
+  } else {
+    corners=[p3(hitX3-beamHW,obj.h,fixZ3*0.1),p3(hitX3+beamHW,obj.h,fixZ3*0.1),
+             p3(hitX3+beamHW,obj.h,0),p3(hitX3-beamHW,obj.h,0)];
+  }
+  ctx.strokeStyle='rgba(255,245,180,'+(0.3*pulse)+')';ctx.lineWidth=1;ctx.setLineDash([4,5]);
+  corners.forEach(function(c){
+    ctx.beginPath();ctx.moveTo(fixPt.x,fixPt.y);ctx.lineTo(c.x,c.y);ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // Beam fill
+  ctx.save();
+  var bfGrad=ctx.createRadialGradient(fixPt.x,fixPt.y,0,fixPt.x,fixPt.y,sc*beamDist*0.9);
+  bfGrad.addColorStop(0,'rgba(255,248,180,'+(0.25*pulse)+')');
+  bfGrad.addColorStop(1,'rgba(255,220,80,0)');
+  ctx.beginPath();ctx.moveTo(fixPt.x,fixPt.y);
+  corners.forEach(function(c){ctx.lineTo(c.x,c.y);});ctx.closePath();
+  ctx.fillStyle=bfGrad;ctx.fill();
+  ctx.restore();
+
+  // ── Fixture ──
+  ctx.fillStyle='#1a2d48';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,10,0,Math.PI*2);ctx.fill();
+  var fhalo=ctx.createRadialGradient(fixPt.x,fixPt.y,0,fixPt.x,fixPt.y,28);
+  fhalo.addColorStop(0,'rgba(255,248,180,'+(0.65*pulse)+')');fhalo.addColorStop(1,'rgba(255,220,80,0)');
+  ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,28,0,Math.PI*2);ctx.fillStyle=fhalo;ctx.fill();
+  ctx.strokeStyle='rgba(200,220,240,0.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,10,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(255,250,200,'+(0.9*pulse)+')';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,5,0,Math.PI*2);ctx.fill();
+  // Tilt indicator
+  var ta=tiltRad; var tx=-Math.sin(ta)*8, ty=Math.cos(ta)*8;
+  ctx.strokeStyle='rgba(255,245,140,0.85)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(fixPt.x-tx*0.4,fixPt.y-ty*0.4);ctx.lineTo(fixPt.x+tx,fixPt.y+ty);ctx.stroke();
+
+  // Ceiling line at top of back wall + left edge of ceiling
+  ctx.strokeStyle='rgba(80,110,160,0.6)';ctx.lineWidth=1.5;
+  var ceilLine=[p3(0,rH,0),p3(rW,rH,0)];
+  ctx.beginPath();ctx.moveTo(ceilLine[0].x,ceilLine[0].y);ctx.lineTo(ceilLine[1].x,ceilLine[1].y);ctx.stroke();
+
+  // Labels
+  var wallLabelPt=p3(rW*0.5,rH*0.55,0);
+  ctx.fillStyle='rgba(110,140,180,0.55)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText('BACK WALL',wallLabelPt.x,wallLabelPt.y);
+  var floorLabelPt=p3(rW*0.6,0,rD*0.5);
+  ctx.fillText('FLOOR',floorLabelPt.x,floorLabelPt.y-8);
+  ctx.fillStyle='rgba(255,240,160,'+(0.6*pulse)+')';ctx.font='bold 12px system-ui,sans-serif';
+  ctx.fillText(Math.round(beamDeg)+'° · '+(_ss.tiltDeg||0)+'° tilt',fixPt.x,fixPt.y+26);
+
+  ctx.restore();
+}
+
 function _fcToRGBA(fc,alpha) {
   if(fc<=0) return 'rgba(0,0,0,0)';
   var i=Math.min(1,fc/80);
@@ -26531,11 +26868,9 @@ function _ssUpdateResults() {
   var halfRad=(beamDeg*Math.PI/180)/2;
   var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
   var H=_ss.ceilH-obj.h;
-  // Tilt-aware beam center
   var fcPX=obj.surf==='vertical'?0:_ssBeamCenter(obj.h);
   var fcC=_ssCalcFC(fcPX, obj.h, obj.surf);
   var xmitPct=Math.round(_ssEffXmit()*100);
-  // Distance along beam axis to surface
   var distAlongBeam = obj.surf==='vertical'
     ? Math.sqrt(_ss.wallDist*_ss.wallDist + H*H)
     : (H>0 ? H/Math.cos(tiltRad) : 0);
@@ -26547,16 +26882,39 @@ function _ssUpdateResults() {
   else if(fcC<=hi){qlbl='Good';qclr='#10b981';}
   else{qlbl='Very Bright';qclr='#60a5fa';}
   var fcStr=fcC>=0.5?Math.round(fcC)+' fc':'< 1 fc';
-  var tiltLabel = (_ss.tiltDeg||0)===0 ? 'Straight down' : (_ss.tiltDeg||0)+'° toward wall';
-  var outLabel = (_ss.outputPct||100)+'%'+(_ssEffXmit()<(_ss.outputPct||100)/100?' · accessories':(_ss.outputPct<100?' dimmed':''));
+  var tiltLabel=(_ss.tiltDeg||0)===0?'Straight down':(_ss.tiltDeg||0)+'° toward wall';
+  var outLabel=xmitPct+'%'+(_ssEffXmit()<(_ss.outputPct||100)/100?' with accessories':(_ss.outputPct<100?' dimmed':''));
 
-  el.innerHTML=
-    _ssCard('Center fc',fcStr,qlbl,qclr)
-    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft','at target surface','#8da0c0')
+  // Multi-fixture analysis
+  var objW = obj.width || 0;
+  var coverSpacing = beamW * 0.65;
+  var numFix = objW>0&&coverSpacing>0 ? Math.max(1,Math.ceil(objW/coverSpacing)) : 1;
+  var fixSpacing = numFix>1 ? Math.round(objW/numFix*10)/10 : 0;
+  var edgeFC = objW>0 ? _ssCalcFC(
+    obj.surf==='vertical' ? 0 : (_ssBeamCenter(obj.h) + objW/2/numFix),
+    obj.h, obj.surf) : 0;
+  var uniformityRatio = fcC>0&&edgeFC>0 ? Math.round(edgeFC/fcC*100) : 0;
+
+  var multiHtml = '';
+  if(objW>0){
+    multiHtml = '<div style="grid-column:1/-1;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.2);border-radius:10px;padding:12px 14px;margin-top:4px">'
+      +'<div style="font-size:11px;font-weight:700;color:#4f8ef7;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Multi-Fixture Coverage — '+objW+'\' '+obj.name+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">'
+      +_ssCard('Fixtures Needed',numFix,'to cover '+objW+'\' width',numFix<=3?'#10b981':'#f59e0b')
+      +(numFix>1?_ssCard('Spacing',fixSpacing+'\'','center to center','#8da0c0'):'')
+      +_ssCard('Beam Cover',Math.round(beamW*10)/10+'\' per fix.','beam spread at surface','#8da0c0')
+      +(uniformityRatio>0?_ssCard('Uniformity',uniformityRatio+'%','edge vs center fc',uniformityRatio>60?'#10b981':'#f59e0b'):'')
+      +'</div></div>';
+  }
+
+  el.innerHTML='<div style="display:contents">'
+    +_ssCard('Center fc',fcStr,qlbl,qclr)
+    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','at target surface','#8da0c0')
     +_ssCard('Distance',Math.round(distAlongBeam*10)/10+' ft','fixture to surface','#8da0c0')
-    +_ssCard('Tilt Angle',(_ss.tiltDeg||0)+'°',tiltLabel,(_ss.tiltDeg||0)>0?'#f59e0b':'#8da0c0')
+    +_ssCard('Tilt',(_ss.tiltDeg||0)+'°',tiltLabel,(_ss.tiltDeg||0)>0?'#f59e0b':'#8da0c0')
     +_ssCard('Output',xmitPct+'%',outLabel,xmitPct>80?'#10b981':'#f59e0b')
-    +_ssCard('Recommended',lo+'–'+hi+' fc',obj.note,'#4f8ef7');
+    +_ssCard('Recommended',lo+'–'+hi+' fc',obj.note,'#4f8ef7')
+    +'</div>'+multiHtml;
 }
 
 function _ssCard(lbl,val,sub,color) {
