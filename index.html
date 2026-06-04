@@ -25977,8 +25977,11 @@ function _ssRender() {
   if (!root) return;
   root.innerHTML = _ssBuildHTML();
   _ssBindEvents();
-  _ssResizeCanvas();
-  _ssStartAnim();
+  // Defer canvas setup until after browser layout so getBoundingClientRect is valid
+  requestAnimationFrame(function() {
+    _ssResizeCanvas();
+    _ssStartAnim();
+  });
 }
 
 function _ssBuildHTML() {
@@ -26196,9 +26199,12 @@ function _ssBindEvents() {
 function _ssResizeCanvas() {
   var c=document.getElementById('ss-canvas'); if(!c) return;
   var r=c.getBoundingClientRect();
-  if(r.width>0&&r.height>0){
+  if(r.width>10&&r.height>10){
     var dpr=window.devicePixelRatio||1;
     c.width=Math.round(r.width*dpr); c.height=Math.round(r.height*dpr);
+  } else {
+    // Layout not complete yet — retry next frame
+    requestAnimationFrame(_ssResizeCanvas);
   }
 }
 
@@ -26261,18 +26267,23 @@ function _ssDrawCanvas() {
   if(_ss.viewMode==='3d')  { _ssDraw3D(ctx,w,h,dpr); return; }
   ctx.save(); ctx.scale(dpr,dpr);
 
-  var ML=54, MR=28, MT=42, MB=38;
+  var ML=58, MR=44, MT=50, MB=44;
   var dw=w-ML-MR, dh=h-MT-MB;
+  if(dw<10||dh<10){ ctx.restore(); return; }
   var cH=_ss.ceilH, wd=_ss.wallDist;
-  var viewRange=Math.max(wd+8, cH*1.15, 14);
-  var sx=dw/viewRange, sy=dh/cH;
+  var viewRange=Math.max(wd+6, cH*1.0, 12);
 
-  // Coordinate converters
-  // physX=0 → wall (RIGHT); physX=viewRange → far left
-  function cx(px){ return ML+(viewRange-px)*sx; }
-  function cy(py){ return MT+(cH-py)*sy; }
-  function fw(v){ return v*sx; }
-  function fh(v){ return v*sy; }
+  // Equal proportional scale — 1 ft = same pixels in X and Y, fits entire room
+  var sc=Math.min(dw/viewRange, dh/cH)*0.96;
+  var roomW=viewRange*sc, roomH=cH*sc;
+  // Center room in drawing area
+  var xOff=Math.max(0,(dw-roomW)/2);
+  var yOff=Math.max(0,(dh-roomH)/2);
+
+  function cx(px){ return ML+xOff+(viewRange-px)*sc; }
+  function cy(py){ return MT+yOff+(cH-py)*sc; }
+  function fw(v){ return v*sc; }
+  function fh(v){ return v*sc; }
 
   var fixCX=cx(wd), fixCY=cy(cH);
   var beamDeg=_ssEffBeam();
@@ -26382,8 +26393,8 @@ function _ssDrawCanvas() {
   ctx.fillStyle='rgba(255,250,210,'+(0.85*pulse)+')'; ctx.fill();
 
   // ── Dimension annotations ──
-  _ssDimV(ctx,ML-14,cy(0),cy(cH),cH+'\'',ML-40);
-  _ssDimH(ctx,cx(0),fixCX,MT-18,wd+'\'',MT-6);
+  _ssDimV(ctx, ML-14, cy(0), cy(cH), cH+"'", ML-42);
+  _ssDimH(ctx, cx(0), fixCX, cy(cH)-22, wd+"'", cy(cH)-8);
 
   // Room labels
   ctx.fillStyle='rgba(110,140,180,0.7)'; ctx.font='bold 11px system-ui,sans-serif';
@@ -26564,12 +26575,17 @@ function _ssDraw2DPlan(ctx,w,h,dpr) {
   var rW=_ss.roomWidth||16, rD=Math.max(_ss.wallDist+8,rW*0.8);
   var pulse=(0.82+0.18*Math.sin(_ss._phase*1.4))*Math.max(0.05,_ssEffXmit());
 
-  var ML=50,MR=30,MT=42,MB=42;
+  var ML=50,MR=30,MT=48,MB=48;
   var dw=w-ML-MR, dh=h-MT-MB;
-  var sx=dw/rW, sz=dh/rD;
-  function px(x){ return ML+x*sx; }
-  function pz(z){ return MT+dh-z*sz; }
-  function fw2(v){ return v*(sx+sz)/2; }
+  if(dw<10||dh<10){ ctx.restore(); return; }
+  // Equal proportional scale — 1 ft = same in both axes
+  var sc2=Math.min(dw/rW, dh/rD)*0.94;
+  var roomWpx=rW*sc2, roomDpx=rD*sc2;
+  var xOff2=Math.max(0,(dw-roomWpx)/2);
+  var zOff2=Math.max(0,(dh-roomDpx)/2);
+  function px(x){ return ML+xOff2+x*sc2; }
+  function pz(z){ return MT+zOff2+dh-zOff2*2-z*sc2; } // wall at bottom
+  function fw2(v){ return v*sc2; }
 
   // Background
   ctx.fillStyle='#080f1e'; ctx.fillRect(0,0,w,h);
@@ -26668,10 +26684,16 @@ function _ssDraw3D(ctx,w,h,dpr) {
 
   // Oblique cabinet projection: front face is back wall (z=0)
   // X=room width, Y=height, Z=depth from back wall
-  var scaleBase=Math.min((w-80)/rW, (h-80)/rH, 30);
-  var sc=scaleBase;
-  var ox=w*0.12, oy=h*0.85; // origin at back-left-floor corner
-  var angle=Math.PI/5, dfact=0.4; // oblique depth angle and factor
+  var angle=Math.PI/5.5, dfact=0.38;
+  var cosA=Math.cos(angle), sinA=Math.sin(angle);
+  // Compute max scale so entire room bounding box fits inside canvas
+  var pad=36;
+  var scW=(w-pad*2)/(rW + rD*dfact*cosA);
+  var scH=(h-pad*2)/(rH + rD*dfact*sinA);
+  var sc=Math.min(scW, scH, 28);
+  // Place origin (back-left-floor) so room is centered / well-padded
+  var ox=pad + rD*dfact*cosA*sc;
+  var oy=h - pad;
 
   function p3(x,y,z){
     return {
