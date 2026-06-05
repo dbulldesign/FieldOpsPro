@@ -5346,6 +5346,20 @@ service cloud.firestore {
   </div>
 </div>
 
+<!-- Section Study: Export Report Modal -->
+<div class="modal-overlay" id="modal-ss-report" style="display:none">
+  <div class="modal" style="max-width:1000px;width:97%;max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-header">
+      <h3>Export Report</h3>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <button class="btn btn-primary btn-sm" onclick="_ssExportReport()">⬇ Export PDF</button>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-report')">✕</button>
+      </div>
+    </div>
+    <div id="ss-report-body" style="overflow:auto;padding:14px 16px 18px"></div>
+  </div>
+</div>
+
 <!-- Save to Project Modal -->
 <div class="modal-overlay" id="modal-save-to-proj" style="display:none">
   <div class="modal" style="max-width:440px">
@@ -26317,6 +26331,7 @@ function _ssBuildHTML() {
     + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
     + '<button class="btn btn-ghost btn-sm" onclick="_ssOpenAddFixture()">+ Fixture</button>'
     + '<button class="btn btn-ghost btn-sm" onclick="_ssOpenAddObject()">+ Object</button>'
+    + '<button class="btn btn-primary btn-sm" onclick="_ssOpenReport()">⬇ Report</button>'
     + '</div></div>';
 
   // ── Fixture & Beam group ──
@@ -27420,6 +27435,113 @@ function _ssFixAuto(){
   _ssRender();
 }
 
+// ── Report Export ─────────────────────────────────────────────
+function _ssOpenReport(){
+  if(!_ss.report) _ss.report={};
+  var r=_ss.report;
+  if(!r.title) r.title='Lighting Section Study';
+  if(!r.project) r.project='';
+  if(!r.location) r.location='';
+  if(!r.preparedBy) r.preparedBy='';
+  if(!r.date) r.date=new Date().toISOString().slice(0,10);
+  if(r.notes===undefined) r.notes='';
+  r.view = r.view || _ss.viewMode || 'section';
+  _ssCaptureReportImg(r.view);
+  var body=document.getElementById('ss-report-body'); if(!body) return;
+  var vbtn=function(m,lbl){ var on=r.view===m; return '<button onclick="_ssReportSetView(\''+m+'\')" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid '+(on?'#4f8ef7':'rgba(255,255,255,0.14)')+';background:'+(on?'#4f8ef7':'rgba(255,255,255,0.05)')+';color:'+(on?'#fff':'#8da0c0')+'">'+lbl+'</button>'; };
+  var fld=function(label,field,val){ return '<div style="margin-bottom:8px"><div style="font-size:11px;color:#8da0c0;margin-bottom:3px">'+label+'</div>'
+    + '<input value="'+escH(val||'')+'" oninput="_ssReportField(\''+field+'\',this.value)" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:13px;box-sizing:border-box"></div>'; };
+  var html='';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">';
+  // Edit form
+  html += '<div>';
+  html += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Report Details</div>';
+  html += fld('Report Title','title',r.title);
+  html += fld('Project','project',r.project);
+  html += fld('Location','location',r.location);
+  html += fld('Prepared By','preparedBy',r.preparedBy);
+  html += '<div style="margin-bottom:8px"><div style="font-size:11px;color:#8da0c0;margin-bottom:3px">Date</div>'
+    + '<input type="date" value="'+escH(r.date)+'" oninput="_ssReportField(\'date\',this.value)" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:13px;box-sizing:border-box"></div>';
+  html += '<div style="margin-bottom:12px"><div style="font-size:11px;color:#8da0c0;margin-bottom:3px">Notes</div>'
+    + '<textarea oninput="_ssReportField(\'notes\',this.value)" rows="4" style="width:100%;background:#152638;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;color:#f0f4ff;font-size:13px;box-sizing:border-box;resize:vertical">'+escH(r.notes)+'</textarea></div>';
+  html += '<div style="font-size:11px;color:#8da0c0;margin-bottom:6px">Diagram View</div>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">'+vbtn('section','Section')+vbtn('plan','Plan')+vbtn('3d','3D')+'</div>';
+  html += '</div>';
+  // Live preview
+  html += '<div><div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Live Preview</div>';
+  html += '<div id="ss-report-preview" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.4)"></div></div>';
+  html += '</div>';
+  body.innerHTML=html;
+  _ssRenderReportPreview();
+  openModal('modal-ss-report');
+}
+function _ssReportField(field,val){ if(!_ss.report) _ss.report={}; _ss.report[field]=val; _ssRenderReportPreview(); }
+function _ssReportSetView(view){
+  _ss.report.view=view;
+  _ssOpenReport(); // recaptures the chosen view + rebuilds form/preview
+}
+function _ssCaptureReportImg(view){
+  var c=document.getElementById('ss-canvas'); if(!c){ _ss._reportImg=''; return; }
+  var prev=_ss.viewMode;
+  _ss.viewMode=view;
+  try{ _ssDrawCanvas(); _ss._reportImg=c.toDataURL('image/png'); }
+  catch(e){ _ss._reportImg=''; }
+  _ss.viewMode=prev;
+  try{ _ssDrawCanvas(); }catch(e){}
+}
+function _ssRenderReportPreview(){
+  var p=document.getElementById('ss-report-preview'); if(!p) return;
+  p.innerHTML=_ssReportDocHTML();
+}
+// Build the printable report document (light theme, inline styles)
+function _ssReportDocHTML(){
+  var r=_ss.report||{};
+  var L=_ssLayout(), obj=L.obj, fx=_ssGetFx();
+  var fcOne=_ssCalcFC(obj.surf==='vertical'?0:obj.dist,obj.h,obj.surf);
+  var fcC=_ssCalcFCCombined(obj.surf==='vertical'?0:obj.dist,obj.h,obj.surf,L.numFix,L.spacing);
+  var xmitPct=Math.round(_ssEffXmit()*100);
+  var accNames=_ss.acc.map(function(id){var a=_ssAllAcc().find(function(x){return x.id===id;});return a?a.name:id;});
+  var viewLabel = r.view==='plan'?'Plan View':(r.view==='3d'?'3D View':'Section View');
+  var img=_ss._reportImg||'';
+  var lo=obj.recFc[0], hi=obj.recFc[1];
+  var rating = fcC<lo*0.4?'Too Dim':(fcC<lo?'Below Recommended':(fcC<=hi?'Good':'Very Bright'));
+  function row(a,b){ return '<tr><td style="padding:5px 10px;border-bottom:1px solid #e5e9f0;color:#475569;font-size:12px">'+a+'</td><td style="padding:5px 10px;border-bottom:1px solid #e5e9f0;color:#0f172a;font-size:12px;font-weight:600;text-align:right">'+b+'</td></tr>'; }
+  function tbl(title,rows){ return '<div style="flex:1;min-width:200px"><div style="font-size:12px;font-weight:700;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px">'+title+'</div><table style="width:100%;border-collapse:collapse">'+rows+'</table></div>'; }
+  var d='<div style="font-family:Helvetica,Arial,sans-serif;color:#0f172a;padding:22px 24px;font-size:13px">';
+  // Header
+  d+='<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1e3a8a;padding-bottom:10px;margin-bottom:14px">';
+  d+='<div><div style="font-size:20px;font-weight:800;color:#1e3a8a">'+escH(r.title||'Lighting Section Study')+'</div>';
+  d+='<div style="font-size:12px;color:#64748b;margin-top:2px">'+escH(r.project||'')+(r.location?' — '+escH(r.location):'')+'</div></div>';
+  d+='<div style="text-align:right;font-size:11px;color:#64748b">'+(r.date?escH(r.date):'')+(r.preparedBy?'<br>'+escH(r.preparedBy):'')+'</div>';
+  d+='</div>';
+  // Diagram
+  if(img){ d+='<div style="text-align:center;margin-bottom:14px"><img src="'+img+'" style="max-width:100%;border:1px solid #cbd5e1;border-radius:6px">'
+    + '<div style="font-size:11px;color:#64748b;margin-top:4px">'+viewLabel+'</div></div>'; }
+  // Spec + condition tables
+  d+='<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:14px">';
+  d+=tbl('Fixture', row('Fixture',escH(fx.name))+row('Beam Angle',Math.round(_ssEffBeam())+'°')+row('Tilt',(_ss.tiltDeg||0)+'°')+row('Output',xmitPct+'%')+row('Accessories',accNames.length?escH(accNames.join(', ')):'None'));
+  d+=tbl('Room & Object', row('Object',escH(obj.icon+' '+obj.name))+row('Ceiling Height',_ss.ceilH+' ft')+row('Wall Distance',_ss.wallDist+' ft')+row('Object Size',(obj.width)+'\' W × '+(Math.round(obj.hw*2*10)/10)+'\' H')+row('Mounting Ht',obj.h+' ft'));
+  d+='</div>';
+  // Results
+  d+='<div style="display:flex;gap:24px;flex-wrap:wrap">';
+  d+=tbl('Photometric Results', row('Throw Distance',Math.round(L.distAlongBeam*10)/10+' ft')+row('Beam Spread',Math.round(L.beamW*10)/10+' ft dia.')+row('fc per Fixture',Math.round(fcOne)+' fc')+row('Total fc on Object',Math.round(fcC)+' fc')+row('Recommended',lo+'–'+hi+' fc')+row('Assessment',rating));
+  d+=tbl('Layout', row('Fixtures',L.numFix+(L.isManual?' (manual)':' (auto)'))+row('Spacing',L.numFix>1?(Math.round(L.spacing*10)/10+' ft o.c.'):'—')+row('Coverage',Math.round(Math.min(100,(L.beamW/(L.objW/Math.max(L.numFix,1)))*100))+'%'));
+  d+='</div>';
+  if(r.notes){ d+='<div style="margin-top:14px"><div style="font-size:12px;font-weight:700;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Notes</div><div style="font-size:12px;color:#334155;white-space:pre-wrap;line-height:1.5">'+escH(r.notes)+'</div></div>'; }
+  d+='<div style="margin-top:16px;padding-top:8px;border-top:1px solid #e5e9f0;font-size:10px;color:#94a3b8;text-align:center">Generated by FieldOps Pro — Section Study · estimates only, verify against manufacturer photometry</div>';
+  d+='</div>';
+  return d;
+}
+function _ssExportReport(){
+  var doc=_ssReportDocHTML();
+  var w=window.open('','_blank');
+  if(!w){ toast('Allow pop-ups to export'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+escH((_ss.report&&_ss.report.title)||'Report')+'</title>'
+    +'<style>@media print{@page{margin:12mm}}body{margin:0;background:#fff}</style></head><body>'+doc
+    +'<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>');
+  w.document.close();
+}
+
 // ── Results Panel ─────────────────────────────────────────────
 function _ssUpdateResults() {
   var el=document.getElementById('ss-results'); if(!el) return;
@@ -27926,6 +28048,10 @@ window._ssFixCount          = _ssFixCount;
 window._ssFixAuto           = _ssFixAuto;
 window._ssImportIESFile     = _ssImportIESFile;
 window._ssImportIESPaste    = _ssImportIESPaste;
+window._ssOpenReport        = _ssOpenReport;
+window._ssReportField       = _ssReportField;
+window._ssReportSetView     = _ssReportSetView;
+window._ssExportReport      = _ssExportReport;
 window._ssStopAnim          = _ssStopAnim;
 window._ssUpdateViewBtns    = _ssUpdateViewBtns;
 window._ssResetCam          = _ssResetCam;
