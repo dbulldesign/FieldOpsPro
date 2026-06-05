@@ -26068,7 +26068,7 @@ function _ssEffBeam() {
   return Math.min(bd, 89);
 }
 function _ssEffXmit() {
-  var x = (_ss.outputPct||100) / 100;
+  var x = (_ss.outputPct!=null?_ss.outputPct:100) / 100;
   _ss.acc.forEach(function(aid){ x *= _ssAccVal(aid,'xmit'); });
   return x;
 }
@@ -26208,6 +26208,13 @@ function _ssNum(label, id, min, max, step, val, unit) {
     + '<div style="display:flex;align-items:center;gap:6px"><input class="ss-num" id="'+id+'" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" style="flex:1;min-width:0">'
     + (unit?'<span style="font-size:13px;color:#64748b;flex-shrink:0">'+unit+'</span>':'')+'</div></div>';
 }
+// Compact inline number — label + small number box, sits in a shared row
+function _ssMiniNum(label, id, min, max, step, val, unit) {
+  return '<div style="display:flex;align-items:center;gap:6px;flex:1;min-width:115px">'
+    + '<span style="font-size:11px;color:#8da0c0;white-space:nowrap">'+label+'</span>'
+    + '<input class="ss-num" id="'+id+'" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" style="flex:1;min-width:0;padding:5px 7px;font-size:13px">'
+    + (unit?'<span style="font-size:11px;color:#64748b">'+unit+'</span>':'')+'</div>';
+}
 // Slider + editable number — value can be typed OR dragged (both stay in sync)
 function _ssSliderNum(label, id, min, max, step, val, unit) {
   return '<div class="ss-field">'
@@ -26287,12 +26294,12 @@ function _ssBuildHTML() {
     + '<div id="ss-fixcount-note" style="font-size:10px;color:#4a5e7a;margin-top:3px;text-align:center">'+(_ss.fixCountOverride!=null?'manual':'auto: '+_lay.autoNum)+'</div></div>';
   s += '</div></div>';
 
-  // ── Room group ──
+  // ── Room group (condensed single row) ──
   s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Room</span></div>';
-  s += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
-  s += _ssNum('Ceiling Height','ss-ceil',6,30,0.5,_ss.ceilH,'ft');
-  s += _ssNum('Distance to Wall','ss-wdist',0.5,20,0.5,_ss.wallDist,'ft');
-  s += _ssNum('Room Width','ss-roomw',8,40,1,(_ss.roomWidth||16),'ft');
+  s += '<div class="ss-field" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">';
+  s += _ssMiniNum('Ceiling','ss-ceil',6,30,0.5,_ss.ceilH,'ft');
+  s += _ssMiniNum('Wall Dist','ss-wdist',0.5,20,0.5,_ss.wallDist,'ft');
+  s += _ssMiniNum('Room W','ss-roomw',8,40,1,(_ss.roomWidth||16),'ft');
   s += '</div></div>';
 
   // ── Object group ──
@@ -26350,6 +26357,14 @@ function _ssBuildHTML() {
      + '<input class="ss-range" id="ss-ov-tilt" type="range" min="0" max="'+_ovMax+'" step="1" value="'+_ovTilt+'"'+(_ovMax===0?' disabled':'')+'></div>';
   s += '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:#8da0c0;margin-bottom:1px"><span>Wall Dist</span><span id="ss-ov-wdist-lbl" style="color:#4f8ef7;font-weight:700">'+_ss.wallDist+"'</span></div>"
      + '<input class="ss-range" id="ss-ov-wdist" type="range" min="0.5" max="20" step="0.25" value="'+_ss.wallDist+'"></div>';
+  // In-view fixture-count stepper (mirrors the main # Fixtures control)
+  var _ovStep='width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.07);color:#f0f4ff;font-size:16px;font-weight:700;cursor:pointer;line-height:1';
+  s += '<div><div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#8da0c0;margin-bottom:2px"><span># Fixtures</span>'
+     + '<button onclick="_ssFixAuto()" style="background:none;border:none;color:'+(_ss.fixCountOverride!=null?'#4f8ef7':'#4a5e7a')+';font-size:10px;font-weight:700;cursor:pointer;padding:0">auto</button></div>'
+     + '<div style="display:flex;align-items:center;justify-content:center;gap:8px">'
+     + '<button onclick="_ssFixCount(-1)" style="'+_ovStep+'">−</button>'
+     + '<span id="ss-ov-fixcount" style="font-size:16px;font-weight:700;color:#f0f4ff;min-width:20px;text-align:center">'+_lay.numFix+'</span>'
+     + '<button onclick="_ssFixCount(1)" style="'+_ovStep+'">+</button></div></div>';
   s += '</div></div>';
 
   // Results
@@ -26479,10 +26494,11 @@ function _ssSyncControls() {
   setv('ss-ov-out',out); setl('ss-ov-out-lbl',_ssFmtPct(out)+'%');
   setv('ss-wdist',_ss.wallDist);
   setv('ss-ov-wdist',_ss.wallDist); setl('ss-ov-wdist-lbl',_ss.wallDist+"'");
-  // Fixture count display
+  // Fixture count display (main panel + canvas overlay)
   var L=_ssLayout();
   setl('ss-fixcount-num', L.numFix);
   setl('ss-fixcount-note', L.isManual?'manual':'auto: '+L.autoNum);
+  setl('ss-ov-fixcount', L.numFix);
 }
 
 function _ssUpdateViewBtns() {
@@ -27350,30 +27366,36 @@ function _ssUpdateResults() {
   else{qlbl='Very Bright';qclr='#60a5fa';}
   var fcStr=fcC>=0.5?Math.round(fcC)+' fc':'< 1 fc';
   var tiltLabel=(_ss.tiltDeg||0)===0?'Straight down':(_ss.tiltDeg||0)+'° toward wall';
-  var outLabel=xmitPct+'%'+(_ssEffXmit()<(_ss.outputPct||100)/100?' with accessories':(_ss.outputPct<100?' dimmed':''));
+  var _outNow=(_ss.outputPct!=null?_ss.outputPct:100);
+  var outLabel=xmitPct+'%'+(_ssEffXmit()<_outNow/100?' with accessories':(_outNow<100?' dimmed':''));
 
-  // Multi-fixture analysis (shared layout)
-  var objW=L.objW, numFix=L.numFix, spacing=L.spacing;
-  // Uniformity: FC at the midpoint between two adjacent beams (worst case)
-  var uniformityRatio=0;
-  if(numFix>1 && fcC>0){
-    // midpoint between fixtures lands half a spacing off a beam center
-    var edgePos=obj.surf==='vertical'? 0 : obj.dist; // FC eval same surface; approximate dip
-    var dip=Math.max(0.35, Math.cos((spacing/Math.max(beamW,0.1))*Math.PI*0.5)); // rough overlap dip
-    uniformityRatio=Math.round(Math.min(100,dip*100));
-  } else if(numFix===1){
-    uniformityRatio=100;
-  }
+  // Multi-fixture analysis (shared layout) — all stats track the chosen count
+  var objW=L.objW, numFix=L.numFix, autoNum=L.autoNum;
+  // Center-to-center spacing if numFix fixtures are spread across the object width
+  var ccSpacing = numFix>0 ? objW/numFix : objW;
+  // Beam overlap ratio: >=1 means adjacent beams meet/overlap (continuous wash)
+  var overlap = ccSpacing>0 ? beamW/ccSpacing : 1;
+  var coverPct = Math.round(Math.min(100, overlap*100));
+  // Uniformity scales with overlap: ~0.6 (scalloped) → 0%, ~1.4 (smooth) → 100%
+  var uniformityRatio = Math.round(Math.max(0, Math.min(100, (overlap-0.6)/(1.4-0.6)*100)));
+
+  // Status of the chosen count vs the recommended count
+  var fxClr, fxNote;
+  if(numFix>=autoNum){ fxClr='#10b981'; fxNote=(numFix===autoNum?'recommended':'rec: '+autoNum); }
+  else { fxClr='#f59e0b'; fxNote='under-lit · rec '+autoNum; }
+  var covClr = coverPct>=95?'#10b981':(coverPct>=70?'#f59e0b':'#ef4444');
+  var uniClr = uniformityRatio>=60?'#10b981':(uniformityRatio>=35?'#f59e0b':'#ef4444');
 
   var multiHtml = '';
   if(objW>0){
     multiHtml = '<div style="grid-column:1/-1;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.2);border-radius:10px;padding:12px 14px;margin-top:4px">'
-      +'<div style="font-size:11px;font-weight:700;color:#4f8ef7;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Multi-Fixture Coverage — '+objW+'\' '+obj.name+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#4f8ef7;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">'
+        +'Multi-Fixture Coverage — '+numFix+' fixture'+(numFix!==1?'s':'')+' on '+objW+'\' '+obj.name+(L.isManual?' (manual)':'')+'</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">'
-      +_ssCard('Fixtures Needed',numFix,'to span '+objW+'\' width',numFix<=4?'#10b981':'#f59e0b')
-      +(numFix>1?_ssCard('Spacing',(Math.round(spacing*10)/10)+'\'','center to center','#8da0c0'):'')
-      +_ssCard('Beam Cover',Math.round(beamW*10)/10+'\' per fix.','beam dia. at surface','#8da0c0')
-      +(uniformityRatio>0?_ssCard('Uniformity',uniformityRatio+'%','beam overlap',uniformityRatio>60?'#10b981':'#f59e0b'):'')
+      +_ssCard('Fixtures',numFix,fxNote,fxClr)
+      +_ssCard('Coverage',coverPct+'%',coverPct>=95?'full wash':'gaps in beam',covClr)
+      +(numFix>1?_ssCard('Spacing',(Math.round(ccSpacing*10)/10)+'\'','center to center','#8da0c0'):_ssCard('Beam Cover',Math.round(beamW*10)/10+'\'','single beam dia.','#8da0c0'))
+      +_ssCard('Uniformity',uniformityRatio+'%',uniformityRatio>=60?'even wash':'uneven',uniClr)
       +'</div></div>';
   }
 
