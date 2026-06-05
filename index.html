@@ -5187,6 +5187,15 @@ service cloud.firestore {
       <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-fixture')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-group" style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.2);border-radius:10px;padding:10px 12px">
+        <label style="color:#8da0c0">Import IES Photometry <span style="color:#4a5e7a;font-size:11px;font-weight:400">(auto-fills specs)</span></label>
+        <input type="file" id="ss-af-ies" accept=".ies,.IES,text/plain" onchange="_ssImportIESFile(this)" style="width:100%;font-size:12px;margin-bottom:6px">
+        <textarea id="ss-af-ies-text" placeholder="…or paste the full .ies file contents here" rows="3" style="width:100%;font-family:monospace;font-size:11px;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <button class="btn btn-ghost btn-sm" onclick="_ssImportIESPaste()" style="font-size:12px">Parse Pasted IES</button>
+          <span id="ss-af-ies-status" style="font-size:11px;color:#4a5e7a"></span>
+        </div>
+      </div>
       <div class="form-group">
         <label>Fixture Name *</label>
         <input type="text" id="ss-af-name" placeholder="e.g. Juno 4" IC Adjust LED" style="width:100%">
@@ -27425,6 +27434,11 @@ function _ssIsCustomObj(id){ return /^uo/.test(id); }
 function _ssIsCustomAcc(id){ return /^ua/.test(id); }
 
 // ── Fixture Adder / Editor ────────────────────────────────────
+function _ssClearIESFields() {
+  var t=document.getElementById('ss-af-ies-text'); if(t) t.value='';
+  var f=document.getElementById('ss-af-ies'); if(f) f.value='';
+  var st=document.getElementById('ss-af-ies-status'); if(st){ st.textContent=''; st.style.color='#4a5e7a'; }
+}
 function _ssOpenAddFixture() {
   _ssEditFx=null;
   ['ss-af-name','ss-af-lumens','ss-af-cbfc'].forEach(function(id){
@@ -27432,6 +27446,7 @@ function _ssOpenAddFixture() {
   });
   var beamEl=document.getElementById('ss-af-beam'); if(beamEl) beamEl.value='25';
   var tiltEl=document.getElementById('ss-af-maxtilt'); if(tiltEl) tiltEl.value='35';
+  _ssClearIESFields();
   _ssSetModalMode('ss-af','Add Fixture','Add Fixture',false);
   openModal('modal-ss-fixture');
 }
@@ -27442,8 +27457,121 @@ function _ssOpenEditFixture() {
   function set(id,v){ var el=document.getElementById(id); if(el) el.value=(v===undefined||v===null)?'':v; }
   set('ss-af-name',fx.name); set('ss-af-lumens',fx.lumens||''); set('ss-af-cbfc',fx.cbfc);
   set('ss-af-beam',fx.beamDeg); set('ss-af-maxtilt',fx.maxTilt!==undefined?fx.maxTilt:0);
+  _ssClearIESFields();
   _ssSetModalMode('ss-af','Edit Fixture','Save Changes',true);
   openModal('modal-ss-fixture');
+}
+
+// ── IES (IESNA LM-63) photometric import ──────────────────────
+function _ssImportIESFile(input){
+  var file=input.files&&input.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var ta=document.getElementById('ss-af-ies-text'); if(ta) ta.value=e.target.result;
+    _ssApplyIES(e.target.result);
+  };
+  reader.onerror=function(){ _ssIESStatus('Could not read file','#ef4444'); };
+  reader.readAsText(file);
+}
+function _ssImportIESPaste(){
+  var ta=document.getElementById('ss-af-ies-text');
+  var txt=ta?ta.value:'';
+  if(!txt.trim()){ _ssIESStatus('Paste IES text first','#f59e0b'); return; }
+  _ssApplyIES(txt);
+}
+function _ssIESStatus(msg,color){
+  var st=document.getElementById('ss-af-ies-status'); if(st){ st.textContent=msg; st.style.color=color||'#4a5e7a'; }
+}
+function _ssApplyIES(text){
+  var d;
+  try { d=_ssParseIES(text); }
+  catch(err){ _ssIESStatus('Could not parse this IES file', '#ef4444'); return; }
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value=v; }
+  var nm=document.getElementById('ss-af-name');
+  if(nm && !nm.value.trim() && d.name) nm.value=d.name;
+  if(d.lumens>0) set('ss-af-lumens', Math.round(d.lumens));
+  set('ss-af-beam', Math.round(d.beamDeg));
+  set('ss-af-cbfc', Math.round(d.cbfc));
+  _ssIESStatus('Imported ✓  '+Math.round(d.beamDeg)+'° beam · '+Math.round(d.cbfc)+' fc@5ft'+(d.peakCandela?' · '+Math.round(d.peakCandela)+' cd':''), '#10b981');
+  toast('IES photometry imported');
+}
+// Parse IES LM-63 text → { name, lumens, beamDeg, cbfc, peakCandela }
+function _ssParseIES(text){
+  var lines=text.split(/\r\n|\r|\n/);
+  var manuf='', lumcat='', desc='', lumName='', testName='', tiltIdx=-1;
+  for(var i=0;i<lines.length;i++){
+    var ln=lines[i];
+    if(/\[MANUFAC\]/i.test(ln)) manuf=ln.replace(/.*\]/,'').trim();
+    else if(/\[LUMINAIRE\]/i.test(ln)) desc=ln.replace(/.*\]/,'').trim();
+    else if(/\[LUMCAT\]/i.test(ln)) lumcat=ln.replace(/.*\]/,'').trim();
+    else if(/\[_?DESCRIPTION\]/i.test(ln)) lumName=ln.replace(/.*\]/,'').trim();
+    else if(/\[TEST\]/i.test(ln)) testName=ln.replace(/.*\]/,'').trim();
+    if(/TILT\s*=/i.test(ln)){ tiltIdx=i; break; }
+  }
+  if(tiltIdx<0) throw 'No TILT line';
+  // Prefer the descriptive luminaire name; fall back to test name, then catalog
+  var descName = desc||lumName||testName||lumcat;
+  var name=[manuf, descName].filter(Boolean).join(' ').trim();
+
+  // Skip any TILT=INCLUDE data block
+  var dataStart=tiltIdx+1;
+  if(/TILT\s*=\s*INCLUDE/i.test(lines[tiltIdx])){
+    // 1 line geometry, 1 line count, then 2 lines (angles, multipliers)
+    var cnt=parseInt((lines[tiltIdx+2]||'').trim())||0;
+    dataStart=tiltIdx+4; // approximate; most fixtures use TILT=NONE
+  }
+  // Collect all numeric tokens from dataStart onward
+  var nums=[];
+  for(var j=dataStart;j<lines.length;j++){
+    var toks=lines[j].trim().split(/[\s,]+/);
+    for(var k=0;k<toks.length;k++){ if(toks[k]!==''){ var val=parseFloat(toks[k]); if(!isNaN(val)) nums.push(val); } }
+  }
+  if(nums.length<13) throw 'Too few values';
+  var p=0;
+  var numLamps=nums[p++], lumensPerLamp=nums[p++], candelaMult=nums[p++]||1;
+  var numVert=Math.round(nums[p++]), numHoriz=Math.round(nums[p++]);
+  p++; /*photometric type*/ p++; /*units*/ p++; /*width*/ p++; /*length*/ p++; /*height*/
+  p++; /*ballast factor*/ p++; /*future use*/ p++; /*input watts*/
+  if(numVert<1||numHoriz<1||numVert>2000) throw 'Bad angle counts';
+  var vert=[]; for(var a=0;a<numVert;a++) vert.push(nums[p++]);
+  for(var b=0;b<numHoriz;b++) p++; // skip horizontal angles
+  var cand=[]; // [horiz][vert]
+  for(var h=0;h<numHoriz;h++){ var col=[]; for(var v=0;v<numVert;v++){ var c=nums[p++]; col.push((isNaN(c)?0:c)*candelaMult); } cand.push(col); }
+
+  // Peak candela overall
+  var peak=0;
+  for(var h2=0;h2<numHoriz;h2++) for(var v2=0;v2<numVert;v2++){ if(cand[h2][v2]>peak) peak=cand[h2][v2]; }
+  if(peak<=0) throw 'No candela data';
+
+  // Beam angle: use first horizontal plane; find 50%-of-peak angle from the peak vertical direction
+  var plane=cand[0];
+  var pPeak=0,pIdx=0; for(var vi=0;vi<plane.length;vi++){ if(plane[vi]>pPeak){pPeak=plane[vi];pIdx=vi;} }
+  var half=pPeak*0.5, halfAng=null;
+  for(var vi2=pIdx+1;vi2<plane.length;vi2++){
+    if(plane[vi2]<=half){
+      var a1=vert[vi2-1], c1=plane[vi2-1], a2=vert[vi2], c2=plane[vi2];
+      var frac=(c1-c2)!==0 ? (c1-half)/(c1-c2) : 0;
+      halfAng=a1+(a2-a1)*frac;
+      break;
+    }
+  }
+  if(halfAng===null) halfAng=vert[plane.length-1]; // never drops to 50% within data
+  var beamDeg=Math.max(5, Math.min(150, (halfAng-vert[pIdx])*2));
+  var lumens=(lumensPerLamp>0)? numLamps*lumensPerLamp : 0;
+  // Absolute photometry (lumens_per_lamp <= 0): integrate the candela distribution
+  // Flux = Σ 2π · I_avg · (cosθ1 − cosθ2)  over each vertical zone (avg across planes)
+  if(lumens<=0 && numVert>1){
+    var _avgAt=function(v){ var s=0; for(var hh=0;hh<numHoriz;hh++) s+=cand[hh][v]; return s/numHoriz; };
+    var flux=0;
+    for(var z=0;z<numVert-1;z++){
+      var t1=vert[z]*Math.PI/180, t2=vert[z+1]*Math.PI/180;
+      var iavg=(_avgAt(z)+_avgAt(z+1))/2;
+      flux += 2*Math.PI*iavg*(Math.cos(t1)-Math.cos(t2));
+    }
+    lumens=Math.abs(flux);
+  }
+  var cbfc=peak/25; // foot-candles at 5 ft (E = I / d²)
+  return { name:name, lumens:lumens, beamDeg:beamDeg, cbfc:cbfc, peakCandela:peak };
 }
 function _ssSaveFixture() {
   var name=(document.getElementById('ss-af-name')||{}).value||'';
@@ -27732,6 +27860,8 @@ window._ssDeleteAccessory   = _ssDeleteAccessory;
 window._ssSetOutput         = _ssSetOutput;
 window._ssFixCount          = _ssFixCount;
 window._ssFixAuto           = _ssFixAuto;
+window._ssImportIESFile     = _ssImportIESFile;
+window._ssImportIESPaste    = _ssImportIESPaste;
 window._ssStopAnim          = _ssStopAnim;
 window._ssUpdateViewBtns    = _ssUpdateViewBtns;
 window._ssResetCam          = _ssResetCam;
