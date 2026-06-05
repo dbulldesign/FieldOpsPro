@@ -3177,7 +3177,11 @@ body.light-mode .detail-expand-content { background: rgba(37,99,255,0.03); borde
 .ss-num:focus, .ss-sel:focus { outline:none; border-color:#4f8ef7; }
 .ss-sel {
   background:#152638; border:1px solid rgba(255,255,255,0.1); border-radius:8px;
-  padding:8px 11px; color:#f0f4ff; font-size:14px; box-sizing:border-box; width:100%; cursor:pointer;
+  padding:8px 30px 8px 11px; color:#f0f4ff; font-size:14px; box-sizing:border-box; width:100%; cursor:pointer;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  -webkit-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238da0c0' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 11px center;
 }
 .ss-section-hdr {
   display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -5322,7 +5326,7 @@ service cloud.firestore {
       <div class="form-row">
         <div class="form-group">
           <label>Transmission (%) <span style="color:#4a5e7a;font-size:11px;font-weight:400">light passed</span></label>
-          <input type="number" id="ss-aa-xmit" placeholder="85" min="5" max="100" value="85" style="width:100%">
+          <input type="number" id="ss-aa-xmit" placeholder="85" min="0" max="100" step="0.01" value="85" style="width:100%">
         </div>
         <div class="form-group">
           <label>Beam Spread (×) <span style="color:#4a5e7a;font-size:11px;font-weight:400">1 = no change</span></label>
@@ -26131,6 +26135,45 @@ function _ssCalcFC(physX, physY, surfType) {
   if (cosInc <= 0) return 0;
   return (I0 * angFactor * cosInc) / (d * d) * xmit;
 }
+// 3D fc from a fixture offset sideways (along the object width) by `lateral` feet.
+// lateral = 0 reproduces _ssCalcFC. Used to sum overlapping beams from multiple fixtures.
+function _ssCalcFC3D(physX, physY, lateral, surfType) {
+  var fx = _ssGetFx();
+  var beamDeg = _ssEffBeam();
+  var xmit = _ssEffXmit();
+  var tiltRad = (_ss.tiltDeg||0) * Math.PI / 180;
+  var halfRad = (beamDeg * Math.PI / 180) / 2;
+  var vX = physX - _ss.wallDist;
+  var vY = physY - _ss.ceilH;
+  var vL = -lateral;             // fixture is offset; vector component along width
+  var d = Math.sqrt(vX*vX + vY*vY + vL*vL);
+  if (d < 0.05) return 0;
+  var bX = -Math.sin(tiltRad), bY = -Math.cos(tiltRad); // beam axis (no lateral aim)
+  var cosAlpha = Math.max(-1, Math.min(1, (vX*bX + vY*bY) / d));
+  var alpha = Math.acos(cosAlpha);
+  if (alpha > halfRad * 1.25) return 0;
+  var cosHalf = Math.cos(halfRad);
+  var n = cosHalf < 0.9999 ? Math.log(0.5) / Math.log(cosHalf) : 300;
+  var angFactor = Math.pow(Math.cos(Math.min(alpha, halfRad*0.9999)), n);
+  if (alpha > halfRad * 0.85) {
+    var t = Math.max(0, Math.min(1, (alpha - halfRad*0.85) / (halfRad*0.40)));
+    angFactor *= (1 - t*t);
+  }
+  var I0 = fx.cbfc * 25;
+  var cosInc = surfType === 'horizontal' ? -vY/d : -vX/d;
+  if (cosInc <= 0) return 0;
+  return (I0 * angFactor * cosInc) / (d * d) * xmit;
+}
+// Combined fc at the object center from all `numFix` fixtures spread across the width
+function _ssCalcFCCombined(physX, physY, surfType, numFix, spacing) {
+  if(!numFix || numFix<=1) return _ssCalcFC(physX, physY, surfType);
+  var total=0;
+  for(var k=0;k<numFix;k++){
+    var lateral=(k-(numFix-1)/2)*spacing; // fixture offset from object center
+    total += _ssCalcFC3D(physX, physY, lateral, surfType);
+  }
+  return total;
+}
 // Beam center landing point on a surface at given height
 function _ssBeamCenter(surfH) {
   var tiltRad = (_ss.tiltDeg||0) * Math.PI / 180;
@@ -26224,6 +26267,16 @@ function _ssMiniNum(label, id, min, max, step, val, unit) {
     + '<input class="ss-num" id="'+id+'" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" style="flex:1;min-width:0;padding:5px 7px;font-size:13px">'
     + (unit?'<span style="font-size:11px;color:#64748b">'+unit+'</span>':'')+'</div>';
 }
+// Compact slider + number — no card chrome, fits in a tight multi-column grid
+function _ssSliderNumC(label, id, min, max, step, val, unit) {
+  return '<div style="min-width:0">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:11px;color:#8da0c0;margin-bottom:2px">'
+    + '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</span>'
+    + '<span style="display:flex;align-items:center;gap:2px;flex-shrink:0"><input id="'+id+'-num" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" '
+    + 'style="width:46px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:6px;padding:2px 5px;color:#4f8ef7;font-size:12px;font-weight:700;text-align:right">'
+    + (unit?'<span style="font-size:10px;color:#64748b">'+unit+'</span>':'')+'</span></div>'
+    + '<input class="ss-range" id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" style="margin:2px 0 0"></div>';
+}
 // Slider + editable number — value can be typed OR dragged (both stay in sync)
 function _ssSliderNum(label, id, min, max, step, val, unit) {
   return '<div class="ss-field">'
@@ -26270,25 +26323,25 @@ function _ssBuildHTML() {
   var fxEditBtn = _ssIsCustomFx(_ss.fxId) ? '<button onclick="_ssOpenEditFixture()" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0">✎ Edit</button>' : '';
   s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Fixture &amp; Beam</span></div>';
   s += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">';
-  s += '<div class="ss-field"><div class="ss-field-lbl"><span>Fixture</span>'+fxEditBtn+'</div><select id="ss-fx" class="ss-sel">'+fxOpts+'</select></div>';
+  s += '<div class="ss-field" style="grid-column:1/-1"><div class="ss-field-lbl"><span>Fixture</span>'+fxEditBtn+'</div><select id="ss-fx" class="ss-sel">'+fxOpts+'</select></div>';
   s += '<div class="ss-field"><div class="ss-field-lbl"><span>Beam Override</span></div><select id="ss-beam" class="ss-sel">'+beamOpts+'</select></div>';
   var _fxMaxTilt = (_ssGetFx().maxTilt !== undefined ? _ssGetFx().maxTilt : 45);
   var _tiltClamped = Math.min(_ss.tiltDeg||0, _fxMaxTilt);
   var _tiltNote = _fxMaxTilt === 0 ? 'Fixed — not adjustable' : 'Max '+_fxMaxTilt+'°';
   s += _ssSlider('Fixture Tilt', _tiltClamped+'°', 'ss-tilt', 0, _fxMaxTilt, 1, _tiltClamped, {disabled:_fxMaxTilt===0, note:_tiltNote});
-  // Output level — slider + typed value (0–100%, 0.1% steps) + preset buttons
+  // Output level — compact: number + slider + tight preset row
   var _outV = (_ss.outputPct!=null?_ss.outputPct:100);
   s += '<div class="ss-field" style="grid-column:1/-1">'
     + '<div class="ss-field-lbl"><span>Output Level</span>'
     + '<span style="display:flex;align-items:center;gap:3px"><input id="ss-out-num" type="number" min="0" max="100" step="0.1" value="'+_outV+'" '
-    + 'style="width:60px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:6px;padding:2px 6px;color:#4f8ef7;font-size:13px;font-weight:700;text-align:right"><span style="font-size:11px;color:#64748b">%</span></span></div>'
+    + 'style="width:56px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:6px;padding:2px 6px;color:#4f8ef7;font-size:13px;font-weight:700;text-align:right"><span style="font-size:11px;color:#64748b">%</span></span></div>'
     + '<input class="ss-range" id="ss-out" type="range" min="0" max="100" step="0.1" value="'+_outV+'">'
-    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:7px">'
+    + '<div style="display:flex;gap:3px;margin-top:6px">'
     + [100,75,50,25,15,10,5,1,0].map(function(p){
         var on=Math.abs(_outV-p)<0.001;
-        return '<button onclick="_ssSetOutput('+p+')" style="flex:1;min-width:34px;padding:4px 0;border-radius:6px;border:1px solid '
+        return '<button onclick="_ssSetOutput('+p+')" style="flex:1;min-width:0;padding:3px 0;border-radius:5px;border:1px solid '
           +(on?'#4f8ef7':'rgba(255,255,255,0.12)')+';background:'+(on?'#4f8ef7':'rgba(255,255,255,0.05)')
-          +';color:'+(on?'#fff':'#8da0c0')+';font-size:11px;font-weight:700;cursor:pointer">'+(p<10?('0'+p).slice(-2):p)+'</button>';
+          +';color:'+(on?'#fff':'#8da0c0')+';font-size:10px;font-weight:700;cursor:pointer">'+(p<10?('0'+p).slice(-2):p)+'</button>';
       }).join('')
     + '</div></div>';
   // Fixture count stepper (manual override of the auto-calculated count)
@@ -26311,19 +26364,20 @@ function _ssBuildHTML() {
   s += _ssMiniNum('Room W','ss-roomw',8,40,1,(_ss.roomWidth||16),'ft');
   s += '</div></div>';
 
-  // ── Object group ──
+  // ── Object group (condensed: dropdown + 3 compact sliders in one card) ──
   var objEditBtn = _ssIsCustomObj(_ss.objId) ? '<button onclick="_ssOpenEditObject()" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0">✎ Edit</button>' : '';
-  s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Target Object</span></div>';
-  s += '<div class="ss-field" style="margin-bottom:10px"><div class="ss-field-lbl"><span class="ss-obj-hdr">'+obj.icon+' '+escH(obj.name)+'</span>'+objEditBtn+'</div>'
-    + '<select id="ss-obj" class="ss-sel">'+objOpts+'</select></div>';
-  s += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
-  var hLabel = obj.surf==='vertical' ? 'Center Height' : 'Surface Height';
+  var hLabel = obj.surf==='vertical' ? 'Center Ht' : 'Surface Ht';
   var hMax=Math.max(_ss.ceilH-0.5, 1);
-  s += _ssSliderNum(hLabel, 'ss-objh', 0, hMax, 0.5, obj.h, 'ft');
-  var swLabel = obj.surf==='vertical' ? 'Object Height' : 'Display Depth';
-  s += _ssSliderNum(swLabel, 'ss-objhw', 0.4, 12, 0.5, Math.round(obj.hw*2*10)/10, 'ft');
-  s += _ssSliderNum('Object Width', 'ss-objw', 1, 40, 0.5, obj.width, 'ft');
-  s += '</div></div>';
+  var swLabel = obj.surf==='vertical' ? 'Obj Height' : 'Depth';
+  s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Target Object</span></div>';
+  s += '<div class="ss-field">'
+    + '<div class="ss-field-lbl" style="margin-bottom:7px"><span class="ss-obj-hdr">'+obj.icon+' '+escH(obj.name)+'</span>'+objEditBtn+'</div>'
+    + '<select id="ss-obj" class="ss-sel" style="margin-bottom:10px">'+objOpts+'</select>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px">'
+    + _ssSliderNumC(hLabel, 'ss-objh', 0, hMax, 0.5, obj.h, 'ft')
+    + _ssSliderNumC(swLabel, 'ss-objhw', 0.4, 12, 0.5, Math.round(obj.hw*2*10)/10, 'ft')
+    + _ssSliderNumC('Width', 'ss-objw', 1, 40, 0.5, obj.width, 'ft')
+    + '</div></div></div>';
 
   // ── Accessories ──
   var accDetailHTML = '';
@@ -26331,10 +26385,14 @@ function _ssBuildHTML() {
     if (_ss.acc.indexOf(a.id) < 0) return;
     var xmit=_ssAccVal(a.id,'xmit'), bMult=_ssAccVal(a.id,'bMult');
     var accEditBtn = _ssIsCustomAcc(a.id) ? '<button onclick="_ssOpenEditAccessory(\''+a.id+'\')" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-left:auto">✎ Edit</button>' : '';
-    accDetailHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px;padding:10px;background:rgba(79,142,247,0.06);border-radius:10px;border:1px solid rgba(79,142,247,0.2)">';
+    accDetailHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 14px;margin-top:8px;padding:10px;background:rgba(79,142,247,0.06);border-radius:10px;border:1px solid rgba(79,142,247,0.2)">';
     accDetailHTML += '<div style="font-size:11px;font-weight:700;color:#8da0c0;grid-column:1/-1;display:flex;align-items:center">'+(a.icon||'◻')+' '+escH(a.name)+accEditBtn+'</div>';
-    accDetailHTML += _ssSlider('Transmission', Math.round(xmit*100)+'%', 'ss-ac-xmit-'+a.id, 10, 100, 1, Math.round(xmit*100), {data:'data-acc-xmit="'+a.id+'"'});
-    accDetailHTML += _ssSlider('Beam Spread', bMult.toFixed(2)+'×', 'ss-ac-bmult-'+a.id, 0.5, 2.5, 0.05, bMult, {data:'data-acc-bmult="'+a.id+'"'});
+    accDetailHTML += '<div style="display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:11px;color:#8da0c0">Transmission</span>'
+      + '<input class="ss-num" id="ss-ac-xmit-'+a.id+'" data-acc-xmit="'+a.id+'" type="number" min="0" max="100" step="0.01" value="'+(Math.round(xmit*10000)/100)+'" style="width:62px;padding:5px 7px;font-size:13px;text-align:right">'
+      + '<span style="font-size:11px;color:#64748b">%</span></div>';
+    accDetailHTML += '<div style="display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:11px;color:#8da0c0">Beam Spread</span>'
+      + '<input class="ss-num" id="ss-ac-bmult-'+a.id+'" data-acc-bmult="'+a.id+'" type="number" min="0.3" max="3" step="0.05" value="'+bMult.toFixed(2)+'" style="width:62px;padding:5px 7px;font-size:13px;text-align:right">'
+      + '<span style="font-size:11px;color:#64748b">×</span></div>';
     accDetailHTML += '</div>';
   });
   s += '<div style="margin-bottom:16px"><div class="ss-section-hdr"><span>Accessories</span></div>'
@@ -26436,22 +26494,26 @@ function _ssBindEvents() {
     };
   });
   document.querySelectorAll('[data-acc-xmit]').forEach(function(inp){
-    inp.oninput = function(){
+    function h(){
       var aid=this.dataset.accXmit;
+      var v=parseFloat(this.value); if(isNaN(v)) return; // allow 0; ignore blank
+      v=Math.max(0,Math.min(100,v));
       if(!_ss.accCustom[aid]) _ss.accCustom[aid]={};
-      _ss.accCustom[aid].xmit = parseInt(this.value)/100;
-      var lbl=document.getElementById('ss-ac-xmit-'+aid+'-lbl'); if(lbl) lbl.textContent=this.value+'%';
+      _ss.accCustom[aid].xmit = v/100;
       _ssUpdate();
-    };
+    }
+    inp.oninput=h; inp.onchange=h;
   });
   document.querySelectorAll('[data-acc-bmult]').forEach(function(inp){
-    inp.oninput = function(){
+    function h(){
       var aid=this.dataset.accBmult;
+      var v=parseFloat(this.value); if(isNaN(v)) return;
+      v=Math.max(0.3,Math.min(3,v));
       if(!_ss.accCustom[aid]) _ss.accCustom[aid]={};
-      _ss.accCustom[aid].bMult = parseFloat(this.value);
-      var lbl=document.getElementById('ss-ac-bmult-'+aid+'-lbl'); if(lbl) lbl.textContent=parseFloat(this.value).toFixed(2)+'×';
+      _ss.accCustom[aid].bMult = v;
       _ssUpdate();
-    };
+    }
+    inp.oninput=h; inp.onchange=h;
   });
   bind('ss-roomw', function(){ var v=parseInt(this.value); if(!isNaN(v)&&v>=8&&v<=40){_ss.roomWidth=v;_ssUpdate();} });
   // In-view overlay controls (sync with main panel via _ssUpdate → _ssSyncControls)
@@ -27363,8 +27425,9 @@ function _ssUpdateResults() {
   var el=document.getElementById('ss-results'); if(!el) return;
   var L=_ssLayout();
   var obj=L.obj;
-  // FC at the object's actual position
-  var fcC=_ssCalcFC(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf);
+  // Combined FC at the object center from ALL fixtures (overlapping beams add up)
+  var fcOne=_ssCalcFC(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf); // single fixture
+  var fcC=_ssCalcFCCombined(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf, L.numFix, L.spacing);
   var xmitPct=Math.round(_ssEffXmit()*100);
   var distAlongBeam=L.distAlongBeam, beamW=L.beamW;
   var lo=obj.recFc[0], hi=obj.recFc[1];
@@ -27374,6 +27437,7 @@ function _ssUpdateResults() {
   else if(fcC<=hi){qlbl='Good';qclr='#10b981';}
   else{qlbl='Very Bright';qclr='#60a5fa';}
   var fcStr=fcC>=0.5?Math.round(fcC)+' fc':'< 1 fc';
+  var fcSub=(L.numFix>1)? (qlbl+' · '+Math.round(fcOne)+' fc/fix') : qlbl;
   var tiltLabel=(_ss.tiltDeg||0)===0?'Straight down':(_ss.tiltDeg||0)+'° toward wall';
   var _outNow=(_ss.outputPct!=null?_ss.outputPct:100);
   var outLabel=xmitPct+'%'+(_ssEffXmit()<_outNow/100?' with accessories':(_outNow<100?' dimmed':''));
@@ -27409,8 +27473,8 @@ function _ssUpdateResults() {
   }
 
   el.innerHTML='<div style="display:contents">'
-    +_ssCard('fc on Object',fcStr,qlbl,qclr)
-    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','dia. at surface','#8da0c0')
+    +_ssCard(L.numFix>1?'Total fc on Object':'fc on Object',fcStr,fcSub,qclr)
+    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','dia./fixture','#8da0c0')
     +_ssCard('Throw Dist',Math.round(distAlongBeam*10)/10+' ft','fixture to surface','#8da0c0')
     +_ssCard('Tilt',(_ss.tiltDeg||0)+'°',tiltLabel,(_ss.tiltDeg||0)>0?'#f59e0b':'#8da0c0')
     +_ssCard('Output',xmitPct+'%',outLabel,xmitPct>80?'#10b981':'#f59e0b')
@@ -27728,8 +27792,8 @@ function _ssSaveAccessory() {
   var name=((document.getElementById('ss-aa-name')||{}).value||'').trim();
   if(!name){ toast('Enter an accessory name'); return; }
   var icon=((document.getElementById('ss-aa-icon')||{}).value||'').trim()||'◻';
-  var xmit=parseInt((document.getElementById('ss-aa-xmit')||{}).value); if(isNaN(xmit)) xmit=85;
-  xmit=Math.max(5,Math.min(100,xmit))/100;
+  var xmit=parseFloat((document.getElementById('ss-aa-xmit')||{}).value); if(isNaN(xmit)) xmit=85;
+  xmit=Math.max(0,Math.min(100,xmit))/100;
   var bMult=parseFloat((document.getElementById('ss-aa-bmult')||{}).value); if(isNaN(bMult)) bMult=1.0;
   bMult=Math.max(0.3,Math.min(3,bMult));
   var desc=((document.getElementById('ss-aa-desc')||{}).value||'').trim();
