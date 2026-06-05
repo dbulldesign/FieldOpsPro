@@ -5183,7 +5183,7 @@ service cloud.firestore {
   <div class="modal" style="max-width:400px">
     <div class="modal-drag-handle" style="display:none"></div>
     <div class="modal-header">
-      <h3>Add Fixture</h3>
+      <h3 id="ss-af-title">Add Fixture</h3>
       <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-fixture')">✕</button>
     </div>
     <div class="modal-body">
@@ -5215,8 +5215,9 @@ service cloud.firestore {
       </div>
     </div>
     <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button id="ss-af-delete" class="btn btn-ghost btn-sm" onclick="_ssDeleteFixture()" style="display:none;color:#ef4444;border-color:rgba(239,68,68,0.3)">Delete</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-ss-fixture')" style="flex:1">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="_ssSaveFixture()" style="flex:1">Add Fixture</button>
+      <button id="ss-af-save" class="btn btn-primary btn-sm" onclick="_ssSaveFixture()" style="flex:1">Add Fixture</button>
     </div>
   </div>
 </div>
@@ -5226,11 +5227,11 @@ service cloud.firestore {
   <div class="modal" style="max-width:420px">
     <div class="modal-drag-handle" style="display:none"></div>
     <div class="modal-header">
-      <h3>Add Object</h3>
+      <h3 id="ss-ao-title">Add Object</h3>
       <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-object')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
+      <div class="form-group" id="ss-ao-preset-wrap">
         <label>Preset <span style="color:#4a5e7a;font-size:11px;font-weight:400">(fills in typical specs)</span></label>
         <select id="ss-ao-preset" onchange="_ssObjPresetApply()" style="width:100%">
           <option value="">— Custom (blank) —</option>
@@ -5283,8 +5284,9 @@ service cloud.firestore {
       </div>
     </div>
     <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button id="ss-ao-delete" class="btn btn-ghost btn-sm" onclick="_ssDeleteObject()" style="display:none;color:#ef4444;border-color:rgba(239,68,68,0.3)">Delete</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-ss-object')" style="flex:1">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="_ssSaveObject()" style="flex:1">Add Object</button>
+      <button id="ss-ao-save" class="btn btn-primary btn-sm" onclick="_ssSaveObject()" style="flex:1">Add Object</button>
     </div>
   </div>
 </div>
@@ -5294,7 +5296,7 @@ service cloud.firestore {
   <div class="modal" style="max-width:400px">
     <div class="modal-drag-handle" style="display:none"></div>
     <div class="modal-header">
-      <h3>Add Accessory</h3>
+      <h3 id="ss-aa-title">Add Accessory</h3>
       <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ss-accessory')">✕</button>
     </div>
     <div class="modal-body">
@@ -5324,8 +5326,9 @@ service cloud.firestore {
       </div>
     </div>
     <div style="display:flex;gap:8px;padding:0 20px 20px">
+      <button id="ss-aa-delete" class="btn btn-ghost btn-sm" onclick="_ssDeleteAccessory()" style="display:none;color:#ef4444;border-color:rgba(239,68,68,0.3)">Delete</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-ss-accessory')" style="flex:1">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="_ssSaveAccessory()" style="flex:1">Add Accessory</button>
+      <button id="ss-aa-save" class="btn btn-primary btn-sm" onclick="_ssSaveAccessory()" style="flex:1">Add Accessory</button>
     </div>
   </div>
 </div>
@@ -26040,6 +26043,7 @@ var _ss = {
   accCustom: {},   // per-accessory overrides: { accId: { xmit, bMult } }
   viewMode: 'section', // 'section' | 'plan' | '3d'
   roomWidth: 16,   // room width in feet (for plan/3D views)
+  fixCountOverride: null, // null = auto-calc fixture count; number = manual override
   // Drag state — dragTarget: null | 'fixture' | 'object'
   dragging: false, dragTarget: null, dragStartCX: 0, dragStartVal: 0, dragScale: 1,
   // 3D camera: yaw (horizontal rotate), pitch (vertical rotate), zoom, panX, panY
@@ -26142,13 +26146,16 @@ function _ssLayout() {
   var beamW = 2*Math.tan(halfRad)*distAlongBeam; // beam diameter at surface
   var objW = obj.width||0;
   // Center-to-center spacing = 0.9 × beam diameter (beams meet w/ slight overlap).
-  // numFix is the minimum count to span the object width continuously.
+  // autoNum is the minimum count to span the object width continuously.
   var spacingMax = beamW*0.9;
-  var numFix = (objW>0 && spacingMax>0.05) ? Math.max(1, Math.ceil(objW/spacingMax)) : 1;
+  var autoNum = (objW>0 && spacingMax>0.05) ? Math.max(1, Math.ceil(objW/spacingMax)) : 1;
+  // Manual override wins when set
+  var numFix = (_ss.fixCountOverride!=null) ? Math.max(1, _ss.fixCountOverride) : autoNum;
   var spacing = numFix>1 ? objW/numFix : 0;
   return { obj:obj, beamDeg:beamDeg, halfRad:halfRad, tiltRad:tiltRad, H:H,
            distAlongBeam:distAlongBeam, beamW:beamW, objW:objW,
-           numFix:numFix, spacing:spacing };
+           numFix:numFix, autoNum:autoNum, spacing:spacing,
+           isManual:(_ss.fixCountOverride!=null) };
 }
 // Find where a ray from fixture at angle (deg from vertical, + = toward wall) hits first
 function _ssRayEnd(angleDeg, viewRange) {
@@ -26169,10 +26176,21 @@ function _ssRayEnd(angleDeg, viewRange) {
 function _ssRender() {
   var root = document.getElementById('ss-root');
   if (!root) return;
+  _ssEnsureObjDist();  // freeze horizontal object position so it doesn't track the fixture
   root.innerHTML = _ssBuildHTML();
   _ssBindEvents();
   _ssResizeCanvas();   // canvas has explicit CSS height so this works immediately
+  _ssUpdate();         // populate results + sync controls immediately (fixes empty panel on object change)
   _ssStartAnim();
+}
+
+// Give horizontal objects a persistent distance so they stay put when the fixture moves
+function _ssEnsureObjDist() {
+  var base=_ssAllObj().find(function(o){return o.id===_ss.objId;});
+  if(base && base.surf!=='vertical'){
+    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
+    if(_ss.objCustom[_ss.objId].dist===undefined) _ss.objCustom[_ss.objId].dist=_ss.wallDist;
+  }
 }
 
 // Slider field — clean card with label + live value + styled range
@@ -26189,6 +26207,15 @@ function _ssNum(label, id, min, max, step, val, unit) {
   return '<div class="ss-field"><div class="ss-field-lbl"><span>'+label+'</span></div>'
     + '<div style="display:flex;align-items:center;gap:6px"><input class="ss-num" id="'+id+'" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" style="flex:1;min-width:0">'
     + (unit?'<span style="font-size:13px;color:#64748b;flex-shrink:0">'+unit+'</span>':'')+'</div></div>';
+}
+// Slider + editable number — value can be typed OR dragged (both stay in sync)
+function _ssSliderNum(label, id, min, max, step, val, unit) {
+  return '<div class="ss-field">'
+    + '<div class="ss-field-lbl"><span>'+label+'</span>'
+    + '<span style="display:flex;align-items:center;gap:3px"><input id="'+id+'-num" type="number" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" '
+    + 'style="width:50px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:6px;padding:2px 6px;color:#4f8ef7;font-size:13px;font-weight:700;text-align:right">'
+    + (unit?'<span style="font-size:11px;color:#64748b">'+unit+'</span>':'')+'</span></div>'
+    + '<input class="ss-range" id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></div>';
 }
 
 function _ssBuildHTML() {
@@ -26224,15 +26251,40 @@ function _ssBuildHTML() {
     + '</div></div>';
 
   // ── Fixture & Beam group ──
+  var fxEditBtn = _ssIsCustomFx(_ss.fxId) ? '<button onclick="_ssOpenEditFixture()" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0">✎ Edit</button>' : '';
   s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Fixture &amp; Beam</span></div>';
   s += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">';
-  s += '<div class="ss-field"><div class="ss-field-lbl"><span>Fixture</span></div><select id="ss-fx" class="ss-sel">'+fxOpts+'</select></div>';
+  s += '<div class="ss-field"><div class="ss-field-lbl"><span>Fixture</span>'+fxEditBtn+'</div><select id="ss-fx" class="ss-sel">'+fxOpts+'</select></div>';
   s += '<div class="ss-field"><div class="ss-field-lbl"><span>Beam Override</span></div><select id="ss-beam" class="ss-sel">'+beamOpts+'</select></div>';
   var _fxMaxTilt = (_ssGetFx().maxTilt !== undefined ? _ssGetFx().maxTilt : 45);
   var _tiltClamped = Math.min(_ss.tiltDeg||0, _fxMaxTilt);
   var _tiltNote = _fxMaxTilt === 0 ? 'Fixed — not adjustable' : 'Max '+_fxMaxTilt+'°';
   s += _ssSlider('Fixture Tilt', _tiltClamped+'°', 'ss-tilt', 0, _fxMaxTilt, 1, _tiltClamped, {disabled:_fxMaxTilt===0, note:_tiltNote});
-  s += _ssSlider('Output Level', (_ss.outputPct||100)+'%', 'ss-out', 5, 100, 5, (_ss.outputPct||100));
+  // Output level — slider + typed value (0–100%, 0.1% steps) + preset buttons
+  var _outV = (_ss.outputPct!=null?_ss.outputPct:100);
+  s += '<div class="ss-field" style="grid-column:1/-1">'
+    + '<div class="ss-field-lbl"><span>Output Level</span>'
+    + '<span style="display:flex;align-items:center;gap:3px"><input id="ss-out-num" type="number" min="0" max="100" step="0.1" value="'+_outV+'" '
+    + 'style="width:60px;background:#152638;border:1px solid rgba(255,255,255,0.14);border-radius:6px;padding:2px 6px;color:#4f8ef7;font-size:13px;font-weight:700;text-align:right"><span style="font-size:11px;color:#64748b">%</span></span></div>'
+    + '<input class="ss-range" id="ss-out" type="range" min="0" max="100" step="0.1" value="'+_outV+'">'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:7px">'
+    + [100,75,50,25,15,10,5,1,0].map(function(p){
+        var on=Math.abs(_outV-p)<0.001;
+        return '<button onclick="_ssSetOutput('+p+')" style="flex:1;min-width:34px;padding:4px 0;border-radius:6px;border:1px solid '
+          +(on?'#4f8ef7':'rgba(255,255,255,0.12)')+';background:'+(on?'#4f8ef7':'rgba(255,255,255,0.05)')
+          +';color:'+(on?'#fff':'#8da0c0')+';font-size:11px;font-weight:700;cursor:pointer">'+(p<10?('0'+p).slice(-2):p)+'</button>';
+      }).join('')
+    + '</div></div>';
+  // Fixture count stepper (manual override of the auto-calculated count)
+  var _lay=_ssLayout();
+  var _stepBtn='width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1';
+  s += '<div class="ss-field"><div class="ss-field-lbl"><span># Fixtures</span>'
+    + '<button onclick="_ssFixAuto()" style="background:none;border:none;color:'+(_ss.fixCountOverride!=null?'#4f8ef7':'#4a5e7a')+';font-size:11px;font-weight:700;cursor:pointer;padding:0">'+(_ss.fixCountOverride!=null?'Auto':'auto')+'</button></div>'
+    + '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:2px">'
+    + '<button onclick="_ssFixCount(-1)" style="'+_stepBtn+'">−</button>'
+    + '<span id="ss-fixcount-num" style="font-size:20px;font-weight:700;color:#f0f4ff;min-width:26px;text-align:center">'+_lay.numFix+'</span>'
+    + '<button onclick="_ssFixCount(1)" style="'+_stepBtn+'">+</button></div>'
+    + '<div id="ss-fixcount-note" style="font-size:10px;color:#4a5e7a;margin-top:3px;text-align:center">'+(_ss.fixCountOverride!=null?'manual':'auto: '+_lay.autoNum)+'</div></div>';
   s += '</div></div>';
 
   // ── Room group ──
@@ -26244,16 +26296,17 @@ function _ssBuildHTML() {
   s += '</div></div>';
 
   // ── Object group ──
+  var objEditBtn = _ssIsCustomObj(_ss.objId) ? '<button onclick="_ssOpenEditObject()" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0">✎ Edit</button>' : '';
   s += '<div style="margin-bottom:14px"><div class="ss-section-hdr"><span>Target Object</span></div>';
-  s += '<div class="ss-field" style="margin-bottom:10px"><div class="ss-field-lbl"><span class="ss-obj-hdr">'+obj.icon+' '+escH(obj.name)+'</span></div>'
+  s += '<div class="ss-field" style="margin-bottom:10px"><div class="ss-field-lbl"><span class="ss-obj-hdr">'+obj.icon+' '+escH(obj.name)+'</span>'+objEditBtn+'</div>'
     + '<select id="ss-obj" class="ss-sel">'+objOpts+'</select></div>';
   s += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">';
   var hLabel = obj.surf==='vertical' ? 'Center Height' : 'Surface Height';
   var hMax=Math.max(_ss.ceilH-0.5, 1);
-  s += _ssSlider('<span id="ss-objh-ctrl-lbl">'+hLabel+'</span>', obj.h+"'", 'ss-objh', 0, hMax, 0.5, obj.h);
+  s += _ssSliderNum(hLabel, 'ss-objh', 0, hMax, 0.5, obj.h, 'ft');
   var swLabel = obj.surf==='vertical' ? 'Object Height' : 'Display Depth';
-  s += _ssSlider('<span id="ss-objhw-ctrl-lbl">'+swLabel+'</span>', (Math.round(obj.hw*2*10)/10)+"'", 'ss-objhw', 0.2, 5, 0.1, obj.hw);
-  s += _ssSlider('Object Width', obj.width+"'", 'ss-objw', 1, 30, 0.5, obj.width);
+  s += _ssSliderNum(swLabel, 'ss-objhw', 0.4, 12, 0.5, Math.round(obj.hw*2*10)/10, 'ft');
+  s += _ssSliderNum('Object Width', 'ss-objw', 1, 40, 0.5, obj.width, 'ft');
   s += '</div></div>';
 
   // ── Accessories ──
@@ -26261,8 +26314,9 @@ function _ssBuildHTML() {
   _ssAllAcc().forEach(function(a){
     if (_ss.acc.indexOf(a.id) < 0) return;
     var xmit=_ssAccVal(a.id,'xmit'), bMult=_ssAccVal(a.id,'bMult');
+    var accEditBtn = _ssIsCustomAcc(a.id) ? '<button onclick="_ssOpenEditAccessory(\''+a.id+'\')" style="background:none;border:none;color:#4f8ef7;font-size:11px;font-weight:700;cursor:pointer;padding:0;margin-left:auto">✎ Edit</button>' : '';
     accDetailHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px;padding:10px;background:rgba(79,142,247,0.06);border-radius:10px;border:1px solid rgba(79,142,247,0.2)">';
-    accDetailHTML += '<div style="font-size:11px;font-weight:700;color:#8da0c0;grid-column:1/-1">'+(a.icon||'◻')+' '+escH(a.name)+'</div>';
+    accDetailHTML += '<div style="font-size:11px;font-weight:700;color:#8da0c0;grid-column:1/-1;display:flex;align-items:center">'+(a.icon||'◻')+' '+escH(a.name)+accEditBtn+'</div>';
     accDetailHTML += _ssSlider('Transmission', Math.round(xmit*100)+'%', 'ss-ac-xmit-'+a.id, 10, 100, 1, Math.round(xmit*100), {data:'data-acc-xmit="'+a.id+'"'});
     accDetailHTML += _ssSlider('Beam Spread', bMult.toFixed(2)+'×', 'ss-ac-bmult-'+a.id, 0.5, 2.5, 0.05, bMult, {data:'data-acc-bmult="'+a.id+'"'});
     accDetailHTML += '</div>';
@@ -26283,7 +26337,20 @@ function _ssBuildHTML() {
   }
   s += '<div style="margin-left:auto;font-size:11px;color:#4a5e7a">'+(_ss.viewMode==='3d'?'drag rotate · scroll zoom · shift-drag pan':_ss.viewMode==='section'?'drag fixture &amp; object':'top-down layout')+'</div>';
   s += '</div>';
-  s += '<canvas id="ss-canvas" style="width:100%;height:380px;display:block;cursor:default;border:1px solid rgba(255,255,255,0.07);border-radius:0 0 12px 12px;margin-bottom:16px"></canvas>';
+  // Canvas with floating in-view fixture controls (dimming, tilt, position)
+  var _ovMax = (_ssGetFx().maxTilt !== undefined ? _ssGetFx().maxTilt : 45);
+  var _ovTilt = Math.min(_ss.tiltDeg||0, _ovMax);
+  s += '<div style="position:relative;margin-bottom:16px">';
+  s += '<canvas id="ss-canvas" style="width:100%;height:380px;display:block;cursor:default;border:1px solid rgba(255,255,255,0.07);border-radius:0 0 12px 12px"></canvas>';
+  s += '<div id="ss-overlay" style="position:absolute;top:10px;left:10px;background:rgba(8,14,24,0.82);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:7px;width:165px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">';
+  s += '<div style="font-size:10px;font-weight:700;color:#8da0c0;letter-spacing:1px;text-transform:uppercase">Fixture</div>';
+  s += '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:#8da0c0;margin-bottom:1px"><span>Output</span><span id="ss-ov-out-lbl" style="color:#4f8ef7;font-weight:700">'+_ssFmtPct(_ss.outputPct!=null?_ss.outputPct:100)+'%</span></div>'
+     + '<input class="ss-range" id="ss-ov-out" type="range" min="0" max="100" step="0.1" value="'+(_ss.outputPct!=null?_ss.outputPct:100)+'"></div>';
+  s += '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:#8da0c0;margin-bottom:1px"><span>Tilt</span><span id="ss-ov-tilt-lbl" style="color:#4f8ef7;font-weight:700">'+_ovTilt+'°</span></div>'
+     + '<input class="ss-range" id="ss-ov-tilt" type="range" min="0" max="'+_ovMax+'" step="1" value="'+_ovTilt+'"'+(_ovMax===0?' disabled':'')+'></div>';
+  s += '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:#8da0c0;margin-bottom:1px"><span>Wall Dist</span><span id="ss-ov-wdist-lbl" style="color:#4f8ef7;font-weight:700">'+_ss.wallDist+"'</span></div>"
+     + '<input class="ss-range" id="ss-ov-wdist" type="range" min="0.5" max="20" step="0.25" value="'+_ss.wallDist+'"></div>';
+  s += '</div></div>';
 
   // Results
   s += '<div id="ss-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:14px;align-items:start"></div>';
@@ -26321,32 +26388,20 @@ function _ssBindEvents() {
     var lbl=document.getElementById('ss-tilt-lbl'); if(lbl) lbl.textContent=_ss.tiltDeg+'°';
     _ssUpdate();
   });
-  bind('ss-out', function(){
-    _ss.outputPct=parseInt(this.value)||100;
-    var lbl=document.getElementById('ss-out-lbl'); if(lbl) lbl.textContent=_ss.outputPct+'%';
-    _ssUpdate();
-  });
-  bind('ss-objh', function(){
-    var v=parseFloat(this.value);
-    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
-    _ss.objCustom[_ss.objId].h=v;
-    var lbl=document.getElementById('ss-objh-lbl'); if(lbl) lbl.textContent=v+'\'';
-    _ssUpdate();
-  });
-  bind('ss-objhw', function(){
-    var v=parseFloat(this.value);
-    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
-    _ss.objCustom[_ss.objId].hw=v;
-    var lbl=document.getElementById('ss-objhw-lbl'); if(lbl) lbl.textContent=(Math.round(v*2*10)/10)+'\'';
-    _ssUpdate();
-  });
-  bind('ss-objw', function(){
-    var v=parseFloat(this.value);
-    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
-    _ss.objCustom[_ss.objId].width=v;
-    var lbl=document.getElementById('ss-objw-lbl'); if(lbl) lbl.textContent=v+'\'';
-    _ssUpdate();
-  });
+  bind('ss-out', function(){ var v=parseFloat(this.value); if(!isNaN(v)){ _ss.outputPct=Math.max(0,Math.min(100,v)); _ssUpdate(); } });
+  bind('ss-out-num', function(){ var v=parseFloat(this.value); if(!isNaN(v)){ _ss.outputPct=Math.max(0,Math.min(100,v)); _ssUpdate(); } });
+  // Object size: slider + typed number kept in sync (clampApply returns the stored value)
+  function bindPair(id, clampApply){
+    var sl=document.getElementById(id), nm=document.getElementById(id+'-num');
+    function handler(){ var v=parseFloat(this.value); if(isNaN(v)) return; var cv=clampApply(v);
+      if(sl) sl.value=cv; if(nm) nm.value=cv; _ssUpdate(); }
+    if(sl) sl.oninput=handler;
+    if(nm){ nm.oninput=handler; nm.onchange=handler; }
+  }
+  function objSet(k,v){ if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={}; _ss.objCustom[_ss.objId][k]=v; }
+  bindPair('ss-objh',  function(v){ v=Math.max(0,Math.min(Math.max(_ss.ceilH-0.5,1),v)); objSet('h',v); return v; });
+  bindPair('ss-objhw', function(v){ v=Math.max(0.4,Math.min(12,v)); objSet('hw',v/2); return v; }); // full size → half
+  bindPair('ss-objw',  function(v){ v=Math.max(1,Math.min(40,v)); objSet('width',v); return v; });
   document.querySelectorAll('[data-acc]').forEach(function(inp){
     inp.onchange = function(){
       var aid=this.dataset.acc, idx=_ss.acc.indexOf(aid);
@@ -26375,6 +26430,10 @@ function _ssBindEvents() {
     };
   });
   bind('ss-roomw', function(){ var v=parseInt(this.value); if(!isNaN(v)&&v>=8&&v<=40){_ss.roomWidth=v;_ssUpdate();} });
+  // In-view overlay controls (sync with main panel via _ssUpdate → _ssSyncControls)
+  bind('ss-ov-out', function(){ var v=parseFloat(this.value); if(!isNaN(v)){ _ss.outputPct=Math.max(0,Math.min(100,v)); _ssUpdate(); } });
+  bind('ss-ov-tilt', function(){ _ss.tiltDeg=parseInt(this.value)||0; _ssUpdate(); });
+  bind('ss-ov-wdist', function(){ var v=parseFloat(this.value); if(!isNaN(v)&&v>=0.5&&v<=20){ _ss.wallDist=v; _ssUpdate(); } });
   var canvas=document.getElementById('ss-canvas');
   if(!canvas) return;
   if(window.ResizeObserver){
@@ -26402,7 +26461,29 @@ function _ssResizeCanvas() {
   c.width=Math.round(cw*dpr); c.height=Math.round(ch*dpr);
 }
 
-function _ssUpdate() { _ssUpdateViewBtns(); _ssUpdateResults(); }
+function _ssUpdate() { _ssUpdateViewBtns(); _ssSyncControls(); _ssUpdateResults(); }
+
+// Format a percentage: whole numbers plain, fractions to 1 decimal
+function _ssFmtPct(v){ return (v%1===0)? String(v) : v.toFixed(1); }
+
+// Push current _ss state into all controls (main panel + canvas overlay) so they stay in sync
+function _ssSyncControls() {
+  function setv(id,v){ var e=document.getElementById(id); if(e&&document.activeElement!==e&&String(e.value)!==String(v)) e.value=v; }
+  function setl(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; }
+  var mt=_ssGetFx().maxTilt!==undefined?_ssGetFx().maxTilt:45;
+  var tilt=Math.min(_ss.tiltDeg||0,mt);
+  setv('ss-tilt',tilt); setl('ss-tilt-lbl',tilt+'°');
+  setv('ss-ov-tilt',tilt); setl('ss-ov-tilt-lbl',tilt+'°');
+  var out=(_ss.outputPct!=null?_ss.outputPct:100);
+  setv('ss-out',out); setv('ss-out-num',out);
+  setv('ss-ov-out',out); setl('ss-ov-out-lbl',_ssFmtPct(out)+'%');
+  setv('ss-wdist',_ss.wallDist);
+  setv('ss-ov-wdist',_ss.wallDist); setl('ss-ov-wdist-lbl',_ss.wallDist+"'");
+  // Fixture count display
+  var L=_ssLayout();
+  setl('ss-fixcount-num', L.numFix);
+  setl('ss-fixcount-note', L.isManual?'manual':'auto: '+L.autoNum);
+}
 
 function _ssUpdateViewBtns() {
   var vmOn  = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #4f8ef7;background:#4f8ef7;color:#fff;transition:all 0.15s';
@@ -27179,28 +27260,27 @@ function _ssMV(e) {
   e.preventDefault();
   var obj=_ssGetObj();
   if(_ss.dragTarget==='fixture'){
+    // Move ONLY the fixture (wall distance) — object stays put (it has its own dist)
     var dxFt=(p.x-_ss.dragStartCX)/(_ss.dragScale||1);
     var nd=Math.max(0.5,Math.min(20,_ss.dragStartVal-dxFt));
     _ss.wallDist=Math.round(nd*4)/4;
-    var wdEl=document.getElementById('ss-wdist'); if(wdEl) wdEl.value=_ss.wallDist;
   } else if(_ss.dragTarget==='object'){
+    if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
     if(obj.surf==='vertical'){
       // Drag vertically → change height
-      var dyFt=(p.y-_ss.dragStartCY)/(_ss.dragScale||1); // down = lower
+      var dyFt=(p.y-_ss.dragStartCY)/(_ss.dragScale||1);
       var nh=Math.max(0,Math.min(_ss.ceilH-0.5, _ss.dragStartVal-dyFt));
-      if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
       _ss.objCustom[_ss.objId].h=Math.round(nh*4)/4;
       var ohEl=document.getElementById('ss-objh'); if(ohEl) ohEl.value=_ss.objCustom[_ss.objId].h;
-      var ohLbl=document.getElementById('ss-objh-lbl'); if(ohLbl) ohLbl.textContent=_ss.objCustom[_ss.objId].h+"'";
+      var ohNum=document.getElementById('ss-objh-num'); if(ohNum) ohNum.value=_ss.objCustom[_ss.objId].h;
     } else {
-      // Drag horizontally → change distance from wall
+      // Drag horizontally → change object distance from wall (independent of fixture)
       var dxFt2=(p.x-_ss.dragStartCX)/(_ss.dragScale||1);
       var ndist=Math.max(0,Math.min(_ssDS.viewRange-0.5, _ss.dragStartVal-dxFt2));
-      if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
       _ss.objCustom[_ss.objId].dist=Math.round(ndist*4)/4;
     }
   }
-  _ssUpdateResults();
+  _ssUpdate();
 }
 
 function _ssMU() {
@@ -27234,6 +27314,23 @@ function _ssWheel(e){
 
 function _ssResetCam(){
   _ss.cam={ yaw:-0.5, pitch:0.35, zoom:1, panX:0, panY:0 };
+}
+
+// Output preset buttons
+function _ssSetOutput(v){
+  _ss.outputPct=Math.max(0,Math.min(100,v));
+  _ssRender(); // rebuild so the preset highlight updates
+}
+// Manual fixture count override
+function _ssFixCount(delta){
+  var L=_ssLayout();
+  var cur=L.numFix;
+  _ss.fixCountOverride=Math.max(1,Math.min(30,cur+delta));
+  _ssRender();
+}
+function _ssFixAuto(){
+  _ss.fixCountOverride=null;
+  _ssRender();
 }
 
 // ── Results Panel ─────────────────────────────────────────────
@@ -27298,16 +27395,34 @@ function _ssCard(lbl,val,sub,color) {
     +'</div>';
 }
 
-// ── Fixture Adder ─────────────────────────────────────────────
+// Edit-mode tracking (null = adding a new entry; an id = editing that entry)
+var _ssEditFx=null, _ssEditObj=null, _ssEditAcc=null;
+// Only user-created entries (id prefixes uf/uo/ua) are editable
+function _ssIsCustomFx(id){ return /^uf/.test(id); }
+function _ssIsCustomObj(id){ return /^uo/.test(id); }
+function _ssIsCustomAcc(id){ return /^ua/.test(id); }
+
+// ── Fixture Adder / Editor ────────────────────────────────────
 function _ssOpenAddFixture() {
+  _ssEditFx=null;
   ['ss-af-name','ss-af-lumens','ss-af-cbfc'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var beamEl=document.getElementById('ss-af-beam'); if(beamEl) beamEl.value='25';
   var tiltEl=document.getElementById('ss-af-maxtilt'); if(tiltEl) tiltEl.value='35';
+  _ssSetModalMode('ss-af','Add Fixture','Add Fixture',false);
   openModal('modal-ss-fixture');
 }
-
+function _ssOpenEditFixture() {
+  var fx=_ssGetFx();
+  if(!fx || !_ssIsCustomFx(fx.id)){ toast('Only custom fixtures can be edited'); return; }
+  _ssEditFx=fx.id;
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value=(v===undefined||v===null)?'':v; }
+  set('ss-af-name',fx.name); set('ss-af-lumens',fx.lumens||''); set('ss-af-cbfc',fx.cbfc);
+  set('ss-af-beam',fx.beamDeg); set('ss-af-maxtilt',fx.maxTilt!==undefined?fx.maxTilt:0);
+  _ssSetModalMode('ss-af','Edit Fixture','Save Changes',true);
+  openModal('modal-ss-fixture');
+}
 function _ssSaveFixture() {
   var name=(document.getElementById('ss-af-name')||{}).value||'';
   var lumens=parseInt((document.getElementById('ss-af-lumens')||{}).value)||0;
@@ -27316,23 +27431,44 @@ function _ssSaveFixture() {
   var maxTilt=parseInt((document.getElementById('ss-af-maxtilt')||{}).value)||0;
   if(!name.trim()){ toast('Enter a fixture name'); return; }
   if(cbfc<=0){ toast('Enter the CBFC value'); return; }
-  var id='uf'+Date.now();
-  _SS_FX_USER.push({id:id,name:name.trim(),lumens:lumens,cbfc:cbfc,beamDeg:beam,maxTilt:maxTilt});
+  if(_ssEditFx){
+    var fx=_SS_FX_USER.find(function(f){return f.id===_ssEditFx;});
+    if(fx){ fx.name=name.trim(); fx.lumens=lumens; fx.cbfc=cbfc; fx.beamDeg=beam; fx.maxTilt=maxTilt; }
+    _ss.fxId=_ssEditFx;
+    toast('Fixture updated');
+  } else {
+    var id='uf'+Date.now();
+    _SS_FX_USER.push({id:id,name:name.trim(),lumens:lumens,cbfc:cbfc,beamDeg:beam,maxTilt:maxTilt});
+    _ss.fxId=id;
+    toast('Fixture added');
+  }
   try{ localStorage.setItem('ss_fx',JSON.stringify(_SS_FX_USER)); }catch(e){}
-  _ss.fxId=id;
+  if(!_ss.useCustomBeam) _ss.beamDeg=_ssGetFx().beamDeg;
+  _ssEditFx=null;
   closeModal('modal-ss-fixture');
-  toast('Fixture added');
+  _ssRender();
+}
+function _ssDeleteFixture() {
+  if(!_ssEditFx) return;
+  if(!confirm('Delete this fixture?')) return;
+  _SS_FX_USER=_SS_FX_USER.filter(function(f){return f.id!==_ssEditFx;});
+  try{ localStorage.setItem('ss_fx',JSON.stringify(_SS_FX_USER)); }catch(e){}
+  if(_ss.fxId===_ssEditFx) _ss.fxId=(_ssAllFx()[0]||{}).id||'f1';
+  _ssEditFx=null;
+  closeModal('modal-ss-fixture');
+  toast('Fixture deleted');
   _ssRender();
 }
 
-// ── Object Adder ──────────────────────────────────────────────
+// ── Object Adder / Editor ─────────────────────────────────────
 function _ssOpenAddObject() {
-  // Populate preset dropdown from built-in objects
+  _ssEditObj=null;
   var sel=document.getElementById('ss-ao-preset');
   if(sel){
     sel.innerHTML='<option value="">— Custom (blank) —</option>'
       + _SS_OBJ.map(function(o){ return '<option value="'+o.id+'">'+o.icon+' '+escH(o.name)+'</option>'; }).join('');
   }
+  var pw=document.getElementById('ss-ao-preset-wrap'); if(pw) pw.style.display='';
   ['ss-ao-name','ss-ao-h','ss-ao-size','ss-ao-width','ss-ao-fclo','ss-ao-fchi','ss-ao-note'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
@@ -27340,6 +27476,22 @@ function _ssOpenAddObject() {
   var sf=document.getElementById('ss-ao-surf'); if(sf) sf.value='vertical';
   _ssObjSurfLabels();
   var sfEl=document.getElementById('ss-ao-surf'); if(sfEl) sfEl.onchange=_ssObjSurfLabels;
+  _ssSetModalMode('ss-ao','Add Object','Add Object',false);
+  openModal('modal-ss-object');
+}
+function _ssOpenEditObject() {
+  var o=_ssAllObj().find(function(x){return x.id===_ss.objId;});
+  if(!o || !_ssIsCustomObj(o.id)){ toast('Only custom objects can be edited'); return; }
+  _ssEditObj=o.id;
+  var pw=document.getElementById('ss-ao-preset-wrap'); if(pw) pw.style.display='none'; // no preset when editing
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value=(v===undefined||v===null)?'':v; }
+  set('ss-ao-icon',o.icon); set('ss-ao-name',o.name); set('ss-ao-surf',o.surf);
+  set('ss-ao-h',o.h); set('ss-ao-size',o.hw*2);
+  set('ss-ao-width',o.width!==undefined?o.width:(o.surf==='vertical'?3:6));
+  set('ss-ao-fclo',o.recFc[0]); set('ss-ao-fchi',o.recFc[1]); set('ss-ao-note',o.note||'');
+  _ssObjSurfLabels();
+  var sfEl=document.getElementById('ss-ao-surf'); if(sfEl) sfEl.onchange=_ssObjSurfLabels;
+  _ssSetModalMode('ss-ao','Edit Object','Save Changes',true);
   openModal('modal-ss-object');
 }
 function _ssObjSurfLabels() {
@@ -27370,21 +27522,56 @@ function _ssSaveObject() {
   var hi=parseInt((document.getElementById('ss-ao-fchi')||{}).value)||50;
   if(hi<lo){ var t=lo; lo=hi; hi=t; }
   var note=((document.getElementById('ss-ao-note')||{}).value||'').trim();
-  var id='uo'+Date.now();
-  _SS_OBJ_USER.push({ id:id, name:name, icon:icon, surf:surf, h:h, hw:size/2, width:width, recFc:[lo,hi], note:note||'Custom object' });
+  if(_ssEditObj){
+    var o=_SS_OBJ_USER.find(function(x){return x.id===_ssEditObj;});
+    if(o){ o.name=name; o.icon=icon; o.surf=surf; o.h=h; o.hw=size/2; o.width=width; o.recFc=[lo,hi]; o.note=note||'Custom object'; }
+    _ss.objId=_ssEditObj;
+    // Clear per-instance overrides so edited base specs take effect
+    if(_ss.objCustom[_ssEditObj]) delete _ss.objCustom[_ssEditObj];
+    toast('Object updated');
+  } else {
+    var id='uo'+Date.now();
+    _SS_OBJ_USER.push({ id:id, name:name, icon:icon, surf:surf, h:h, hw:size/2, width:width, recFc:[lo,hi], note:note||'Custom object' });
+    _ss.objId=id;
+    toast('Object added');
+  }
   try{ localStorage.setItem('ss_obj',JSON.stringify(_SS_OBJ_USER)); }catch(e){}
-  _ss.objId=id;
+  _ssEditObj=null;
   closeModal('modal-ss-object');
-  toast('Object added');
+  _ssRender();
+}
+function _ssDeleteObject() {
+  if(!_ssEditObj) return;
+  if(!confirm('Delete this object?')) return;
+  _SS_OBJ_USER=_SS_OBJ_USER.filter(function(o){return o.id!==_ssEditObj;});
+  try{ localStorage.setItem('ss_obj',JSON.stringify(_SS_OBJ_USER)); }catch(e){}
+  if(_ss.objId===_ssEditObj) _ss.objId=(_ssAllObj()[0]||{}).id||'painting';
+  _ssEditObj=null;
+  closeModal('modal-ss-object');
+  toast('Object deleted');
   _ssRender();
 }
 
-// ── Accessory Adder ───────────────────────────────────────────
+// ── Accessory Adder / Editor ──────────────────────────────────
 function _ssOpenAddAccessory() {
+  _ssEditAcc=null;
   ['ss-aa-name','ss-aa-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var ic=document.getElementById('ss-aa-icon'); if(ic) ic.value='◻';
   var xm=document.getElementById('ss-aa-xmit'); if(xm) xm.value='85';
   var bm=document.getElementById('ss-aa-bmult'); if(bm) bm.value='1.0';
+  _ssSetModalMode('ss-aa','Add Accessory','Add Accessory',false);
+  openModal('modal-ss-accessory');
+}
+function _ssOpenEditAccessory(aid) {
+  var a=_ssAllAcc().find(function(x){return x.id===aid;});
+  if(!a || !_ssIsCustomAcc(a.id)){ toast('Only custom accessories can be edited'); return; }
+  _ssEditAcc=a.id;
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value=v; }
+  set('ss-aa-icon',a.icon||'◻'); set('ss-aa-name',a.name);
+  set('ss-aa-xmit',Math.round((a.xmit!==undefined?a.xmit:0.85)*100));
+  set('ss-aa-bmult',(a.bMult!==undefined?a.bMult:1).toFixed(2));
+  set('ss-aa-desc',a.desc||'');
+  _ssSetModalMode('ss-aa','Edit Accessory','Save Changes',true);
   openModal('modal-ss-accessory');
 }
 function _ssSaveAccessory() {
@@ -27396,13 +27583,39 @@ function _ssSaveAccessory() {
   var bMult=parseFloat((document.getElementById('ss-aa-bmult')||{}).value); if(isNaN(bMult)) bMult=1.0;
   bMult=Math.max(0.3,Math.min(3,bMult));
   var desc=((document.getElementById('ss-aa-desc')||{}).value||'').trim();
-  var id='ua'+Date.now();
-  _SS_ACC_USER.push({ id:id, name:name, icon:icon, xmit:xmit, bMult:bMult, desc:desc||'Custom accessory' });
+  if(_ssEditAcc){
+    var a=_SS_ACC_USER.find(function(x){return x.id===_ssEditAcc;});
+    if(a){ a.name=name; a.icon=icon; a.xmit=xmit; a.bMult=bMult; a.desc=desc||'Custom accessory'; }
+    if(_ss.accCustom[_ssEditAcc]) delete _ss.accCustom[_ssEditAcc]; // reset tweaks to new base
+    toast('Accessory updated');
+  } else {
+    var id='ua'+Date.now();
+    _SS_ACC_USER.push({ id:id, name:name, icon:icon, xmit:xmit, bMult:bMult, desc:desc||'Custom accessory' });
+    if(_ss.acc.indexOf(id)<0) _ss.acc.push(id);
+    toast('Accessory added');
+  }
   try{ localStorage.setItem('ss_acc',JSON.stringify(_SS_ACC_USER)); }catch(e){}
-  if(_ss.acc.indexOf(id)<0) _ss.acc.push(id); // enable the new accessory
+  _ssEditAcc=null;
   closeModal('modal-ss-accessory');
-  toast('Accessory added');
   _ssRender();
+}
+function _ssDeleteAccessory() {
+  if(!_ssEditAcc) return;
+  if(!confirm('Delete this accessory?')) return;
+  _SS_ACC_USER=_SS_ACC_USER.filter(function(a){return a.id!==_ssEditAcc;});
+  try{ localStorage.setItem('ss_acc',JSON.stringify(_SS_ACC_USER)); }catch(e){}
+  var idx=_ss.acc.indexOf(_ssEditAcc); if(idx>=0) _ss.acc.splice(idx,1);
+  _ssEditAcc=null;
+  closeModal('modal-ss-accessory');
+  toast('Accessory deleted');
+  _ssRender();
+}
+
+// Set a modal's title, save-button label, and delete-button visibility
+function _ssSetModalMode(prefix, title, saveLabel, showDelete) {
+  var t=document.getElementById(prefix+'-title'); if(t) t.textContent=title;
+  var sv=document.getElementById(prefix+'-save'); if(sv) sv.textContent=saveLabel;
+  var dl=document.getElementById(prefix+'-delete'); if(dl) dl.style.display=showDelete?'':'none';
 }
 
 // Beam Spread Calculator
@@ -27472,7 +27685,7 @@ registerProjCapture('ohmslaw', function() {
 // Section Study proj capture
 registerProjCapture('sectionstudy', function() {
   return {
-    data: JSON.parse(JSON.stringify({fxId:_ss.fxId,beamDeg:_ss.beamDeg,useCustomBeam:_ss.useCustomBeam,acc:_ss.acc,ceilH:_ss.ceilH,wallDist:_ss.wallDist,objId:_ss.objId,tiltDeg:_ss.tiltDeg,outputPct:_ss.outputPct,objCustom:_ss.objCustom,accCustom:_ss.accCustom,roomWidth:_ss.roomWidth,viewMode:_ss.viewMode})),
+    data: JSON.parse(JSON.stringify({fxId:_ss.fxId,beamDeg:_ss.beamDeg,useCustomBeam:_ss.useCustomBeam,acc:_ss.acc,ceilH:_ss.ceilH,wallDist:_ss.wallDist,objId:_ss.objId,tiltDeg:_ss.tiltDeg,outputPct:_ss.outputPct,objCustom:_ss.objCustom,accCustom:_ss.accCustom,roomWidth:_ss.roomWidth,viewMode:_ss.viewMode,fixCountOverride:_ss.fixCountOverride})),
     preview: _ssGetFx().name+' · '+_ss.ceilH+'\'H · '+Math.round(_ssEffBeam())+'° · '+(_ss.tiltDeg||0)+'° tilt · '+_ssGetObj().name
   };
 }, function(d) {
@@ -27488,6 +27701,15 @@ window._ssObjPresetApply    = _ssObjPresetApply;
 window._ssSaveObject        = _ssSaveObject;
 window._ssOpenAddAccessory  = _ssOpenAddAccessory;
 window._ssSaveAccessory     = _ssSaveAccessory;
+window._ssOpenEditFixture   = _ssOpenEditFixture;
+window._ssDeleteFixture     = _ssDeleteFixture;
+window._ssOpenEditObject    = _ssOpenEditObject;
+window._ssDeleteObject      = _ssDeleteObject;
+window._ssOpenEditAccessory = _ssOpenEditAccessory;
+window._ssDeleteAccessory   = _ssDeleteAccessory;
+window._ssSetOutput         = _ssSetOutput;
+window._ssFixCount          = _ssFixCount;
+window._ssFixAuto           = _ssFixAuto;
 window._ssStopAnim          = _ssStopAnim;
 window._ssUpdateViewBtns    = _ssUpdateViewBtns;
 window._ssResetCam          = _ssResetCam;
