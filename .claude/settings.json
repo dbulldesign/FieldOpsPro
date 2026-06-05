@@ -11,7 +11,8 @@
       "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('d:/FieldOpsPro/FieldOpsPro/index.html','utf8'\\); const lines=src.split\\('\\\\n'\\); for\\(let i=19730;i<19850;i++\\){if\\(lines[i].includes\\('data-zone-ch'\\)\\){console.log\\(i+1,lines[i]\\);}}\")",
       "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('d:/FieldOpsPro/FieldOpsPro/index.html','utf8'\\); const lines=src.split\\('\\\\n'\\); for\\(let i=19695;i<19715;i++\\){console.log\\(i+1,lines[i]\\);}\")",
       "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('d:/FieldOpsPro/FieldOpsPro/index.html','utf8'\\); const lines=src.split\\('\\\\n'\\); for\\(let i=19900;i<19935;i++\\){console.log\\(i+1,lines[i]\\);}\")",
-      "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('d:/FieldOpsPro/FieldOpsPro/index.html','utf8'\\); const lines=src.split\\('\\\\n'\\); for\\(let i=19750;i<19930;i++\\){if\\(lines[i].includes\\('chBadge'\\)\\){console.log\\(i+1,lines[i]\\);}}\")"
+      "Bash(node -e \"const fs=require\\('fs'\\); const src=fs.readFileSync\\('d:/FieldOpsPro/FieldOpsPro/index.html','utf8'\\); const lines=src.split\\('\\\\n'\\); for\\(let i=19750;i<19930;i++\\){if\\(lines[i].includes\\('chBadge'\\)\\){console.log\\(i+1,lines[i]\\);}}\")",
+      "Bash(awk 'NR>=26723 && NR<=26900{for\\(i=1;i<=length\\($0\\);i++\\){c=substr\\($0,i,1\\);if\\(c==\"{\"\\)o++;else if\\(c==\"}\"\\)o--}} END{print \"brace balance from 3D start:\",o}' index.html)"
     ]
   }
 }

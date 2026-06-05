@@ -25554,7 +25554,7 @@ var _projEditSave = null; // { projId, saveId } when a save entry is in edit mod
 var _activeRestoredSave = null; // { projId, saveId, view, projName, viewTitle } when editing a restored save
 var _pendingUpdateCapture = null; // captured module state waiting for note confirmation
 // Section Study draw state — shared between draw and mouse handlers
-var _ssDS = { sc:1, ML:58, MT:50, xOff:0, yOff:0, viewRange:12, fixCX:0, fixCY:50 };
+var _ssDS = { sc:1, ML:58, MT:50, xOff:0, yOff:0, viewRange:12, fixCX:0, fixCY:50, objCX:0, objCY:0 };
 
 function renderProjectNotebook() {
   var el = document.getElementById('proj-notebook-list');
@@ -25877,11 +25877,15 @@ var _ss = {
   acc: [], ceilH: 10, wallDist: 3, objId: 'painting',
   tiltDeg: 0,      // fixture tilt toward wall (0 = straight down, positive = toward wall)
   outputPct: 100,  // fixture output dimming percentage
-  objCustom: {},   // per-object height/size overrides: { objId: { h, hw } }
+  objCustom: {},   // per-object height/size/width/dist overrides: { objId: { h, hw, width, dist } }
   accCustom: {},   // per-accessory overrides: { accId: { xmit, bMult } }
   viewMode: 'section', // 'section' | 'plan' | '3d'
   roomWidth: 16,   // room width in feet (for plan/3D views)
-  dragging: false, dragStartCX: 0, dragStartDist: 0, dragScale: 1,
+  // Drag state — dragTarget: null | 'fixture' | 'object'
+  dragging: false, dragTarget: null, dragStartCX: 0, dragStartVal: 0, dragScale: 1,
+  // 3D camera: yaw (horizontal rotate), pitch (vertical rotate), zoom, panX, panY
+  cam: { yaw: -0.5, pitch: 0.35, zoom: 1, panX: 0, panY: 0 },
+  cam3dDrag: null, // {mode:'rotate'|'pan', x, y, startYaw, startPitch, startPanX, startPanY}
   animId: null, _phase: 0,
 };
 
@@ -25909,10 +25913,14 @@ function _ssGetObj() {
   var base=_SS_OBJ.find(function(o){return o.id===_ss.objId;})||_SS_OBJ[0];
   var c=_ss.objCustom[_ss.objId]||{};
   var defWidth = base.surf==='vertical' ? 3 : 6; // default widths
+  // Horizontal objects: default distance from wall = directly under the fixture.
+  // Vertical objects: always on the wall (dist 0).
+  var defDist = base.surf==='vertical' ? 0 : _ss.wallDist;
   return { id:base.id, name:base.name, icon:base.icon, surf:base.surf,
            h:  c.h!==undefined  ? c.h  : base.h,
            hw: c.hw!==undefined ? c.hw : base.hw,
            width: c.width!==undefined ? c.width : defWidth,
+           dist: base.surf==='vertical' ? 0 : (c.dist!==undefined ? c.dist : defDist),
            recFc: base.recFc, note: base.note };
 }
 
@@ -25957,6 +25965,31 @@ function _ssBeamCenter(surfH) {
   var H = _ss.ceilH - surfH;
   if (H <= 0) return _ss.wallDist;
   return _ss.wallDist - H * Math.tan(tiltRad);
+}
+// Shared multi-fixture layout — used by both plan view and results panel
+// so the fixture count is always consistent.
+function _ssLayout() {
+  var obj=_ssGetObj();
+  var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
+  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
+  var H=_ss.ceilH-obj.h;
+  // Slant distance from fixture to the surface point being lit
+  var distAlongBeam;
+  if(obj.surf==='vertical'){
+    distAlongBeam=Math.sqrt(_ss.wallDist*_ss.wallDist + H*H);
+  } else {
+    distAlongBeam = H>0 ? H/Math.max(Math.cos(tiltRad),0.1) : 0;
+  }
+  var beamW = 2*Math.tan(halfRad)*distAlongBeam; // beam diameter at surface
+  var objW = obj.width||0;
+  // Center-to-center spacing = 0.9 × beam diameter (beams meet w/ slight overlap).
+  // numFix is the minimum count to span the object width continuously.
+  var spacingMax = beamW*0.9;
+  var numFix = (objW>0 && spacingMax>0.05) ? Math.max(1, Math.ceil(objW/spacingMax)) : 1;
+  var spacing = numFix>1 ? objW/numFix : 0;
+  return { obj:obj, beamDeg:beamDeg, halfRad:halfRad, tiltRad:tiltRad, H:H,
+           distAlongBeam:distAlongBeam, beamW:beamW, objW:objW,
+           numFix:numFix, spacing:spacing };
 }
 // Find where a ray from fixture at angle (deg from vertical, + = toward wall) hits first
 function _ssRayEnd(angleDeg, viewRange) {
@@ -26079,9 +26112,12 @@ function _ssBuildHTML() {
   var vmOn  = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #4f8ef7;background:#4f8ef7;color:#fff;transition:all 0.15s';
   var vmOff = 'padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0;transition:all 0.15s';
   s += '<div style="display:flex;gap:6px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-bottom:none;border-radius:12px 12px 0 0;flex-wrap:wrap;align-items:center">';
-  s += '<button id="ss-vm-section" style="'+(_ss.viewMode==='section'?vmOn:vmOff)+'" onclick="_ss.viewMode=\'section\';_ssUpdateViewBtns();_ssUpdate()">Section</button>';
-  s += '<button id="ss-vm-plan"    style="'+(_ss.viewMode==='plan'?vmOn:vmOff)+'"    onclick="_ss.viewMode=\'plan\';_ssUpdateViewBtns();_ssUpdate()">Plan View</button>';
-  s += '<button id="ss-vm-3d"      style="'+(_ss.viewMode==='3d'?vmOn:vmOff)+'"      onclick="_ss.viewMode=\'3d\';_ssUpdateViewBtns();_ssUpdate()">3D View</button>';
+  s += '<button id="ss-vm-section" style="'+(_ss.viewMode==='section'?vmOn:vmOff)+'" onclick="_ss.viewMode=\'section\';_ssRender()">Section</button>';
+  s += '<button id="ss-vm-plan"    style="'+(_ss.viewMode==='plan'?vmOn:vmOff)+'"    onclick="_ss.viewMode=\'plan\';_ssRender()">Plan View</button>';
+  s += '<button id="ss-vm-3d"      style="'+(_ss.viewMode==='3d'?vmOn:vmOff)+'"      onclick="_ss.viewMode=\'3d\';_ssRender()">3D View</button>';
+  if(_ss.viewMode==='3d'){
+    s += '<button style="padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#8da0c0" onclick="_ssResetCam()" title="Reset 3D camera">⟲ Reset</button>';
+  }
   s += '<div style="margin-left:auto;display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#64748b">Room Width</span>';
   s += '<input id="ss-roomw" type="number" min="8" max="40" step="1" value="'+(_ss.roomWidth||16)+'" style="width:52px;background:#152638;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 8px;color:#f0f4ff;font-size:12px;text-align:center">';
   s += '<span style="font-size:11px;color:#64748b">ft</span></div>';
@@ -26192,6 +26228,8 @@ function _ssBindEvents() {
   canvas.addEventListener('touchstart',_ssTD,{passive:false});
   canvas.addEventListener('touchmove', _ssTM,{passive:false});
   canvas.addEventListener('touchend',  _ssMU);
+  canvas.addEventListener('wheel', _ssWheel, {passive:false});
+  canvas.addEventListener('contextmenu', function(e){ if(_ss.viewMode==='3d') e.preventDefault(); });
 }
 
 function _ssResizeCanvas() {
@@ -26465,6 +26503,11 @@ function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse,tiltDeg) {
       ctx.strokeRect(wallCX-objW,topCY,objW,h);
     }
 
+    // Grab handle at object center (draggable up/down to change height)
+    ctx.strokeStyle='rgba(120,200,255,0.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(wallCX-objW/2,cy(obj.h),6,0,Math.PI*2); ctx.stroke();
+    _ssDS.objCX=wallCX-objW/2; _ssDS.objCY=cy(obj.h);
+
     // Object name label
     ctx.fillStyle='rgba(220,230,245,0.9)'; ctx.font=LBL; ctx.textAlign='right';
     ctx.fillText(obj.icon+' '+obj.name,wallCX-objW-8,cy(obj.h)-6);
@@ -26482,19 +26525,23 @@ function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse,tiltDeg) {
     // Horizontal surface
     var surfH=obj.h;
     var surfCY=cy(surfH);
+    // Light pool: where the beam actually lands (moves with the fixture)
     var beamCenterPX=_ssBeamCenter(surfH);
     var beamCX=cx(beamCenterPX);
     var tR=tiltDeg*Math.PI/180;
     var distAlongBeam=(cH-surfH)/Math.cos(tR);
     var beamR=fw(Math.tan(halfRad)*distAlongBeam);
-    var fcCtr=_ssCalcFC(beamCenterPX,surfH,'horizontal');
+    // Object: fixed at its own position (independent of the light)
+    var objCX=cx(obj.dist);
+    var fcObj=_ssCalcFC(obj.dist,surfH,'horizontal'); // FC on the object itself
 
-    // Illuminance radial halo
-    if(fcCtr>0.5 && beamR>2){
+    // Illuminance radial light-pool halo on the surface plane (at beam center)
+    var fcPool=_ssCalcFC(beamCenterPX,surfH,'horizontal');
+    if(fcPool>0.5 && beamR>2){
       var rGrad=ctx.createRadialGradient(beamCX,surfCY,0,beamCX,surfCY,Math.max(beamR,5));
-      rGrad.addColorStop(0,_fcToRGBA(fcCtr,0.75*pulse));
-      rGrad.addColorStop(0.4,_fcToRGBA(fcCtr*0.55,0.55*pulse));
-      rGrad.addColorStop(0.8,_fcToRGBA(fcCtr*0.08,0.2*pulse));
+      rGrad.addColorStop(0,_fcToRGBA(fcPool,0.75*pulse));
+      rGrad.addColorStop(0.4,_fcToRGBA(fcPool*0.55,0.55*pulse));
+      rGrad.addColorStop(0.8,_fcToRGBA(fcPool*0.08,0.2*pulse));
       rGrad.addColorStop(1,'rgba(0,0,0,0)');
       ctx.save();
       ctx.beginPath(); ctx.rect(50,surfCY-Math.max(beamR,5)*1.5,cx(0)-46,Math.max(beamR,5)*3);
@@ -26504,63 +26551,62 @@ function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse,tiltDeg) {
       ctx.restore();
     }
 
-    // Surface line + object shape
+    // Object shape drawn at the object's own position objCX
     var halfW=fw(obj.hw);
     if(obj.id==='table'||obj.id==='desk'||obj.id==='counter'||obj.id==='retail'||obj.id==='reading'){
-      // Table top surface
       ctx.fillStyle='rgba(120,140,170,0.25)';
-      ctx.fillRect(beamCX-halfW,surfCY-4,halfW*2,8);
-      ctx.strokeStyle='rgba(160,185,215,0.8)'; ctx.lineWidth=2;
-      ctx.strokeRect(beamCX-halfW,surfCY-4,halfW*2,8);
-      // Table legs
+      ctx.fillRect(objCX-halfW,surfCY-4,halfW*2,8);
+      ctx.strokeStyle='rgba(160,185,215,0.85)'; ctx.lineWidth=2;
+      ctx.strokeRect(objCX-halfW,surfCY-4,halfW*2,8);
       if(surfH>0.3){
         ctx.strokeStyle='rgba(120,145,175,0.5)'; ctx.lineWidth=2;
         var legH=surfH<1?fh(surfH):fh(Math.min(surfH,2.5));
-        ctx.beginPath(); ctx.moveTo(beamCX-halfW+4,surfCY+4); ctx.lineTo(beamCX-halfW+4,surfCY+4+legH); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(beamCX+halfW-4,surfCY+4); ctx.lineTo(beamCX+halfW-4,surfCY+4+legH); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(objCX-halfW+4,surfCY+4); ctx.lineTo(objCX-halfW+4,surfCY+4+legH); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(objCX+halfW-4,surfCY+4); ctx.lineTo(objCX+halfW-4,surfCY+4+legH); ctx.stroke();
       }
     } else if(obj.id==='person'){
-      // Simple person silhouette
       var headR=fh(0.5), bodyH=fh(2.5), bodyW=fw(0.6);
-      var feetCY=cy(0);
       ctx.fillStyle='rgba(140,160,190,0.35)';
-      // Head
-      ctx.beginPath(); ctx.arc(beamCX,surfCY,headR,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(objCX,surfCY,headR,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle='rgba(180,200,230,0.6)'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.arc(beamCX,surfCY,headR,0,Math.PI*2); ctx.stroke();
-      // Body
+      ctx.beginPath(); ctx.arc(objCX,surfCY,headR,0,Math.PI*2); ctx.stroke();
       ctx.fillStyle='rgba(120,145,175,0.3)';
-      ctx.fillRect(beamCX-bodyW/2,surfCY+headR,bodyW,bodyH);
+      ctx.fillRect(objCX-bodyW/2,surfCY+headR,bodyW,bodyH);
       ctx.strokeStyle='rgba(160,185,215,0.5)'; ctx.lineWidth=1.5;
-      ctx.strokeRect(beamCX-bodyW/2,surfCY+headR,bodyW,bodyH);
+      ctx.strokeRect(objCX-bodyW/2,surfCY+headR,bodyW,bodyH);
     } else if(obj.id==='floor'){
-      // Floor highlight patch
       ctx.fillStyle='rgba(100,120,150,0.15)';
-      ctx.fillRect(beamCX-halfW,surfCY-2,halfW*2,2);
+      ctx.fillRect(objCX-halfW,surfCY-2,halfW*2,2);
       ctx.strokeStyle='rgba(140,165,195,0.6)'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(50,surfCY); ctx.lineTo(cx(0),surfCY); ctx.stroke();
     } else {
       ctx.strokeStyle='rgba(160,185,215,0.7)'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
-      ctx.beginPath(); ctx.moveTo(50,surfCY); ctx.lineTo(cx(0),surfCY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(objCX-halfW,surfCY); ctx.lineTo(objCX+halfW,surfCY); ctx.stroke();
       ctx.setLineDash([]);
     }
+
+    // Object grab handle (small ring) so user knows it's draggable
+    ctx.strokeStyle='rgba(120,200,255,0.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(objCX,surfCY,6,0,Math.PI*2); ctx.stroke();
+
+    // Store object screen position for drag hit-testing
+    _ssDS.objCX=objCX; _ssDS.objCY=surfCY;
 
     // Object label
     ctx.fillStyle='rgba(220,230,245,0.9)'; ctx.font=LBL; ctx.textAlign='left';
     ctx.fillText(obj.icon+' '+obj.name+' ('+surfH+'\')',58,surfCY-14);
-    // FC value
-    if(fcCtr>0.5){
-      ctx.fillStyle='rgba(255,240,140,0.95)'; ctx.font=VAL; ctx.textAlign='center';
-      ctx.fillText(Math.round(fcCtr)+' fc',beamCX,surfCY-26);
-      // Beam spread annotation
-      if(beamR>16){
-        var spreadFt=Math.round(Math.tan(halfRad)*distAlongBeam*2*10)/10;
-        ctx.strokeStyle='rgba(79,142,247,0.55)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
-        ctx.beginPath(); ctx.moveTo(beamCX-beamR,surfCY+10); ctx.lineTo(beamCX+beamR,surfCY+10); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle='rgba(79,142,247,0.8)'; ctx.font=SMOL; ctx.textAlign='center';
-        ctx.fillText('↔ '+spreadFt+'\' spread',beamCX,surfCY+22);
-      }
+    // FC ON the object (at its position)
+    ctx.fillStyle=fcObj>0.5?'rgba(255,240,140,0.95)':'rgba(150,165,185,0.8)';
+    ctx.font=VAL; ctx.textAlign='center';
+    ctx.fillText((fcObj>=0.5?Math.round(fcObj):'<1')+' fc',objCX,surfCY-26);
+    // Beam spread annotation at the light pool
+    if(beamR>16 && fcPool>0.5){
+      var spreadFt=Math.round(Math.tan(halfRad)*distAlongBeam*2*10)/10;
+      ctx.strokeStyle='rgba(79,142,247,0.55)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(beamCX-beamR,surfCY+10); ctx.lineTo(beamCX+beamR,surfCY+10); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(79,142,247,0.8)'; ctx.font=SMOL; ctx.textAlign='center';
+      ctx.fillText('↔ '+spreadFt+'\' pool',beamCX,surfCY+22);
     }
   }
 }
@@ -26568,10 +26614,11 @@ function _ssDrawObject(ctx,obj,cx,cy,fw,fh,cH,wd,halfRad,pulse,tiltDeg) {
 // ── Plan View (top-down) ──────────────────────────────────────
 function _ssDraw2DPlan(ctx,w,h,dpr) {
   ctx.save(); ctx.scale(dpr,dpr);
-  var obj=_ssGetObj();
-  var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
-  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
-  var rW=_ss.roomWidth||16, rD=Math.max(_ss.wallDist+8,rW*0.8);
+  var L=_ssLayout();
+  var obj=L.obj;
+  var tiltRad=L.tiltRad;
+  var rW=_ss.roomWidth||16, wd=_ss.wallDist;
+  var rD=Math.max(wd+8, rW*0.8);
   var pulse=(0.82+0.18*Math.sin(_ss._phase*1.4))*Math.max(0.05,_ssEffXmit());
 
   var ML=50,MR=30,MT=48,MB=48;
@@ -26582,9 +26629,10 @@ function _ssDraw2DPlan(ctx,w,h,dpr) {
   var roomWpx=rW*sc2, roomDpx=rD*sc2;
   var xOff2=Math.max(0,(dw-roomWpx)/2);
   var zOff2=Math.max(0,(dh-roomDpx)/2);
-  function px(x){ return ML+xOff2+x*sc2; }
-  function pz(z){ return MT+zOff2+dh-zOff2*2-z*sc2; } // wall at bottom
+  function px(x){ return ML+xOff2+x*sc2; }     // x = position along room width
+  function pz(z){ return MT+roomDpx+zOff2-z*sc2; } // z = depth from wall (wall at bottom)
   function fw2(v){ return v*sc2; }
+  var wallY=pz(0);
 
   // Background
   ctx.fillStyle='#080f1e'; ctx.fillRect(0,0,w,h);
@@ -26593,73 +26641,75 @@ function _ssDraw2DPlan(ctx,w,h,dpr) {
   for(var gx=0;gx<=rW;gx++){ctx.beginPath();ctx.moveTo(px(gx),MT);ctx.lineTo(px(gx),MT+dh);ctx.stroke();}
   for(var gz=0;gz<=Math.ceil(rD);gz++){ctx.beginPath();ctx.moveTo(ML,pz(gz));ctx.lineTo(ML+dw,pz(gz));ctx.stroke();}
 
-  // Multi-fixture calculation
-  var H=_ss.ceilH-obj.h;
-  var distAlongBeam=H>0?H/Math.max(Math.cos(tiltRad),0.1):0;
-  var beamFootprintR=Math.tan(halfRad)*distAlongBeam;
-  var objWidth=(_ss.objCustom[obj.id]||{}).width || 8; // default 8ft wide
-  var numFix=1;
-  if(objWidth>0 && beamFootprintR>0){
-    var coverSpacing=beamFootprintR*2*0.65;
-    numFix=Math.max(1,Math.ceil(objWidth/Math.max(coverSpacing,0.5)));
-  }
-  var fixSpacing=numFix>1?objWidth/(numFix):0;
-  var objCenterX=rW/2, fixZ=_ss.wallDist;
+  var numFix=L.numFix, spacing=L.spacing, objW=L.objW;
+  var footR=L.beamW/2;                 // footprint radius in ft
+  var objCenterX=rW/2;                 // object centered on room width
+  var objZ = obj.surf==='vertical' ? 0 : obj.dist; // depth of object surface
+  var fixZ = _ss.wallDist;             // fixtures at wallDist from wall
+  // FC at object center (consistent with results)
+  var fcAtObj=_ssCalcFC(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf);
 
-  // Draw fixtures and beams in plan
+  // First fixture centered within its slice
+  function fixXAt(i){ return numFix>1 ? (objCenterX - objW/2 + spacing*(i+0.5)) : objCenterX; }
+
+  // Draw beam footprints (under each fixture, on the object surface)
   for(var fi=0;fi<numFix;fi++){
-    var fixX=numFix>1?(objCenterX-objWidth/2+fixSpacing*0.5+fi*fixSpacing):objCenterX;
-    var beamCenterX=fixX-fixZ*Math.sin(tiltRad);
-    // Beam footprint circle on wall/surface
-    var bR=fw2(beamFootprintR);
+    var fixX=fixXAt(fi);
+    var bR=fw2(footR);
     if(bR>1){
-      var fcCtr=_ssCalcFC(obj.surf==='vertical'?0:beamCenterX, obj.h, obj.surf);
-      var rGrad=ctx.createRadialGradient(px(beamCenterX),pz(0),0,px(beamCenterX),pz(0),bR);
-      rGrad.addColorStop(0,_fcToRGBA(fcCtr,0.6*pulse));
-      rGrad.addColorStop(0.5,_fcToRGBA(fcCtr*0.4,0.4*pulse));
+      var rGrad=ctx.createRadialGradient(px(fixX),pz(objZ),0,px(fixX),pz(objZ),bR);
+      rGrad.addColorStop(0,_fcToRGBA(fcAtObj,0.55*pulse));
+      rGrad.addColorStop(0.55,_fcToRGBA(fcAtObj*0.4,0.35*pulse));
       rGrad.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.beginPath();ctx.arc(px(beamCenterX),pz(0),bR,0,Math.PI*2);
+      ctx.beginPath();ctx.arc(px(fixX),pz(objZ),bR,0,Math.PI*2);
       ctx.fillStyle=rGrad;ctx.fill();
+      ctx.strokeStyle='rgba(255,235,150,0.25)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.arc(px(fixX),pz(objZ),bR,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     }
-    // Beam lines from fixture to footprint edges
-    ctx.strokeStyle='rgba(255,245,180,0.25)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
-    ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ));ctx.lineTo(px(beamCenterX-beamFootprintR),pz(0));ctx.stroke();
-    ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ));ctx.lineTo(px(beamCenterX+beamFootprintR),pz(0));ctx.stroke();
-    ctx.setLineDash([]);
-    // Fixture symbol (⊕)
-    ctx.fillStyle='#111e35';ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),8,0,Math.PI*2);ctx.fill();
-    var halo=ctx.createRadialGradient(px(fixX),pz(fixZ),0,px(fixX),pz(fixZ),22);
+  }
+
+  // Object surface line / rectangle
+  if(objW>0){
+    var oL=px(objCenterX-objW/2), oR=px(objCenterX+objW/2);
+    if(obj.surf==='vertical'){
+      ctx.strokeStyle='rgba(200,216,240,0.85)';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(oL,wallY);ctx.lineTo(oR,wallY);ctx.stroke();
+    } else {
+      var depthPx=fw2(obj.hw*2);
+      ctx.fillStyle='rgba(120,140,170,0.2)';
+      ctx.fillRect(oL,pz(objZ)-depthPx/2,oR-oL,depthPx);
+      ctx.strokeStyle='rgba(200,216,240,0.8)';ctx.lineWidth=2;
+      ctx.strokeRect(oL,pz(objZ)-depthPx/2,oR-oL,depthPx);
+    }
+    ctx.fillStyle='rgba(220,230,245,0.9)';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
+    ctx.fillText(obj.icon+' '+obj.name+' ('+objW+"' wide)",px(objCenterX), obj.surf==='vertical'?wallY+18:pz(objZ)+fw2(obj.hw)+18);
+  }
+
+  // Draw fixtures + spacing dims
+  for(var fj=0;fj<numFix;fj++){
+    var fX=fixXAt(fj);
+    ctx.fillStyle='#111e35';ctx.beginPath();ctx.arc(px(fX),pz(fixZ),8,0,Math.PI*2);ctx.fill();
+    var halo=ctx.createRadialGradient(px(fX),pz(fixZ),0,px(fX),pz(fixZ),20);
     halo.addColorStop(0,'rgba(255,248,180,'+(0.6*pulse)+')');halo.addColorStop(1,'rgba(255,220,80,0)');
-    ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),22,0,Math.PI*2);ctx.fillStyle=halo;ctx.fill();
-    ctx.strokeStyle='rgba(200,220,240,0.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),8,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle='rgba(255,250,210,0.9)';ctx.beginPath();ctx.arc(px(fixX),pz(fixZ),4,0,Math.PI*2);ctx.fill();
-    // Spacing annotation
-    if(numFix>1&&fi<numFix-1){
-      var nextX=objCenterX-objWidth/2+fixSpacing*0.5+(fi+1)*fixSpacing;
-      ctx.strokeStyle='rgba(79,142,247,0.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-      ctx.beginPath();ctx.moveTo(px(fixX),pz(fixZ)-24);ctx.lineTo(px(nextX),pz(fixZ)-24);ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle='rgba(79,142,247,0.8)';ctx.font='bold 10px system-ui,sans-serif';ctx.textAlign='center';
-      ctx.fillText(Math.round(fixSpacing*10)/10+"'", (px(fixX)+px(nextX))/2, pz(fixZ)-28);
+    ctx.beginPath();ctx.arc(px(fX),pz(fixZ),20,0,Math.PI*2);ctx.fillStyle=halo;ctx.fill();
+    ctx.strokeStyle='rgba(200,220,240,0.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(px(fX),pz(fixZ),8,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,250,210,0.9)';ctx.beginPath();ctx.arc(px(fX),pz(fixZ),4,0,Math.PI*2);ctx.fill();
+    if(numFix>1 && fj<numFix-1){
+      var nX=fixXAt(fj+1);
+      var midY=pz(fixZ)-26;
+      ctx.strokeStyle='rgba(79,142,247,0.55)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(px(fX),midY);ctx.lineTo(px(nX),midY);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='rgba(120,180,255,0.95)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.fillText(Math.round(spacing*10)/10+"'", (px(fX)+px(nX))/2, midY-4);
     }
   }
 
-  // Object footprint on wall
-  if(objWidth>0){
-    var oL=px(objCenterX-objWidth/2), oR=px(objCenterX+objWidth/2);
-    ctx.fillStyle='rgba(200,216,240,0.18)';ctx.fillRect(oL,MT+dh-5,oR-oL,5);
-    ctx.strokeStyle='rgba(200,216,240,0.8)';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(oL,MT+dh);ctx.lineTo(oR,MT+dh);ctx.stroke();
-    ctx.fillStyle='rgba(220,230,245,0.85)';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
-    ctx.fillText(obj.icon+' '+obj.name+' ('+objWidth+"' wide)",px(objCenterX),MT+dh+16);
-  }
-
-  // Wall line
-  ctx.strokeStyle='rgba(150,175,210,0.8)';ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(ML,MT+dh);ctx.lineTo(ML+dw,MT+dh);ctx.stroke();
+  // Wall line (full width)
+  ctx.strokeStyle='rgba(150,175,210,0.85)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(ML,wallY);ctx.lineTo(ML+dw,wallY);ctx.stroke();
   // Labels
   ctx.fillStyle='rgba(110,140,180,0.7)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
-  ctx.fillText('WALL',ML+dw/2,MT+dh+30);
+  ctx.fillText('WALL',ML+dw/2,wallY+30);
   ctx.fillText('OPEN ROOM',ML+dw/2,MT+12);
   // Room width annotation
   ctx.strokeStyle='rgba(79,142,247,0.45)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
@@ -26667,160 +26717,172 @@ function _ssDraw2DPlan(ctx,w,h,dpr) {
   ctx.fillStyle='#4f8ef7';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
   ctx.fillText(rW+"' room width",ML+dw/2,MT-4);
   // Multi-fixture summary
-  ctx.fillStyle='rgba(255,240,160,0.9)';ctx.font='bold 13px system-ui,sans-serif';ctx.textAlign='left';
-  ctx.fillText(numFix+' fixture'+(numFix>1?'s':'')+(numFix>1?' · '+Math.round(fixSpacing*10)/10+"' spacing":''),ML+4,MT+20);
+  ctx.fillStyle='rgba(255,240,160,0.95)';ctx.font='bold 13px system-ui,sans-serif';ctx.textAlign='left';
+  ctx.fillText(numFix+' fixture'+(numFix>1?'s':'')+(numFix>1?' · '+Math.round(spacing*10)/10+"' apart":''),ML+4,MT+20);
   ctx.restore();
 }
 
 // ── 3D Oblique View ───────────────────────────────────────────
 function _ssDraw3D(ctx,w,h,dpr) {
   ctx.save(); ctx.scale(dpr,dpr);
-  var obj=_ssGetObj();
-  var beamDeg=_ssEffBeam(), halfRad=(beamDeg*Math.PI/180)/2;
-  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
+  var L=_ssLayout();
+  var obj=L.obj, halfRad=L.halfRad, tiltRad=L.tiltRad, beamDeg=L.beamDeg;
   var rW=_ss.roomWidth||16, rH=_ss.ceilH, rD=Math.max(_ss.wallDist+6,12);
   var pulse=(0.82+0.18*Math.sin(_ss._phase*1.4))*Math.max(0.05,_ssEffXmit());
+  var cam=_ss.cam;
 
-  // Oblique cabinet projection: front face is back wall (z=0)
-  // X=room width, Y=height, Z=depth from back wall
-  var angle=Math.PI/5.5, dfact=0.38;
-  var cosA=Math.cos(angle), sinA=Math.sin(angle);
-  // Compute max scale so entire room bounding box fits inside canvas
-  var pad=36;
-  var scW=(w-pad*2)/(rW + rD*dfact*cosA);
-  var scH=(h-pad*2)/(rH + rD*dfact*sinA);
-  var sc=Math.min(scW, scH, 28);
-  // Place origin (back-left-floor) so room is centered / well-padded
-  var ox=pad + rD*dfact*cosA*sc;
-  var oy=h - pad;
-
-  function p3(x,y,z){
-    return {
-      x: ox + x*sc - z*dfact*sc*Math.cos(angle),
-      y: oy - y*sc - z*dfact*sc*Math.sin(angle)
-    };
+  // Orbit camera: rotate world around room center by yaw (Y axis) + pitch (X axis)
+  var cx0=rW/2, cy0=rH/2, cz0=rD/2;
+  var cy=Math.cos(cam.yaw), sy=Math.sin(cam.yaw);
+  var cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch);
+  function rotXYZ(x,y,z){
+    var x1=x*cy + z*sy;
+    var z1=-x*sy + z*cy;
+    var y2=y*cp - z1*sp;
+    var z2=y*sp + z1*cp;
+    return {x:x1, y:y2, z:z2};
   }
+  // Base scale to fit room; zoom multiplies
+  var diag=Math.sqrt(rW*rW+rH*rH+rD*rD);
+  var baseScale=Math.min(w,h)/(diag*1.15)*cam.zoom;
+  var ccx=w/2+cam.panX, ccy=h/2+cam.panY;
+  function p3(x,y,z){
+    var r=rotXYZ(x-cx0,y-cy0,z-cz0);
+    return { x: ccx + r.x*baseScale, y: ccy - r.y*baseScale, z: r.z };
+  }
+  // Rotate a direction/normal (no translation)
+  function nrmZ(nx,ny,nz){ return rotXYZ(nx,ny,nz).z; }
 
   // Background
-  ctx.fillStyle='#080f1e'; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#070d18'; ctx.fillRect(0,0,w,h);
 
-  // ── Floor ──
-  var fl=[p3(0,0,0),p3(rW,0,0),p3(rW,0,rD),p3(0,0,rD)];
-  ctx.fillStyle='rgba(20,35,55,0.9)';
-  ctx.beginPath();ctx.moveTo(fl[0].x,fl[0].y);fl.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(60,90,130,0.5)';ctx.lineWidth=1;
-  for(var gx=0;gx<=rW;gx+=2){var a=p3(gx,0,0),b=p3(gx,0,rD);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-  for(var gz=0;gz<=rD;gz+=2){var a=p3(0,0,gz),b=p3(rW,0,gz);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-
-  // ── Back wall (where painting is) ──
-  var bw=[p3(0,0,0),p3(rW,0,0),p3(rW,rH,0),p3(0,rH,0)];
-  ctx.fillStyle='rgba(15,28,48,0.9)';
-  ctx.beginPath();ctx.moveTo(bw[0].x,bw[0].y);bw.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(80,110,160,0.6)';ctx.lineWidth=1;
-  for(var gy=0;gy<=rH;gy+=2){var a=p3(0,gy,0),b=p3(rW,gy,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-  for(var gx2=0;gx2<=rW;gx2+=2){var a=p3(gx2,0,0),b=p3(gx2,rH,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-
-  // ── Left wall ──
-  var lw=[p3(0,0,0),p3(0,0,rD),p3(0,rH,rD),p3(0,rH,0)];
-  ctx.fillStyle='rgba(12,22,40,0.85)';
-  ctx.beginPath();ctx.moveTo(lw[0].x,lw[0].y);lw.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(60,85,130,0.4)';ctx.lineWidth=1;
-  for(var gz2=0;gz2<=rD;gz2+=2){var a=p3(0,0,gz2),b=p3(0,rH,gz2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-
-  // Wall/floor edge lines
-  ctx.strokeStyle='rgba(100,140,190,0.7)';ctx.lineWidth=2;
-  var wallBottom=[p3(0,0,0),p3(rW,0,0)];ctx.beginPath();ctx.moveTo(wallBottom[0].x,wallBottom[0].y);ctx.lineTo(wallBottom[1].x,wallBottom[1].y);ctx.stroke();
-  var floorLeft=[p3(0,0,0),p3(0,0,rD)];ctx.beginPath();ctx.moveTo(floorLeft[0].x,floorLeft[0].y);ctx.lineTo(floorLeft[1].x,floorLeft[1].y);ctx.stroke();
-
-  // ── Object on back wall ──
-  var fixX3=rW/2, fixZ3=_ss.wallDist;
-  var beamCenterX3=fixX3; // no sideways tilt for now
-  if(obj.surf==='vertical'){
-    var ow=(_ss.objCustom[obj.id]||{}).width||4;
-    var oh=obj.hw*2;
-    var ox3L=fixX3-ow/2, ox3R=fixX3+ow/2;
-    var oyB=obj.h-obj.hw, oyT=obj.h+obj.hw;
-    // Illuminance gradient on object face
-    var p3tl=p3(ox3L,oyT,0), p3tr=p3(ox3R,oyT,0), p3br=p3(ox3R,oyB,0), p3bl=p3(ox3L,oyB,0);
-    var fcC=_ssCalcFC(0,obj.h,'vertical');
-    ctx.fillStyle=_fcToRGBA(fcC,0.6*pulse);
-    ctx.beginPath();ctx.moveTo(p3tl.x,p3tl.y);ctx.lineTo(p3tr.x,p3tr.y);ctx.lineTo(p3br.x,p3br.y);ctx.lineTo(p3bl.x,p3bl.y);ctx.closePath();ctx.fill();
-    // Frame
-    ctx.strokeStyle='rgba(210,180,120,0.8)';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.moveTo(p3tl.x,p3tl.y);ctx.lineTo(p3tr.x,p3tr.y);ctx.lineTo(p3br.x,p3br.y);ctx.lineTo(p3bl.x,p3bl.y);ctx.closePath();ctx.stroke();
-    // FC label
-    if(fcC>0.5){
-      var ctr=p3(fixX3,obj.h,0);
-      ctx.fillStyle='rgba(255,240,140,0.9)';ctx.font='bold 14px system-ui,sans-serif';ctx.textAlign='center';
-      ctx.fillText(Math.round(fcC)+' fc',ctr.x,ctr.y);
-    }
-  } else {
-    var surfP=p3(fixX3,obj.h,0);
-    var fcC=_ssCalcFC(_ssBeamCenter(obj.h),obj.h,'horizontal');
-    ctx.fillStyle=_fcToRGBA(fcC,0.5*pulse);
-    var sR=sc*2;
-    ctx.beginPath();ctx.arc(surfP.x,surfP.y,sR,0,Math.PI*2);ctx.fill();
-    if(fcC>0.5){
-      ctx.fillStyle='rgba(255,240,140,0.9)';ctx.font='bold 14px system-ui,sans-serif';ctx.textAlign='center';
-      ctx.fillText(Math.round(fcC)+' fc',surfP.x,surfP.y-sR-4);
-    }
-  }
-
-  // ── Beam cone ──
-  var fixPt=p3(fixX3,rH,fixZ3);
-  var beamDist=Math.sqrt(fixZ3*fixZ3+Math.pow(rH-obj.h,2));
-  var beamHW=Math.tan(halfRad)*beamDist;
-  var hitX3=fixX3-fixZ3*Math.sin(tiltRad);
-  var hitY3=rH-fixZ3/Math.tan(halfRad>0.01?halfRad:0.01)*0; // simplified
-  // Beam to 4 corners of illuminated area on wall/floor
-  var corners=[];
-  if(obj.surf==='vertical'){
-    corners=[p3(hitX3-beamHW,obj.h+beamHW,0),p3(hitX3+beamHW,obj.h+beamHW,0),
-             p3(hitX3+beamHW,obj.h-beamHW,0),p3(hitX3-beamHW,obj.h-beamHW,0)];
-  } else {
-    corners=[p3(hitX3-beamHW,obj.h,fixZ3*0.1),p3(hitX3+beamHW,obj.h,fixZ3*0.1),
-             p3(hitX3+beamHW,obj.h,0),p3(hitX3-beamHW,obj.h,0)];
-  }
-  ctx.strokeStyle='rgba(255,245,180,'+(0.3*pulse)+')';ctx.lineWidth=1;ctx.setLineDash([4,5]);
-  corners.forEach(function(c){
-    ctx.beginPath();ctx.moveTo(fixPt.x,fixPt.y);ctx.lineTo(c.x,c.y);ctx.stroke();
+  // ── Room faces with back-face culling (draw interior far walls) ──
+  // Each face: corners CCW, outward normal. Visible (interior) if rotated normal.z < 0.
+  var faces=[
+    { n:[0,-1,0], pts:[[0,0,0],[rW,0,0],[rW,0,rD],[0,0,rD]], fill:'rgba(18,32,52,0.92)', label:'FLOOR', grid:'floor' },     // floor
+    { n:[0,1,0],  pts:[[0,rH,0],[0,rH,rD],[rW,rH,rD],[rW,rH,0]], fill:'rgba(10,18,32,0.92)', label:'CEILING', grid:'ceil' }, // ceiling
+    { n:[0,0,-1], pts:[[0,0,0],[0,rH,0],[rW,rH,0],[rW,0,0]], fill:'rgba(16,30,52,0.95)', label:'WALL', grid:'wall' },        // back wall (z=0)
+    { n:[-1,0,0], pts:[[0,0,0],[0,0,rD],[0,rH,rD],[0,rH,0]], fill:'rgba(12,22,40,0.9)', grid:'sideL' },                      // left
+    { n:[1,0,0],  pts:[[rW,0,0],[rW,rH,0],[rW,rH,rD],[rW,0,rD]], fill:'rgba(12,22,40,0.9)', grid:'sideR' }                   // right
+  ];
+  // compute visibility + centroid depth
+  faces.forEach(function(f){
+    f.vis = nrmZ(f.n[0],f.n[1],f.n[2]) < -0.02;
+    var cx=0,cyy=0,czz=0; f.pts.forEach(function(p){cx+=p[0];cyy+=p[1];czz+=p[2];});
+    var c=p3(cx/4,cyy/4,czz/4); f.depth=c.z;
   });
-  ctx.setLineDash([]);
-  // Beam fill
-  ctx.save();
-  var bfGrad=ctx.createRadialGradient(fixPt.x,fixPt.y,0,fixPt.x,fixPt.y,sc*beamDist*0.9);
-  bfGrad.addColorStop(0,'rgba(255,248,180,'+(0.25*pulse)+')');
-  bfGrad.addColorStop(1,'rgba(255,220,80,0)');
-  ctx.beginPath();ctx.moveTo(fixPt.x,fixPt.y);
-  corners.forEach(function(c){ctx.lineTo(c.x,c.y);});ctx.closePath();
-  ctx.fillStyle=bfGrad;ctx.fill();
-  ctx.restore();
+  // draw far first (smaller camera-z = farther since camera at +z)
+  faces.filter(function(f){return f.vis;}).sort(function(a,b){return a.depth-b.depth;})
+    .forEach(function(f){
+      var sp0=f.pts.map(function(p){return p3(p[0],p[1],p[2]);});
+      ctx.fillStyle=f.fill;
+      ctx.beginPath();ctx.moveTo(sp0[0].x,sp0[0].y);sp0.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+      // grid lines
+      ctx.strokeStyle='rgba(70,100,145,0.35)';ctx.lineWidth=1;
+      if(f.grid==='floor'||f.grid==='ceil'){
+        var yy=f.grid==='floor'?0:rH;
+        for(var gx=0;gx<=rW;gx+=2){var a=p3(gx,yy,0),b=p3(gx,yy,rD);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+        for(var gz=0;gz<=rD;gz+=2){var a2=p3(0,yy,gz),b2=p3(rW,yy,gz);ctx.beginPath();ctx.moveTo(a2.x,a2.y);ctx.lineTo(b2.x,b2.y);ctx.stroke();}
+      } else if(f.grid==='wall'){
+        for(var gy=0;gy<=rH;gy+=2){var a3=p3(0,gy,0),b3=p3(rW,gy,0);ctx.beginPath();ctx.moveTo(a3.x,a3.y);ctx.lineTo(b3.x,b3.y);ctx.stroke();}
+        for(var gx3=0;gx3<=rW;gx3+=2){var a4=p3(gx3,0,0),b4=p3(gx3,rH,0);ctx.beginPath();ctx.moveTo(a4.x,a4.y);ctx.lineTo(b4.x,b4.y);ctx.stroke();}
+      } else {
+        var xx=f.grid==='sideL'?0:rW;
+        for(var gy2=0;gy2<=rH;gy2+=2){var a5=p3(xx,gy2,0),b5=p3(xx,gy2,rD);ctx.beginPath();ctx.moveTo(a5.x,a5.y);ctx.lineTo(b5.x,b5.y);ctx.stroke();}
+        for(var gz2=0;gz2<=rD;gz2+=2){var a6=p3(xx,0,gz2),b6=p3(xx,rH,gz2);ctx.beginPath();ctx.moveTo(a6.x,a6.y);ctx.lineTo(b6.x,b6.y);ctx.stroke();}
+      }
+      if(f.label){
+        var lc=p3((f.pts[0][0]+f.pts[2][0])/2,(f.pts[0][1]+f.pts[2][1])/2,(f.pts[0][2]+f.pts[2][2])/2);
+        ctx.fillStyle='rgba(110,140,180,0.5)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
+        ctx.fillText(f.label,lc.x,lc.y);
+      }
+    });
 
-  // ── Fixture ──
-  ctx.fillStyle='#1a2d48';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,10,0,Math.PI*2);ctx.fill();
-  var fhalo=ctx.createRadialGradient(fixPt.x,fixPt.y,0,fixPt.x,fixPt.y,28);
-  fhalo.addColorStop(0,'rgba(255,248,180,'+(0.65*pulse)+')');fhalo.addColorStop(1,'rgba(255,220,80,0)');
-  ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,28,0,Math.PI*2);ctx.fillStyle=fhalo;ctx.fill();
-  ctx.strokeStyle='rgba(200,220,240,0.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,10,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='rgba(255,250,200,'+(0.9*pulse)+')';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,5,0,Math.PI*2);ctx.fill();
-  // Tilt indicator
-  var ta=tiltRad; var tx=-Math.sin(ta)*8, ty=Math.cos(ta)*8;
-  ctx.strokeStyle='rgba(255,245,140,0.85)';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(fixPt.x-tx*0.4,fixPt.y-ty*0.4);ctx.lineTo(fixPt.x+tx,fixPt.y+ty);ctx.stroke();
+  // ── Multi-fixture layout (centered on object) ──
+  var numFix=L.numFix, spacing=L.spacing, objW=L.objW||1;
+  var objCenterX=rW/2;
+  var objZ = obj.surf==='vertical' ? 0 : obj.dist;
+  function fixXAt(i){ return numFix>1 ? (objCenterX - objW/2 + spacing*(i+0.5)) : objCenterX; }
 
-  // Ceiling line at top of back wall + left edge of ceiling
-  ctx.strokeStyle='rgba(80,110,160,0.6)';ctx.lineWidth=1.5;
-  var ceilLine=[p3(0,rH,0),p3(rW,rH,0)];
-  ctx.beginPath();ctx.moveTo(ceilLine[0].x,ceilLine[0].y);ctx.lineTo(ceilLine[1].x,ceilLine[1].y);ctx.stroke();
+  // ── Object on its surface ──
+  var fcObj=_ssCalcFC(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf);
+  if(obj.surf==='vertical'){
+    var oyB=Math.max(0,obj.h-obj.hw), oyT=obj.h+obj.hw;
+    var oL=objCenterX-objW/2, oR=objCenterX+objW/2;
+    var q=[p3(oL,oyT,0),p3(oR,oyT,0),p3(oR,oyB,0),p3(oL,oyB,0)];
+    ctx.fillStyle=_fcToRGBA(fcObj,0.6*pulse);
+    ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);q.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(210,180,120,0.85)';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);q.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.stroke();
+  } else {
+    // Horizontal slab at height obj.h
+    var hL=objCenterX-objW/2, hR=objCenterX+objW/2, dHalf=obj.hw;
+    var q2=[p3(hL,obj.h,objZ-dHalf),p3(hR,obj.h,objZ-dHalf),p3(hR,obj.h,objZ+dHalf),p3(hL,obj.h,objZ+dHalf)];
+    ctx.fillStyle=_fcToRGBA(fcObj,0.5*pulse);
+    ctx.beginPath();ctx.moveTo(q2[0].x,q2[0].y);q2.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(160,185,215,0.8)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(q2[0].x,q2[0].y);q2.forEach(function(p){ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.stroke();
+  }
 
-  // Labels
-  var wallLabelPt=p3(rW*0.5,rH*0.55,0);
-  ctx.fillStyle='rgba(110,140,180,0.55)';ctx.font='bold 11px system-ui,sans-serif';ctx.textAlign='center';
-  ctx.fillText('BACK WALL',wallLabelPt.x,wallLabelPt.y);
-  var floorLabelPt=p3(rW*0.6,0,rD*0.5);
-  ctx.fillText('FLOOR',floorLabelPt.x,floorLabelPt.y-8);
-  ctx.fillStyle='rgba(255,240,160,'+(0.6*pulse)+')';ctx.font='bold 12px system-ui,sans-serif';
-  ctx.fillText(Math.round(beamDeg)+'° · '+(_ss.tiltDeg||0)+'° tilt',fixPt.x,fixPt.y+26);
+  // ── Beam footprints + cones + fixtures (one per fixture) ──
+  var footR=L.beamW/2;
+  for(var fi=0;fi<numFix;fi++){
+    var fx=fixXAt(fi);
+    var fixPt=p3(fx,rH,_ss.wallDist);
+    // Footprint center on the surface
+    var fcx, fcy, fcz;
+    if(obj.surf==='vertical'){
+      // beam hits wall (z=0); center height shifts up as tilt decreases
+      fcx=fx; fcy=obj.h; fcz=0;
+    } else {
+      fcx=fx; fcy=obj.h; fcz=_ssBeamCenter(obj.h); // tilt shifts toward wall
+    }
+    // Footprint polygon (circle of radius footR on the surface plane)
+    var fpPts=[]; var NSEG=24;
+    for(var s=0;s<NSEG;s++){
+      var ang=s/NSEG*Math.PI*2;
+      if(obj.surf==='vertical') fpPts.push(p3(fcx+footR*Math.cos(ang), fcy+footR*Math.sin(ang), 0));
+      else fpPts.push(p3(fcx+footR*Math.cos(ang), obj.h, fcz+footR*Math.sin(ang)));
+    }
+    // Beam cone fill (apex → footprint ring)
+    ctx.save();
+    ctx.fillStyle='rgba(255,244,170,'+(0.10*pulse)+')';
+    ctx.beginPath();
+    fpPts.forEach(function(p,idx){ if(idx===0)ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y); });
+    ctx.closePath(); ctx.fill();
+    // cone sides
+    ctx.strokeStyle='rgba(255,240,160,'+(0.18*pulse)+')';ctx.lineWidth=1;
+    [0,6,12,18].forEach(function(idx){ var p=fpPts[idx]; ctx.beginPath();ctx.moveTo(fixPt.x,fixPt.y);ctx.lineTo(p.x,p.y);ctx.stroke(); });
+    ctx.restore();
+    // Footprint pool fill on surface
+    var pgrad=ctx.createRadialGradient(p3(fcx,fcy,fcz).x,p3(fcx,fcy,fcz).y,0,p3(fcx,fcy,fcz).x,p3(fcx,fcy,fcz).y,Math.max(footR*baseScale,4));
+    pgrad.addColorStop(0,_fcToRGBA(fcObj,0.55*pulse));
+    pgrad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=pgrad;
+    ctx.beginPath();fpPts.forEach(function(p,idx){if(idx===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(255,235,150,0.3)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();fpPts.forEach(function(p,idx){if(idx===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+    // Fixture marker
+    ctx.fillStyle='#1a2d48';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,8,0,Math.PI*2);ctx.fill();
+    var fhalo=ctx.createRadialGradient(fixPt.x,fixPt.y,0,fixPt.x,fixPt.y,22);
+    fhalo.addColorStop(0,'rgba(255,248,180,'+(0.6*pulse)+')');fhalo.addColorStop(1,'rgba(255,220,80,0)');
+    ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,22,0,Math.PI*2);ctx.fillStyle=fhalo;ctx.fill();
+    ctx.strokeStyle='rgba(200,220,240,0.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,8,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(255,250,200,'+(0.9*pulse)+')';ctx.beginPath();ctx.arc(fixPt.x,fixPt.y,4,0,Math.PI*2);ctx.fill();
+  }
+
+  // FC label at object center
+  if(fcObj>0.5){
+    var lp=p3(objCenterX,obj.h,objZ);
+    ctx.fillStyle='rgba(255,240,140,0.95)';ctx.font='bold 15px system-ui,sans-serif';ctx.textAlign='center';
+    ctx.fillText(Math.round(fcObj)+' fc',lp.x,lp.y-6);
+  }
+
+  // HUD
+  ctx.fillStyle='rgba(255,240,160,'+(0.85)+')';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='left';
+  ctx.fillText(numFix+' fixture'+(numFix>1?'s':'')+' · '+Math.round(beamDeg)+'° · '+(_ss.tiltDeg||0)+'° tilt',12,20);
+  ctx.fillStyle='rgba(110,140,180,0.7)';ctx.font='11px system-ui,sans-serif';
+  ctx.fillText('drag rotate · wheel/pinch zoom · shift-drag pan',12,h-12);
 
   ctx.restore();
 }
@@ -26866,58 +26928,133 @@ function _ssCanvasCoords(e) {
 }
 
 function _ssMD(e) {
-  if(_ss.viewMode!=='section') return; // only drag in section view
   var p=_ssCanvasCoords(e); if(!p) return;
-  var dist=Math.sqrt((p.x-_ssDS.fixCX)*(p.x-_ssDS.fixCX)+(p.y-_ssDS.fixCY)*(p.y-_ssDS.fixCY));
-  if(dist<24){
-    _ss.dragging=true;
-    _ss.dragStartCX=p.x; _ss.dragStartDist=_ss.wallDist; _ss.dragScale=_ssDS.sc;
-    var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='col-resize';
+
+  // ── 3D view: start camera rotate (left/touch) or pan (shift/right) ──
+  if(_ss.viewMode==='3d'){
+    var mode = (e.shiftKey || e.button===2) ? 'pan' : 'rotate';
+    _ss.cam3dDrag = { mode:mode, x:p.x, y:p.y,
+      startYaw:_ss.cam.yaw, startPitch:_ss.cam.pitch,
+      startPanX:_ss.cam.panX, startPanY:_ss.cam.panY };
+    var c3=document.getElementById('ss-canvas'); if(c3) c3.style.cursor='grabbing';
+    return;
   }
+
+  if(_ss.viewMode!=='section') return; // plan view is not draggable
+
+  // ── Section view: pick fixture or object, whichever is closer ──
+  var dFix=Math.hypot(p.x-_ssDS.fixCX, p.y-_ssDS.fixCY);
+  var dObj=Math.hypot(p.x-_ssDS.objCX, p.y-_ssDS.objCY);
+  var obj=_ssGetObj();
+  if(dObj<26 && dObj<=dFix){
+    _ss.dragging=true; _ss.dragTarget='object';
+    _ss.dragStartCX=p.x; _ss.dragStartCY=p.y;
+    _ss.dragStartVal = obj.surf==='vertical' ? obj.h : obj.dist;
+    _ss.dragScale=_ssDS.sc;
+  } else if(dFix<26){
+    _ss.dragging=true; _ss.dragTarget='fixture';
+    _ss.dragStartCX=p.x; _ss.dragStartVal=_ss.wallDist; _ss.dragScale=_ssDS.sc;
+  }
+  if(_ss.dragging){ var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='grabbing'; }
 }
 
 function _ssMV(e) {
   var p=_ssCanvasCoords(e); if(!p) return;
+
+  // ── 3D camera drag ──
+  if(_ss.viewMode==='3d' && _ss.cam3dDrag){
+    e.preventDefault();
+    var d=_ss.cam3dDrag;
+    if(d.mode==='rotate'){
+      _ss.cam.yaw = d.startYaw + (p.x-d.x)*0.01;
+      _ss.cam.pitch = Math.max(-0.2, Math.min(1.3, d.startPitch + (p.y-d.y)*0.008));
+    } else {
+      _ss.cam.panX = d.startPanX + (p.x-d.x);
+      _ss.cam.panY = d.startPanY + (p.y-d.y);
+    }
+    return;
+  }
+
   if(!_ss.dragging){
+    // Hover cursor hint
+    var c=document.getElementById('ss-canvas'); if(!c) return;
+    if(_ss.viewMode==='3d'){ c.style.cursor='grab'; return; }
     if(_ss.viewMode==='section'){
-      var dist=Math.sqrt((p.x-_ssDS.fixCX)*(p.x-_ssDS.fixCX)+(p.y-_ssDS.fixCY)*(p.y-_ssDS.fixCY));
-      var c=document.getElementById('ss-canvas');
-      if(c) c.style.cursor=dist<24?'col-resize':'default';
+      var dFix=Math.hypot(p.x-_ssDS.fixCX, p.y-_ssDS.fixCY);
+      var dObj=Math.hypot(p.x-_ssDS.objCX, p.y-_ssDS.objCY);
+      c.style.cursor=(dFix<26||dObj<26)?'grab':'default';
     }
     return;
   }
   e.preventDefault();
-  var dxPx=p.x-_ss.dragStartCX;
-  var dxFt=dxPx/(_ss.dragScale||1);
-  var nd=Math.max(0.5,Math.min(20,_ss.dragStartDist-dxFt));
-  _ss.wallDist=Math.round(nd*4)/4;
-  var wdEl=document.getElementById('ss-wdist'); if(wdEl) wdEl.value=_ss.wallDist;
+  var obj=_ssGetObj();
+  if(_ss.dragTarget==='fixture'){
+    var dxFt=(p.x-_ss.dragStartCX)/(_ss.dragScale||1);
+    var nd=Math.max(0.5,Math.min(20,_ss.dragStartVal-dxFt));
+    _ss.wallDist=Math.round(nd*4)/4;
+    var wdEl=document.getElementById('ss-wdist'); if(wdEl) wdEl.value=_ss.wallDist;
+  } else if(_ss.dragTarget==='object'){
+    if(obj.surf==='vertical'){
+      // Drag vertically → change height
+      var dyFt=(p.y-_ss.dragStartCY)/(_ss.dragScale||1); // down = lower
+      var nh=Math.max(0,Math.min(_ss.ceilH-0.5, _ss.dragStartVal-dyFt));
+      if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
+      _ss.objCustom[_ss.objId].h=Math.round(nh*4)/4;
+      var ohEl=document.getElementById('ss-objh'); if(ohEl) ohEl.value=_ss.objCustom[_ss.objId].h;
+      var ohLbl=document.getElementById('ss-objh-lbl'); if(ohLbl) ohLbl.textContent=_ss.objCustom[_ss.objId].h+"'";
+    } else {
+      // Drag horizontally → change distance from wall
+      var dxFt2=(p.x-_ss.dragStartCX)/(_ss.dragScale||1);
+      var ndist=Math.max(0,Math.min(_ssDS.viewRange-0.5, _ss.dragStartVal-dxFt2));
+      if(!_ss.objCustom[_ss.objId]) _ss.objCustom[_ss.objId]={};
+      _ss.objCustom[_ss.objId].dist=Math.round(ndist*4)/4;
+    }
+  }
   _ssUpdateResults();
 }
 
 function _ssMU() {
-  _ss.dragging=false;
-  var c=document.getElementById('ss-canvas'); if(c) c.style.cursor='default';
+  _ss.dragging=false; _ss.dragTarget=null; _ss.cam3dDrag=null;
+  var c=document.getElementById('ss-canvas'); if(c) c.style.cursor=(_ss.viewMode==='3d')?'grab':'default';
 }
 
-function _ssTD(e){ e.preventDefault(); _ssMD(e); }
-function _ssTM(e){ e.preventDefault(); _ssMV(e); }
+function _ssTD(e){ if(e.touches&&e.touches.length>1){ _ssPinchStart(e); return; } e.preventDefault(); _ssMD(e); }
+function _ssTM(e){ if(e.touches&&e.touches.length>1){ _ssPinchMove(e); return; } e.preventDefault(); _ssMV(e); }
+
+// Pinch-to-zoom for 3D view
+var _ssPinchDist0=0, _ssPinchZoom0=1;
+function _ssPinchStart(e){
+  if(_ss.viewMode!=='3d') return;
+  var t=e.touches; _ssPinchDist0=Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  _ssPinchZoom0=_ss.cam.zoom;
+}
+function _ssPinchMove(e){
+  if(_ss.viewMode!=='3d'||!_ssPinchDist0) return;
+  e.preventDefault();
+  var t=e.touches; var d=Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  _ss.cam.zoom=Math.max(0.4,Math.min(3, _ssPinchZoom0*(d/_ssPinchDist0)));
+}
+
+// Mouse wheel zoom in 3D view
+function _ssWheel(e){
+  if(_ss.viewMode!=='3d') return;
+  e.preventDefault();
+  _ss.cam.zoom=Math.max(0.4,Math.min(3, _ss.cam.zoom*(e.deltaY<0?1.1:0.9)));
+}
+
+function _ssResetCam(){
+  _ss.cam={ yaw:-0.5, pitch:0.35, zoom:1, panX:0, panY:0 };
+}
 
 // ── Results Panel ─────────────────────────────────────────────
 function _ssUpdateResults() {
   var el=document.getElementById('ss-results'); if(!el) return;
-  var obj=_ssGetObj();
-  var beamDeg=_ssEffBeam();
-  var halfRad=(beamDeg*Math.PI/180)/2;
-  var tiltRad=(_ss.tiltDeg||0)*Math.PI/180;
-  var H=_ss.ceilH-obj.h;
-  var fcPX=obj.surf==='vertical'?0:_ssBeamCenter(obj.h);
-  var fcC=_ssCalcFC(fcPX, obj.h, obj.surf);
+  var L=_ssLayout();
+  var obj=L.obj;
+  // FC at the object's actual position
+  var fcC=_ssCalcFC(obj.surf==='vertical'?0:obj.dist, obj.h, obj.surf);
   var xmitPct=Math.round(_ssEffXmit()*100);
-  var distAlongBeam = obj.surf==='vertical'
-    ? Math.sqrt(_ss.wallDist*_ss.wallDist + H*H)
-    : (H>0 ? H/Math.cos(tiltRad) : 0);
-  var beamW = 2*Math.tan(halfRad)*distAlongBeam;
+  var distAlongBeam=L.distAlongBeam, beamW=L.beamW;
   var lo=obj.recFc[0], hi=obj.recFc[1];
   var qlbl,qclr;
   if(fcC<lo*0.4){qlbl='Too Dim';qclr='#ef4444';}
@@ -26928,32 +27065,35 @@ function _ssUpdateResults() {
   var tiltLabel=(_ss.tiltDeg||0)===0?'Straight down':(_ss.tiltDeg||0)+'° toward wall';
   var outLabel=xmitPct+'%'+(_ssEffXmit()<(_ss.outputPct||100)/100?' with accessories':(_ss.outputPct<100?' dimmed':''));
 
-  // Multi-fixture analysis
-  var objW = obj.width || 0;
-  var coverSpacing = beamW * 0.65;
-  var numFix = objW>0&&coverSpacing>0 ? Math.max(1,Math.ceil(objW/coverSpacing)) : 1;
-  var fixSpacing = numFix>1 ? Math.round(objW/numFix*10)/10 : 0;
-  var edgeFC = objW>0 ? _ssCalcFC(
-    obj.surf==='vertical' ? 0 : (_ssBeamCenter(obj.h) + objW/2/numFix),
-    obj.h, obj.surf) : 0;
-  var uniformityRatio = fcC>0&&edgeFC>0 ? Math.round(edgeFC/fcC*100) : 0;
+  // Multi-fixture analysis (shared layout)
+  var objW=L.objW, numFix=L.numFix, spacing=L.spacing;
+  // Uniformity: FC at the midpoint between two adjacent beams (worst case)
+  var uniformityRatio=0;
+  if(numFix>1 && fcC>0){
+    // midpoint between fixtures lands half a spacing off a beam center
+    var edgePos=obj.surf==='vertical'? 0 : obj.dist; // FC eval same surface; approximate dip
+    var dip=Math.max(0.35, Math.cos((spacing/Math.max(beamW,0.1))*Math.PI*0.5)); // rough overlap dip
+    uniformityRatio=Math.round(Math.min(100,dip*100));
+  } else if(numFix===1){
+    uniformityRatio=100;
+  }
 
   var multiHtml = '';
   if(objW>0){
     multiHtml = '<div style="grid-column:1/-1;background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.2);border-radius:10px;padding:12px 14px;margin-top:4px">'
       +'<div style="font-size:11px;font-weight:700;color:#4f8ef7;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Multi-Fixture Coverage — '+objW+'\' '+obj.name+'</div>'
       +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">'
-      +_ssCard('Fixtures Needed',numFix,'to cover '+objW+'\' width',numFix<=3?'#10b981':'#f59e0b')
-      +(numFix>1?_ssCard('Spacing',fixSpacing+'\'','center to center','#8da0c0'):'')
-      +_ssCard('Beam Cover',Math.round(beamW*10)/10+'\' per fix.','beam spread at surface','#8da0c0')
-      +(uniformityRatio>0?_ssCard('Uniformity',uniformityRatio+'%','edge vs center fc',uniformityRatio>60?'#10b981':'#f59e0b'):'')
+      +_ssCard('Fixtures Needed',numFix,'to span '+objW+'\' width',numFix<=4?'#10b981':'#f59e0b')
+      +(numFix>1?_ssCard('Spacing',(Math.round(spacing*10)/10)+'\'','center to center','#8da0c0'):'')
+      +_ssCard('Beam Cover',Math.round(beamW*10)/10+'\' per fix.','beam dia. at surface','#8da0c0')
+      +(uniformityRatio>0?_ssCard('Uniformity',uniformityRatio+'%','beam overlap',uniformityRatio>60?'#10b981':'#f59e0b'):'')
       +'</div></div>';
   }
 
   el.innerHTML='<div style="display:contents">'
-    +_ssCard('Center fc',fcStr,qlbl,qclr)
-    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','at target surface','#8da0c0')
-    +_ssCard('Distance',Math.round(distAlongBeam*10)/10+' ft','fixture to surface','#8da0c0')
+    +_ssCard('fc on Object',fcStr,qlbl,qclr)
+    +_ssCard('Beam Spread',beamW>0?(Math.round(beamW*10)/10)+' ft':'—','dia. at surface','#8da0c0')
+    +_ssCard('Throw Dist',Math.round(distAlongBeam*10)/10+' ft','fixture to surface','#8da0c0')
     +_ssCard('Tilt',(_ss.tiltDeg||0)+'°',tiltLabel,(_ss.tiltDeg||0)>0?'#f59e0b':'#8da0c0')
     +_ssCard('Output',xmitPct+'%',outLabel,xmitPct>80?'#10b981':'#f59e0b')
     +_ssCard('Recommended',lo+'–'+hi+' fc',obj.note,'#4f8ef7')
@@ -27062,7 +27202,7 @@ registerProjCapture('ohmslaw', function() {
 // Section Study proj capture
 registerProjCapture('sectionstudy', function() {
   return {
-    data: JSON.parse(JSON.stringify({fxId:_ss.fxId,beamDeg:_ss.beamDeg,useCustomBeam:_ss.useCustomBeam,acc:_ss.acc,ceilH:_ss.ceilH,wallDist:_ss.wallDist,objId:_ss.objId,tiltDeg:_ss.tiltDeg,outputPct:_ss.outputPct,objCustom:_ss.objCustom})),
+    data: JSON.parse(JSON.stringify({fxId:_ss.fxId,beamDeg:_ss.beamDeg,useCustomBeam:_ss.useCustomBeam,acc:_ss.acc,ceilH:_ss.ceilH,wallDist:_ss.wallDist,objId:_ss.objId,tiltDeg:_ss.tiltDeg,outputPct:_ss.outputPct,objCustom:_ss.objCustom,accCustom:_ss.accCustom,roomWidth:_ss.roomWidth,viewMode:_ss.viewMode})),
     preview: _ssGetFx().name+' · '+_ss.ceilH+'\'H · '+Math.round(_ssEffBeam())+'° · '+(_ss.tiltDeg||0)+'° tilt · '+_ssGetObj().name
   };
 }, function(d) {
@@ -27075,6 +27215,7 @@ window._ssSaveFixture       = _ssSaveFixture;
 window._ssOpenAddFixture    = _ssOpenAddFixture;
 window._ssStopAnim          = _ssStopAnim;
 window._ssUpdateViewBtns    = _ssUpdateViewBtns;
+window._ssResetCam          = _ssResetCam;
 
 window.openSaveToProject     = openSaveToProject;
 window.execSaveToProject     = execSaveToProject;
