@@ -362,7 +362,14 @@
       '.fop-tool{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;' +
         'border:1px solid var(--border,rgba(255,255,255,.1));background:var(--surface-2,#141f35);font-size:13px;' +
         'color:var(--text,#f0f4ff)}' +
-      '.fop-tool input{width:16px;height:16px;accent-color:var(--accent,#4f8ef7)}' +
+      // Restore native checkbox rendering — the app's global "input" rule
+      // sets appearance:none + a forced background/padding that otherwise
+      // hides the checkmark and makes selection invisible.
+      '.fop-tool input[type=checkbox]{-webkit-appearance:auto !important;appearance:auto !important;' +
+        'width:18px !important;height:18px !important;min-width:18px;flex:0 0 auto;margin:0;padding:0 !important;' +
+        'border-radius:4px !important;background:initial !important;accent-color:var(--accent,#4f8ef7);cursor:pointer}' +
+      '.fop-tool:hover{border-color:var(--border-strong,rgba(255,255,255,.25))}' +
+      '.fop-tool:has(input:checked){border-color:var(--accent,#4f8ef7);background:rgba(79,142,247,.14)}' +
       '.fop-tool.locked{opacity:.55;cursor:not-allowed}' +
       '.fop-sech{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;' +
         'color:var(--text-muted,#6e8aad);margin:10px 0 2px}' +
