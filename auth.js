@@ -41,6 +41,46 @@
   ];
   var LABELS_FALLBACK = { timekeeping: 'Time Tracking' };
 
+  // Contextual help shown by the topbar "?" button, keyed by view id.
+  var HELP_TEXT = {
+    dashboard: '<p>Your home overview — project health, overdue tasks, recent shipments and alerts all at a glance.</p>',
+    projects: '<p>The Project Notebook. Create and organize projects with their notes, files and documentation for each job.</p>',
+    calendar: '<p>Schedule and view events, deadlines and site visits on a calendar.</p>',
+    pos: '<p>Create and track Purchase Orders — vendor, line items, totals and status — for materials and fixtures.</p>',
+    shipping: '<p>Track inbound and outbound shipments with tracking numbers, ETAs and delivery status.</p><p>Tip: use the barcode scanner to add a tracking number from your camera.</p>',
+    punchlist: '<p>Build and work through punch lists — the outstanding items to fix or finish before sign-off.</p>',
+    fieldlog: '<p>Record daily field notes, observations and progress logs from the job site.</p>',
+    systainer: '<p>Inventory your Systainer/tool cases — track what is stocked and get low-stock alerts.</p>',
+    mapview: '<p>See your projects plotted on a map to plan routes and visualize site locations.</p>',
+    dmxcalc: '<p>Calculate DMX channel usage and universe allocation for a rig of fixtures.</p>',
+    ledcalc: '<p>Size LED tape runs — power draw, maximum run length, voltage drop and the power-supply rating you need.</p>',
+    colorcalc: '<p>Mix and convert color values (RGB / HSL / Kelvin) and preview blends for color-tunable fixtures.</p>',
+    dipcalc: '<p>Convert a DMX address into DIP-switch positions — and back again — for addressing fixtures.</p>',
+    voltcalc: '<p>Calculate voltage drop over a cable run from wire gauge, length and load to keep fixtures in spec.</p>',
+    wiringref: '<p>Quick wiring reference — pinouts, cable types and connection diagrams.</p>',
+    lutronlink: '<p>Calculate Lutron link wiring limits and device counts for QS / RadioRA / HomeWorks links.</p>',
+    dmxaddrcalc: '<p>Plan DMX start addresses across fixtures, auto-assigned from each fixture’s channel footprint.</p>',
+    lutroncheck: '<p>A step-by-step Lutron programming checklist so you can commission a system without missing steps.</p>',
+    photometrics: '<p>Look up fixture photometric data — lumen output, beam angles and light distribution.</p>',
+    beamspread: '<p>Calculate beam diameter and footcandles at a given throw distance and beam angle.</p>',
+    sectionstudy: '<p>Study a section or elevation to plan fixture aiming, throw and coverage.</p>',
+    circuitload: '<p>Calculate circuit loading — total amps/watts on a circuit so you don’t overload it.</p>',
+    luxconvert: '<p>Convert between lux and footcandles and related illuminance units.</p>',
+    artnetplan: '<p>Plan Art-Net / sACN universes, IP addressing and node mapping for networked lighting.</p>',
+    twblend: '<p>Blend tunable-white channels — find the warm/cool mix for a target color temperature.</p>',
+    cablecutlist: '<p>Generate a cable cut list — the lengths and quantities to pull and terminate.</p>',
+    ohmslaw: '<p>Solve Ohm’s Law and power: enter any two of volts, amps, ohms or watts to get the rest.</p>',
+    iprating: '<p>Reference for IP (Ingress Protection) ratings — what each digit means for dust and water resistance.</p>',
+    etccablecross: '<p>Cross-reference ETC cable types and their equivalents.</p>',
+    fixturedb: '<p>A searchable database of fixtures with specs, addresses and notes you can save.</p>',
+    specdocs: '<p>A central library of spec sheets and product documentation.</p>',
+    vendors: '<p>Manage your vendor and supplier contacts and details.</p>',
+    troubleshoot: '<p>A searchable troubleshooting knowledge base for common lighting-control issues and their fixes.</p>',
+    timekeeping: '<p>Track time against tasks and projects with the built-in timer and time log.</p>',
+    settings: '<p>App preferences — theme, sync and account settings.</p>',
+    _default: '<p>Help for this screen isn’t available yet.</p>'
+  };
+
   // Containers whose nav entries we hide for tools a user can't see.
   // (The switchView guard below is the real enforcement; this is cosmetic.)
   var NAV_CONTAINERS = ['#sidebar', '#mob-tab-bar', '#mob-more-sheet', '#fab-menu', '#desk-add-menu'];
@@ -241,6 +281,7 @@
     if (window.currentView && !window._fopAllowed[window.currentView]) {
       gotoLanding();
     }
+    applyChrome();
     if (document.getElementById('fop-account-card')) renderAccountCard();
   }
 
@@ -274,12 +315,82 @@
   }
 
   // ---------------------------------------------------------
+  // topbar enhancements: animated theme toggle, logout, help
+  // ---------------------------------------------------------
+  var topbarEnhanced = false;
+  function enhanceTopbar() {
+    if (topbarEnhanced) return;
+    var topbar = document.getElementById('topbar');
+    if (!topbar) return;
+    topbarEnhanced = true;
+
+    // 1) Animated dark/light toggle — wrap the app's theme icon in a sliding
+    //    knob. applyTheme() keeps #topbar-theme-icon's emoji in sync for us.
+    var themeBtn = document.getElementById('topbar-theme-btn');
+    if (themeBtn && !themeBtn.classList.contains('fop-theme-toggle')) {
+      var icon = document.getElementById('topbar-theme-icon');
+      var emoji = icon ? icon.textContent : '🌙';
+      themeBtn.classList.add('fop-theme-toggle');
+      themeBtn.innerHTML = '<span class="fop-knob"><span id="topbar-theme-icon">' + emoji + '</span></span>';
+    }
+
+    // 2) Logout button in the header.
+    if (!document.getElementById('fop-logout-btn')) {
+      var btn = document.createElement('button');
+      btn.id = 'fop-logout-btn';
+      btn.type = 'button';
+      btn.title = 'Log out';
+      btn.onclick = function () { lock(); };
+      btn.innerHTML =
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+        '<span>Log out</span>';
+      topbar.appendChild(btn);
+    }
+
+    // 3) Repurpose the "?" button to show help for the current tool.
+    var helpBtn = topbar.querySelector('[onclick*="modal-shortcuts"]');
+    if (helpBtn) {
+      helpBtn.removeAttribute('onclick');
+      helpBtn.removeAttribute('onmouseenter');
+      helpBtn.removeAttribute('onmouseleave');
+      helpBtn.setAttribute('title', 'Help for this tool');
+      helpBtn.onclick = function () { window.fopShowHelp(); };
+    }
+  }
+
+  // Show / hide the simplified-chrome elements based on role.
+  function applyChrome() {
+    if (currentUser) enhanceTopbar();
+    var hide = currentUser && !isAdmin(currentUser);
+    document.body.classList.toggle('fop-hide-chrome', !!hide);
+    // The keyboard-shortcut hint is an id-less <span> appended to #topbar.
+    var spans = document.querySelectorAll('#topbar > span');
+    Array.prototype.forEach.call(spans, function (s) {
+      if (/=\s*search/i.test(s.textContent || '')) s.style.display = hide ? 'none' : '';
+    });
+  }
+
+  window.fopShowHelp = function () {
+    var v = window.currentView || 'dashboard';
+    var body = HELP_TEXT[v] || HELP_TEXT._default;
+    openModal('fop-help-modal',
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+        '<h3>❓ ' + esc(toolLabel(v)) + '</h3>' +
+        '<button class="fop-btn" onclick="fopCloseModal(\'fop-help-modal\')">✕</button></div>' +
+      '<div id="fop-help-body">' + body + '</div>' +
+      '<div class="fop-row" style="margin-top:16px;justify-content:flex-end">' +
+        '<button class="fop-btn primary" onclick="fopCloseModal(\'fop-help-modal\')">Got it</button></div>');
+  };
+
+  // ---------------------------------------------------------
   // session
   // ---------------------------------------------------------
   function login(u) {
     currentUser = u;
     try { localStorage.setItem(LS_SESSION, u.id); } catch (e) {}
     installSwitchGuard();
+    enhanceTopbar();
     applyAccess();
     hideLock();
     injectAccountCard();
@@ -289,6 +400,7 @@
   function lock() {
     currentUser = null;
     try { localStorage.removeItem(LS_SESSION); } catch (e) {}
+    document.body.classList.remove('fop-hide-chrome');
     showLock();
   }
   window.fopLock = lock;
@@ -374,6 +486,36 @@
       '.fop-sech{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;' +
         'color:var(--text-muted,#6e8aad);margin:10px 0 2px}' +
       '.fop-hidden{display:none !important}' +
+      // Chrome hidden for non-admin users (body.fop-hide-chrome)
+      'body.fop-hide-chrome #save-to-proj-btn,' +
+      'body.fop-hide-chrome #topbar .search-wrap,' +
+      'body.fop-hide-chrome #sync-now-btn,' +
+      'body.fop-hide-chrome #notif-btn,' +
+      'body.fop-hide-chrome #add-btn-wrap,' +
+      'body.fop-hide-chrome #mob-search-bar,' +
+      'body.fop-hide-chrome #mob-global-search-btn,' +
+      'body.fop-hide-chrome #mob-sync-status,' +
+      'body.fop-hide-chrome #nav-settings-btn,' +
+      'body.fop-hide-chrome .sidebar-footer .sidebar-action-btn[onclick*="openGlobalSearch"],' +
+      'body.fop-hide-chrome #notif-bell-btn,' +
+      'body.fop-hide-chrome .sidebar-footer .sync-status{display:none !important}' +
+      // Animated dark/light toggle (replaces the plain moon button)
+      '#topbar-theme-btn.fop-theme-toggle{position:relative;width:46px !important;height:25px !important;' +
+        'padding:0 !important;border-radius:99px !important;background:rgba(120,130,150,.3) !important;' +
+        'border:1px solid var(--border,rgba(255,255,255,.14)) !important;display:inline-flex !important;' +
+        'align-items:center;flex-shrink:0;overflow:hidden;transition:background .25s;cursor:pointer}' +
+      // Slide via `left` (transform is unreliably overridden on this node).
+      '#topbar-theme-btn.fop-theme-toggle .fop-knob{position:absolute;top:2px;left:2px;width:19px;height:19px;' +
+        'border-radius:50% !important;background:#0d1526 !important;display:flex;align-items:center;justify-content:center;font-size:11px;' +
+        'line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.45);transition:left .3s cubic-bezier(.34,1.56,.64,1),background .25s}' +
+      'html[data-theme="light"] #topbar-theme-btn.fop-theme-toggle{background:rgba(79,142,247,.45) !important}' +
+      'html[data-theme="light"] #topbar-theme-btn.fop-theme-toggle .fop-knob{left:25px !important;background:#fff !important}' +
+      // Header logout button
+      '#fop-logout-btn{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;background:rgba(239,68,68,.12);' +
+        'border:1px solid rgba(239,68,68,.35);color:#f87171;border-radius:10px;padding:6px 12px;font-size:13px;' +
+        'font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}' +
+      '#fop-logout-btn:hover{background:rgba(239,68,68,.2)}' +
+      '#fop-help-body p{margin:0 0 10px;line-height:1.6;color:var(--text-secondary,#a3b8d4);font-size:14px}' +
       '@media(max-width:520px){.fop-grid{grid-template-columns:1fr}}';
     var st = document.createElement('style');
     st.id = 'fop-auth-styles';
